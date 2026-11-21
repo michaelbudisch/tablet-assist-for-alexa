@@ -2,7 +2,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 work="$(mktemp -d)"
-name="tablet-assist-ci-$"
+name="tablet-assist-ci-${BASHPID}"
 network="$name-net"
 image="ghcr.io/home-assistant/home-assistant:2026.11.0"
 cleanup() {
