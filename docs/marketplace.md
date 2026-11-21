@@ -1,6 +1,6 @@
 # Marketplace — Tablet Assist for Alexa
 
-Home Assistant Core 2026.11 or newer. Developer preview 0.2.0. First install on a test instance; do not overwrite a working legacy installation.
+Home Assistant Core 2026.11 or newer. Developer preview 0.2.1. First install on a test instance; do not overwrite a working legacy installation.
 
 ## 1. Prepare the speech server
 
@@ -37,7 +37,7 @@ Create an Assist pipeline: German language, **Tablet Assist Gesprächsrouter**, 
 
 ## 4. Optional Alexa MP3 announcements
 
-Not needed for Bluetooth. Follow [Nginx proxy](nginx-proxy.md) and configure a compatible notify integration that accepts SSML audio. Configure in the integration:
+Not needed for Bluetooth. Follow [Nginx proxy, DuckDNS and existing proxy setup](nginx-proxy.md) and configure a compatible notify integration that accepts SSML audio. Configure in the integration:
 
 - MP3 API URL: `http://speechserver.local:5001` (internal only).
 - MP3 API key: generated in the speech server's root-only local configuration.

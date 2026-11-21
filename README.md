@@ -1,10 +1,10 @@
-# Tablet Assist for Alexa — 0.2.0 (Developer Preview)
+# Tablet Assist for Alexa — 0.2.1 (Developer Preview)
 
 Local AI voice assistant for Home Assistant using an Android tablet as the microphone and an Amazon Echo as a Bluetooth speaker. No custom Echo firmware is required. Ordinary Alexa functions remain independent; Alexa is not replaced internally.
 
 **Deutsch:** Ein Android-Tablet übernimmt Mikrofon, Wakeword und native Home-Assistant-Assist-Pipeline. Die Antwort wird über den Bluetooth-Lautsprecher (z. B. Amazon Echo) ausgegeben. Separat können Echo-Geräte über eine kompatible Alexa-Integration MP3-Durchsagen empfangen. Lokale Sprachverarbeitung mit Whisper, Piper und optional Qwen-TTS/LLM; eine GPU ist nicht zwingend notwendig.
 
-**Status:** v0.2.0, öffentliche Entwicklungsvorschau. Native Tablet-Ausgabe, Live-Klangprofile, Gesprächsrouter, Timer/Erinnerung, automatische Hinweise und Original-GPU-Worker 1.5.0. Keine vollständig auf einer frischen Installation verifizierte Version. Die native Android-/Echo-Kompatibilität ist geräteabhängig. Start mit einer Testinstanz empfohlen.
+**Status:** v0.2.1, öffentliche Entwicklungsvorschau. Native Tablet-Ausgabe, Live-Klangprofile, Gesprächsrouter, Timer/Erinnerung, automatische Hinweise und Original-GPU-Worker 1.5.0. Keine vollständig auf einer frischen Installation verifizierte Version. Die native Android-/Echo-Kompatibilität ist geräteabhängig. Start mit einer Testinstanz empfohlen.
 
 ## Architektur
 
@@ -44,7 +44,7 @@ cd tablet-assist-for-alexa
 1. [Proxmox / Debian Sprachserver](docs/proxmox.md) — CPU-Basis und optionale LXC-Erstellung.
 2. [Marketplace-Installation](docs/marketplace.md) — neue Integration empfohlen; oder [manuelle Legacy-Installation](docs/home-assistant.md) — Integrationen, Pipeline, Dashboard, Tablet-/Echo-Kopplung.
 3. [Optional: Windows oder Linux KI-Rechner](docs/worker.md) — Faster Whisper, Qwen-TTS, Streaming, Ollama.
-4. [Optionaler Nginx-Proxy-CT](docs/nginx-proxy.md) — nur für Alexa-MP3-Durchsagen.
+4. [Optionaler Nginx-Proxy-CT](docs/nginx-proxy.md) — nur für Alexa-MP3-Durchsagen; DuckDNS-App, Certbot und vorhandene Nginx-Proxy-CTs werden beschrieben.
 5. [Sicherheit und Datenschutz](docs/security.md) — LAN-Zugriff, Bluetooth und Alexa-Ausgabe.
 6. [Tests und Releasehinweise](docs/release.md).
 

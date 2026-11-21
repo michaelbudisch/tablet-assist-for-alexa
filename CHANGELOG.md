@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — Developer Preview
+- Anleitung für DuckDNS-IP-Aktualisierung durch die Home Assistant App und getrennte Certbot-Zertifikate im Proxy-CT.
+- Expliziter Shared-Proxy-Modus für einen neuen Audio-Hostnamen in einem vorhandenen Debian-Nginx-CT; keine Übernahme bereits vorhandener Sites.
+- Prüfung auf Hostnamenkonflikte, Beibehaltung der Default-Site und bestehenden Certbot-Zeitplanung im Shared-Modus.
+- Tests für die Hostnamenprüfung; bestehende Proxy- und HA-Installation bleibt unverändert.
+
 ## 0.2.0 — Developer Preview
 - Marketplace-kompatible Einzelintegration `tablet_assist_for_alexa` mit `hacs.json`, deutscher und englischer Einrichtung, STT- und TTS-Routing, Gesprächsmodus und optionaler Alexa-Ansageaktion.
 - Verbindungsparameter und Klangprofile per Konfigurationsdialog statt Quellcode-Platzhaltern; optionale Assist-/Bluetooth-Karten enthalten.
