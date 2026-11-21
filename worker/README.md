@@ -1,3 +1,5 @@
+**Deutsch** | [English](README.en.md) · [Installation](../docs/worker.md)
+
 # Jarvis GPU Worker v1.5.0 – Stimmenwahl / Voice selection
 
 DE: Vorhandene `.env` unverändert behalten, besonders `STREAM_VOICE_STYLE` und `STREAM_VOICE_VARIANT=1`. Update in den vorhandenen Ordner kopieren.

@@ -1,3 +1,5 @@
+**English** | [Deutsch](CHANGELOG.de.md)
+
 # 1.5.0
 
 - Optional authenticated request field `voice_variant`: choose an existing synthetic reference 1–9 for the current voice description without restarting. Missing variants use the configured reference; response headers report the effective variant and status. No voice uploads or remote model reloads.

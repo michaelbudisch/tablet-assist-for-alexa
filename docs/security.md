@@ -1,3 +1,5 @@
+**Deutsch** | [English](en/security.md) · [Projektübersicht](../README.de.md)
+
 # Datenschutz und Sicherheit
 
 - Lokale Sprachverarbeitung: keine zusätzliche dauerhafte Mikrofonaufnahme im Browser. Native Assist und seine eigenen Debug-/Cache-Einstellungen können dennoch Anfragen speichern. Aufbewahrung in HA prüfen.

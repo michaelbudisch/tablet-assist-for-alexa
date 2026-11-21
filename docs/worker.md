@@ -1,3 +1,5 @@
+**Deutsch** | [English](en/worker.md) · [Projektübersicht](../README.de.md)
+
 # Optionaler KI-Zusatzrechner – Original-Worker v1.5.0
 
 Enthalten ist der bereitgestellte Jarvis GPU Worker 1.5.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
@@ -41,7 +43,7 @@ Ollama verwendet dieselbe GPU. Bei knappem VRAM die Dienste einzeln testen. Die 
 
 ## 3. Home Assistant und CPU-Sprachserver verbinden
 
-GPU-Wyoming in HA über die Host-IP und Port 10300 hinzufügen; Entity-ID in der HA-Konfigurationsvorlage als `gpu_stt` eintragen. GPU-Host und API-Token in HA ergänzen. Für MP3-Durchsagen in `/etc/jarvis-local.env` die eigenen Werte einstellen:
+GPU-Wyoming in HA über die Host-IP und Port 10300 hinzufügen; Entity-ID in der HA-Konfigurationsvorlage als `gpu_stt` eintragen. GPU-Host und API-Token im Integrationsdialog ergänzen; bei Altinstallation die Vorlagen verwenden. Für MP3-Durchsagen in `/etc/jarvis-local.env` die eigenen Werte einstellen:
 
 ```ini
 JARVIS_GPU_BASE=http://gpu.example.invalid:10502

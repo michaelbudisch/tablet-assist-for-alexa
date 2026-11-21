@@ -22,3 +22,4 @@ jobs:
       - run: python tests/test_marketplace.py
       - run: python tests/test_proxy.py
       - run: python tests/test_proxy_host.py
+      - run: python tests/test_standalone.py

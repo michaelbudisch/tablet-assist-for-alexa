@@ -10,6 +10,7 @@ announce:
       selector:
         select:
           multiple: true
+          translation_key: rooms
           options:
             - Büro
             - Wohnzimmer

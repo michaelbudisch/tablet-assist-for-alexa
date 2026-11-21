@@ -37,6 +37,11 @@ def room_map(raw):
                 raise ValueError("Invalid entity")
     return obj
 
+def translated_select(key, options):
+    # Preserve existing stored values and the speech-server API.
+    return selector.SelectSelector(selector.SelectSelectorConfig(
+        options=options, translation_key=key, mode=selector.SelectSelectorMode.DROPDOWN))
+
 def schema():
     password = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD))
     return vol.Schema({
@@ -47,15 +52,15 @@ def schema():
         vol.Optional("gpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
         vol.Optional("gpu_stt_host", default=""): str,
         vol.Optional("llm_agent"): selector.EntitySelector(selector.EntitySelectorConfig(domain="conversation")),
-        vol.Required("hardware_profile", default="Automatisch"): vol.In(["Automatisch", "Homeserver"]),
-        vol.Required("live_profile", default="Natürlich"): vol.In(list(PROFILES)),
-        vol.Required("voice_variant", default="default"): vol.In(["default", *map(str, range(1, 10))]),
-        vol.Required("conversation_mode", default="Intelligent"): vol.In(["Manuell", "Intelligent", "Automatisch"]),
+        vol.Required("hardware_profile", default="Automatisch"): translated_select("hardware_profile", ["Automatisch", "Homeserver"]),
+        vol.Required("live_profile", default="Natürlich"): translated_select("live_profile", list(PROFILES)),
+        vol.Required("voice_variant", default="default"): translated_select("voice_variant", ["default", *map(str, range(1, 10))]),
+        vol.Required("conversation_mode", default="Intelligent"): translated_select("conversation_mode", ["Manuell", "Intelligent", "Automatisch"]),
         vol.Optional("mp3_base", default=""): str,
         vol.Optional("mp3_token", default=""): password,
         vol.Optional("public_audio_base", default=""): str,
         vol.Optional("rooms_json", default="{}"): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
-        vol.Required("mp3_profile", default="Natürlich"): vol.In(["Natürlich", "Studio", "Durchsage"]),
+        vol.Required("mp3_profile", default="Natürlich"): translated_select("mp3_profile", ["Natürlich", "Studio", "Durchsage"]),
         vol.Required("chime", default=False): bool,
     })
 

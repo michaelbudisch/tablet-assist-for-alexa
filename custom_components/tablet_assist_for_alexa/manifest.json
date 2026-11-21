@@ -15,7 +15,9 @@
     "conversation",
     "tts",
     "stt",
-    "http"
+    "http",
+    "frontend",
+    "panel_custom"
   ],
   "documentation": "https://github.com/michaelbudisch/tablet-assist-for-alexa/blob/main/docs/marketplace.md",
   "integration_type": "service",
@@ -23,5 +25,5 @@
   "issue_tracker": "https://github.com/michaelbudisch/tablet-assist-for-alexa/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.2.1"
+  "version": "0.2.2"
 }

@@ -22,6 +22,10 @@
           "rooms_json": "Raumzuordnung (JSON, optional)",
           "mp3_profile": "Klangprofil Durchsagen",
           "chime": "Durchsage-Signalton"
+        },
+        "data_description": {
+          "rooms_json": "Raumschlüssel Büro, Wohnzimmer, Badezimmer, Schlafzimmer und Kinderzimmer beibehalten.",
+          "cpu_stt": "Die mitgelieferte Pipeline unterstützt deutsche Sprache."
         }
       },
       "reconfigure": {
@@ -45,6 +49,10 @@
           "rooms_json": "Raumzuordnung (JSON, optional)",
           "mp3_profile": "Klangprofil Durchsagen",
           "chime": "Durchsage-Signalton"
+        },
+        "data_description": {
+          "rooms_json": "Raumschlüssel Büro, Wohnzimmer, Badezimmer, Schlafzimmer und Kinderzimmer beibehalten.",
+          "cpu_stt": "Die mitgelieferte Pipeline unterstützt deutsche Sprache."
         }
       }
     },
@@ -70,6 +78,58 @@
           "name": "Räume",
           "description": "Konfigurierte Räume wählen."
         }
+      }
+    }
+  },
+  "selector": {
+    "hardware_profile": {
+      "options": {
+        "Automatisch": "Automatisch",
+        "Homeserver": "Homeserver"
+      }
+    },
+    "live_profile": {
+      "options": {
+        "Natürlich": "Natürlich",
+        "Studio": "Studio",
+        "Klar": "Klar"
+      }
+    },
+    "voice_variant": {
+      "options": {
+        "1": "Variante 1",
+        "2": "Variante 2",
+        "3": "Variante 3",
+        "4": "Variante 4",
+        "5": "Variante 5",
+        "6": "Variante 6",
+        "7": "Variante 7",
+        "8": "Variante 8",
+        "9": "Variante 9",
+        "default": "Standard"
+      }
+    },
+    "conversation_mode": {
+      "options": {
+        "Manuell": "Manuell",
+        "Intelligent": "Intelligent",
+        "Automatisch": "Automatisch"
+      }
+    },
+    "mp3_profile": {
+      "options": {
+        "Natürlich": "Natürlich",
+        "Studio": "Studio",
+        "Durchsage": "Durchsage"
+      }
+    },
+    "rooms": {
+      "options": {
+        "Büro": "Büro",
+        "Wohnzimmer": "Wohnzimmer",
+        "Badezimmer": "Badezimmer",
+        "Schlafzimmer": "Schlafzimmer",
+        "Kinderzimmer": "Kinderzimmer"
       }
     }
   }

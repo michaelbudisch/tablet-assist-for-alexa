@@ -1,48 +1,56 @@
-# Marketplace — Tablet Assist for Alexa
+**Deutsch** | [English](en/marketplace.md) · [Projektübersicht](../README.de.md)
 
-Home Assistant Core 2026.11 or newer. Developer preview 0.2.1. First install on a test instance; do not overwrite a working legacy installation.
+# Marketplace – Tablet Assist for Alexa
 
-## 1. Prepare the speech server
+Home Assistant Core ab 2026.11; Entwicklungsvorschau 0.2.2. Auf einer Testinstanz beginnen und die funktionierende Altinstallation nicht überschreiben.
 
-Follow [CPU / Proxmox](proxmox.md) first. The optional [GPU worker](worker.md) is independent. Add the CPU Wyoming integration in Home Assistant (speech server, TCP 10300). If you use the GPU worker for STT, add its Wyoming integration as well and note the separate STT entity.
+## 1. Sprachserver vorbereiten
 
-## 2. Install from the Marketplace
+[CPU / Proxmox](proxmox.md) einrichten. Der [GPU-Worker](worker.md) ist optional. Die Wyoming-Integration für den CPU-Sprachserver hinzufügen (Host, TCP 10300). Bei GPU-STT eine zweite Wyoming-Integration hinzufügen und deren Entität notieren.
 
-1. In Home Assistant, open **Settings → Marketplace → Add from link** (Einstellungen → Marketplace → Über Link hinzufügen).
-2. Enter `https://github.com/michaelbudisch/tablet-assist-for-alexa` and choose **Integration** if a category is requested. Connect GitHub if prompted.
-3. Install the available version. The repository has one installable integration at `custom_components/tablet_assist_for_alexa/` and a root-level `hacs.json`. No HACS installer or manual copy into custom_components is needed.
-4. Add **Tablet Assist for Alexa** under **Settings → Devices & services → Add integration**. Restart if Home Assistant requests it.
+## 2. Über Marketplace installieren
 
-[Open repository in Marketplace](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Start integration setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
+1. Einstellungen → Marketplace → Über Link hinzufügen.
+2. `https://github.com/michaelbudisch/tablet-assist-for-alexa` eingeben, ggf. Kategorie Integration wählen und GitHub verbinden.
+3. Verfügbare Version installieren. Das Repository enthält eine Integration direkt in `custom_components/tablet_assist_for_alexa/` sowie `hacs.json`. Manuelles Kopieren entfällt.
+4. Einstellungen → Geräte & Dienste → Integration hinzufügen → Tablet Assist for Alexa. Bei Aufforderung neu starten.
 
-## 3. Configuration (no YAML for the integration)
+[Im Home Assistant öffnen](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Integration hinzufügen](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
 
-| Field | Example / explanation |
+## 3. Integration ohne YAML einrichten
+
+| Feld | Beispiel / Erklärung |
 |---|---|
-| Piper URL | `http://speechserver.local:5000` (internal host, replace example) |
-| CPU Wyoming STT | Select the CPU STT entity |
-| GPU streaming URL | Optional, e.g. `http://gpu.local:10502` |
-| GPU API key | Optional, from worker configuration; never publish |
-| GPU Wyoming STT | Optional, select the second Wyoming entity |
-| GPU STT host | Optional host without URL, uses port 10300 for a fast reachability check |
-| Conversation agent | Optional existing HA LLM conversation entity, not this router itself |
-| Hardware profile | Automatisch = GPU preferred, Homeserver = CPU |
-| Live sound profile | Natürlich / Studio / Klar |
-| Voice variant | default or 1–9, requires a compatible prepared worker |
-| Conversation mode | Manuell / Intelligent / Automatisch |
+| Piper-Adresse | `http://speechserver.local:5000` (eigenen internen Host verwenden) |
+| CPU-Wyoming-Spracherkennung | CPU-STT-Entität auswählen |
+| GPU-Streaming-Adresse | Optional, z. B. `http://gpu.local:10502` |
+| GPU-API-Schlüssel | Optional, aus lokaler Worker-Konfiguration |
+| GPU-Wyoming-Spracherkennung | Optionale zweite STT-Entität |
+| GPU-STT-Host | Optionaler Hostname für Schnelltest auf Port 10300 |
+| KI-Konversationsagent | Optionaler vorhandener HA-KI-Agent, nicht dieser Router selbst |
+| Hardwareprofil | Automatisch = GPU bevorzugt, Homeserver = CPU |
+| Live-Klangprofil | Natürlich / Studio / Klar |
+| Stimmvariante | Standard oder 1–9, entsprechend vorbereiteter Worker nötig |
+| Gesprächsmodus | Manuell / Intelligent / Automatisch |
 
-All addresses and credentials live in the local config entry; reconfigure from the integration menu. CPU Piper must be reachable during setup. GPU and LLM are optional. Settings are global to the integration, not per tablet. Native Home Assistant local intents work when the pipeline prefers local handling; general questions require a configured conversation agent.
+Adressen und Schlüssel werden lokal im Konfigurationseintrag gespeichert. Über das Integrationsmenü neu konfigurieren. Piper muss bei der Einrichtung erreichbar sein; GPU und KI sind optional. Einstellungen gelten für die Integration, nicht pro Tablet.
 
-Create an Assist pipeline: German language, **Tablet Assist Gesprächsrouter**, **Tablet Assist Sprachrouter**, **Tablet Assist Stream** (or Tablet Assist Piper). Prefer local intents. Select this pipeline in the Android Companion App. See [Bluetooth and Wakeword](home-assistant.md#native-ausgabe-über-amazon-echo-bluetooth). Echo is only the output device, not the microphone. Use Bluetooth for native replies.
+**Sprache:** Bedienoberfläche und Dokumentation sind deutsch und englisch. Die mitgelieferte Sprachpipeline, Sprachbefehle und Standardmodelle sind weiterhin deutsch. Englische Sprachverarbeitung ist nicht Bestandteil dieser Version.
 
-## 4. Optional Alexa MP3 announcements
+Assist-Pipeline mit deutscher Sprache auswählen/anlegen: Tablet Assist Gesprächsrouter, Tablet Assist Sprachrouter, Tablet Assist Stream (oder Piper). Lokale Intents bevorzugen; allgemeine Wissensfragen benötigen einen konfigurierten KI-Agenten. In der Android-App diese Pipeline auswählen. Siehe [Tablet und Bluetooth](home-assistant.md#native-ausgabe-über-amazon-echo-bluetooth). Echo ist nur der Ausgabelautsprecher, nicht das Mikrofon.
 
-Not needed for Bluetooth. Follow [Nginx proxy, DuckDNS and existing proxy setup](nginx-proxy.md) and configure a compatible notify integration that accepts SSML audio. Configure in the integration:
+## 4. Eigene Sprachzentrale (automatisch)
 
-- MP3 API URL: `http://speechserver.local:5001` (internal only).
-- MP3 API key: generated in the speech server's root-only local configuration.
-- Public HTTPS audio origin: `https://audio.example.org` (your own certificate-backed domain).
-- Room mapping (JSON). Use actual notify entities, and optionally DND and schedule helpers:
+Nach erfolgreicher Integrationseinrichtung erscheint **Tablet Assist** in der Home-Assistant-Seitenleiste (Pfad `/tablet_assist_for_alexa`). Dies ist eine integrierte eigene Seite, kein zu bearbeitendes Lovelace-Dashboard. Sie benötigt weder die private Hauszentrale noch deren Helfer und JS-Ressourcen. Sie bietet Assist-Start, Status der Sprachdienste, Links zur Konfiguration (Administratoren), Bluetooth-Keepalive und Durchsagen an konfigurierte Räume. In der Companion-App wird der native Assist geöffnet; im Browser ist der Standard-Dashboard-Assist der Ausweichweg. Wähle die richtige Pipeline. Die Seite verwendet die HA-Oberflächensprache. Beim Entladen der Integration wird der Sidebar-Eintrag entfernt. Die tatsächliche Darstellung und native App-Auslösung müssen auf Zielgeräten geprüft werden.
+
+## 5. Optionale Alexa-MP3-Durchsagen
+
+Für Bluetooth nicht erforderlich. [Nginx, DuckDNS und Certbot](nginx-proxy.md) einrichten sowie eine kompatible Notify-Integration, die SSML-Audio unterstützt.
+
+- MP3-API-Adresse: intern `http://speechserver.local:5001`.
+- MP3-API-Schlüssel: aus der geschützten lokalen Sprachserver-Konfiguration.
+- Öffentliche HTTPS-Audioadresse: eigener zertifikatsgesicherter Host, z. B. `https://audio.example.org`.
+- Raumzuordnung (JSON): eigene Notify-Entitäten und optional DND-Schalter und Ruhezeitpläne eintragen.
 
 ```json
 {
@@ -54,9 +62,9 @@ Not needed for Bluetooth. Follow [Nginx proxy, DuckDNS and existing proxy setup]
 }
 ```
 
-Supported room names: Büro, Wohnzimmer, Badezimmer, Schlafzimmer, Kinderzimmer. For another room, don't map to a misleading name: custom room names are a future feature. Configured DND / schedule must both be off; unknown/unavailable blocks delivery. Omit a field only if you deliberately do not want that restriction. Unconfigured rooms never receive a message. Only non-confidential messages; HTTPS capability links expire after 15 minutes.
+Gültige Raumschlüssel: Büro, Wohnzimmer, Badezimmer, Schlafzimmer, Kinderzimmer (auch bei englischer Oberfläche). Weitere Räume sind noch nicht unterstützt. Konfigurierte DND- und Ruhezeit-Entitäten müssen aus sein; fehlende oder nicht verfügbare konfigurierte Entitäten blockieren die Durchsage. Ein optionales Feld nur weglassen, wenn diese Einschränkung bewusst nicht gewünscht ist. Nicht konfigurierte Räume erhalten keine Ausgabe. Keine vertraulichen Nachrichten; die HTTPS-Links sind 15 Minuten abrufbar.
 
-Use the native HA action in automations or developer tools:
+Die Aktion kann aus der Sprachzentrale, Automationen und Entwicklerwerkzeugen genutzt werden:
 
 ```yaml
 action: tablet_assist_for_alexa.announce
@@ -66,33 +74,28 @@ data:
     - Büro
 ```
 
-The existing German multi-turn announcement dialogue calls this service. The service verifies the MP3 URL, rechecks quiet flags and passes the request to notify. Successful service execution does not prove audible playback on Echo.
+Auch der deutsche Durchsagedialog nutzt diese Aktion. Sie prüft die Audio-URL und erneut die Ruhezeiten und übergibt die Nachricht an Notify. Erfolgreiche Übergabe garantiert noch keine hörbare Wiedergabe am Echo.
 
-## 5. Optional dashboard cards
+## 6. Optionale Karten für andere Dashboards
 
-Register these local resource URLs as JavaScript modules (Settings → Dashboards → Resources, advanced mode):
+Nur falls zusätzlich gewünscht, als JS-Module unter Einstellungen → Dashboards → Ressourcen registrieren:
 
 - `/tablet_assist_for_alexa/assist.js`
 - `/tablet_assist_for_alexa/keepalive.js`
 
-Then use a dashboard card with:
-
 ```yaml
 type: custom:tablet-assist-conversation-card
 ```
-
-Optional separate card:
-
 ```yaml
 type: custom:tablet-assist-bt-keepalive
 ```
 
-The Assist card uses the default pipeline unless you specify an explicit pipeline ID with `pipeline:`. Keepalive is a manually started silent audio loop on that device, not a second microphone. Device compatibility varies; stop if it interferes with Alexa or media.
+Assist-Karte nutzt die zuletzt genutzte Pipeline, optional eine explizite Pipeline-ID mit `pipeline:`. Beide Karten folgen der HA-Oberflächensprache. Keepalive spielt nach manuellem Start eine lautlose Audioschleife auf diesem Gerät ab und greift nicht auf das Mikrofon zu. Geräteabhängige Wirkung; bei Störungen stoppen.
 
-## Legacy installation / migration
+## Altinstallation / Migration
 
-The pre-0.2 manual installer and its dashboard, timer and notification templates remain under `homeassistant/`. They are **not** automatically installed by the Marketplace; create HA automations with the new announce service instead. No automatic import of an existing Jarvis configuration, assistant pipeline, reminders or room rules. Do not mix two active TTS/STT providers with indistinguishable names or remove legacy providers before reconfiguring consumers. Back up and test first. The Marketplace integration uses a new, unique domain and does not replace the old components.
+Der frühere manuelle Installer mit Control Center, Timer- und Benachrichtigungsvorlagen bleibt in `homeassistant/` verfügbar. Diese Vorlagen installiert der Marketplace nicht automatisch. Neue Automationen können die Durchsageaktion verwenden. Keine automatische Migration alter Jarvis-Konfigurationen, Pipelines, Erinnerungen oder Raumregeln. Bestehende Sprachdienste erst nach Umstellung ihrer Verbraucher entfernen. Die neue Integration besitzt eine eigene Domain und überschreibt die alten Komponenten nicht.
 
 ## Status
 
-The installation layout follows the Home Assistant Marketplace custom-repository format. A real setup from Marketplace, live HA API compatibility, GPU inference, Bluetooth audio, and public Alexa HTTPS playback need end-to-end tests. This release is a developer preview, not a claim of official certification or listing in the public catalog.
+Marketplace-Struktur vorbereitet; vollständige Neuinstallation, HA-Laufzeit, GPU-Inferenz, Bluetooth und öffentliche HTTPS-Wiedergabe müssen praktisch geprüft werden. Entwicklungsvorschau, keine offizielle Zertifizierung oder bestätigte Aufnahme in den öffentlichen Katalog.

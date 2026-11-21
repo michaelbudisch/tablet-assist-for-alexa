@@ -22,6 +22,10 @@
           "rooms_json": "Room mapping (JSON, optional)",
           "mp3_profile": "Announcement sound profile",
           "chime": "Announcement chime"
+        },
+        "data_description": {
+          "rooms_json": "Use the stored room keys Büro, Wohnzimmer, Badezimmer, Schlafzimmer and Kinderzimmer.",
+          "cpu_stt": "The supplied speech pipeline supports German."
         }
       },
       "reconfigure": {
@@ -45,6 +49,10 @@
           "rooms_json": "Room mapping (JSON, optional)",
           "mp3_profile": "Announcement sound profile",
           "chime": "Announcement chime"
+        },
+        "data_description": {
+          "rooms_json": "Use the stored room keys Büro, Wohnzimmer, Badezimmer, Schlafzimmer and Kinderzimmer.",
+          "cpu_stt": "The supplied speech pipeline supports German."
         }
       }
     },
@@ -70,6 +78,58 @@
           "name": "Rooms",
           "description": "Select configured rooms."
         }
+      }
+    }
+  },
+  "selector": {
+    "hardware_profile": {
+      "options": {
+        "Automatisch": "Automatic",
+        "Homeserver": "CPU server"
+      }
+    },
+    "live_profile": {
+      "options": {
+        "Natürlich": "Natural",
+        "Studio": "Studio",
+        "Klar": "Clear"
+      }
+    },
+    "voice_variant": {
+      "options": {
+        "1": "Variant 1",
+        "2": "Variant 2",
+        "3": "Variant 3",
+        "4": "Variant 4",
+        "5": "Variant 5",
+        "6": "Variant 6",
+        "7": "Variant 7",
+        "8": "Variant 8",
+        "9": "Variant 9",
+        "default": "Default"
+      }
+    },
+    "conversation_mode": {
+      "options": {
+        "Manuell": "Manual",
+        "Intelligent": "Intelligent",
+        "Automatisch": "Automatic"
+      }
+    },
+    "mp3_profile": {
+      "options": {
+        "Natürlich": "Natural",
+        "Studio": "Studio",
+        "Durchsage": "Announcement"
+      }
+    },
+    "rooms": {
+      "options": {
+        "Büro": "Office",
+        "Wohnzimmer": "Living room",
+        "Badezimmer": "Bathroom",
+        "Schlafzimmer": "Bedroom",
+        "Kinderzimmer": "Children's room"
       }
     }
   }

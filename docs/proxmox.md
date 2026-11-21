@@ -1,3 +1,5 @@
+**Deutsch** | [English](en/proxmox.md) · [Projektübersicht](../README.de.md)
+
 # CPU-Sprachserver
 
 Voraussetzungen: aktuelles Proxmox VE oder Debian 12/13 mit systemd; für die CPU-Basis zunächst 4 vCPU, 4 GiB RAM und 20 GiB Speicher als Startgröße (abhängig vom Modell). Unterstützte Architektur und Python-Version der Abhängigkeiten prüfen. Eine NVIDIA-GPU ist nicht notwendig. Download der Modelle benötigt Internet; Laufzeit kann anschließend lokal bleiben.
@@ -26,7 +28,7 @@ curl -fsS http://127.0.0.1:5001/health
 journalctl -u jarvis-whisper -n 50 --no-pager
 ```
 
-Die lokale Konfiguration liegt unter `/etc/jarvis-local.env` (nur root). Den darin generierten `PIPER_API_TOKEN` lokal in Home Assistant als `piper_api_token` in `secrets.yaml` hinterlegen. Nicht in Git oder Chat posten. CPU-Host-Adresse und Port 10300 beim Wyoming-Setup angeben.
+Die lokale Konfiguration liegt unter `/etc/jarvis-local.env` (nur root). Den darin generierten `PIPER_API_TOKEN` im Marketplace-Integrationsdialog als MP3-API-Schlüssel eintragen (bei manueller Altinstallation stattdessen als `piper_api_token` in `secrets.yaml`). Nicht in Git oder Chat posten. CPU-Host-Adresse und Port 10300 beim Wyoming-Setup angeben.
 
 | Port | Dienst | Zugriff |
 |---|---|---|
