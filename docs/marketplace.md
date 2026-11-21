@@ -2,7 +2,9 @@
 
 # Marketplace – Tablet Assist for Alexa
 
-Home Assistant Core ab 2026.11; Entwicklungsvorschau 0.2.2. Auf einer Testinstanz beginnen und die funktionierende Altinstallation nicht überschreiben.
+Home Assistant Core ab 2026.11; Entwicklungsvorschau 0.3.0. Auf einer Testinstanz beginnen und die funktionierende Altinstallation nicht überschreiben.
+
+**Neu in 0.3.0:** Lokale Absichtserkennung, frei konfigurierbare Wetter-, Bring!-, Abfall-, Heizungs- und Energiedaten sowie ein persistenter Erinnerungsdialog. [Datenquellen und Sprachbefehle](data-sources.md).
 
 ## 1. Sprachserver vorbereiten
 

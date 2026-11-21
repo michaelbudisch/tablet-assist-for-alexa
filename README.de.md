@@ -1,12 +1,14 @@
-# Tablet Assist for Alexa — 0.2.2 (Entwicklungsvorschau)
+# Tablet Assist for Alexa — 0.3.0 (Entwicklungsvorschau)
 
 [English](README.md) | **Deutsch**
 
 Ein Android-Tablet übernimmt Mikrofon, Wakeword und native Home-Assistant-Assist-Pipeline. Die Antwort wird über den Bluetooth-Lautsprecher (z. B. Amazon Echo) ausgegeben. Separat können Echo-Geräte über eine kompatible Alexa-Integration MP3-Durchsagen empfangen. Lokale Sprachverarbeitung mit Whisper, Piper und optional Qwen-TTS/LLM; eine GPU ist nicht zwingend notwendig.
 
-**Status:** v0.2.2, öffentliche Entwicklungsvorschau. Native Tablet-Ausgabe, Live-Klangprofile, Gesprächsrouter, Timer/Erinnerung, automatische Hinweise und Original-GPU-Worker 1.5.0. Keine vollständig auf einer frischen Installation verifizierte Version. Die native Android-/Echo-Kompatibilität ist geräteabhängig. Start mit einer Testinstanz empfohlen.
+**Status:** v0.3.0, öffentliche Entwicklungsvorschau. Native Tablet-Ausgabe, Live-Klangprofile, Gesprächsrouter, Timer/Erinnerung, automatische Hinweise und Original-GPU-Worker 1.5.0. Keine vollständig auf einer frischen Installation verifizierte Version. Die native Android-/Echo-Kompatibilität ist geräteabhängig. Start mit einer Testinstanz empfohlen.
 
 Nach erfolgreicher Einrichtung erscheint eine eigene **Tablet Assist**-Sprachzentrale in der Sidebar. Keine private Hauszentrale oder zusätzliche Lovelace-Konfiguration nötig. Die mitgelieferte Sprachpipeline ist weiterhin deutsch.
+
+**Neu in 0.3.0:** Lokale Absichtserkennung, frei konfigurierbare Wetter-, Bring!-, Abfall-, Heizungs- und Energiedaten sowie ein persistenter Erinnerungsdialog. [Datenquellen und Sprachbefehle](docs/data-sources.md).
 
 ## Architektur
 

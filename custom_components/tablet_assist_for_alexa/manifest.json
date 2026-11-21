@@ -2,7 +2,9 @@
   "domain": "tablet_assist_for_alexa",
   "name": "Tablet Assist for Alexa",
   "after_dependencies": [
-    "wyoming"
+    "wyoming",
+    "todo",
+    "weather"
   ],
   "categories": [
     "ai_voice.voice_assistants"
@@ -25,5 +27,5 @@
   "issue_tracker": "https://github.com/michaelbudisch/tablet-assist-for-alexa/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.2.2"
+  "version": "0.3.0"
 }

@@ -2,6 +2,13 @@
 
 # Changelog
 
+## 0.3.0 — Developer Preview
+- Flexible local German intent recognition with normalization, synonyms and time-scope checks.
+- Selectable source entities in integration Options and a standalone data-source status page: weather, Bring!/to-do, collection dates, heating, appliances and energy.
+- Single-item shopping-list add/remove/check/read, exact names and post-operation verification.
+- Waste collection queries offer confirmed reminders; one persistent item, HA notification and optional Echo playback.
+- No household-specific entity mappings or automatic migration. Synthetic tests and DE/EN documentation; fresh HA installation pending.
+
 ## 0.2.2 — Developer Preview
 - German and English project and installation documentation; translated Marketplace selectors and dashboard cards.
 - Standalone sidebar voice center with native Assist launch, speech-service status, Bluetooth keepalive and announcements. No private dashboard or legacy helpers required.

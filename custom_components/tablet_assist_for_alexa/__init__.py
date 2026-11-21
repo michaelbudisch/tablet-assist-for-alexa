@@ -14,6 +14,8 @@ from homeassistant.components import frontend, panel_custom
 
 from .const import DOMAIN, ROOMS, settings
 from .announcement import audio_url, allowed_targets
+from .reminders import Reminders
+from .local_data import LocalData
 
 PLATFORMS = [Platform.STT, Platform.TTS, Platform.CONVERSATION]
 ANNOUNCE_SCHEMA = vol.Schema({
@@ -62,19 +64,29 @@ async def async_setup_entry(hass, entry):
             await hass.services.async_call("notify", "send_message",
                 {"entity_id":targets, "message":f'<audio src="{url}"/>'}, blocking=True, context=call.context)
 
+    reminders = Reminders(hass, entry, cfg)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LocalData(hass, cfg, reminders)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
         sidebar_title="Tablet Assist", sidebar_icon="mdi:microphone-message",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.2.2",
-        config={"rooms": list(cfg.get("rooms", {}))}, require_admin=False,
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.3.0",
+        config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
+    await reminders.load()
+    entry.async_on_unload(entry.add_update_listener(_reload))
     return True
+
+async def _reload(hass, entry):
+    await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass, entry):
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
+        data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+        if data:
+            data.reminders.close()
         hass.services.async_remove(DOMAIN, "announce")
         frontend.async_remove_panel(hass, DOMAIN)
     return ok

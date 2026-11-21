@@ -2,6 +2,13 @@
 
 # Changelog
 
+## 0.3.0 — Entwicklungsvorschau
+- Flexible deutsche, lokale Absichtserkennung mit Wortnormalisierung, Synonymen und Zeitraumprüfung.
+- Frei auswählbare Datenquellen in Integration → Optionen und Übersicht in der eigenen Sprachzentrale: Wetter, Bring!/To-do, Abfalltermine, Heizung, Geräte, Energie.
+- Bring!-Einzelartikel hinzufügen, entfernen, prüfen und vorlesen; exakte Namensvergleiche und Prüfung nach Änderungen.
+- Abfallabfragen bieten bestätigungspflichtige Erinnerungen an; ein persistenter Termin, HA-Benachrichtigung und optional Echo.
+- Keine privaten Entitätszuordnungen, keine automatische Migration. Synthetische Tests und DE/EN-Dokumentation; echte HA-Installation ausstehend.
+
 ## 0.2.2 — Entwicklungsvorschau
 - Vollständige DE/EN-Installations- und Projektdokumentation, lokalisierte Marketplace-Auswahlfelder und Karten.
 - Eigenständige Sidebar-Sprachzentrale mit Assist-Start, Status, Bluetooth-Keepalive und Durchsagen; keine Abhängigkeit von Hauszentrale oder Legacy-Helfern.

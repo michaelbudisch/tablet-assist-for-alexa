@@ -1,4 +1,4 @@
-# Tablet Assist for Alexa — 0.2.2 (Developer Preview)
+# Tablet Assist for Alexa — 0.3.0 (Developer Preview)
 
 **English** | [Deutsch](README.de.md)
 
@@ -7,6 +7,8 @@ Local AI voice assistant for Home Assistant using an Android tablet as a microph
 The tablet runs native Assist, including supported Android wake word functionality. Whisper, Piper and optional Qwen TTS/LLM provide local speech processing. A GPU is not required for the CPU setup. Optional multiroom announcements use a compatible Alexa notify integration and temporary HTTPS MP3 links.
 
 **Status:** Developer preview. The shipped speech pipeline, default models and custom voice-command grammar are German. The Marketplace interface, help and active installation documentation are available in German and English. End-to-end installation and device compatibility require testing. Start with a test instance.
+
+**New in 0.3.0:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](docs/en/data-sources.md).
 
 ## Architecture
 

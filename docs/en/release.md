@@ -2,7 +2,7 @@
 
 # Tests and release checklist
 
-Public developer preview 0.2.2 (not a production-ready stable release).
+Public developer preview 0.3.0 (not a production-ready stable release).
 
 ```bash
 python3 tests/check_sources.py
@@ -18,3 +18,5 @@ Audio tests use synthetic signals and a Flask stub, without loading a TTS model.
 Before a stable release: fresh Debian CT and HA installation, STT and GPU inference, CPU fallback with the worker offline, tablet/Echo Bluetooth pairing, announcements, quiet times, device mapping, restart and security review. Never commit private configuration or models. Update VERSION and both changelogs together. The separately versioned original GPU worker remains at 1.5.0.
 
 Public catalog inclusion requires additional validation, a release tag and successful CI. Test Add from link on HA 2026.11. Installers, GPU and HTTPS playback must be checked on real equipment.
+
+Additional tests: `python3 tests/test_local_intents.py` (synthetic states, no live HA install).

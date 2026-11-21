@@ -92,14 +92,15 @@ def ann_label(rooms):
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([JarvisConversation(entry.entry_id, settings(entry))])
+    async_add_entities([JarvisConversation(entry.entry_id, settings(entry), hass.data[DOMAIN][entry.entry_id])])
 
 
 class JarvisConversation(conversation.ConversationEntity):
     _attr_name = "Tablet Assist Gesprächsrouter"
     _attr_should_poll = False
 
-    def __init__(self, entry_id, cfg):
+    def __init__(self, entry_id, cfg, data):
+        self._local_data = data
         self._cfg = cfg
         self._attr_unique_id = entry_id + "_conversation_router"
         self._sessions = {}
@@ -248,7 +249,16 @@ class JarvisConversation(conversation.ConversationEntity):
         phrase = ann_normal(user_input.text)
         announcement = await self._ann_dialog(key, now, phrase, user_input, chat_log)
         if announcement is not None:
+            self._local_data.reminders.pending.pop(key, None)
             return announcement
+        try:
+            reminder = await self._local_data.reminders.handle(key, user_input.text, phrase)
+            if reminder is not None:
+                self._sessions.pop(key, None)
+                return self._reply(user_input, chat_log, *reminder)
+        except Exception:
+            _LOGGER.debug("Tablet Assist reminder operation failed")
+            return self._reply(user_input, chat_log, "Die Erinnerung konnte nicht bestätigt werden.")
         if phrase in STOP:
             self._sessions.pop(key, None)
             self._remember_closed(key, now)
@@ -275,6 +285,16 @@ class JarvisConversation(conversation.ConversationEntity):
             self._remember_closed(key, monotonic())
             _LOGGER.debug("Jarvis local sentence failed")
             return self._reply(user_input, chat_log, "Die lokale Abfrage konnte nicht abgeschlossen werden. Bitte versuche es erneut.")
+
+        try:
+            async with asyncio.timeout(15):
+                result = await self._local_data.handle(key, user_input.text, user_input.context)
+            if result is not None:
+                message, keep = result
+                return self._reply(user_input, chat_log, message, keep)
+        except Exception:
+            _LOGGER.debug("Tablet Assist local data operation failed")
+            return self._reply(user_input, chat_log, "Die lokale Abfrage konnte nicht bestätigt werden. Bitte überprüfe die Datenquelle.")
 
         agent = self._cfg.get("llm_agent")
         state = self.hass.states.get(agent) if agent else None

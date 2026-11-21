@@ -11,6 +11,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PROFILES, ROOMS
+from .sources import SOURCES
 
 def origin(value, https_only=False):
     value = value.strip().rstrip("/")
@@ -66,6 +67,10 @@ def schema():
 
 class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        return TabletAssistSourcesFlow()
 
     async def _form(self, step, user_input, existing=None):
         errors = {}
@@ -125,3 +130,26 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reconfigure(self, user_input=None):
         return await self._form("reconfigure", user_input, self._get_reconfigure_entry())
+
+class TabletAssistSourcesFlow(config_entries.OptionsFlow):
+    """Independent data-source configuration, editable without server credentials."""
+    async def async_step_init(self,user_input=None):
+        errors={}
+        if user_input is not None:
+            sources={k:user_input[k] for k in SOURCES if user_input.get(k)}
+            if any(not isinstance(v,str) or not v.startswith(SOURCES[k]+".") for k,v in sources.items()):
+                errors["base"]="invalid_configuration"
+            else:
+                room=user_input.get("reminder_room","")
+                allowed=self.config_entry.data.get("rooms",{})
+                if room and room not in allowed:
+                    errors["base"]="invalid_configuration"
+                else:
+                    return self.async_create_entry(title="",data={**self.config_entry.options,"sources":sources,"reminders_enabled":bool(user_input.get("reminders_enabled")),"reminder_room":room})
+        old=self.config_entry.options
+        values={**old.get("sources",{}),"reminders_enabled":old.get("reminders_enabled",False),"reminder_room":old.get("reminder_room","")}
+        fields={vol.Optional(k):selector.EntitySelector(selector.EntitySelectorConfig(domain=domain)) for k,domain in SOURCES.items()}
+        fields[vol.Required("reminders_enabled",default=False)]=bool
+        rooms=self.config_entry.data.get("rooms",{})
+        fields[vol.Optional("reminder_room")]=selector.SelectSelector(selector.SelectSelectorConfig(options=list(rooms),mode=selector.SelectSelectorMode.DROPDOWN)) if rooms else str
+        return self.async_show_form(step_id="init",data_schema=self.add_suggested_values_to_schema(vol.Schema(fields),{k:v for k,v in values.items() if v!=""}),errors=errors)
