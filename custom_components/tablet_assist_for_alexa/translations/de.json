@@ -84,15 +84,15 @@
   "selector": {
     "hardware_profile": {
       "options": {
-        "Automatisch": "Automatisch",
-        "Homeserver": "Homeserver"
+        "automatic": "Automatisch",
+        "cpu": "Homeserver"
       }
     },
     "live_profile": {
       "options": {
-        "Natürlich": "Natürlich",
-        "Studio": "Studio",
-        "Klar": "Klar"
+        "natural": "Natürlich",
+        "studio": "Studio",
+        "clear": "Klar"
       }
     },
     "voice_variant": {
@@ -111,25 +111,25 @@
     },
     "conversation_mode": {
       "options": {
-        "Manuell": "Manuell",
-        "Intelligent": "Intelligent",
-        "Automatisch": "Automatisch"
+        "manual": "Manuell",
+        "intelligent": "Intelligent",
+        "automatic": "Automatisch"
       }
     },
     "mp3_profile": {
       "options": {
-        "Natürlich": "Natürlich",
-        "Studio": "Studio",
-        "Durchsage": "Durchsage"
+        "natural": "Natürlich",
+        "studio": "Studio",
+        "announcement": "Durchsage"
       }
     },
     "rooms": {
       "options": {
-        "Büro": "Büro",
-        "Wohnzimmer": "Wohnzimmer",
-        "Badezimmer": "Badezimmer",
-        "Schlafzimmer": "Schlafzimmer",
-        "Kinderzimmer": "Kinderzimmer"
+        "buero": "Büro",
+        "wohnzimmer": "Wohnzimmer",
+        "badezimmer": "Badezimmer",
+        "schlafzimmer": "Schlafzimmer",
+        "kinderzimmer": "Kinderzimmer"
       }
     }
   },
@@ -167,7 +167,8 @@
           "kuehlschrank": "Kühlschrankleistung",
           "kuehlschrankheute": "Kühlschrankverbrauch heute",
           "reminders_enabled": "Gemeinsame Erinnerungen aktivieren",
-          "reminder_room": "Optionaler Echo-Raum für Erinnerungen"
+          "reminder_room": "Optionaler Echo-Raum für Erinnerungen",
+          "learning_enabled": "Optionale Lernfunktion für allgemeine Hausdaten-Abfragen"
         },
         "data_description": {
           "restmuell": "ISO-Datum YYYY-MM-DD als Zustand oder als Datumsschlüssel in den Attributen.",
@@ -176,7 +177,8 @@
           "guenstig": "Preissensor mit timestamp-Attribut für morgen.",
           "solar": "Nutze einen Gesamtsensor bei mehreren Anlagen.",
           "reminders_enabled": "Maximal eine aktive Erinnerung. HA-Benachrichtigung; auch nach Neustart.",
-          "reminder_room": "Nur ein freigegebener Raum. Audio kann über öffentliche temporäre Links laufen; keine vertraulichen Inhalte."
+          "reminder_room": "Nur ein freigegebener Raum. Audio kann über öffentliche temporäre Links laufen; keine vertraulichen Inhalte.",
+          "learning_enabled": "Standardmäßig aus. Nur allgemeine, nicht erkannte Hausdaten-Fragen aus einer begrenzten Wortliste; Vorschläge 24 Stunden im RAM, Freigabe durch Administrator."
         }
       }
     },

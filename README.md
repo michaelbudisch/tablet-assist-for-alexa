@@ -1,4 +1,4 @@
-# Tablet Assist for Alexa — 0.3.0 (Developer Preview)
+# Tablet Assist for Alexa — 0.3.1 (Developer Preview)
 
 **English** | [Deutsch](README.de.md)
 
@@ -8,7 +8,9 @@ The tablet runs native Assist, including supported Android wake word functionali
 
 **Status:** Developer preview. The shipped speech pipeline, default models and custom voice-command grammar are German. The Marketplace interface, help and active installation documentation are available in German and English. End-to-end installation and device compatibility require testing. Start with a test instance.
 
-**New in 0.3.0:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](docs/en/data-sources.md).
+**New in 0.3.1:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](docs/en/data-sources.md).
+
+**New:** Contextual follow-ups and optional administrator-approved aliases. [Guide](docs/en/data-sources.md).
 
 ## Architecture
 

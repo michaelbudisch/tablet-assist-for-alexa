@@ -2,6 +2,13 @@
 
 # Changelog
 
+## 0.3.1 — Developer Preview
+- Contextual follow-ups in the same conversation, bounded time and supported read-only topics.
+- Optional administrator-approved learning for generic unmatched home-data queries; no audio recording or general transcript log, bounded in-memory suggestions and local aliases.
+- Dedicated admin Learning page, authenticated WebSocket API, German/English UI and tests.
+- Valid ASCII selector translation IDs while retaining existing stored values and announcement API compatibility.
+- Declare HA config-entry schema. Repository description/topics still required for HACS.
+
 ## 0.3.0 — Developer Preview
 - Flexible local German intent recognition with normalization, synonyms and time-scope checks.
 - Selectable source entities in integration Options and a standalone data-source status page: weather, Bring!/to-do, collection dates, heating, appliances and energy.

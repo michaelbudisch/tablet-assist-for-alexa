@@ -38,6 +38,28 @@ def room_map(raw):
                 raise ValueError("Invalid entity")
     return obj
 
+CHOICES = {
+    "hardware_profile": {
+        "automatic": "Automatisch",
+        "cpu": "Homeserver"
+    },
+    "live_profile": {
+        "natural": "Natürlich",
+        "studio": "Studio",
+        "clear": "Klar"
+    },
+    "conversation_mode": {
+        "manual": "Manuell",
+        "intelligent": "Intelligent",
+        "automatic": "Automatisch"
+    },
+    "mp3_profile": {
+        "natural": "Natürlich",
+        "studio": "Studio",
+        "announcement": "Durchsage"
+    }
+}
+
 def translated_select(key, options):
     # Preserve existing stored values and the speech-server API.
     return selector.SelectSelector(selector.SelectSelectorConfig(
@@ -53,15 +75,15 @@ def schema():
         vol.Optional("gpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
         vol.Optional("gpu_stt_host", default=""): str,
         vol.Optional("llm_agent"): selector.EntitySelector(selector.EntitySelectorConfig(domain="conversation")),
-        vol.Required("hardware_profile", default="Automatisch"): translated_select("hardware_profile", ["Automatisch", "Homeserver"]),
-        vol.Required("live_profile", default="Natürlich"): translated_select("live_profile", list(PROFILES)),
+        vol.Required("hardware_profile", default="automatic"): translated_select("hardware_profile", list(CHOICES["hardware_profile"])),
+        vol.Required("live_profile", default="natural"): translated_select("live_profile", list(CHOICES["live_profile"])),
         vol.Required("voice_variant", default="default"): translated_select("voice_variant", ["default", *map(str, range(1, 10))]),
-        vol.Required("conversation_mode", default="Intelligent"): translated_select("conversation_mode", ["Manuell", "Intelligent", "Automatisch"]),
+        vol.Required("conversation_mode", default="intelligent"): translated_select("conversation_mode", list(CHOICES["conversation_mode"])),
         vol.Optional("mp3_base", default=""): str,
         vol.Optional("mp3_token", default=""): password,
         vol.Optional("public_audio_base", default=""): str,
         vol.Optional("rooms_json", default="{}"): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
-        vol.Required("mp3_profile", default="Natürlich"): translated_select("mp3_profile", ["Natürlich", "Studio", "Durchsage"]),
+        vol.Required("mp3_profile", default="natural"): translated_select("mp3_profile", list(CHOICES["mp3_profile"])),
         vol.Required("chime", default=False): bool,
     })
 
@@ -76,6 +98,8 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             data = {**user_input}
+            for key, choices in CHOICES.items():
+                data[key] = choices.get(data.get(key), data.get(key))
             for key in ("gpu_base", "qwen_token", "gpu_stt", "gpu_stt_host", "llm_agent",
                         "mp3_base", "mp3_token", "public_audio_base", "rooms_json"):
                 data[key] = (data.get(key) or "").strip()
@@ -121,6 +145,9 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="Tablet Assist for Alexa", data=data)
         suggested = user_input if user_input is not None else (dict(existing.data) if existing else {})
         suggested = {k:v for k,v in suggested.items() if k != "rooms" and v != ""}
+        for key, choices in CHOICES.items():
+            if key in suggested:
+                suggested[key] = next((slug for slug, old in choices.items() if old == suggested[key]), suggested[key])
         return self.async_show_form(step_id=step, data_schema=self.add_suggested_values_to_schema(schema(), suggested), errors=errors)
 
     async def async_step_user(self, user_input=None):
@@ -145,11 +172,12 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                 if room and room not in allowed:
                     errors["base"]="invalid_configuration"
                 else:
-                    return self.async_create_entry(title="",data={**self.config_entry.options,"sources":sources,"reminders_enabled":bool(user_input.get("reminders_enabled")),"reminder_room":room})
+                    return self.async_create_entry(title="",data={**self.config_entry.options,"sources":sources,"learning_enabled":bool(user_input.get("learning_enabled")),"reminders_enabled":bool(user_input.get("reminders_enabled")),"reminder_room":room})
         old=self.config_entry.options
-        values={**old.get("sources",{}),"reminders_enabled":old.get("reminders_enabled",False),"reminder_room":old.get("reminder_room","")}
+        values={**old.get("sources",{}),"learning_enabled":old.get("learning_enabled",False),"reminders_enabled":old.get("reminders_enabled",False),"reminder_room":old.get("reminder_room","")}
         fields={vol.Optional(k):selector.EntitySelector(selector.EntitySelectorConfig(domain=domain)) for k,domain in SOURCES.items()}
         fields[vol.Required("reminders_enabled",default=False)]=bool
+        fields[vol.Required("learning_enabled",default=False)]=bool
         rooms=self.config_entry.data.get("rooms",{})
         fields[vol.Optional("reminder_room")]=selector.SelectSelector(selector.SelectSelectorConfig(options=list(rooms),mode=selector.SelectSelectorMode.DROPDOWN)) if rooms else str
         return self.async_show_form(step_id="init",data_schema=self.add_suggested_values_to_schema(vol.Schema(fields),{k:v for k,v in values.items() if v!=""}),errors=errors)

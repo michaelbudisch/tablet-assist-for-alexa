@@ -2,7 +2,7 @@
 
 # Tests and release checklist
 
-Public developer preview 0.3.0 (not a production-ready stable release).
+Public developer preview 0.3.1 (not a production-ready stable release).
 
 ```bash
 python3 tests/check_sources.py

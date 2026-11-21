@@ -16,6 +16,11 @@ from .const import DOMAIN, ROOMS, settings
 from .announcement import audio_url, allowed_targets
 from .reminders import Reminders
 from .local_data import LocalData
+from .learning import Learning
+from .learning_ws import learning_command
+from homeassistant.components import websocket_api
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.STT, Platform.TTS, Platform.CONVERSATION]
 ANNOUNCE_SCHEMA = vol.Schema({
@@ -24,6 +29,7 @@ ANNOUNCE_SCHEMA = vol.Schema({
 })
 
 async def async_setup(hass: HomeAssistant, config):
+    websocket_api.async_register_command(hass, learning_command)
     # All files required at runtime are part of this integration's directory.
     await hass.http.async_register_static_paths([
         StaticPathConfig("/tablet_assist_for_alexa/keepalive.js", str(Path(__file__).parent / "frontend" / "keepalive.js"), False),
@@ -65,13 +71,15 @@ async def async_setup_entry(hass, entry):
                 {"entity_id":targets, "message":f'<audio src="{url}"/>'}, blocking=True, context=call.context)
 
     reminders = Reminders(hass, entry, cfg)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LocalData(hass, cfg, reminders)
+    learning = Learning(hass, entry, cfg)
+    await learning.load()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LocalData(hass, cfg, reminders, learning)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
         sidebar_title="Tablet Assist", sidebar_icon="mdi:microphone-message",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.3.0",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.3.1",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()

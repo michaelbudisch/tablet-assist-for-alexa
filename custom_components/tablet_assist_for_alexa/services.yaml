@@ -10,10 +10,14 @@ announce:
       selector:
         select:
           multiple: true
-          translation_key: rooms
           options:
-            - Büro
-            - Wohnzimmer
-            - Badezimmer
-            - Schlafzimmer
-            - Kinderzimmer
+            - value: Büro
+              label: Büro / Office
+            - value: Wohnzimmer
+              label: Wohnzimmer / Living room
+            - value: Badezimmer
+              label: Badezimmer / Bathroom
+            - value: Schlafzimmer
+              label: Schlafzimmer / Bedroom
+            - value: Kinderzimmer
+              label: Kinderzimmer / Children's room

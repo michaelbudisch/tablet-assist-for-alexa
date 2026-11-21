@@ -1,4 +1,4 @@
-# Lokale Datenquellen und Sprachbefehle (0.3.0)
+# Lokale Datenquellen und Sprachbefehle (0.3.1)
 
 [English](en/data-sources.md) · [Installation](marketplace.md)
 
@@ -48,3 +48,13 @@ Zur Fälligkeit erscheint eine Home-Assistant-Benachrichtigung. Optional kann ei
 ## Tests / Grenzen
 
 Die neue Integration und die Legacy-Installation sind getrennt. Die neue Logik wird nur für Marketplace bereitgestellt; bestehende private Installationen werden nicht automatisch migriert. Automatisierte Tests verwenden künstliche Daten, keine echten Einkaufseinträge, Geräte oder Konten. Erforderlich bleibt ein Test mit einem echten HA-System, Bring!-Konto, Wetterintegrationen, Abfallterminen und Android-/Echo-Ausgabe.
+
+## Kontext und optionale Lernfunktion
+
+Im Gesprächsmodus Intelligent oder Automatisch kann Jarvis bei unterstützten lokalen Hausdaten eine kurze Folgefrage in derselben Unterhaltung einordnen, etwa „Und der Rücklauf?“, „Und morgen?“ nach einer Wetterfrage oder „Und morgen früh?“ nach einer Regenfrage. Im manuellen Modus ist der explizit gestartete Gesprächsmodus nötig. Maximal 90 Sekunden Kontext und die bestehende Begrenzung der Gesprächsrunden gelten; ein Themenwechsel oder ein beendetes Gespräch setzt ihn zurück. Der Kontext enthält nur die letzte Absichts-ID, keine Gesprächshistorie. Nicht jede Folgefrage ist unterstützt. Native Assist-Verarbeitung, Geräteaktionen, Erinnerungs- und Durchsagedialoge behalten Vorrang. Die Anfrage muss den Tablet-Assist-Router erreichen.
+
+Unter Integration → Optionen → **Optionale Lernfunktion** lässt sich das Lernen ausdrücklich aktivieren (Standard: aus). Weise alle Nutzer des gemeinsamen Tablets darauf hin. Nur nicht eindeutig erkannte allgemeine Hausdaten-Formulierungen aus einer begrenzten Wortliste werden normalisiert als Vorschlag aufgenommen. Keine Audioaufzeichnung, kein allgemeines Transkriptarchiv; keine beliebigen Namen, Zahlen, Adressen oder Diktate. Maximal 30 Vorschläge im Arbeitsspeicher, 24 Stunden ab letzter Beobachtung; auch beim Neustart verschwinden sie. Es werden keine Nutzer-, Geräte- oder Gesprächs-IDs in Lernvorschlägen gespeichert. Die normalen HA-/LLM-Debug- und Konversationsfunktionen sind hiervon unabhängig.
+
+Unter **Tablet Assist → Lernen** kann ein Administrator einen Vorschlag prüfen, einem unterstützten lesenden Intent zuordnen, freigeben oder verwerfen. Auch eigene allgemeine Formulierungen können eingegeben werden, sofern sie zur eingeschränkten Wortliste passen und noch nicht erkannt werden. Maximal 100 freigegebene Zuordnungen werden lokal gespeichert. Einkäufe ändern, Geräte steuern, Erinnerungen und andere Aktionen können nicht angelernt werden. Berechtigungen und Datenquellen werden bei jeder Abfrage erneut geprüft. Abschalten pausiert die Nutzung; „Alle Lernzuordnungen löschen“ entfernt gespeicherte Zuordnungen und aktuelle Vorschläge. Keine automatische Modellanpassung und kein zusätzlicher externer Lernserver. Sprachbefehle weiterhin deutsch.
+
+Beispiel: „Wie hoch ist die Vorlauftemperatur?“ → „Und der Rücklauf?“ oder „Was sagt das Wetter?“ → „Und morgen?“. Ein falsch erkannter allgemeiner Satz kann nach manueller Zuordnung beim nächsten Mal direkt beantwortet werden.

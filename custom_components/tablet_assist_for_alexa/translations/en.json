@@ -84,15 +84,15 @@
   "selector": {
     "hardware_profile": {
       "options": {
-        "Automatisch": "Automatic",
-        "Homeserver": "CPU server"
+        "automatic": "Automatic",
+        "cpu": "CPU server"
       }
     },
     "live_profile": {
       "options": {
-        "Natürlich": "Natural",
-        "Studio": "Studio",
-        "Klar": "Clear"
+        "natural": "Natural",
+        "studio": "Studio",
+        "clear": "Clear"
       }
     },
     "voice_variant": {
@@ -111,25 +111,25 @@
     },
     "conversation_mode": {
       "options": {
-        "Manuell": "Manual",
-        "Intelligent": "Intelligent",
-        "Automatisch": "Automatic"
+        "manual": "Manual",
+        "intelligent": "Intelligent",
+        "automatic": "Automatic"
       }
     },
     "mp3_profile": {
       "options": {
-        "Natürlich": "Natural",
-        "Studio": "Studio",
-        "Durchsage": "Announcement"
+        "natural": "Natural",
+        "studio": "Studio",
+        "announcement": "Announcement"
       }
     },
     "rooms": {
       "options": {
-        "Büro": "Office",
-        "Wohnzimmer": "Living room",
-        "Badezimmer": "Bathroom",
-        "Schlafzimmer": "Bedroom",
-        "Kinderzimmer": "Children's room"
+        "buero": "Office",
+        "wohnzimmer": "Living room",
+        "badezimmer": "Bathroom",
+        "schlafzimmer": "Bedroom",
+        "kinderzimmer": "Children's room"
       }
     }
   },
@@ -167,7 +167,8 @@
           "kuehlschrank": "Refrigerator power",
           "kuehlschrankheute": "Refrigerator energy today",
           "reminders_enabled": "Enable shared reminders",
-          "reminder_room": "Optional Echo room for reminders"
+          "reminder_room": "Optional Echo room for reminders",
+          "learning_enabled": "Optional learning for generic home-data questions"
         },
         "data_description": {
           "restmuell": "ISO YYYY-MM-DD state or date-key attributes.",
@@ -176,7 +177,8 @@
           "guenstig": "Price sensor with a timestamp attribute for tomorrow.",
           "solar": "Use an aggregate sensor for multiple arrays.",
           "reminders_enabled": "One active reminder. HA notification, including after restart.",
-          "reminder_room": "One configured room only. Audio may use public short-lived links; no confidential content."
+          "reminder_room": "One configured room only. Audio may use public short-lived links; no confidential content.",
+          "learning_enabled": "Off by default. Only generic unmatched home-data questions from a restricted vocabulary; suggestions in RAM for 24 hours, admin approval required."
         }
       }
     },

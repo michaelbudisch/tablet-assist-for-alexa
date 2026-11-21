@@ -249,21 +249,25 @@ class JarvisConversation(conversation.ConversationEntity):
         phrase = ann_normal(user_input.text)
         announcement = await self._ann_dialog(key, now, phrase, user_input, chat_log)
         if announcement is not None:
+            self._local_data.followups.clear(key)
             self._local_data.reminders.pending.pop(key, None)
             return announcement
         try:
             reminder = await self._local_data.reminders.handle(key, user_input.text, phrase)
             if reminder is not None:
+                self._local_data.followups.clear(key)
                 self._sessions.pop(key, None)
                 return self._reply(user_input, chat_log, *reminder)
         except Exception:
             _LOGGER.debug("Tablet Assist reminder operation failed")
             return self._reply(user_input, chat_log, "Die Erinnerung konnte nicht bestätigt werden.")
         if phrase in STOP:
+            self._local_data.followups.clear(key)
             self._sessions.pop(key, None)
             self._remember_closed(key, now)
             return self._reply(user_input, chat_log, "Gespräch beendet.")
         if phrase in START:
+            self._local_data.followups.clear(key)
             self._closed.pop(key, None)
             self._store_session(key, (now + TIMEOUT, 3, True))
             return self._reply(user_input, chat_log, "Gesprächsmodus aktiv. Du kannst bis zu drei Fragen stellen. Was möchtest du wissen?", True)
@@ -279,6 +283,7 @@ class JarvisConversation(conversation.ConversationEntity):
             if handler is not None:
                 local = await handler(self.hass, user_input, chat_log)
                 if isinstance(local, str):
+                    self._local_data.followups.clear(key)
                     keep = self._continue(key, active, mode, mode == "Automatisch")
                     return self._reply(user_input, chat_log, local, keep)
         except Exception:
@@ -291,8 +296,12 @@ class JarvisConversation(conversation.ConversationEntity):
                 result = await self._local_data.handle(key, user_input.text, user_input.context)
             if result is not None:
                 message, keep = result
+                eligible = (mode != "Manuell" or active is not None) and key in self._local_data.followups.context
+                keep = keep or (eligible and self._continue(key, active, mode, True))
+                if not keep:self._local_data.followups.clear(key)
                 return self._reply(user_input, chat_log, message, keep)
         except Exception:
+            self._local_data.followups.clear(key)
             _LOGGER.debug("Tablet Assist local data operation failed")
             return self._reply(user_input, chat_log, "Die lokale Abfrage konnte nicht bestätigt werden. Bitte überprüfe die Datenquelle.")
 

@@ -1,4 +1,4 @@
-# Local data sources and voice commands (0.3.0)
+# Local data sources and voice commands (0.3.1)
 
 [Deutsch](../data-sources.md) · [Installation](marketplace.md)
 
@@ -48,3 +48,13 @@ At the due time, a Home Assistant notification appears. Optionally choose an alr
 ## Tests and limits
 
 The Marketplace integration and legacy installation remain separate. No automatic migration of a private installation. Automated tests use synthetic states and fake services, not real item mutations, devices, accounts or audio. A fresh real HA installation, Bring!, forecasts, collection dates, Android and Echo playback still need end-to-end validation.
+
+## Context and optional learning
+
+In Intelligent or Automatic conversation mode, Jarvis can resolve supported short follow-up questions from the same local home-data conversation: “Und der Rücklauf?” after heating flow, “Und morgen?” after weather, or “Und morgen früh?” after rain. Manual mode requires an explicitly started conversation. The context expires after at most 90 seconds and obeys existing turn limits. Changing topics or ending the conversation clears it. It stores only the last intent ID, not conversation history. Native Assist handling, device actions, reminder and announcement dialogs retain priority. Requests must reach the Tablet Assist router.
+
+Enable **Optional learning** explicitly in integration Options (off by default). Inform people using the shared tablet. Only unmatched generic home-data phrases from a restricted vocabulary are normalized into suggestions. No audio recording, general transcript archive, arbitrary names, numbers, addresses or dictation. Up to 30 suggestions in RAM, expiring 24 hours after last observation or on restart. No user, device or conversation IDs are stored in suggestions. Normal HA/LLM debugging and conversation functions are independent.
+
+In **Tablet Assist → Learning**, an administrator can inspect, choose a supported read-only intent, approve or dismiss a phrase. Administrators may manually enter a generic phrase that matches the vocabulary and is not already classified. Up to 100 approved aliases are stored locally. Shopping mutations, device control, reminders and other actions cannot be taught. Data sources and permissions are checked again on every request. Turning learning off pauses lookup; Clear learning data removes approved aliases and current suggestions. No automatic model training or external learning service. Commands remain German.
+
+Examples: “Wie hoch ist die Vorlauftemperatur?” → “Und der Rücklauf?”; “Was sagt das Wetter?” → “Und morgen?”. A missed generic query can be answered locally once an administrator has approved its mapping.

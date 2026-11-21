@@ -2,9 +2,11 @@
 
 # Marketplace — Tablet Assist for Alexa
 
-Home Assistant Core 2026.11 or newer. Developer preview 0.3.0. Start on a test instance and do not overwrite a working legacy configuration.
+Home Assistant Core 2026.11 or newer. Developer preview 0.3.1. Start on a test instance and do not overwrite a working legacy configuration.
 
-**New in 0.3.0:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](data-sources.md).
+**New in 0.3.1:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](data-sources.md).
+
+**New:** Contextual follow-ups and optional administrator-approved aliases. [Guide](data-sources.md).
 
 ## 1. Prepare the speech server
 

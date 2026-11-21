@@ -2,7 +2,7 @@
 
 # Tests und Release-Checkliste
 
-Öffentliche Entwicklungsvorschau 0.3.0 (keine stabile produktionsfertige Version).
+Öffentliche Entwicklungsvorschau 0.3.1 (keine stabile produktionsfertige Version).
 
 ```bash
 python3 tests/check_sources.py

@@ -1,5 +1,6 @@
 """Check the shipped UI and automatic registration without a live HA instance."""
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -28,6 +29,10 @@ class Standalone(unittest.TestCase):
         self.assertEqual(shape(en), shape(de))
         self.assertEqual(en, json.loads((D / "strings.json").read_text()))
         self.assertEqual(set(en["selector"]), {"hardware_profile","live_profile","voice_variant","conversation_mode","mp3_profile","rooms"})
+        for k,v in en["selector"].items():
+            for key in v["options"]:
+                self.assertRegex(key, r"^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$")
+        self.assertIn("@websocket_api.require_admin", (D / "learning_ws.py").read_text())
 
 if __name__ == "__main__":
     unittest.main()

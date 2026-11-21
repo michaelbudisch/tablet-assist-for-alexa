@@ -8,6 +8,7 @@ from .sources import METRICS, UNITS, WASTE_LABELS
 from .local_intents import classify, WASTE_KEYS, has, normalize
 from .weather_data import weather, numeric, WEATHER_KEYS
 from .shopping import shopping, parse_shopping
+from .followups import Followups
 
 async def permitted(hass,entity,context,write=False):
     # HA's trusted device pipelines can have no user_id; only explicit configured sources are reachable.
@@ -27,7 +28,8 @@ def collection_dates(state,today):
     return sorted(dates)
 
 class LocalData:
-    def __init__(self,hass,cfg,reminders):
+    def __init__(self,hass,cfg,reminders,learning=None):
+        self.learning=learning;self.followups=Followups()
         self.hass=hass;self.cfg=cfg;self.reminders=reminders;self.sources=cfg.get("sources",{});self.shop_lock=asyncio.Lock()
 
     async def source(self,key,context,write=False):
@@ -82,7 +84,13 @@ class LocalData:
 
     async def handle(self,key,text,context):
         request=parse_shopping(text)
-        kind=classify(text) if request is None else None
+        kind=None
+        if request is None:
+            kind=self.followups.get(key,text) or classify(text)
+            if kind is None and self.learning:kind=self.learning.lookup(text)
+        self.followups.clear(key)
+        if kind not in (None,"ambiguous","bring_list"):self.followups.remember(key,kind)
+        if kind is None and request is None and self.learning:self.learning.observe(text)
         if request is not None or kind=="bring_list":
             op,name=request or ("list","")
             entity=await self.source("shopping",context,op in ("add","remove"))

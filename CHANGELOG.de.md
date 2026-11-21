@@ -2,6 +2,13 @@
 
 # Changelog
 
+## 0.3.1 — Entwicklungsvorschau
+- Kontextbezogene Folgefragen in derselben Unterhaltung, begrenzte Dauer und unterstützte lesende Themen.
+- Optionale manuell freigegebene Lernfunktion für allgemeine nicht erkannte Hausdaten-Fragen; keine Audioaufnahmen, keine allgemeinen Transkriptlogs, begrenzte Vorschläge im RAM und lokale Alias-Speicherung.
+- Eigene Administrationsseite Lernen, sicherer WebSocket-Zugriff, DE/EN-Texte und Tests.
+- Übersetzungsschlüssel auf gültige ASCII-IDs umgestellt; alte gespeicherte Werte und Durchsage-API bleiben kompatibel.
+- Home-Assistant-Konfigurationsschema ergänzt. HACS-Beschreibung/Topics müssen weiterhin im Repository gesetzt werden.
+
 ## 0.3.0 — Entwicklungsvorschau
 - Flexible deutsche, lokale Absichtserkennung mit Wortnormalisierung, Synonymen und Zeitraumprüfung.
 - Frei auswählbare Datenquellen in Integration → Optionen und Übersicht in der eigenen Sprachzentrale: Wetter, Bring!/To-do, Abfalltermine, Heizung, Geräte, Energie.

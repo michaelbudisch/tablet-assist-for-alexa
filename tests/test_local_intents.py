@@ -42,6 +42,8 @@ shop=importlib.import_module("tablet_test.shopping")
 rem=importlib.import_module("tablet_test.reminders")
 local=importlib.import_module("tablet_test.local_data")
 weather=importlib.import_module("tablet_test.weather_data")
+follow=importlib.import_module("tablet_test.followups")
+learn=importlib.import_module("tablet_test.learning")
 CTX=NS(user_id=None)
 
 class Classifier(unittest.TestCase):
@@ -142,5 +144,47 @@ class Operations(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(keep);self.assertIn("23.11.2026",msg);self.assertIsNone(r.item)
         msg,keep=await d.handle("b","Wie wird das Wetter morgen?",CTX)
         self.assertIn("bewölkt",msg)
+
+class ContextAndLearning(unittest.IsolatedAsyncioTestCase):
+    def test_followups(self):
+        self.assertEqual(follow.resolve("vorlauf","Und der Rücklauf?"),"ruecklauf")
+        self.assertEqual(follow.resolve("aktuell","Und morgen?"),"morgen")
+        self.assertEqual(follow.resolve("regenheute","Und morgen früh?"),"regenmorgenfrueh")
+        self.assertEqual(follow.resolve("solarheute","Und morgen?"),"prognose")
+        self.assertIsNone(follow.resolve("preis","Und morgen?"))
+        self.assertIsNone(follow.resolve("vorlauf","Erhöhe die Temperatur"))
+        c=follow.Followups();c.remember("a","vorlauf")
+        self.assertIsNone(c.get("b","Und der Rücklauf?"))
+        self.assertEqual(c.get("a","Und der Rücklauf?"),"ruecklauf")
+        c.context["a"]=(0,"vorlauf")
+        self.assertIsNone(c.get("a","Und der Rücklauf?"))
+
+    async def test_approval(self):
+        text="wir haben welche artikel auf der einkaufsliste"
+        self.assertIsNone(intent.classify(text))
+        self.assertEqual(learn.safe_phrase(text),text)
+        r=learn.Learning(None,NS(entry_id="test"),{})
+        r.observe(text);self.assertFalse(r.snapshot()["candidates"])
+        with self.assertRaises(ValueError):await r.edit("approve",text,"bring_list")
+        r.enabled=True;r.observe(text);r.observe(text)
+        self.assertEqual(r.snapshot()["candidates"][text],2)
+        self.assertIsNone(r.lookup(text))
+        for phrase in ["mein passwort ist solarstrom","schalte die heizung aus","einkaufsliste Beispielname","strompreis 1234","mail@example.org wetter"]:
+            self.assertIsNone(learn.safe_phrase(phrase));r.observe(phrase)
+        self.assertEqual(len(r.snapshot()["candidates"]),1)
+        with self.assertRaises(ValueError):await r.edit("approve",text,"todo.add_item")
+        await r.edit("approve",text,"bring_list")
+        self.assertEqual(r.lookup(text),"bring_list")
+        self.assertFalse(r.snapshot()["candidates"])
+        r.aliases={};await r.load();self.assertEqual(r.lookup(text),"bring_list")
+        r.enabled=False;self.assertIsNone(r.lookup(text))
+        await r.edit("clear");self.assertFalse(r.snapshot()["aliases"])
+        self.assertEqual(r.store.data,{})
+
+    async def test_followup_reads(self):
+        hass=NS(states={"sensor.example_flow":NS(state="40",attributes={"unit_of_measurement":"°C"}),"sensor.example_return":NS(state="36",attributes={"unit_of_measurement":"°C"})})
+        reader=local.LocalData(hass,{"sources":{"vorlauf":"sensor.example_flow","ruecklauf":"sensor.example_return"}},None)
+        self.assertIn("40", (await reader.handle("a","Wie hoch ist die Vorlauftemperatur?",CTX))[0])
+        self.assertIn("36", (await reader.handle("a","Und der Rücklauf?",CTX))[0])
 
 if __name__=="__main__":unittest.main()
