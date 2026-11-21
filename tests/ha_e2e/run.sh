@@ -2,11 +2,14 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 work="$(mktemp -d)"
-name="tablet-assist-ci-$$"
+name="tablet-assist-ci-$"
+network="$name-net"
 image="ghcr.io/home-assistant/home-assistant:2026.11.0"
 cleanup() {
   docker rm -f "$name" >/dev/null 2>&1 || true
-  rm -rf "$work"
+  docker network rm "$network" >/dev/null 2>&1 || true
+  # HA may create root-owned storage directories inside the temporary mount.
+  sudo rm -rf -- "$work"
 }
 trap cleanup EXIT
 mkdir -p "$work/custom_components"
@@ -24,9 +27,12 @@ persistent_notification:
 tablet_assist_ci:
 YAML
 docker pull "$image"
+# A private bridge supplies an interface for HA Zeroconf/mDNS without
+# publishing ports or allowing external network egress during tests.
+docker network create --driver bridge --internal "$network" >/dev/null
 run_phase(){
   local phase="$1" limit="$2"
-  docker run -d --name "$name" --network none \
+  docker run -d --name "$name" --network "$network" \
     -e "TABLET_ASSIST_CI_PHASE=$phase" -v "$work:/config" \
     --entrypoint python3 "$image" -m homeassistant --config /config
   local result="$work/ci-result-$phase.json"
@@ -46,8 +52,8 @@ run_phase(){
   echo "Timed out waiting for $phase"
   return 1
 }
-run_phase one 150
+run_phase one 210
 docker stop --time 20 "$name"
 docker rm "$name"
-run_phase two 210
+run_phase two 270
 echo "HA standalone integration, reload, local queries and persistent reminder passed."
