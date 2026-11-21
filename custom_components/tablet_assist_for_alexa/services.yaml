@@ -1,0 +1,18 @@
+announce:
+  fields:
+    text:
+      required: true
+      selector:
+        text:
+          multiline: true
+    rooms:
+      required: true
+      selector:
+        select:
+          multiple: true
+          options:
+            - Büro
+            - Wohnzimmer
+            - Badezimmer
+            - Schlafzimmer
+            - Kinderzimmer

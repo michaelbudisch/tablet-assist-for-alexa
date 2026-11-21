@@ -1,0 +1,27 @@
+{
+  "domain": "tablet_assist_for_alexa",
+  "name": "Tablet Assist for Alexa",
+  "after_dependencies": [
+    "wyoming"
+  ],
+  "categories": [
+    "ai_voice.voice_assistants"
+  ],
+  "codeowners": [
+    "@michaelbudisch"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "conversation",
+    "tts",
+    "stt",
+    "http"
+  ],
+  "documentation": "https://github.com/michaelbudisch/tablet-assist-for-alexa/blob/main/docs/marketplace.md",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/michaelbudisch/tablet-assist-for-alexa/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.2.0"
+}

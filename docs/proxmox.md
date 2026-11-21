@@ -36,3 +36,7 @@ Die lokale Konfiguration liegt unter `/etc/jarvis-local.env` (nur root). Den dar
 | 8080 | temporäre Audio-Dateien | intern; optional streng begrenzter HTTPS-Proxy |
 
 Firewall-Regeln administrativ so setzen, dass lediglich die benötigten HA- und Proxy-Hosts zugreifen dürfen. Keine automatische Router-Konfiguration. Die GPU-Adresse bleibt zunächst leer; siehe `worker.md`.
+
+## Optionaler HTTPS-Proxy
+
+Für Alexa-Durchsagen einen getrennten Nginx-Proxy-CT gemäß [Anleitung](nginx-proxy.md) einrichten. Für reines Tablet/Echo-Bluetooth nicht benötigt.

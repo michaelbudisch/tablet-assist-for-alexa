@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper and one Wyoming STT entity are required. GPU, LLM and Alexa announcements are optional. See installation guide for room mapping.",
+        "data": {
+          "piper_base": "Piper URL",
+          "cpu_stt": "CPU Wyoming STT",
+          "gpu_base": "GPU streaming URL (optional)",
+          "qwen_token": "GPU API key (optional)",
+          "gpu_stt": "GPU Wyoming STT (optional)",
+          "gpu_stt_host": "GPU STT host (optional fast probe)",
+          "llm_agent": "Conversation agent (optional)",
+          "hardware_profile": "Hardware profile",
+          "live_profile": "Live sound profile",
+          "voice_variant": "Voice variant",
+          "conversation_mode": "Conversation mode",
+          "mp3_base": "MP3 API URL (optional)",
+          "mp3_token": "MP3 API key (optional)",
+          "public_audio_base": "Public HTTPS audio origin (optional)",
+          "rooms_json": "Room mapping (JSON, optional)",
+          "mp3_profile": "Announcement sound profile",
+          "chime": "Announcement chime"
+        }
+      },
+      "reconfigure": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper and one Wyoming STT entity are required. GPU, LLM and Alexa announcements are optional. See installation guide for room mapping.",
+        "data": {
+          "piper_base": "Piper URL",
+          "cpu_stt": "CPU Wyoming STT",
+          "gpu_base": "GPU streaming URL (optional)",
+          "qwen_token": "GPU API key (optional)",
+          "gpu_stt": "GPU Wyoming STT (optional)",
+          "gpu_stt_host": "GPU STT host (optional fast probe)",
+          "llm_agent": "Conversation agent (optional)",
+          "hardware_profile": "Hardware profile",
+          "live_profile": "Live sound profile",
+          "voice_variant": "Voice variant",
+          "conversation_mode": "Conversation mode",
+          "mp3_base": "MP3 API URL (optional)",
+          "mp3_token": "MP3 API key (optional)",
+          "public_audio_base": "Public HTTPS audio origin (optional)",
+          "rooms_json": "Room mapping (JSON, optional)",
+          "mp3_profile": "Announcement sound profile",
+          "chime": "Announcement chime"
+        }
+      }
+    },
+    "error": {
+      "invalid_configuration": "Check URLs, Wyoming entities, keys and room mapping.",
+      "cannot_connect": "Cannot reach Piper server."
+    },
+    "abort": {
+      "already_configured": "Already configured.",
+      "reconfigure_successful": "Configuration updated."
+    }
+  },
+  "services": {
+    "announce": {
+      "name": "Alexa announcement",
+      "description": "Send a non-confidential MP3 to selected enabled Echo rooms.",
+      "fields": {
+        "text": {
+          "name": "Message",
+          "description": "Up to 500 characters."
+        },
+        "rooms": {
+          "name": "Rooms",
+          "description": "Select configured rooms."
+        }
+      }
+    }
+  }
+}

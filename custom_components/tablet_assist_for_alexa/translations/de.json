@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper und mindestens eine Wyoming-STT-Entität erforderlich. GPU, KI und Alexa-Durchsagen sind optional. Siehe Installationsanleitung für Raumzuordnung.",
+        "data": {
+          "piper_base": "Piper-Adresse",
+          "cpu_stt": "CPU-Wyoming-Spracherkennung",
+          "gpu_base": "GPU-Streaming-Adresse (optional)",
+          "qwen_token": "GPU-API-Schlüssel (optional)",
+          "gpu_stt": "GPU-Wyoming-Spracherkennung (optional)",
+          "gpu_stt_host": "GPU-STT-Host (optionaler Schnelltest)",
+          "llm_agent": "KI-Konversationsagent (optional)",
+          "hardware_profile": "Hardwareprofil",
+          "live_profile": "Live-Klangprofil",
+          "voice_variant": "Stimmvariante",
+          "conversation_mode": "Gesprächsmodus",
+          "mp3_base": "MP3-API-Adresse (optional)",
+          "mp3_token": "MP3-API-Schlüssel (optional)",
+          "public_audio_base": "Öffentliche HTTPS-Audioadresse (optional)",
+          "rooms_json": "Raumzuordnung (JSON, optional)",
+          "mp3_profile": "Klangprofil Durchsagen",
+          "chime": "Durchsage-Signalton"
+        }
+      },
+      "reconfigure": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper und mindestens eine Wyoming-STT-Entität erforderlich. GPU, KI und Alexa-Durchsagen sind optional. Siehe Installationsanleitung für Raumzuordnung.",
+        "data": {
+          "piper_base": "Piper-Adresse",
+          "cpu_stt": "CPU-Wyoming-Spracherkennung",
+          "gpu_base": "GPU-Streaming-Adresse (optional)",
+          "qwen_token": "GPU-API-Schlüssel (optional)",
+          "gpu_stt": "GPU-Wyoming-Spracherkennung (optional)",
+          "gpu_stt_host": "GPU-STT-Host (optionaler Schnelltest)",
+          "llm_agent": "KI-Konversationsagent (optional)",
+          "hardware_profile": "Hardwareprofil",
+          "live_profile": "Live-Klangprofil",
+          "voice_variant": "Stimmvariante",
+          "conversation_mode": "Gesprächsmodus",
+          "mp3_base": "MP3-API-Adresse (optional)",
+          "mp3_token": "MP3-API-Schlüssel (optional)",
+          "public_audio_base": "Öffentliche HTTPS-Audioadresse (optional)",
+          "rooms_json": "Raumzuordnung (JSON, optional)",
+          "mp3_profile": "Klangprofil Durchsagen",
+          "chime": "Durchsage-Signalton"
+        }
+      }
+    },
+    "error": {
+      "invalid_configuration": "Adressen, Wyoming-Entitäten, Schlüssel und Raumzuordnung prüfen.",
+      "cannot_connect": "Piper-Sprachserver nicht erreichbar."
+    },
+    "abort": {
+      "already_configured": "Bereits eingerichtet.",
+      "reconfigure_successful": "Konfiguration aktualisiert."
+    }
+  },
+  "services": {
+    "announce": {
+      "name": "Alexa-Durchsage",
+      "description": "Spielt eine nicht vertrauliche MP3 über ausgewählte, freigegebene Echo-Räume ab.",
+      "fields": {
+        "text": {
+          "name": "Nachricht",
+          "description": "Maximal 500 Zeichen."
+        },
+        "rooms": {
+          "name": "Räume",
+          "description": "Konfigurierte Räume wählen."
+        }
+      }
+    }
+  }
+}

@@ -19,3 +19,5 @@ jobs:
       - run: python tests/check_sources.py
       - run: python tests/test_audio.py
       - run: python tests/test_install.py
+      - run: python tests/test_marketplace.py
+      - run: python tests/test_proxy.py
