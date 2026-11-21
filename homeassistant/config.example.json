@@ -1,0 +1,11 @@
+{
+  "cpu_host": "speechserver.example.invalid",
+  "gpu_host": "gpu.example.invalid",
+  "cpu_stt": "stt.faster_whisper",
+  "gpu_stt": "stt.faster_whisper_2",
+  "llm_agent": "conversation.jarvis_llm_not_configured",
+  "pipeline_id": "",
+  "audio_public_base": "https://audio.example.invalid",
+  "rooms": {},
+  "event_sources": {}
+}

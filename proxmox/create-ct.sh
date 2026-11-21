@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Explicit creation of a NEW unprivileged CT using an existing Debian template.
+set -Eeuo pipefail
+[[ $EUID -eq 0 ]] && command -v pct >/dev/null || { echo 'Run on Proxmox VE as administrator.'; exit 1; }
+[[ $# -ge 3 && $# -le 4 ]] || { echo 'Usage: create-ct.sh CTID TEMPLATE_VOLUME STORAGE [BRIDGE]'; exit 2; }
+ID=$1; TEMPLATE=$2; STORE=$3; BRIDGE=${4:-vmbr0}
+[[ "$ID" =~ ^[0-9]+$ ]] || exit 2
+if pct config "$ID" >/dev/null 2>&1 || qm config "$ID" >/dev/null 2>&1; then echo 'ID already in use'; exit 1; fi
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+printf 'New CT %s (4 vCPU, 4 GiB RAM, 20 GiB disk, DHCP) on %s. Type the CT ID to confirm: ' "$ID" "$BRIDGE"
+read -r confirm </dev/tty
+[[ "$confirm" == "$ID" ]] || exit 1
+pct create "$ID" "$TEMPLATE" --hostname jarvis-speechserver --unprivileged 1 --cores 4 --memory 4096 --swap 1024 --rootfs "$STORE:20" --net0 "name=eth0,bridge=$BRIDGE,ip=dhcp" --onboot 1
+pct start "$ID"
+ARCHIVE=$(mktemp --suffix=.tar.gz)
+trap 'rm -f "$ARCHIVE"' EXIT
+tar -C "$ROOT" -czf "$ARCHIVE" speechserver proxmox
+pct push "$ID" "$ARCHIVE" /tmp/jarvis-install.tar.gz
+pct exec "$ID" -- mkdir -p /opt/jarvis-installer
+pct exec "$ID" -- tar -xzf /tmp/jarvis-install.tar.gz -C /opt/jarvis-installer
+pct exec "$ID" -- bash /opt/jarvis-installer/proxmox/install-speechserver.sh
+pct exec "$ID" -- hostname -I
+printf 'CT %s created. Use the guest IP in Home Assistant. No firewall/router changes made.\n' "$ID"

@@ -1,0 +1,854 @@
+{
+  "input_boolean": {
+    "jarvis_signalton": {
+      "name": "jarvis_signalton"
+    },
+    "jarvis_erinnerung_aktiv": {
+      "name": "jarvis_erinnerung_aktiv"
+    },
+    "jarvis_automatische_hinweise": {
+      "name": "jarvis_automatische_hinweise"
+    }
+  },
+  "input_select": {
+    "jarvis_stt_profil": {
+      "name": "jarvis_stt_profil",
+      "options": [
+        "Automatisch",
+        "Homeserver"
+      ]
+    },
+    "jarvis_stimme": {
+      "name": "jarvis_stimme",
+      "options": [
+        "Standard (.env)",
+        "Variante 1",
+        "Variante 2",
+        "Variante 3",
+        "Variante 4",
+        "Variante 5",
+        "Variante 6",
+        "Variante 7",
+        "Variante 8",
+        "Variante 9"
+      ]
+    },
+    "jarvis_gesprachsmodus": {
+      "name": "jarvis_gesprachsmodus",
+      "options": [
+        "Manuell",
+        "Intelligent",
+        "Automatisch"
+      ]
+    },
+    "jarvis_android_lautsprecher": {
+      "name": "jarvis_android_lautsprecher",
+      "options": [
+        "Büro",
+        "Wohnzimmer",
+        "Badezimmer",
+        "Schlafzimmer",
+        "Kinderzimmer"
+      ]
+    },
+    "jarvis_erinnerung_raum": {
+      "name": "jarvis_erinnerung_raum",
+      "options": [
+        "Büro",
+        "Wohnzimmer",
+        "Badezimmer",
+        "Schlafzimmer",
+        "Kinderzimmer",
+        "Alle Räume"
+      ]
+    },
+    "jarvis_klangprofil": {
+      "name": "jarvis_klangprofil",
+      "options": [
+        "Natürlich",
+        "Studio",
+        "Durchsage"
+      ]
+    },
+    "jarvis_live_klangprofil": {
+      "name": "jarvis_live_klangprofil",
+      "options": [
+        "Natürlich",
+        "Studio",
+        "Klar"
+      ]
+    }
+  },
+  "input_text": {
+    "jarvis_stt_zusatzrechner": {
+      "max": 255
+    },
+    "jarvis_erinnerung_text": {
+      "max": 200
+    },
+    "jarvis_mp3_status": {
+      "max": 255
+    },
+    "jarvis_hinweis_historie": {
+      "max": 255,
+      "initial": "{}"
+    },
+    "jarvis_hinweis_status": {
+      "max": 255
+    },
+    "jarvis_hinweis_waschen": {
+      "max": 255,
+      "initial": "{\"enabled\":false,\"rooms\":[\"Büro\"],\"start\":\"08:00\",\"end\":\"21:00\",\"priority\":\"Normal\"}"
+    },
+    "jarvis_hinweis_spuelen": {
+      "max": 255,
+      "initial": "{\"enabled\":false,\"rooms\":[\"Büro\"],\"start\":\"08:00\",\"end\":\"21:00\",\"priority\":\"Normal\"}"
+    },
+    "jarvis_hinweis_solar": {
+      "max": 255,
+      "initial": "{\"enabled\":false,\"rooms\":[\"Büro\"],\"start\":\"08:00\",\"end\":\"21:00\",\"priority\":\"Normal\"}"
+    },
+    "jarvis_hinweis_wallbox": {
+      "max": 255,
+      "initial": "{\"enabled\":false,\"rooms\":[\"Büro\"],\"start\":\"08:00\",\"end\":\"21:00\",\"priority\":\"Normal\"}"
+    },
+    "jarvis_hinweis_abfall": {
+      "max": 255,
+      "initial": "{\"enabled\":false,\"rooms\":[\"Büro\"],\"start\":\"08:00\",\"end\":\"21:00\",\"priority\":\"Normal\"}"
+    },
+    "jarvis_hinweis_regen": {
+      "max": 255,
+      "initial": "{\"enabled\":false,\"rooms\":[\"Büro\"],\"start\":\"08:00\",\"end\":\"21:00\",\"priority\":\"Normal\"}"
+    }
+  },
+  "input_datetime": {
+    "jarvis_erinnerung_zeitpunkt": {
+      "has_date": true,
+      "has_time": true
+    }
+  },
+  "schedule": {
+    "jarvis_ruhe_buro": {
+      "name": "Jarvis Ruhe buro"
+    },
+    "jarvis_ruhe_wohnzimmer": {
+      "name": "Jarvis Ruhe wohnzimmer"
+    },
+    "jarvis_ruhe_badezimmer": {
+      "name": "Jarvis Ruhe badezimmer"
+    },
+    "jarvis_ruhe_schlafzimmer": {
+      "name": "Jarvis Ruhe schlafzimmer"
+    },
+    "jarvis_ruhe_kinderzimmer": {
+      "name": "Jarvis Ruhe kinderzimmer"
+    }
+  },
+  "script": {
+    "jarvis_durchsage": {
+      "alias": "Jarvis · Durchsage",
+      "description": "Erzeugt eine MP3 einmal und übergibt dieselbe URL an ausgewählte Echo-Lautsprecher. Nur nicht vertrauliche Nachrichten; Link zeitlich öffentlich. Bei Fehler der Generierung keine Ausgabe in anderer Stimme.",
+      "icon": "mdi:bullhorn-outline",
+      "mode": "queued",
+      "max": 5,
+      "fields": {
+        "text": {
+          "name": "Ansage",
+          "required": true,
+          "selector": {
+            "text": {
+              "multiline": true
+            }
+          }
+        },
+        "raeume": {
+          "name": "Räume",
+          "required": true,
+          "selector": {
+            "select": {
+              "multiple": true,
+              "options": [
+                "Büro",
+                "Wohnzimmer",
+                "Badezimmer",
+                "Schlafzimmer",
+                "Kinderzimmer"
+              ]
+            }
+          }
+        }
+      },
+      "sequence": [
+        {
+          "variables": {
+            "nachricht": "{{ text | default('') | trim }}",
+            "zimmer": "{{ raeume | default([]) }}",
+            "zuordnung": {
+              "Büro": "notify.jarvis_buero_sprechen",
+              "Wohnzimmer": "notify.jarvis_wohnzimmer_sprechen",
+              "Badezimmer": "notify.jarvis_badezimmer_sprechen",
+              "Schlafzimmer": "notify.jarvis_schlafzimmer_sprechen",
+              "Kinderzimmer": "notify.jarvis_kinderzimmer_sprechen"
+            },
+            "ruhe": {
+              "Büro": "schedule.jarvis_ruhe_buro",
+              "Wohnzimmer": "schedule.jarvis_ruhe_wohnzimmer",
+              "Badezimmer": "schedule.jarvis_ruhe_badezimmer",
+              "Schlafzimmer": "schedule.jarvis_ruhe_schlafzimmer",
+              "Kinderzimmer": "schedule.jarvis_ruhe_kinderzimmer"
+            },
+            "dnd": {
+              "Büro": "switch.jarvis_buero_bitte_nicht_storen",
+              "Wohnzimmer": "switch.jarvis_wohnzimmer_bitte_nicht_storen",
+              "Badezimmer": "switch.jarvis_badezimmer_bitte_nicht_storen",
+              "Schlafzimmer": "switch.jarvis_schlafzimmer_bitte_nicht_storen",
+              "Kinderzimmer": "switch.jarvis_kinderzimmer_bitte_nicht_storen"
+            }
+          }
+        },
+        {
+          "variables": {
+            "ziele": "{% set ns=namespace(items=[]) %}{% for name, entity in zuordnung.items() if zimmer is iterable and zimmer is not string and name in zimmer and is_state(ruhe[name],'off') and is_state(dnd[name],'off') and not is_state(entity,'unavailable') %}{% set ns.items=ns.items+[entity] %}{% endfor %}{{ ns.items }}"
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ not (0 < nachricht | length <= 500 and ziele | length > 0) }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_text.set_value",
+              "target": {
+                "entity_id": "input_text.jarvis_mp3_status"
+              },
+              "data": {
+                "value": "{\"status\":\"Keine gültigen Ziele oder kein Text\"}"
+              }
+            },
+            {
+              "stop": "Ansagetext (1–500 Zeichen) und mindestens einen gültigen Raum wählen.",
+              "error": true
+            }
+          ]
+        },
+        {
+          "action": "rest_command.piper_generate",
+          "data": {
+            "text": "{{ nachricht }}"
+          },
+          "response_variable": "audio_result",
+          "continue_on_error": true
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{% set r = audio_result | default({}) %}{% set c = r.get('content', {}) if r is mapping else {} %}{{ r is mapping and r.get('status') == 200 and c is mapping and c.get('success') == true and (c.get('path','') | regex_match('^/[a-f0-9]{32}\\\\.mp3$')) }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_text.set_value",
+              "target": {
+                "entity_id": "input_text.jarvis_mp3_status"
+              },
+              "data": {
+                "value": "{{ {\"status\":\"Datei erzeugt\", \"backend\":audio_result.content.get(\"backend\",\"unbekannt\"), \"ms\":audio_result.content.get(\"duration_ms\",0), \"voice\":audio_result.content.get(\"voice_variant\",\"\"), \"cache\":audio_result.content.get(\"cached\",false), \"fallback\":audio_result.content.get(\"fallback\",false), \"sound_profile\":audio_result.content.get(\"sound_profile\",\"nicht gemeldet\"), \"rooms\":ziele|length} | to_json }}"
+              }
+            },
+            {
+              "action": "notify.send_message",
+              "target": {
+                "entity_id": "{{ ziele }}"
+              },
+              "data": {
+                "message": "<audio src=\"https://audio.example.invalid{{ audio_result.content.path }}\"/>"
+              }
+            }
+          ],
+          "else": [
+            {
+              "action": "input_text.set_value",
+              "target": {
+                "entity_id": "input_text.jarvis_mp3_status"
+              },
+              "data": {
+                "value": "{\"status\":\"MP3-Erzeugung fehlgeschlagen\"}"
+              }
+            },
+            {
+              "stop": "MP3 konnte nicht erzeugt werden.",
+              "error": true
+            }
+          ]
+        }
+      ],
+      "trace": {
+        "stored_traces": 2
+      }
+    },
+    "jarvis_erinnerung_planen": {
+      "alias": "Jarvis · Erinnerung planen",
+      "description": "Ein persistenter Termin für eine Erinnerung, einen Timer oder einen Wecker. Keine bestehenden Termine überschreiben.",
+      "mode": "single",
+      "fields": {
+        "nachricht": {
+          "required": true,
+          "selector": {
+            "text": {}
+          }
+        },
+        "zeitpunkt": {
+          "required": true,
+          "selector": {
+            "text": {}
+          }
+        },
+        "raum": {
+          "required": true,
+          "selector": {
+            "select": {
+              "options": [
+                "Büro",
+                "Wohnzimmer",
+                "Badezimmer",
+                "Schlafzimmer",
+                "Kinderzimmer",
+                "Alle Räume"
+              ]
+            }
+          }
+        }
+      },
+      "sequence": [
+        {
+          "if": [
+            {
+              "condition": "state",
+              "entity_id": "input_boolean.jarvis_erinnerung_aktiv",
+              "state": "on"
+            }
+          ],
+          "then": [
+            {
+              "stop": "Es gibt bereits einen aktiven Termin. Erst beenden oder abwarten.",
+              "error": true
+            }
+          ]
+        },
+        {
+          "variables": {
+            "msg": "{{ nachricht | default('') | trim }}",
+            "when": "{{ as_timestamp(zeitpunkt | default(''), default=0) }}",
+            "room": "{{ raum | default('') }}"
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ not (0 < msg|length <= 200 and when|float(0) > as_timestamp(now()) and room in ['Büro','Wohnzimmer','Badezimmer','Schlafzimmer','Kinderzimmer','Alle Räume']) }}"
+            }
+          ],
+          "then": [
+            {
+              "stop": "Ungültige Nachricht, Zeit oder Raum.",
+              "error": true
+            }
+          ]
+        },
+        {
+          "action": "input_text.set_value",
+          "target": {
+            "entity_id": "input_text.jarvis_erinnerung_text"
+          },
+          "data": {
+            "value": "{{ msg }}"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.jarvis_erinnerung_zeitpunkt"
+          },
+          "data": {
+            "timestamp": "{{ when }}"
+          }
+        },
+        {
+          "action": "input_select.select_option",
+          "target": {
+            "entity_id": "input_select.jarvis_erinnerung_raum"
+          },
+          "data": {
+            "option": "{{ room }}"
+          }
+        },
+        {
+          "action": "input_boolean.turn_on",
+          "target": {
+            "entity_id": "input_boolean.jarvis_erinnerung_aktiv"
+          }
+        }
+      ],
+      "trace": {
+        "stored_traces": 1
+      }
+    },
+    "jarvis_automatischer_hinweis": {
+      "alias": "Jarvis · Automatischer Hinweis",
+      "description": "Zentrale Ereignisfreigabe, Zeitfenster (auch über Mitternacht), Zielräume, Prioritäts-Abstand. Nie Ruhezeiten umgehen. Nur allgemeine Hausinformationen über MP3.",
+      "mode": "queued",
+      "max": 10,
+      "fields": {
+        "ereignis": {
+          "required": true,
+          "selector": {
+            "select": {
+              "options": [
+                "waschen",
+                "spuelen",
+                "solar",
+                "wallbox",
+                "abfall",
+                "regen"
+              ]
+            }
+          }
+        },
+        "nachricht": {
+          "required": true,
+          "selector": {
+            "text": {}
+          }
+        }
+      },
+      "sequence": [
+        {
+          "condition": "state",
+          "entity_id": "input_boolean.jarvis_automatische_hinweise",
+          "state": "on"
+        },
+        {
+          "variables": {
+            "event": "{{ ereignis | default('') }}",
+            "msg": "{{ nachricht | default('') | trim }}",
+            "valid_rooms": [
+              "Büro",
+              "Wohnzimmer",
+              "Badezimmer",
+              "Schlafzimmer",
+              "Kinderzimmer"
+            ],
+            "quiet": {
+              "Büro": "schedule.jarvis_ruhe_buro",
+              "Wohnzimmer": "schedule.jarvis_ruhe_wohnzimmer",
+              "Badezimmer": "schedule.jarvis_ruhe_badezimmer",
+              "Schlafzimmer": "schedule.jarvis_ruhe_schlafzimmer",
+              "Kinderzimmer": "schedule.jarvis_ruhe_kinderzimmer"
+            },
+            "dnd": {
+              "Büro": "switch.jarvis_buero_bitte_nicht_storen",
+              "Wohnzimmer": "switch.jarvis_wohnzimmer_bitte_nicht_storen",
+              "Badezimmer": "switch.jarvis_badezimmer_bitte_nicht_storen",
+              "Schlafzimmer": "switch.jarvis_schlafzimmer_bitte_nicht_storen",
+              "Kinderzimmer": "switch.jarvis_kinderzimmer_bitte_nicht_storen"
+            },
+            "limits": {
+              "waschen": [
+                30,
+                10
+              ],
+              "spuelen": [
+                30,
+                10
+              ],
+              "solar": [
+                180,
+                60
+              ],
+              "wallbox": [
+                60,
+                20
+              ],
+              "abfall": [
+                1200,
+                1200
+              ],
+              "regen": [
+                360,
+                120
+              ]
+            }
+          }
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ event in limits and 0 < msg|length <= 500 }}"
+        },
+        {
+          "variables": {
+            "settings": "{{ states('input_text.jarvis_hinweis_'~event) | from_json({}) }}",
+            "history": "{{ states('input_text.jarvis_hinweis_historie') | from_json({}) }}",
+            "clock": "{{ now().strftime('%H:%M') }}",
+            "stamp": "{{ as_timestamp(now()) | int }}"
+          }
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ settings is mapping and settings.get('enabled') == true and history is mapping and settings.get('priority') in ['Normal','Hoch'] and settings.get('rooms') is iterable and settings.get('rooms') is not string }}"
+        },
+        {
+          "variables": {
+            "begin": "{{ settings.get('start','') }}",
+            "end": "{{ settings.get('end','') }}",
+            "delay_minutes": "{{ limits[event][1] if settings.priority == 'Hoch' else limits[event][0] }}",
+            "rooms": "{% set ns = namespace(items=[]) %}{% for r in valid_rooms if r in settings.rooms and is_state(quiet[r],'off') and is_state(dnd[r],'off') %}{% set ns.items=ns.items+[r] %}{% endfor %}{{ ns.items }}"
+          }
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ begin is string and end is string and begin | regex_match('^(?:[01][0-9]|2[0-3]):[0-5][0-9]$') and end | regex_match('^(?:[01][0-9]|2[0-3]):[0-5][0-9]$') and (begin == end or (begin <= clock < end if begin < end else clock >= begin or clock < end)) }}"
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ stamp|int - history.get(event,0)|int(0) >= delay_minutes|int * 60 }}"
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ rooms|length == 0 }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_text.set_value",
+              "target": {
+                "entity_id": "input_text.jarvis_hinweis_status"
+              },
+              "data": {
+                "value": "{{ now().strftime('%d.%m. %H:%M') ~ ' · ' ~ event ~ ' · kein Raum freigegeben' }}"
+              }
+            },
+            {
+              "stop": "Keine freigegebenen Räume"
+            }
+          ]
+        },
+        {
+          "action": "script.jarvis_durchsage",
+          "data": {
+            "text": "{{ msg }}",
+            "raeume": "{{ rooms }}"
+          }
+        },
+        {
+          "action": "input_text.set_value",
+          "target": {
+            "entity_id": "input_text.jarvis_hinweis_historie"
+          },
+          "data": {
+            "value": "{{ dict(history, **{event:stamp|int}) | to_json }}"
+          }
+        },
+        {
+          "action": "input_text.set_value",
+          "target": {
+            "entity_id": "input_text.jarvis_hinweis_status"
+          },
+          "data": {
+            "value": "{{ now().strftime('%d.%m. %H:%M') ~ ' · ' ~ event ~ ' · an ' ~ rooms|join(', ') ~ ' übergeben' }}"
+          }
+        }
+      ],
+      "trace": {
+        "stored_traces": 3
+      }
+    }
+  },
+  "automation": [
+    {
+      "id": "jarvis_durchsage_sprachbefehl",
+      "alias": "Jarvis · Durchsage Sprachbefehl",
+      "description": "Verarbeitet eindeutige einteilige Durchsagebefehle mit ausdrücklich genannten Zielräumen und Nachricht. Keine generelle Freitextweiterleitung.",
+      "triggers": [
+        {
+          "trigger": "conversation",
+          "command": [
+            "[mach[e]] [eine] durchsage an alle mit dem text {nachricht}",
+            "[mach[e]] [eine] benachrichtigung an alle mit dem text {nachricht}"
+          ],
+          "id": "alle"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "[mach[e]] [eine] durchsage im büro mit dem text {nachricht}",
+            "[mach[e]] [eine] durchsage für büro mit dem text {nachricht}"
+          ],
+          "id": "raum_0"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "[mach[e]] [eine] durchsage im wohnzimmer mit dem text {nachricht}",
+            "[mach[e]] [eine] durchsage für wohnzimmer mit dem text {nachricht}"
+          ],
+          "id": "raum_1"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "[mach[e]] [eine] durchsage im badezimmer mit dem text {nachricht}",
+            "[mach[e]] [eine] durchsage für badezimmer mit dem text {nachricht}"
+          ],
+          "id": "raum_2"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "[mach[e]] [eine] durchsage im schlafzimmer mit dem text {nachricht}",
+            "[mach[e]] [eine] durchsage für schlafzimmer mit dem text {nachricht}"
+          ],
+          "id": "raum_3"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "[mach[e]] [eine] durchsage im kinderzimmer mit dem text {nachricht}",
+            "[mach[e]] [eine] durchsage für kinderzimmer mit dem text {nachricht}"
+          ],
+          "id": "raum_4"
+        }
+      ],
+      "actions": [
+        {
+          "variables": {
+            "nachricht": "{{ trigger.slots.nachricht | default('') | trim }}",
+            "raeume": "{% set r = ['Büro','Wohnzimmer','Badezimmer','Schlafzimmer','Kinderzimmer'] %}{{ r if trigger.id == 'alle' else [r[trigger.id.split('_')[1] | int]] }}"
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ 0 < nachricht | length <= 500 }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "script.turn_on",
+              "target": {
+                "entity_id": "script.jarvis_durchsage"
+              },
+              "data": {
+                "variables": {
+                  "text": "{{ nachricht }}",
+                  "raeume": "{{ raeume }}"
+                }
+              }
+            },
+            {
+              "set_conversation_response": "Ich erstelle die Durchsage für die ausgewählten Räume."
+            }
+          ],
+          "else": [
+            {
+              "set_conversation_response": "Bitte nenne eine Nachricht mit höchstens 500 Zeichen."
+            }
+          ]
+        }
+      ],
+      "mode": "queued",
+      "max": 5
+    },
+    {
+      "id": "jarvis_timer_und_erinnerung_sprachbefehl",
+      "alias": "Jarvis · Timer und Erinnerung Sprachbefehl",
+      "description": "Minutentimer, relative Erinnerung oder Wecker am nächsten Tag. Verwendet den eingestellten Erinnerungsraum. Nur ein Termin gleichzeitig.",
+      "triggers": [
+        {
+          "trigger": "conversation",
+          "command": [
+            "[stell[e]] [einen] timer auf {zahl} minuten",
+            "timer für {zahl} minuten"
+          ],
+          "id": "timer"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "erinnere mich in {zahl} minuten an {nachricht}"
+          ],
+          "id": "reminder"
+        },
+        {
+          "trigger": "conversation",
+          "command": [
+            "weck[e] mich morgen um {zahl} uhr"
+          ],
+          "id": "alarm"
+        }
+      ],
+      "actions": [
+        {
+          "variables": {
+            "wort": "{{ trigger.slots.zahl | default('') | lower | trim }}",
+            "zahlen": {
+              "ein": 1,
+              "eine": 1,
+              "eins": 1,
+              "zwei": 2,
+              "drei": 3,
+              "vier": 4,
+              "fünf": 5,
+              "sechs": 6,
+              "sieben": 7,
+              "acht": 8,
+              "neun": 9,
+              "zehn": 10,
+              "elf": 11,
+              "zwölf": 12,
+              "dreizehn": 13,
+              "vierzehn": 14,
+              "fünfzehn": 15,
+              "sechzehn": 16,
+              "siebzehn": 17,
+              "achtzehn": 18,
+              "neunzehn": 19,
+              "zwanzig": 20,
+              "dreißig": 30,
+              "vierzig": 40,
+              "fünfzig": 50,
+              "sechzig": 60
+            },
+            "raum": "{{ states('input_select.jarvis_erinnerung_raum') }}"
+          }
+        },
+        {
+          "variables": {
+            "zahl": "{{ zahlen.get(wort,wort|int(-1)) }}",
+            "msg": "{{ 'Timer abgelaufen.' if trigger.id == 'timer' else 'Guten Morgen. Es ist Zeit aufzustehen.' if trigger.id == 'alarm' else 'Erinnerung: ' ~ (trigger.slots.nachricht | default('')) }}"
+          }
+        },
+        {
+          "choose": [
+            {
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity_id": "input_boolean.jarvis_erinnerung_aktiv",
+                  "state": "on"
+                }
+              ],
+              "sequence": [
+                {
+                  "set_conversation_response": "Es ist bereits ein Termin aktiv. Beende ihn zuerst in der Hauszentrale."
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ (trigger.id=='alarm' and 0<=zahl|int(-1)<=23 or trigger.id!='alarm' and 1<=zahl|int(-1)<=10080) and 0 < msg|length <= 200 and raum in ['Büro','Wohnzimmer','Badezimmer','Schlafzimmer','Kinderzimmer','Alle Räume'] }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "action": "script.jarvis_erinnerung_planen",
+                  "data": {
+                    "nachricht": "{{ msg }}",
+                    "raum": "{{ raum }}",
+                    "zeitpunkt": "{{ (today_at('%02d:00'|format(zahl|int)) + timedelta(days=1)).isoformat() if trigger.id=='alarm' else (now()+timedelta(minutes=zahl|int)).isoformat() }}"
+                  }
+                },
+                {
+                  "set_conversation_response": "{{ 'Wecker' if trigger.id=='alarm' else 'Timer' if trigger.id=='timer' else 'Erinnerung' }} für {{ raum }} gespeichert."
+                }
+              ]
+            }
+          ],
+          "default": [
+            {
+              "set_conversation_response": "Bitte eine gültige Zahl, Nachricht und einen Erinnerungsraum angeben."
+            }
+          ]
+        }
+      ],
+      "mode": "single"
+    },
+    {
+      "id": "jarvis_erinnerung_auslosen",
+      "alias": "Jarvis · Erinnerung auslösen",
+      "description": "Persistenter Termin; Wiederanlauf bis 15 Minuten nach Fälligkeit. Bei älterem Termin keine verspätete Durchsage.",
+      "triggers": [
+        {
+          "trigger": "time",
+          "at": "input_datetime.jarvis_erinnerung_zeitpunkt"
+        },
+        {
+          "trigger": "homeassistant",
+          "event": "start"
+        },
+        {
+          "trigger": "time_pattern",
+          "minutes": "/1"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "state",
+          "entity_id": "input_boolean.jarvis_erinnerung_aktiv",
+          "state": "on"
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ 0 < state_attr('input_datetime.jarvis_erinnerung_zeitpunkt','timestamp')|float(0) <= as_timestamp(now()) }}"
+        }
+      ],
+      "actions": [
+        {
+          "variables": {
+            "msg": "{{ states('input_text.jarvis_erinnerung_text') }}",
+            "room": "{{ states('input_select.jarvis_erinnerung_raum') }}",
+            "late": "{{ as_timestamp(now()) - state_attr('input_datetime.jarvis_erinnerung_zeitpunkt','timestamp')|float(0) }}"
+          }
+        },
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.jarvis_erinnerung_aktiv"
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ late|float(0) <= 900 and msg not in ['unknown','unavailable',''] }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "script.turn_on",
+              "target": {
+                "entity_id": "script.jarvis_durchsage"
+              },
+              "data": {
+                "variables": {
+                  "text": "{{ msg }}",
+                  "raeume": "{{ ['Büro','Wohnzimmer','Badezimmer','Schlafzimmer','Kinderzimmer'] if room == 'Alle Räume' else [room] }}"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "mode": "single"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Jarvis Tablet Audio",
+        "description": "Lokale Piper-Ausgabe; optional Qwen-Token des eigenen GPU-Workers eintragen. Ohne Token bleibt Piper aktiv.",
+        "data": {
+          "qwen_token": "Qwen API-Schlüssel (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Tablet-Audio-Einstellungen",
+        "description": "Qwen-Schlüssel erneut eintragen. Ohne Schlüssel wird Piper genutzt.",
+        "data": {
+          "qwen_token": "Qwen API-Schlüssel (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_token": "Der Schlüssel muss mindestens 32 Zeichen lang sein."
+    },
+    "abort": {
+      "already_configured": "Bereits eingerichtet",
+      "reconfigure_successful": "Konfiguration aktualisiert"
+    }
+  }
+}
