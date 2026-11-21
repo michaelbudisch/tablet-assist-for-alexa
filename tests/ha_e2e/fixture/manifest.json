@@ -1,0 +1,13 @@
+{
+  "domain": "tablet_assist_ci",
+  "name": "Tablet Assist CI fixtures",
+  "version": "1.0.0",
+  "dependencies": [
+    "frontend",
+    "conversation",
+    "persistent_notification",
+    "todo"
+  ],
+  "requirements": [],
+  "iot_class": "local_push"
+}

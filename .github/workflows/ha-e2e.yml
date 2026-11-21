@@ -1,0 +1,16 @@
+name: Standalone Home Assistant runtime tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-ha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Boot real Home Assistant, configure and restart
+        run: bash tests/ha_e2e/run.sh
