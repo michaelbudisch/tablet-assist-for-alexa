@@ -1,5 +1,10 @@
 [English](CHANGELOG.md) | **Deutsch**
 
+# 1.9.0
+
+- Authentifizierter `/detect`-Endpunkt mit festem validiertem Personen-/Hund-Schema und grober Einschätzung erwachsen/Kind/unklar. Keine Namen, Identitäten, Geschlechter, freien Prompts oder durch die KI gewählten Aktionen.
+- Nutzt den bestehenden Vision-Container, Ollama sowie gewähltes Modell, Kontext und Warmhaltezeit. Vierzehn isolierte Worker-Tests prüfen Erkennung und bisherige Beschreibungen. Freigabe, Sperrzeit und Wiedergabekoordination übernimmt HA-Backend 1.6.0.
+
 # 1.8.0
 
 - Authenticated installed/loaded model status and bounded per-request residency/context for matching HA text/vision settings. Legacy immediate-unload defaults remain compatible; response timings support load-cost diagnosis. No additional service, model download, endpoint exposure or speech changes.

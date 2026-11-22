@@ -2,6 +2,14 @@
 
 # Changelog
 
+## Echo Relay proactive actions — backend 1.6.0 / worker 1.9.0 / card 1.2.0
+
+- Opt-in motion-triggered structured people/dog detections, coarse adult/child/unknown appearance and no identity or gender inference.
+- Repeatable all-hours test mode with adjustable cooldown; morning window and persisted daily guard in normal mode.
+- HA forecast-based rain advice, optional fixed greeting name, single-dashboard native streaming playback and yes/no daily-overview follow-up.
+- Explicit category/script selection and a detection event for native HA automations. Offline/busy/stale/uncertain checks skip actions.
+- Shared German/English Lovelace settings, portable motion automation and isolated worker/HA/browser coverage. Existing APK 0.5.0 is unchanged.
+
 ## Lovelace settings 1.1.0 / control panel 1.6.0
 
 - Shared theme-aware settings with accessible voice/audio, display/cameras, AI/performance and history/diagnostics tabs.

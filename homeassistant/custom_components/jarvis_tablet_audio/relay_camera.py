@@ -175,6 +175,9 @@ class FrameView(HomeAssistantView):
 async def async_setup(hass, entry):
     data = hass.data.setdefault(DOMAIN, {})
     relay = RelayRuntime(hass, entry)
+    from .relay_proactive import Proactive
+    relay.proactive = Proactive(relay)
+    await relay.proactive.setup()
     data["relay_camera"] = relay
     entry.async_on_unload(async_track_time_interval(hass, relay.expire, timedelta(seconds=3)))
     if not data.get("relay_views_registered"):
@@ -230,6 +233,16 @@ async def async_setup(hass, entry):
             vol.Optional("keep_alive"): int, vol.Optional("num_ctx"): int,
             vol.Optional("revision"): vol.All(str, vol.Length(max=64))}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "unpair_camera", unpair, schema=vol.Schema({}))
+    async def proactive_service(call):
+        current = runtime(hass)
+        if current is None:
+            raise ServiceValidationError("Echo Relay unavailable")
+        return await current.proactive.service(call)
+    hass.services.async_register(DOMAIN, "proactive", proactive_service, schema=vol.Schema({
+        vol.Optional("action", default="get"): vol.In(["get", "set", "check", "heartbeat", "claim", "ack"]),
+        vol.Optional("settings"): dict, vol.Optional("revision"): str, vol.Optional("manual", default=False): bool,
+        vol.Optional("client_id"): str, vol.Optional("busy", default=True): bool,
+        vol.Optional("request_id"): str, vol.Optional("started", default=False): bool}), supports_response=SupportsResponse.ONLY)
 
 def async_unload(hass):
     current = runtime(hass)
@@ -237,7 +250,7 @@ def async_unload(hass):
         current.frames.clear()
         current.notify()
     hass.data.get(DOMAIN, {}).pop("relay_camera", None)
-    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "unpair_camera"):
+    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "unpair_camera", "proactive"):
         hass.services.async_remove(DOMAIN, service)
 
 async def answer(hass, text, context):

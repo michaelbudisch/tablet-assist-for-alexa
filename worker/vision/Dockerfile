@@ -3,7 +3,7 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-COPY server.py test_server.py ./
+COPY server.py detection.py test_server.py ./
 USER 65534:65534
 EXPOSE 10503
 CMD ["python", "server.py"]

@@ -29,8 +29,8 @@ bash homeassistant/install.sh config.local.json ./staging
    - `/local/jarvis/jarvis-dashboard-assist-v1.4.0.js`
    - `/local/jarvis/jarvis-bt-keepalive-v1.1.0.js`
    - `/local/jarvis/jarvis-control-panel-v1.6.0.js`
-   - `/local/jarvis/echo-relay-assist-card-v1.1.0.js`
-   Die Module `jarvis-settings-v1.0.0.js`, `jarvis-model-settings-v1.1.0.js` und `jarvis-camera-preview-v1.2.0.js` müssen ebenfalls in `/config/www/jarvis/` liegen; sie werden automatisch importiert und benötigen keinen eigenen Ressourceneintrag.
+   - `/local/jarvis/echo-relay-assist-card-v1.2.0.js`
+   Die Module `jarvis-settings-v1.1.0.js`, `jarvis-model-settings-v1.1.0.js` und `jarvis-camera-preview-v1.2.0.js`, `jarvis-proactive-v1.0.0.js` müssen ebenfalls in `/config/www/jarvis/` liegen; sie werden automatisch importiert und benötigen keinen eigenen Ressourceneintrag.
    Den Inhalt der Vorlage `jarvis-dashboard.yaml` in den YAML-Editor des neuen Dashboards übernehmen. Keine vollständige private Hauszentrale enthalten. Kiosk/App-Vollbild im Gerätebrowser einstellen.
 9. Native Sprachaufnahme testen: zunächst bekannte HA-Intents, dann optional LLM-Wissensfrage, anschließend Streaming und Klangprofil wechseln. Bei fehlendem LLM sind allgemeine KI-Fragen nicht möglich, lokale Intents bleiben verfügbar.
 

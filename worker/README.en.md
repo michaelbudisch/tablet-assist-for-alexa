@@ -1,4 +1,6 @@
-# Jarvis GPU Worker 1.7.0
+# Jarvis GPU Worker 1.9.0
+
+The existing optional vision container now also supports opt-in structured motion detections for the Echo Relay Lovelace controller. [Proactive setup](../docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions). No additional container or model is needed.
 
 **English** | [Deutsch](README.md)
 

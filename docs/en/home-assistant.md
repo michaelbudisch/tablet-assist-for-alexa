@@ -30,9 +30,9 @@ Check for conflicts with existing helpers and automations. The installer does no
    - /local/jarvis/jarvis-dashboard-assist-v1.4.0.js
    - /local/jarvis/jarvis-bt-keepalive-v1.1.0.js
    - /local/jarvis/jarvis-control-panel-v1.6.0.js
-   - /local/jarvis/echo-relay-assist-card-v1.1.0.js
+   - /local/jarvis/echo-relay-assist-card-v1.2.0.js
 
-   Also copy `jarvis-settings-v1.0.0.js`, `jarvis-model-settings-v1.1.0.js` and `jarvis-camera-preview-v1.2.0.js` into `/config/www/jarvis/`. These modules are imported automatically and need no resource entries.
+   Also copy `jarvis-settings-v1.1.0.js`, `jarvis-model-settings-v1.1.0.js` and `jarvis-camera-preview-v1.2.0.js`, `jarvis-proactive-v1.0.0.js` into `/config/www/jarvis/`. These modules are imported automatically and need no resource entries.
 
    Copy the generated jarvis-dashboard.yaml into a new dashboard's YAML editor. No private complete house dashboard is provided. Configure the kiosk/app fullscreen mode in the device browser.
 

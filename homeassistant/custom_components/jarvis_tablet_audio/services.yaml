@@ -64,3 +64,35 @@ model_settings:
       description: Revision returned by get; required for saving to prevent stale settings writes.
       selector:
         text:
+
+proactive:
+  name: Proactive motion actions
+  description: Opt-in bounded tablet checks and explicit actions. Get/set requires administrator. Automation check skips offline, busy, stale or throttled requests. Heartbeat/claim/ack coordinate one authorized visible dashboard; fixed names are configuration, never recognition.
+  fields:
+    action:
+      default: get
+      selector:
+        select:
+          options: [get, set, check, heartbeat, claim, ack]
+    settings:
+      selector:
+        object:
+    revision:
+      selector:
+        text:
+    manual:
+      description: Check a fresh image without requiring the current motion flag. All opt-in and cooldown guards remain active.
+      selector:
+        boolean:
+    client_id:
+      selector:
+        text:
+    busy:
+      selector:
+        boolean:
+    request_id:
+      selector:
+        text:
+    started:
+      selector:
+        boolean:

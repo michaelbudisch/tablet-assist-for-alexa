@@ -2,6 +2,14 @@
 
 # Changelog
 
+## Echo Relay proaktiv — Backend 1.6.0 / Worker 1.9.0 / Karte 1.2.0
+
+- Optionale Bewegungsauswertung mit festem Personen-/Hund-Ergebnis und grober Einschätzung erwachsen/Kind/unklar; keine Identitäts- oder Geschlechtserkennung.
+- Wiederholbarer Testmodus zu jeder Uhrzeit mit Sperrzeit; Morgen-Zeitfenster und gespeicherte Tagesbegrenzung im Normalbetrieb.
+- Regenhinweise aus HA-Vorhersagen, optionale feste Anrede, koordinierte native Audioausgabe und Ja/Nein-Rückfrage zum Tagesüberblick.
+- Konfigurierte Kategorien/Skripte und Erkennungsereignis für native HA-Automationen. Offline, beschäftigt, veraltet oder unsicher löst keine Aktion aus.
+- Gemeinsame DE/EN-Lovelace-Einstellungen, Bewegungsvorlage und isolierte Worker-/HA-/Browsertests. APK 0.5.0 bleibt unverändert.
+
 ## Lovelace-Einstellungen 1.1.0 / Bedienpanel 1.6.0
 
 - Gemeinsame Oberfläche mit Theme-Farben und Reitern für Sprache/Audio, Anzeige/Kameras, KI/Leistung und Verlauf/Diagnose.

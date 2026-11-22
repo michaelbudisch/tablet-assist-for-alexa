@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 const dir=new URL('../../homeassistant/www/jarvis/',import.meta.url);
-const files=Object.fromEntries(await Promise.all(['echo-relay-assist-card-v1.1.0.js','jarvis-settings-v1.0.0.js','jarvis-model-settings-v1.1.0.js','jarvis-control-panel-v1.6.0.js'].map(async name=>[name,await readFile(new URL(name,dir),'utf8')])));
+const files=Object.fromEntries(await Promise.all(['echo-relay-assist-card-v1.2.0.js','jarvis-settings-v1.1.0.js','jarvis-model-settings-v1.1.0.js','jarvis-proactive-v1.0.0.js','jarvis-control-panel-v1.6.0.js'].map(async name=>[name,await readFile(new URL(name,dir),'utf8')])));
 const html=`<!doctype html><meta charset="utf-8"><style>
 :root{--hz-bg:#10151d;--hz-surface:#1b2430;--hz-surface-alt:#242f3d;--hz-line:#354150;--hz-text:#e9eef5;--hz-muted:#aebbc9;--hz-accent:#38c5ae;--primary-text-color:var(--hz-text);--secondary-text-color:var(--hz-muted);--card-background-color:var(--hz-surface);--divider-color:var(--hz-line);--primary-color:var(--hz-accent)}body{background:var(--hz-bg);color:var(--hz-text);font:14px system-ui;margin:0;padding:24px}ha-card{display:block;background:var(--hz-surface);border-radius:16px}main{max-width:900px;margin:auto;display:grid;gap:24px}
 </style><main></main><script type="module">
-import '/local/jarvis/echo-relay-assist-card-v1.1.0.js';import '/local/jarvis/jarvis-control-panel-v1.6.0.js';
+import '/local/jarvis/echo-relay-assist-card-v1.2.0.js';import '/local/jarvis/jarvis-control-panel-v1.6.0.js';
 window.errors=[];window.calls=[];window.waiters=[];window.rejectChoice=false;
 const states={};for(const id of ['jarvis_stt_profil','jarvis_stimme','jarvis_klangprofil','jarvis_live_klangprofil','jarvis_gesprachsmodus','jarvis_android_lautsprecher'])states['input_select.'+id]={state:'Natürlich',attributes:{options:['Natürlich','Studio','Klar']}};
 for(const key of ['waschen','spuelen','solar','wallbox','abfall','regen'])states['input_text.jarvis_hinweis_'+key]={state:JSON.stringify({enabled:false,rooms:['Büro'],start:'08:00',end:'22:00',priority:'Normal'})};

@@ -2,6 +2,8 @@
 
 [English](README.md) | **Deutsch**
 
+**Echo Relay proaktiv im Testmodus:** optionale lokale Bildprüfung bei Bewegung, wiederholbare Begrüßung, HA-Regenhinweise und konfigurierbare Automationsereignisse. Backend 1.6.0 / GPU Worker 1.9.0, vorhandene APK 0.5.0. [Lovelace-Einrichtung](docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions).
+
 **Echo Relay Lovelace-Einstellungen 1.1.0:** geordnete Bereiche, Theme-Farben, direkte Modellauswahl sowie Mikrofon-, Untertitel- und Verlaufseinstellungen für die eigenständige Karte. [Einrichtung und Dashboard-Vorlage](docs/echo-relay-dashboard.md).
 
 Ein Android-Tablet übernimmt Mikrofon, Wakeword und native Home-Assistant-Assist-Pipeline. Die Antwort wird über den Bluetooth-Lautsprecher (z. B. Amazon Echo) ausgegeben. Separat können Echo-Geräte über eine kompatible Alexa-Integration MP3-Durchsagen empfangen. Lokale Sprachverarbeitung mit Whisper, Piper und optional Qwen-TTS/LLM; eine GPU ist nicht zwingend notwendig.

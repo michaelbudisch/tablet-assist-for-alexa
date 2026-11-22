@@ -11,6 +11,7 @@ from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHand
 
 from flask import Flask, jsonify, request
 from PIL import Image, UnidentifiedImageError, ImageOps
+from detection import SCHEMA as DETECTION_SCHEMA, SYSTEM as DETECTION_SYSTEM, validate as validate_detection, labels as detection_labels
 
 MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct",
           "qwen3-vl:8b-instruct", "gemma3:4b")
@@ -177,7 +178,7 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
             tags = call("/api/tags")
             loaded = call("/api/ps").get("models", [])
             installed = {m.get("name") or m.get("model") for m in tags.get("models", []) if isinstance(m, dict)}
-            return jsonify(settings_api=1,
+            return jsonify(settings_api=1, detection_api=1,
                 text_models=[m for m in TEXT_MODELS if m in installed],
                 vision_models=[m for m in MODELS if m in installed],
                 loaded=[{k: m.get(k) for k in ("name", "size", "size_vram", "context_length", "expires_at")}
@@ -185,6 +186,35 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
                 busy=lock.locked())
         except Exception:
             return jsonify(error="ollama runtime unavailable"), 503
+
+    @app.post("/detect")
+    def detect():
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or set(data) - {"image", "model", "keep_alive", "num_ctx"}:
+            return jsonify(error="expected bounded image and model settings"), 400
+        model, keep, context = data.get("model", default_model), data.get("keep_alive", 0), data.get("num_ctx", 4096)
+        if not isinstance(model, str) or model not in MODELS or type(keep) is not int or keep not in KEEP_ALIVE or type(context) is not int or context not in CONTEXTS:
+            return jsonify(error="unsupported model settings"), 400
+        if not lock.acquire(blocking=False):
+            return jsonify(error="vision busy"), 503
+        try:
+            try:
+                image = normalize_image(data.get("image"))
+            except ValueError:
+                return jsonify(error="invalid image"), 400
+            try:
+                body = {"model": model, "stream": False, "think": False, "keep_alive": keep,
+                    "format": DETECTION_SCHEMA, "options": {"num_ctx": context, "num_predict": 180, "temperature": 0},
+                    "messages": [{"role": "system", "content": DETECTION_SYSTEM},
+                        {"role": "user", "content": "Count visible people and dogs. Return person_count, dog_count, age_groups (adult/child/unknown), uncertain. Use unknown for unclear age groups. Return the fixed JSON schema only.", "images": [image]}]}
+                result = call("/api/chat", body, timeout=45)
+                detection = validate_detection(result.get("message", {}).get("content"))
+                return jsonify(detection=detection, labels=detection_labels(detection), model=model,
+                    detection_api=1, limitation="single-image estimate; no identity recognition")
+            except Exception:
+                return jsonify(error="invalid or unavailable detection; no action"), 503
+        finally:
+            lock.release()
     return app
 
 if __name__ == "__main__":

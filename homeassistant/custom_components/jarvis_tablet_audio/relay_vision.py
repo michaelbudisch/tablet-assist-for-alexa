@@ -122,7 +122,7 @@ async def request(relay, path, payload=None):
     try:
         async with client.request("POST" if payload is not None else "GET", worker_url(relay.entry) + path,
                 headers={"X-API-Key": token}, json=payload, allow_redirects=False,
-                timeout=aiohttp.ClientTimeout(total=110 if payload else 10)) as response:
+                timeout=aiohttp.ClientTimeout(total=15 if path == "/detect" else 110 if payload else 10)) as response:
             if response.status != 200:
                 raise ServiceValidationError("Local vision worker unavailable")
             data = bytearray()

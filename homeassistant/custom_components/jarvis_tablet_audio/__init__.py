@@ -10,8 +10,9 @@ async def async_setup_entry(hass, entry):
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     options = dict(entry.options)
     from .relay_models import MODEL_OPTIONS
+    from .relay_proactive import PROACTIVE_OPTIONS
     async def reload_options(hass, updated):
-        if {k: v for k, v in updated.options.items() if k not in MODEL_OPTIONS} != {k: v for k, v in options.items() if k not in MODEL_OPTIONS}:
+        if {k: v for k, v in updated.options.items() if k not in MODEL_OPTIONS | PROACTIVE_OPTIONS} != {k: v for k, v in options.items() if k not in MODEL_OPTIONS | PROACTIVE_OPTIONS}:
             await hass.config_entries.async_reload(updated.entry_id)
     entry.async_on_unload(entry.add_update_listener(reload_options))
     return True

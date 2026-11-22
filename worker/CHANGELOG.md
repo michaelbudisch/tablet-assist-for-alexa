@@ -1,5 +1,10 @@
 **English** | [Deutsch](CHANGELOG.de.md)
 
+# 1.9.0
+
+- Authenticated `/detect` endpoint with a fixed validated people/dog schema and coarse adult/child/unknown appearance. No names, identity, gender, arbitrary prompts or model-chosen actions.
+- Reuses the existing vision container, Ollama and selected model/context/residency. Fourteen isolated worker tests cover the new response validation and existing descriptions. HA opt-in, cooldown and playback coordination live in backend 1.6.0.
+
 # 1.8.0
 
 - Authenticated installed/loaded model status and bounded per-request residency/context for matching HA text/vision settings. Legacy immediate-unload defaults remain compatible; response timings support load-cost diagnosis. No additional service, model download, endpoint exposure or speech changes.

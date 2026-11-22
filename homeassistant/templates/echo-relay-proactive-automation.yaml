@@ -1,0 +1,15 @@
+# Create via Settings > Automations > Create > Edit in YAML.
+# Adjust the motion entity to your configured tablet; enable opt-in settings in Lovelace.
+alias: Jarvis - Tablet motion vision
+description: Local still-image check on a fresh tablet motion event. All guards are enforced by the service.
+triggers:
+  - trigger: motion.detected
+    target:
+      entity_id: binary_sensor.echo_relay_bildbewegung
+actions:
+  - action: jarvis_tablet_audio.proactive
+    data:
+      action: check
+    response_variable: detection_result
+mode: single
+max_exceeded: silent

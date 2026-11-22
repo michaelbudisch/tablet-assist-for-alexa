@@ -2,6 +2,8 @@
 
 **English** | [Deutsch](README.de.md)
 
+**Echo Relay proactive test mode:** optional motion-triggered local vision, repeated greetings, HA rain advice and configurable automation events. Requires backend 1.6.0 / GPU Worker 1.9.0; existing APK 0.5.0 works. [Lovelace setup](docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions).
+
 **Echo Relay Lovelace settings 1.1.0:** grouped settings, theme colours, inline model choices and portable microphone/caption/history preferences. [Setup and dashboard example](docs/echo-relay-dashboard.md).
 
 Local AI voice assistant for Home Assistant using an Android tablet as a microphone and an Amazon Echo as a Bluetooth speaker. No custom Echo firmware required. The Echo retains its normal Alexa functions; its internal assistant is not replaced.

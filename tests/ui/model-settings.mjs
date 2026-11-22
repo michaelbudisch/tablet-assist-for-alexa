@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {chromium} from "playwright";
 const source=await readFile(new URL("../../homeassistant/www/jarvis/jarvis-model-settings-v1.1.0.js",import.meta.url),"utf8");
-const shared=await readFile(new URL("../../homeassistant/www/jarvis/jarvis-settings-v1.0.0.js",import.meta.url),"utf8");
-const card=await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.1.0.js",import.meta.url),"utf8");
+const shared=await readFile(new URL("../../homeassistant/www/jarvis/jarvis-settings-v1.1.0.js",import.meta.url),"utf8");
+const proactive=await readFile(new URL('../../homeassistant/www/jarvis/jarvis-proactive-v1.0.0.js',import.meta.url),'utf8');
+const card=await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.2.0.js",import.meta.url),"utf8");
 const html=`<!doctype html><meta charset="utf-8"><body style="background:#151b23;color:#eee;font:16px system-ui;padding:24px"><script type="module">
 import '/card.js';
 window.calls=[];window.failSave=false;
@@ -17,7 +18,7 @@ const c=document.createElement('echo-relay-assist-card');c.setConfig({title:'Jar
 const browser=await chromium.launch({headless:true,...(process.env.CAMERA_TEST_CHROME?{executablePath:process.env.CAMERA_TEST_CHROME}:{})});
 const page=await browser.newPage({viewport:{width:850,height:1000}});
 await page.route("http://relay-models.test/**",route=>route.fulfill({contentType:route.request().url().endsWith('.js')?'application/javascript':'text/html',
- body:route.request().url().endsWith('card.js')?card:route.request().url().includes('jarvis-settings-')?shared:route.request().url().endsWith('.js')?source:html}));
+ body:route.request().url().endsWith('card.js')?card:route.request().url().includes('jarvis-settings-')?shared:route.request().url().includes('jarvis-proactive-')?proactive:route.request().url().endsWith('.js')?source:html}));
 try{
  await page.goto('http://relay-models.test/');await page.waitForFunction(()=>window.ready);
  await page.getByText('Assistent und Audio · Einstellungen',{exact:true}).click();

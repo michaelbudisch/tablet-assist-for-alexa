@@ -66,6 +66,7 @@ async def run(hass):
     seen = []
     vision_payloads = []
     worker = web.Application()
+    worker_state = {"busy":False,"uncertain":False,"offline":False}
     async def health(request):
         check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "worker authentication")
         return web.json_response({"ready": True, "model": "synthetic-ci", "busy": False})
@@ -80,10 +81,16 @@ async def run(hass):
         return web.json_response({"description": "Ein rotes Rechteck auf hellem Hintergrund.", "model": "synthetic-ci"})
     worker.router.add_get("/health", health); worker.router.add_post("/describe", describe)
     async def model_runtime(request):
+        if worker_state["offline"]:
+            return web.json_response({"error":"offline"},status=503)
         check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "model runtime authentication")
-        return web.json_response({"settings_api":1,"text_models":["qwen3:4b-instruct","qwen3-vl:4b-instruct"],
-            "vision_models":["qwen3-vl:4b-instruct"],"loaded":[],"busy":False})
+        return web.json_response({"settings_api":1,"detection_api":1,"text_models":["qwen3:4b-instruct","qwen3-vl:4b-instruct"],
+            "vision_models":["qwen3-vl:4b-instruct"],"loaded":[],"busy":worker_state["busy"]})
     worker.router.add_get("/runtime", model_runtime)
+    async def detect(request):
+        check(request.headers.get("X-API-Key") == "test-worker-token-" * 3,"detection authenticated")
+        return web.json_response({"detection_api":1,"detection":{"person_count":1,"dog_count":0,"age_groups":["adult"],"uncertain":worker_state["uncertain"]}})
+    worker.router.add_post("/detect", detect)
     runner = web.AppRunner(worker); await runner.setup(); await web.TCPSite(runner, "127.0.0.1", 15003).start()
     try:
         flow = await hass.config_entries.flow.async_init("jarvis_tablet_audio", context={"source": "user"})
@@ -239,6 +246,8 @@ async def run(hass):
                     raise AssertionError("Invalid model settings accepted")
             await hass.services.async_call("jarvis_tablet_audio","describe_camera",{"source":"tablet"},blocking=True,return_response=True,context=Context(user_id=admin.id))
             check(vision_payloads[-1]["keep_alive"]==300 and vision_payloads[-1]["num_ctx"]==2048 and vision_payloads[-1]["model"]==subentry.data["model"],"vision shares text model residency and context")
+            from .proactive import check_proactive
+            await check_proactive(hass,relay,jpeg,device,nonce,admin,guest,worker_state,check)
             async with client.delete(base + "/frame", headers=headers) as response:
                 check(response.status == 204, "stop clears image")
             check(hass.states.get(cid).state == "unavailable" and relay.frames.image is None, "no stale fallback after stop")

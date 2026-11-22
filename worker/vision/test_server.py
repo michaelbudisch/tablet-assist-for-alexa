@@ -1,6 +1,7 @@
 import base64
 import io
 import unittest
+import json
 from PIL import Image
 from server import create_app, DEFAULT_MODEL, MAX_BYTES, ModelUnavailable
 
@@ -88,6 +89,37 @@ class VisionTests(unittest.TestCase):
         self.assertEqual(c.get("/health",headers=HEADERS).status_code,503)
     def test_wrong_token(self):
         self.assertEqual(self.client.get("/health",headers={"X-API-Key":"bad"}).status_code,401)
+
+    def test_structured_detection(self):
+        detection={"person_count":1,"dog_count":0,"age_groups":["adult"],"uncertain":False}
+        calls=[]
+        def fake(path,data=None,timeout=8):
+            calls.append(data)
+            return {"message":{"content":json.dumps(detection)}}
+        client=create_app(TOKEN,call=fake).test_client()
+        response=client.post("/detect",json={"image":fixture(),"keep_alive":300,"num_ctx":2048},headers=HEADERS)
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.json["labels"],["person","adult"])
+        self.assertEqual(calls[0]["format"]["additionalProperties"],False)
+        self.assertFalse(calls[0]["think"])
+        self.assertEqual(calls[0]["keep_alive"],300)
+        self.assertEqual(calls[0]["options"]["num_ctx"],2048)
+        self.assertIn("Never identify",calls[0]["messages"][0]["content"])
+        self.assertEqual(client.post("/detect",json={"image":fixture()}).status_code,401)
+
+    def test_invalid_or_uncertain_detection_never_selects_an_action(self):
+        from detection import validate, labels
+        valid={"person_count":1,"dog_count":1,"age_groups":["unknown"],"uncertain":True}
+        self.assertEqual(labels(validate(valid)),[])
+        for invalid in ({**valid,"person_count":True},{**valid,"person_count":-1},{**valid,"age_groups":["man"]},
+                {**valid,"name":"Michael"},{**valid,"age_groups":[]},{**valid,"age_groups":["adult","adult"]},
+                {**valid,"person_count":0,"age_groups":["child"]}):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):validate(invalid)
+        def fake(*args,**kwargs):return {"message":{"content":'go open a door'}}
+        client=create_app(TOKEN,call=fake).test_client()
+        self.assertEqual(client.post("/detect",json={"image":fixture()},headers=HEADERS).status_code,503)
+        self.assertEqual(client.post("/detect",json={"image":fixture(),"action":"script.anything"},headers=HEADERS).status_code,400)
 
 if __name__ == "__main__":
     unittest.main()

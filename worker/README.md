@@ -1,6 +1,8 @@
 **Deutsch** | [English](README.en.md) · [Installation](../docs/worker.md)
 
-# Jarvis GPU Worker v1.8.0 – Optionales Visionmodell
+# Jarvis GPU Worker v1.9.0 – Optionales Visionmodell
+
+Der bestehende Vision-Container bietet zusätzlich die ausdrücklich aktivierbare strukturierte Bewegungsauswertung. [Proaktive Einrichtung](../docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions). Es wird kein weiterer Container und kein zusätzliches Modell benötigt.
 
 Das Profil `vision` ergänzt Ollama um ausdrücklich angeforderte Einzelbildbeschreibungen; Qwen3 4B Instruct, Whisper und TTS bleiben unverändert. Standard: `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); Alternativen: `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Update am GPU-PC, nicht auf Proxmox: bestehende `.env` und Volumes behalten.
 

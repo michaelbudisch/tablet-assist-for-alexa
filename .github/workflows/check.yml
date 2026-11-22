@@ -31,3 +31,4 @@ jobs:
       - run: node tests/ui/camera-infobox.mjs
       - run: node tests/ui/model-settings.mjs
       - run: node tests/ui/settings.mjs
+      - run: node tests/ui/proactive.mjs

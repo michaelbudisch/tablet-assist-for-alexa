@@ -3,7 +3,7 @@ import {readFile} from "node:fs/promises";
 import {chromium} from "playwright";
 
 const source = await readFile(new URL("../../homeassistant/www/jarvis/jarvis-camera-preview-v1.2.0.js", import.meta.url), "utf8");
-const controller = await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.1.0.js", import.meta.url), "utf8");
+const controller = await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.2.0.js", import.meta.url), "utf8");
 const browser = await chromium.launch({headless: true,
   ...(process.env.CAMERA_TEST_CHROME ? {executablePath: process.env.CAMERA_TEST_CHROME} : {})});
 const page = await browser.newPage({viewport: {width: 1080, height: 800}});
