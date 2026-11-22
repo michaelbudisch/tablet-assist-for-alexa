@@ -1,0 +1,30 @@
+name: Worker ZIP
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/worker-zip.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check worker version
+        id: version
+        run: |
+          version="$(cat worker/VERSION)"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jarvis_GPU_Worker_v${{ steps.version.outputs.version }}
+          path: worker/
+          include-hidden-files: false
+          if-no-files-found: error
+          retention-days: 30
