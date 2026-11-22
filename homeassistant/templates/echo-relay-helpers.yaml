@@ -1,0 +1,10 @@
+# Optional package: only use when these helpers do not already exist.
+input_text:
+  jarvis_native_audio_command:
+    name: Jarvis Native Audio Command
+    max: 255
+    initial: idle
+  jarvis_native_audio_status:
+    name: Jarvis Native Audio Status
+    max: 255
+    initial: idle
