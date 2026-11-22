@@ -6,8 +6,10 @@ const makeId=()=>[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toStri
 const statuses={idle:['Noch keine Auswertung','No check yet'],disabled:['Ausgeschaltet','Disabled'],cooldown:['Sperrzeit aktiv','Cooldown active'],busy:['Sprachverarbeitung oder Vision beschäftigt','Speech or vision is busy'],no_fresh_motion:['Kein frisches Bewegungsbild','No fresh motion image'],no_idle_dashboard:['Kein freies Dashboard mit Echo Relay','No idle dashboard with Echo Relay'],outside_window:['Außerhalb des Morgen-Zeitfensters','Outside the morning window'],already_today:['Heute bereits ausgeführt','Already acted today'],worker_unavailable:['Vision-Worker nicht verfügbar','Vision worker unavailable'],worker_update_required:['Vision-Worker ab 1.9.0 erforderlich','Vision worker 1.9.0+ required'],expired:['Bild oder Einstellungen inzwischen veraltet','Image or settings expired'],uncertain:['Unsicheres Bild: keine Aktion','Uncertain image: no action'],empty:['Keine Person und kein Hund erkannt','No person or dog detected'],no_match:['Keine ausgewählte Kategorie erkannt','No selected category detected'],detected:['Erkennung erfolgreich','Detection successful'],claimed:['Begrüßung wird vorbereitet','Preparing greeting'],greeting_started:['Wiedergabe vom Tablet bestätigt','Playback confirmed by tablet'],playback_skipped:['Wiedergabe übersprungen','Playback skipped']};
 const statusText=(v,key)=>statuses[key]?t(v,...statuses[key]):key;
 export function canAccept(v){
- const passive=v.session?.stage==='wake'&&!v.session?.wakeDetected;
- return !!(v.card?.isConnected&&!document.hidden&&v.mode==='dashboard'&&v.output==='native_audio'&&v.nativeAudioReady()&&!v.processing&&!v.playing&&!v.continuous&&(!v.session||passive)&&v.retryTimer==null&&!v._proactiveRunning);
+ const endpoint=v.session?.endpoint;
+ const quietContinuous=v.continuous&&v.session?.stage==='listen'&&endpoint&&!endpoint.started&&endpoint.leading>=100&&!endpoint.recent?.some(Boolean);
+ const passive=v.session?.stage==='wake'&&!v.session?.wakeDetected||quietContinuous;
+ return !!(v.card?.isConnected&&!document.hidden&&v.mode==='dashboard'&&v.output==='native_audio'&&v.nativeAudioReady()&&!v.processing&&!v.playing&&(!v.continuous||!v.session||quietContinuous)&&(!v.session||passive)&&v.retryTimer==null&&!v._proactiveRunning);
 }
 export function resolveProactiveFollowup(v,text){
  const follow=v._proactiveFollowup;v._proactiveFollowup=null;
@@ -18,7 +20,7 @@ export function resolveProactiveFollowup(v,text){
  return text;
 }
 export function connectProactive(v){
- if(v._proactiveConnection)return;
+ if(v._proactiveConnection||!v.card?.isConnected||!v.h?.connection?.subscribeEvents)return;
  const state={disposed:false,unsub:null,heartbeatTimer:null,updateTimer:null,signature:null};v._proactiveConnection=state;
  const client=makeId();
  async function heartbeat(){if(state.disposed||!v.card.isConnected)return;try{await rpc(v,{action:'heartbeat',client_id:client,busy:!canAccept(v)});}catch{}}
@@ -51,6 +53,7 @@ export function connectProactive(v){
 }
 
 export function mountProactiveSettings(v,root){
+ connectProactive(v);
  const section=node('div',null,'jvs-section');section.append(node('h3',t(v,'Proaktive Aktionen','Proactive actions')),node('p',t(v,'Bewegung kann ein aktuelles Einzelbild lokal auswerten lassen. Die KI liefert nur Kategorien; Aktionen legst du hier oder in HA fest.','Motion can trigger a local still-image check. AI returns categories only; you configure actions here or in HA.'),'jvs-muted'));
  const status=node('p',t(v,'Beim Öffnen werden die zentralen Einstellungen geladen.','Open to load shared settings.'),'jvs-muted');status.setAttribute('role','status');section.append(status);root.append(section);
  let current=null,loading=false;const fields={},controls=[];

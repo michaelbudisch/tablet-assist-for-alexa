@@ -31,10 +31,13 @@ try{
  await page.getByRole('button',{name:'Jetzt prüfen und Aktionen ausführen',exact:true}).click();await page.getByText('Prüfergebnis: Sperrzeit aktiv',{exact:true}).waitFor();
  // Running speech blocks even claiming a proactive job.
  await page.evaluate(async()=>{card.voice.processing=true;await handler({data:{request_id:'a'.repeat(32)}});card.voice.processing=false;});assert.equal(await page.evaluate(()=>calls.filter(c=>c.service_data.action==='claim').length),0);
+ assert.deepEqual(await page.evaluate(async()=>{const {canAccept}=await import('/jarvis-proactive-v1.0.0.js');const v=card.voice;v.continuous=true;v.session={stage:'listen',endpoint:{started:false,leading:101,recent:[false,false]}};const quiet=canAccept(v);v.session.endpoint.recent=[true];const voiced=canAccept(v);v.session=null;v.continuous=false;return [quiet,voiced];}),[true,false]);
  // Passive wake word may be paused, but no live listening or active utterance is interrupted.
  await page.evaluate(async()=>{const v=card.voice;v.wake=true;v.session={stage:'wake',wakeDetected:false};v.rearm=(ms,follow)=>rearms.push({ms,follow});v.playNativeAudio=async(url,keep)=>{v._nativeRequest='fixture-request';v.playing=true;h.states['input_text.jarvis_native_audio_status'].state='fixture-request|playing';await new Promise(r=>setTimeout(r,180));v._nativeRequest=null;v.playing=false;h.states['input_text.jarvis_native_audio_status'].state='ready|'+Date.now();v.finishPlayback(keep);};await handler({data:{request_id:'b'.repeat(32)}});});
  assert.equal(await page.evaluate(()=>calls.filter(c=>c.service_data.action==='ack'&&c.service_data.started).length),1);
  assert.equal(await page.evaluate(()=>card.voice.wake),true);assert.equal(await page.evaluate(()=>rearms.at(-1).follow),true);
+ await page.evaluate(async()=>{const v=card.voice;v.wake=false;v.continuous=true;v.session={stage:'listen',endpoint:{started:false,leading:101,recent:[false,false]}};await handler({data:{request_id:'c'.repeat(32)}});});
+ assert.equal(await page.evaluate(()=>card.voice.continuous),true);assert.equal(await page.evaluate(()=>calls.filter(c=>c.service_data.action==='ack'&&c.service_data.started).length),2);
  assert.equal(await page.evaluate(async()=>{const m=await import('/jarvis-proactive-v1.0.0.js');return m.resolveProactiveFollowup(card.voice,'ja bitte');}),'Was steht heute an?');
  assert.equal(await page.evaluate(async()=>{card.voice._proactiveFollowup={until:Date.now()+10000};const m=await import('/jarvis-proactive-v1.0.0.js');return m.resolveProactiveFollowup(card.voice,'nein danke');}),null);
  await page.evaluate(()=>card.remove());assert.equal(await page.evaluate(()=>window.unsubscribed),true);assert.deepEqual(errors,[]);
