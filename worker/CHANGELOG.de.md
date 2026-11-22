@@ -1,5 +1,11 @@
 [English](CHANGELOG.md) | **Deutsch**
 
+# 1.6.0
+
+- Optionaler authentifizierter Einzelbilddienst über vorhandenes Ollama; vier erlaubte Modelle, Qwen3-VL 4B Instruct Standard.
+- Feste Beschreibungsmodi, Bildlimits, Metadatenentfernung, eine parallele Vision-Anfrage, Entladen nach Inferenz. Keine Aufnahme oder Bildablage.
+- Simulierte API-Tests und PowerShell-Testclient. Sprach-/Textdienste unverändert. GPU und HA-Kameraanbindung am Zielsystem testen.
+
 # 1.5.0
 - Authentifizierte Stimmvariantenauswahl 1–9 für vorhandene synthetische Referenzen; fehlende Varianten fallen auf die konfigurierte Referenz zurück. Status im Antwortheader. Keine Uploads oder entfernten Modellneuladungen.
 - Lokales prepare_variants.py erstellt weitere Varianten bei gestopptem Streaming-Container. Bestehende Referenzen bleiben erhalten.

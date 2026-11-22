@@ -1,5 +1,11 @@
 **English** | [Deutsch](CHANGELOG.de.md)
 
+# 1.6.0
+
+- Optional authenticated single-image vision service sharing local Ollama; four allowed model tags, Qwen3-VL 4B Instruct default.
+- Fixed description modes, size limits, metadata removal, one concurrent vision request, unload after inference. No capture or persistent image storage.
+- Mock API tests and PowerShell client. Speech and text unchanged. GPU and HA camera integration require target tests.
+
 # 1.5.0
 
 - Optional authenticated request field `voice_variant`: choose an existing synthetic reference 1–9 for the current voice description without restarting. Missing variants use the configured reference; response headers report the effective variant and status. No voice uploads or remote model reloads.

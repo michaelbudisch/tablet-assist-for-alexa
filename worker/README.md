@@ -1,5 +1,22 @@
 **Deutsch** | [English](README.en.md) · [Installation](../docs/worker.md)
 
+# Jarvis GPU Worker v1.6.0 – Optionales Visionmodell
+
+Das Profil `vision` ergänzt Ollama um ausdrücklich angeforderte Einzelbildbeschreibungen; Qwen3 4B Instruct, Whisper und TTS bleiben unverändert. Standard: `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); Alternativen: `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Update am GPU-PC, nicht auf Proxmox: bestehende `.env` und Volumes behalten.
+
+```powershell
+docker compose config --quiet
+docker compose --profile llm --profile vision up -d --build vision
+docker compose exec ollama ollama pull qwen3-vl:4b-instruct
+docker compose exec vision python -m unittest -v test_server
+```
+
+Test mit einem eigenen unkritischen JPEG/PNG: `.\Test-Vision.ps1 -ImagePath C:\Bilder\test.png`. Anderes Modell lokal pullen, `VISION_MODEL` in .env setzen und `docker compose --profile vision up -d --no-deps vision` ausführen. Textmodell bleibt erhalten, Ollama lädt maximal ein Modell gleichzeitig, Vision fordert keep_alive 0 an. Modellwechsel können Zeit kosten; VRAM mit `nvidia-smi` prüfen.
+
+API: GET `/health` und POST `/describe` auf Privat-LAN-Port 10503, Header `X-API-Key` mit bestehendem Worker-Token. JSON `{"image":"<base64 JPEG/PNG>","mode":"scene"}`; Modi scene, objects, object_in_hand; optional model aus obiger Liste. Maximal 2 MiB/12 MP, intern auf 1280 px verkleinert, Metadaten entfernt. Antwort description, model, mode, limitation. Keine URL-/Stream-Aufnahme, freie Prompts oder Gerätebefehle, keine Personenidentifikation/-überwachung oder persistente Bilder. Nur Bilder, deren Verwendung erlaubt ist. Firewall auf HA beschränken; HTTP unverschlüsselt; keine Router-Portfreigabe. HA-Kameraauswahl und Android-App folgen separat. Beschreibungen können falsch sein. Mit `docker compose --profile vision stop vision` deaktivieren, keine Volumes löschen.
+
+---
+
 # Jarvis GPU Worker v1.5.0 – Stimmenwahl / Voice selection
 
 DE: Vorhandene `.env` unverändert behalten, besonders `STREAM_VOICE_STYLE` und `STREAM_VOICE_VARIANT=1`. Update in den vorhandenen Ordner kopieren.

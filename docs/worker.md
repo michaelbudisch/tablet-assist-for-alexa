@@ -1,8 +1,8 @@
 **Deutsch** | [English](en/worker.md) · [Projektübersicht](../README.de.md)
 
-# Optionaler KI-Zusatzrechner – Original-Worker v1.5.0
+# Optionaler KI-Zusatzrechner – Original-Worker v1.6.0
 
-Enthalten ist der bereitgestellte Jarvis GPU Worker 1.5.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
+Enthalten ist der bereitgestellte Jarvis GPU Worker 1.6.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
 
 ## 1. Konfiguration
 
@@ -40,6 +40,10 @@ docker compose exec ollama ollama pull qwen3:4b-instruct
 ```
 
 Ollama verwendet dieselbe GPU. Bei knappem VRAM die Dienste einzeln testen. Die geschützte Ollama-Schnittstelle kann über die HA-Ollama-Integration eingebunden werden; Schlüssel nur im HA-Dialog eingeben. Modelle können sich gegenseitig Speicher entziehen. Kein GPU-Rechner nötig für die CPU-Basis.
+
+## Optional: Vision
+
+Visionprofil über vorhandenes Ollama, Port 10503 nur für HA. [Installation und API](../worker/README.md). Kameraauswahl in HA folgt separat.
 
 ## 3. Home Assistant und CPU-Sprachserver verbinden
 

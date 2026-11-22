@@ -1,8 +1,8 @@
 [Deutsch](../worker.md) | **English** · [Project overview](../../README.md)
 
-# Optional AI computer — original GPU worker 1.5.0
+# Optional AI computer — original GPU worker 1.6.0
 
-The repository includes the original Jarvis GPU Worker 1.5.0. Models are not bundled; build and first startup download them separately. Windows requires Docker Desktop with WSL2 and NVIDIA drivers. Linux requires Docker Engine/Compose and NVIDIA Container Toolkit. Allow enough SSD space for models. Only trusted private-network access; never expose service ports publicly. Real GPU inference and Linux setup have not been tested end-to-end.
+The repository includes the original Jarvis GPU Worker 1.6.0. Models are not bundled; build and first startup download them separately. Windows requires Docker Desktop with WSL2 and NVIDIA drivers. Linux requires Docker Engine/Compose and NVIDIA Container Toolkit. Allow enough SSD space for models. Only trusted private-network access; never expose service ports publicly. Real GPU inference and Linux setup have not been tested end-to-end.
 
 ## 1. Configuration
 
@@ -38,6 +38,10 @@ docker compose exec ollama ollama pull qwen3:4b-instruct
 ```
 
 Ollama shares the GPU. Test services one at a time with limited VRAM. Use the authenticated Ollama interface via the HA integration, storing the key locally in its dialog. Models may compete for GPU memory. The CPU setup does not require an extra GPU computer.
+
+## Optional: vision
+
+The vision profile shares Ollama, port 10503 restricted to HA. [Setup and API](../../worker/README.en.md#optional-vision-160). HA camera selection is separate.
 
 ## 3. Connect Home Assistant and CPU server
 

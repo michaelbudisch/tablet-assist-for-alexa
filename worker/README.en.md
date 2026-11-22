@@ -1,4 +1,4 @@
-# Jarvis GPU Worker 1.5.0
+# Jarvis GPU Worker 1.6.0
 
 **English** | [Deutsch](README.md)
 
@@ -15,6 +15,22 @@ docker compose --profile stream up -d --build qwen-stream
 ```
 
 The Wyoming service uses port 10300; streaming TTS uses 10502. Only allow the necessary internal HA and CPU speech server clients. Do not forward these ports through your router. The optional older TTS profile on port 10501 is a separate model; do not run both TTS profiles simultaneously. Native CPU fallback remains available.
+
+
+## Optional vision (1.6.0)
+
+The optional `vision` profile uses the existing private Ollama for explicitly requested single-image descriptions. Existing text, Whisper, TTS and volumes are unchanged. Default `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); alternatives `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Preserve .env; run on the GPU computer, not Proxmox.
+
+```powershell
+docker compose config --quiet
+docker compose --profile llm --profile vision up -d --build vision
+docker compose exec ollama ollama pull qwen3-vl:4b-instruct
+docker compose exec vision python -m unittest -v test_server
+```
+
+Test a non-private image you may use with `.\Test-Vision.ps1 -ImagePath C:\Bilder\test.png`. Pull alternatives locally, set VISION_MODEL in .env and recreate only vision. Ollama limits loaded models to one; vision unloads after inference. Check actual shared VRAM and model-switch latency.
+
+Authenticated GET `/health`, POST `/describe` on private LAN port 10503 with existing X-API-Key. JSON `{"image":"<raw base64 JPEG/PNG>","mode":"scene"}`, modes scene, objects, object_in_hand; optional model from the four tags. Max 2 MiB/12 MP, resized to 1280 px, image metadata removed. Response description, model, mode, limitation. No URL/stream fetching, arbitrary prompts, device tools, person identification or monitoring, persistent image storage. Restrict firewall to HA, no public forwarding; HTTP is unencrypted. HA camera selection and Android integration are separate. Descriptions may be inaccurate. Stop only vision to disable without changing speech or volumes.
 
 ## Voice variants (1.5.0)
 

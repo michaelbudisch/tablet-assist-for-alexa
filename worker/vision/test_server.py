@@ -1,0 +1,65 @@
+import base64
+import io
+import unittest
+from PIL import Image
+from server import create_app, DEFAULT_MODEL, MAX_BYTES, ModelUnavailable
+
+TOKEN = "test-only-" + "x" * 40
+HEADERS = {"X-API-Key": TOKEN}
+
+def fixture():
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 64), "blue").save(buf, "PNG")
+    return base64.b64encode(buf.getvalue()).decode()
+
+class VisionTests(unittest.TestCase):
+    def setUp(self):
+        self.calls = []
+        def fake(path, data=None, timeout=8):
+            self.calls.append((path, data, timeout))
+            if path == "/api/tags":
+                return {"models": [{"name": DEFAULT_MODEL}]}
+            return {"message": {"content": "Eine blaue Fläche."}}
+        self.client = create_app(TOKEN, call=fake).test_client()
+    def post(self, data):
+        return self.client.post("/describe", json=data, headers=HEADERS)
+    def test_auth(self):
+        self.assertEqual(self.client.post("/describe", json={"image": fixture()}).status_code, 401)
+        self.assertEqual(self.calls, [])
+    def test_health(self):
+        self.assertTrue(self.client.get("/health", headers=HEADERS).json["ready"])
+    def test_description(self):
+        r = self.post({"image": fixture()})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json["model"], DEFAULT_MODEL)
+        self.assertEqual(r.headers["Cache-Control"], "no-store")
+        path, body, _ = self.calls[0]
+        self.assertEqual(path, "/api/chat")
+        self.assertEqual(body["keep_alive"], 0)
+        self.assertFalse(body["stream"])
+        self.assertEqual(len(body["messages"][1]["images"]), 1)
+        self.assertTrue(base64.b64decode(body["messages"][1]["images"][0]).startswith(b"\xff\xd8"))
+    def test_alternative(self):
+        self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,200)
+        self.assertEqual(self.calls[0][1]["model"], "gemma3:4b")
+    def test_invalid_model_mode_and_extra(self):
+        for extra in ({"model":"remote-cloud"}, {"mode":"identify"}, {"url":"https://example.org"}, {"question":"free text"}, {"mode":[]}, {"model":{}}):
+            with self.subTest(extra=extra):
+                self.assertEqual(self.post({"image": fixture(), **extra}).status_code, 400)
+        self.assertEqual(self.calls, [])
+    def test_invalid_image(self):
+        for image in ("invalid", "a" * (MAX_BYTES * 2), base64.b64encode(b"not an image").decode(), None):
+            with self.subTest():
+                self.assertIn(self.post({"image": image}).status_code, (400,413))
+        self.assertEqual(self.calls, [])
+    def test_offline_missing_model(self):
+        def fail(*args, **kwargs):
+            raise ModelUnavailable()
+        c = create_app(TOKEN, call=fail).test_client()
+        self.assertEqual(c.post("/describe", json={"image":fixture()}, headers=HEADERS).status_code, 503)
+        self.assertEqual(c.get("/health",headers=HEADERS).status_code,503)
+    def test_wrong_token(self):
+        self.assertEqual(self.client.get("/health",headers={"X-API-Key":"bad"}).status_code,401)
+
+if __name__ == "__main__":
+    unittest.main()

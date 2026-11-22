@@ -84,7 +84,7 @@ services:
               count: all
               capabilities: [gpu]
     restart: unless-stopped
-    profiles: ["llm"]
+    profiles: ["llm", "vision"]
     networks: [llm-private]
   ollama-gateway:
     image: nginx:alpine
@@ -100,6 +100,25 @@ services:
     restart: unless-stopped
     profiles: ["llm"]
     networks: [llm-private]
+  vision:
+    build: ./vision
+    image: jarvis-vision:1.6.0
+    environment:
+      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
+      VISION_MODEL: ${VISION_MODEL:-qwen3-vl:4b-instruct}
+    ports:
+      - "${LAN_IP}:10503:10503"
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    profiles: ["vision"]
+    networks: [llm-private]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
 volumes:
   whisper-data:
   qwen-data:
