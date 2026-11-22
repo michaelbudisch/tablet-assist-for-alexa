@@ -42,9 +42,11 @@ async def run(hass):
     check(frames.fresh, "fresh frame accepted")
     clock[0] = 17
     check(not frames.fresh and frames.expire() and frames.image is None, "stale image discarded")
-    for phrase in ("Wie wird das Wetter draußen?", "Schalte das Licht an", "Was ist ein Kameraobjektiv?", "Öffne die Haustür", "Ist die Haustür abgeschlossen?", "Wer wartet auf den Bus?"):
+    for phrase in ("Wie wird das Wetter draußen?", "Schalte das Licht an", "Was ist ein Kameraobjektiv?", "Öffne die Haustür", "Ist die Haustür abgeschlossen?", "Wer wartet auf den Bus?", "Schalte die Vorderkamera aus", "Ist die Vorderkamera an?", "Wie funktioniert die Vorderkamera?"):
         check(classify(phrase) is None, "ordinary request preserved: " + phrase)
     check(classify("Was ist draußen los?") == ("outside", "scene"), "outdoor sight question routed")
+    for phrase in ("Was siehst du in der Vorderkamera?", "Was siehst du an der Vorderseite?", "Was zeigt die Vorderkamera?", "Was ist an der Vorderseite los?", "Zeig mir die Außenkamera", "Was siehst du vorne?"):
+        check(classify(phrase) == ("outside", "scene"), "outdoor camera alias: " + phrase)
     for phrase in ("Wer ist an der Haustür?", "Was ist an der Haustür?", "Was siehst du an der Haustür?", "Was erkennst du vor der Tür?", "Wer steht gerade vor der Tür?", "Was ist vor meiner Haustür los?", "Hey Jarvis, kannst du mir bitte sagen, wer ist an der Haustuer?", "Who is at the front door?"):
         check(classify(phrase) == ("door", "scene"), "door sight variant: " + phrase)
 
@@ -140,7 +142,7 @@ async def run(hass):
             pipeline = Pipeline(conversation_engine=agent, conversation_language="de", language="de", name="Camera routing fixture",
                 stt_engine=None, stt_language=None, tts_engine=None, tts_language=None, tts_voice=None,
                 wake_word_entity=None, wake_word_id=None, prefer_local_intents=False)
-            for phrase in ("Wer ist an der Tür?", "Wer ist an der Haustür?", "Was siehst du an der Haustür?"):
+            for phrase in ("Wer ist an der Tür?", "Wer ist an der Haustür?", "Was siehst du an der Haustür?", "Was siehst du in der Vorderkamera?", "Was siehst du an der Vorderseite?"):
                 result = await run_intent(hass, pipeline, Context(user_id=admin.id), phrase)
                 check(not result["errors"] and "Rechteck" in result["speech"] and result["processed_locally"] is False,
                     "full Assist pipeline reaches vision: " + phrase)
@@ -173,7 +175,7 @@ async def run(hass):
             check(hass.states.get(cid).state == "unavailable" and relay.frames.image is None, "no stale fallback after stop")
             async with client.post(base + "/frame", headers={**headers, "X-Relay-Sequence": "2"}, data=jpeg) as response:
                 check(response.status == 409, "late frame after stop rejected")
-        check(len(seen) == 5, "vision called only for explicit service/question")
+        check(len(seen) == 7, "vision called only for explicit service/question")
     finally:
         await runner.cleanup()
 

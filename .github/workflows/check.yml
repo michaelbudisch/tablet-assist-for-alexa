@@ -25,3 +25,6 @@ jobs:
       - run: python tests/test_standalone.py
       - run: python tests/test_local_intents.py
       - run: node tests/test_camera_preview.mjs
+      - run: npm ci --prefix tests/ui --no-audit --no-fund
+      - run: npx --prefix tests/ui playwright install --with-deps chromium
+      - run: node tests/ui/camera-infobox.mjs

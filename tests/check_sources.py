@@ -1,7 +1,7 @@
 from pathlib import Path
 import ast,json,subprocess,re
 root=Path(__file__).resolve().parents[1]
-files=[p for p in root.rglob('*') if p.is_file() and not any(x in p.parts for x in ('.git','__pycache__','.venv','staging'))]
+files=[p for p in root.rglob('*') if p.is_file() and not any(x in p.parts for x in ('.git','__pycache__','.venv','staging','node_modules'))]
 for p in files:
     if p.suffix=='.py': ast.parse(p.read_text(),filename=str(p))
     elif p.suffix=='.json': json.loads(p.read_text())

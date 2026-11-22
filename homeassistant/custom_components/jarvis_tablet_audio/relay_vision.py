@@ -22,6 +22,19 @@ def classify(text):
     phrase = re.sub(r"^(?:hey )?jarvis ", "", phrase)
     phrase = re.sub(r"^(?:bitte |kannst du (?:mir )?(?:bitte )?sagen |sag mir (?:bitte )?)+", "", phrase)
     phrase = re.sub(r" bitte$", "", phrase)
+    # Visual questions accept common camera/location names; ordinary controls do not.
+    references = {
+        "outside": r"(?:vorderseite|vorderkamera|außenkamera|aussenkamera|außenseite|aussenseite)(?: live ansicht)?",
+        "tablet": r"(?:tabletkamera|tablet kamera)(?: live ansicht)?",
+    }
+    for source, reference in references.items():
+        if (re.fullmatch(r"was (?:siehst|erkennst) du(?: (?:gerade|jetzt|denn|da))* (?:(?:auf|in|an|bei|vor) (?:der|unserer|meiner) )" + reference + r"(?: (?:gerade|jetzt|denn|da))*", phrase)
+            or re.fullmatch(r"was (?:sieht|zeigt) (?:die|unsere|meine) " + reference, phrase)
+            or re.fullmatch(r"(?:beschreibe|zeige|zeig) (?:mir )?(?:die |unsere |meine )?" + reference, phrase)
+            or re.fullmatch(r"(?:wer|was) (?:ist|steht|passiert)(?: (?:gerade|jetzt|denn|da))* (?:an|vor|auf) (?:der|unserer|meiner) " + reference + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase)):
+            return (source, "scene")
+    if phrase in {"was siehst du vorne", "was ist vorne los", "was ist vor dem haus los"}:
+        return ("outside", "scene")
     door = r"(?:haus(?:tür|tuer)|eingangs(?:tür|tuer)|tür|tuer)"
     if re.fullmatch(r"(?:wer|was) (?:ist|steht|sitzt|wartet|passiert|befindet sich)(?: (?:gerade|jetzt|denn|da))* (?:an|vor) (?:der|unserer|meiner) " + door + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase):
         return ("door", "scene")
