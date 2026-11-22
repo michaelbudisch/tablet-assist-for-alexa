@@ -45,10 +45,20 @@ async def run(hass):
     for phrase in ("Wie wird das Wetter draußen?", "Schalte das Licht an", "Was ist ein Kameraobjektiv?", "Öffne die Haustür", "Ist die Haustür abgeschlossen?", "Wer wartet auf den Bus?", "Schalte die Vorderkamera aus", "Ist die Vorderkamera an?", "Wie funktioniert die Vorderkamera?"):
         check(classify(phrase) is None, "ordinary request preserved: " + phrase)
     check(classify("Was ist draußen los?") == ("outside", "scene"), "outdoor sight question routed")
-    for phrase in ("Was siehst du in der Vorderkamera?", "Was siehst du an der Vorderseite?", "Was zeigt die Vorderkamera?", "Was ist an der Vorderseite los?", "Zeig mir die Außenkamera", "Was siehst du vorne?"):
+    for phrase in ("Was siehst du in der Vorderkamera?", "Was siehst du an der Vorderseite?", "Was zeigt die Vorderkamera?", "Was ist an der Vorderseite los?", "Was siehst du vorne?"):
         check(classify(phrase) == ("outside", "scene"), "outdoor camera alias: " + phrase)
-    for phrase in ("Wer ist an der Haustür?", "Was ist an der Haustür?", "Was siehst du an der Haustür?", "Was erkennst du vor der Tür?", "Wer steht gerade vor der Tür?", "Was ist vor meiner Haustür los?", "Hey Jarvis, kannst du mir bitte sagen, wer ist an der Haustuer?", "Who is at the front door?"):
+    for phrase in ("Wer ist an der Haustür?", "Was ist an der Haustür?", "Was siehst du an der Haustür?", "Was siehst du in der Haustürkamera?", "Was ist auf der Haustür Kamera zu sehen?", "Was erkennst du vor der Tür?", "Wer steht gerade vor der Tür?", "Was ist vor meiner Haustür los?", "Hey Jarvis, kannst du mir bitte sagen, wer ist an der Haustuer?", "Who is at the front door?"):
         check(classify(phrase) == ("door", "scene"), "door sight variant: " + phrase)
+    view_phrases = {
+        "door": ("Zeige Haustür Kamera", "Zeige Haustürkamera", "Zeige Haustür", "Haustür", "Haustürkamera", "Haustür Kamera", "Kamera Haustür", "Klingel", "Zeige Klingel", "Klingelkamera", "Kannst du mir bitte zeigen die Haustürkamera"),
+        "outside": ("Zeige Vorderseite", "Vorderseite", "Vorderseitenkamera", "Vorderseite Kamera", "Kamera Vorderseite", "Vorderkamera", "Zeig mir die Außenkamera", "Schau nach draußen"),
+        "all": ("Zeige Kameras", "Zeig mir alle Kameras", "Kameras"),
+    }
+    for source, phrases in view_phrases.items():
+        for phrase in phrases:
+            check(classify(phrase) == (source, "view"), "view-only alias: " + phrase)
+    for phrase in ("Zeige nicht die Haustür", "Was ist eine Haustürkamera?", "Warum ist die Klingel kaputt?", "Klingel ausschalten"):
+        check(classify(phrase) is None, "non-visual request preserved: " + phrase)
 
     image = Image.new("RGB", (640, 480), "white")
     ImageDraw.Draw(image).rectangle((80, 80, 300, 300), fill="red")
@@ -129,11 +139,17 @@ async def run(hass):
                 check(response.status == 401, "preview resolution requires authentication")
             async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}, headers=auth) as response:
                 resolved = await response.json()
-                check(response.status == 200 and resolved["camera_entity_id"] == cid and resolved["source"] == "door", "requesting UI resolves configured door camera")
+                check(response.status == 200 and resolved["camera_entity_id"] == cid and resolved["source"] == "door" and resolved["action"] == "describe", "requesting UI resolves configured door camera")
+            for phrase in ("Zeige Haustürkamera", "Kamera Haustür", "Klingel", "Zeige Vorderseite", "Zeige Kameras"):
+                async with client.post(base + "/resolve_camera", json={"text": phrase}, headers=auth) as response:
+                    resolved = await response.json()
+                    check(response.status == 200 and resolved["camera_entity_ids"] == [cid] and resolved["action"] == "view", "view resolution without inference: " + phrase)
             async with client.post(base + "/resolve_camera", json={"text": "Ist die Haustür abgeschlossen?"}, headers=auth) as response:
                 check((await response.json())["camera_entity_id"] is None, "door control query has no camera popup")
             async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}, headers={"Authorization": "Bearer " + restricted_bearer}) as response:
                 check(response.status == 403, "preview obeys entity read permissions")
+            async with client.post(base + "/resolve_camera", json={"text": "Zeige Kameras"}, headers={"Authorization": "Bearer " + restricted_bearer}) as response:
+                check(response.status == 403, "overview does not expose unauthorized camera IDs")
             check(not seen, "preview resolution does not invoke model")
             result = await hass.services.async_call("jarvis_tablet_audio", "describe_camera", {"source": "tablet"}, blocking=True, return_response=True, context=Context(user_id=admin.id))
             check("Rechteck" in result["description"], "service describes tablet image")
@@ -142,10 +158,15 @@ async def run(hass):
             pipeline = Pipeline(conversation_engine=agent, conversation_language="de", language="de", name="Camera routing fixture",
                 stt_engine=None, stt_language=None, tts_engine=None, tts_language=None, tts_voice=None,
                 wake_word_entity=None, wake_word_id=None, prefer_local_intents=False)
-            for phrase in ("Wer ist an der Tür?", "Wer ist an der Haustür?", "Was siehst du an der Haustür?", "Was siehst du in der Vorderkamera?", "Was siehst du an der Vorderseite?"):
+            for phrase in ("Wer ist an der Tür?", "Wer ist an der Haustür?", "Was siehst du an der Haustür?", "Was siehst du in der Haustürkamera?", "Was siehst du in der Vorderkamera?", "Was siehst du an der Vorderseite?"):
                 result = await run_intent(hass, pipeline, Context(user_id=admin.id), phrase)
                 check(not result["errors"] and "Rechteck" in result["speech"] and result["processed_locally"] is False,
                     "full Assist pipeline reaches vision: " + phrase)
+            count_before_views = len(seen)
+            for phrase in ("Zeige Haustürkamera", "Haustür", "Kamera Haustür", "Klingel", "Zeige Vorderseite", "Zeige Kameras"):
+                result = await run_intent(hass, pipeline, Context(user_id=admin.id), phrase)
+                check(not result["errors"] and "Liveansicht" in result["speech"] and len(seen) == count_before_views,
+                    "view-only native fallback never invokes vision: " + phrase)
             # No real devices: this synthetic service records native HA command execution.
             lamp = registry.async_get_or_create("light", "relay_camera_ci", "routing-fixture", suggested_object_id="routing_fixture", original_name="Testlampe")
             hass.states.async_set(lamp.entity_id, "off", {"friendly_name": "Testlampe", "supported_features": 0})
@@ -175,7 +196,7 @@ async def run(hass):
             check(hass.states.get(cid).state == "unavailable" and relay.frames.image is None, "no stale fallback after stop")
             async with client.post(base + "/frame", headers={**headers, "X-Relay-Sequence": "2"}, data=jpeg) as response:
                 check(response.status == 409, "late frame after stop rejected")
-        check(len(seen) == 7, "vision called only for explicit service/question")
+        check(len(seen) == 8, "vision called only for explicit service/question")
     finally:
         await runner.cleanup()
 

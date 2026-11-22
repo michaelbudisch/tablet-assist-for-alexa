@@ -15,40 +15,45 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import QWEN_BASE
 
+DOOR_PLACE = r"(?:(?:haus ?|eingangs ?)?t(?:ür|uer)|klingel)"
+CAMERA_REFERENCES = {
+    "door": rf"(?:{DOOR_PLACE}(?: ?kamera)?|kamera {DOOR_PLACE})(?: live ansicht)?",
+    "outside": r"(?:vorderseite(?:n? ?kamera)?|vorder ?kamera|außen ?kamera|aussen ?kamera|außenseite|aussenseite|vorne|kamera (?:vorderseite|vorne|außen|aussen))(?: live ansicht)?",
+    "tablet": r"(?:(?:tablet|tablett) ?kamera|kamera (?:tablet|tablett))(?: live ansicht)?",
+}
+
+
 def classify(text):
+    """Return (source, view/scene/object_in_hand); only explicit questions infer an image."""
     if not isinstance(text, str) or len(text) > 500:
         return None
     phrase = re.sub(r"[^\wäöüß]+", " ", text.casefold()).strip()
-    phrase = re.sub(r"^(?:hey )?jarvis ", "", phrase)
-    phrase = re.sub(r"^(?:bitte |kannst du (?:mir )?(?:bitte )?sagen |sag mir (?:bitte )?)+", "", phrase)
+    phrase = re.sub(r"^(?:(?:hey )?jarvis |bitte )+", "", phrase)
+    phrase = re.sub(r"^kannst du (?:mir )?(?:bitte )?zeigen ", "zeige ", phrase)
+    phrase = re.sub(r"^(?:kannst du (?:mir )?(?:bitte )?sagen |sag mir (?:bitte )?)+", "", phrase)
     phrase = re.sub(r" bitte$", "", phrase)
-    # Visual questions accept common camera/location names; ordinary controls do not.
-    references = {
-        "outside": r"(?:vorderseite|vorderkamera|außenkamera|aussenkamera|außenseite|aussenseite)(?: live ansicht)?",
-        "tablet": r"(?:tabletkamera|tablet kamera)(?: live ansicht)?",
-    }
-    for source, reference in references.items():
-        if (re.fullmatch(r"was (?:siehst|erkennst) du(?: (?:gerade|jetzt|denn|da))* (?:(?:auf|in|an|bei|vor) (?:der|unserer|meiner) )" + reference + r"(?: (?:gerade|jetzt|denn|da))*", phrase)
-            or re.fullmatch(r"was (?:sieht|zeigt) (?:die|unsere|meine) " + reference, phrase)
-            or re.fullmatch(r"(?:beschreibe|zeige|zeig) (?:mir )?(?:die |unsere |meine )?" + reference, phrase)
-            or re.fullmatch(r"(?:wer|was) (?:ist|steht|passiert)(?: (?:gerade|jetzt|denn|da))* (?:an|vor|auf) (?:der|unserer|meiner) " + reference + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase)):
+    show = r"(?:(?:zeige|zeig) (?:mir )?(?:bitte )?)?"
+    article = r"(?:(?:die|das|unsere|meine) )?"
+    if re.fullmatch(show + r"(?:(?:alle|die|unsere|meine) )?(?:kameras|kameraübersicht|kamera übersicht)(?: anzeigen)?", phrase):
+        return ("all", "view")
+    if phrase in {"schau nach draußen", "schau nach draussen", "show outdoor camera"}:
+        return ("outside", "view")
+    for source, reference in CAMERA_REFERENCES.items():
+        if re.fullmatch(show + article + reference + r"(?: anzeigen)?", phrase):
+            return (source, "view")
+        if (re.fullmatch(r"was (?:siehst|erkennst) du(?: (?:gerade|jetzt|denn|da))* (?:(?:auf|in|an|bei|vor|durch) (?:(?:der|die|das|unserer|meiner) )?)?" + reference + r"(?: (?:gerade|jetzt|denn|da))*", phrase)
+            or re.fullmatch(r"was (?:sieht|zeigt) (?:(?:die|unsere|meine) )?" + reference, phrase)
+            or re.fullmatch(r"beschreib(?:e)? (?:mir )?" + article + reference, phrase)
+            or re.fullmatch(r"(?:wer|was) (?:ist|steht|sitzt|wartet|passiert|befindet sich)(?: (?:gerade|jetzt|denn|da))* (?:an|vor|auf|in|bei) (?:(?:der|unserer|meiner) )?" + reference + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase)):
             return (source, "scene")
-    if phrase in {"was siehst du vorne", "was ist vorne los", "was ist vor dem haus los"}:
-        return ("outside", "scene")
-    door = r"(?:haus(?:tür|tuer)|eingangs(?:tür|tuer)|tür|tuer)"
-    if re.fullmatch(r"(?:wer|was) (?:ist|steht|sitzt|wartet|passiert|befindet sich)(?: (?:gerade|jetzt|denn|da))* (?:an|vor) (?:der|unserer|meiner) " + door + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase):
-        return ("door", "scene")
-    if re.fullmatch(r"was (?:siehst|erkennst) du(?: (?:gerade|jetzt|denn|da))* (?:an|vor) (?:der|unserer|meiner) " + door + r"(?: (?:gerade|jetzt|denn|da))*", phrase):
-        return ("door", "scene")
-    if phrase in {"who is at the door", "who is at the front door", "what is at the front door", "what is happening at the front door"}:
-        return ("door", "scene")
     groups = {
         ("tablet", "object_in_hand"): ("was halte ich in der hand", "was habe ich in der hand", "what am i holding"),
-        ("tablet", "scene"): ("was siehst du", "was sieht die tabletkamera", "beschreibe das kamerabild", "what do you see"),
-        ("outside", "scene"): ("was ist draußen los", "was ist draussen los", "was siehst du draußen", "was siehst du draussen", "schau nach draußen", "schau nach draussen", "beschreibe die außenkamera", "what is happening outside"),
-        ("door", "scene"): ("was sieht die haustürkamera", "was ist vor der haustür zu sehen", "beschreibe die haustürkamera"),
+        ("tablet", "scene"): ("was siehst du", "beschreibe das kamerabild", "what do you see"),
+        ("outside", "scene"): ("was ist draußen los", "was ist draussen los", "was siehst du draußen", "was siehst du draussen", "was siehst du vorne", "was ist vorne los", "was ist vor dem haus los", "what is happening outside"),
+        ("door", "scene"): ("who is at the door", "who is at the front door", "what is at the front door", "what is happening at the front door"),
     }
     return next((key for key, values in groups.items() if phrase in values), None)
+
 
 async def resolve_camera(relay, source, context):
     """One mapping and permission check shared by descriptions and the requesting UI."""
@@ -60,6 +65,38 @@ async def resolve_camera(relay, source, context):
         if user is None or not user.permissions.check_entity(entity_id, POLICY_READ):
             raise Unauthorized()
     return entity_id
+
+
+async def resolve_camera_request(relay, selection, context):
+    """Resolve only authorized configured cameras, without capturing or inferring images."""
+    source, mode = selection
+    sources = ("door", "outside", "tablet") if source == "all" else (source,)
+    entities = []
+    denied = False
+    for selected in sources:
+        try:
+            entity_id = await resolve_camera(relay, selected, context)
+        except Unauthorized:
+            if source != "all":
+                raise
+            denied = True
+            continue
+        except ServiceValidationError:
+            if source != "all":
+                raise
+            continue
+        state = relay.hass.states.get(entity_id)
+        if source == "all" and (state is None or selected == "tablet" and not relay.frames.fresh):
+            continue
+        if entity_id not in entities:
+            entities.append(entity_id)
+    if not entities:
+        if denied:
+            raise Unauthorized()
+        raise ServiceValidationError("No configured camera is available")
+    return {"camera_entity_id": entities[0] if len(entities) == 1 else None,
+        "camera_entity_ids": entities, "source": source,
+        "action": "view" if mode == "view" else "describe"}
 
 def worker_url(entry):
     configured = entry.options.get("vision_url", "").strip()

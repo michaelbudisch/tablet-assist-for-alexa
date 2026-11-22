@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {chromium} from "playwright";
 
-const source = await readFile(new URL("../../homeassistant/www/jarvis/jarvis-camera-preview-v1.1.0.js", import.meta.url), "utf8");
+const source = await readFile(new URL("../../homeassistant/www/jarvis/jarvis-camera-preview-v1.2.0.js", import.meta.url), "utf8");
+const controller = await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.0.4.js", import.meta.url), "utf8");
 const browser = await chromium.launch({headless: true,
   ...(process.env.CAMERA_TEST_CHROME ? {executablePath: process.env.CAMERA_TEST_CHROME} : {})});
 const page = await browser.newPage({viewport: {width: 1080, height: 800}});
 const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"></head><body style="background:#111820;color:#eef;font:16px system-ui"><h1>Jarvis · Kamera-Test</h1><div id="host"></div><script type="module">
 import {previewCamera,closeCameraInfo} from '/preview.js';
+import '/card.js';
 const host=document.querySelector('#host');host.attachShadow({mode:'open'});
 window.attached=0;window.detached=0;window.configs=[];
 customElements.define('fixture-camera',class extends HTMLElement {
@@ -15,13 +17,18 @@ customElements.define('fixture-camera',class extends HTMLElement {
   disconnectedCallback(){window.detached++;}
 });
 window.loadCardHelpers=async()=>({createCardElement:config=>{window.configs.push(config);return document.createElement('fixture-camera');}});
-const voice={card:host,session:{},generation:1,mode:'dashboard',h:{language:'de',states:{'camera.door':{state:'idle',attributes:{friendly_name:'Haustür Live-Ansicht'}}},callApi:async()=>({camera_entity_id:'camera.door'})}};
+window.fixtureHass={language:'de',states:{'camera.door':{state:'idle',attributes:{friendly_name:'Haustür Live-Ansicht'}},'camera.outside':{state:'idle',attributes:{friendly_name:'Vorderseite'}}},callApi:async(method,path,body)=>{
+  const viewing=!body.text.startsWith('Wer')&&!body.text.startsWith('Was');
+  const all=body.text==='Zeige Kameras';
+  return {camera_entity_id:all?null:'camera.door',camera_entity_ids:all?['camera.door','camera.outside']:['camera.door'],source:all?'all':'door',action:viewing?'view':'describe'};
+}};
+const voice={card:host,session:{},generation:1,mode:'dashboard',h:window.fixtureHass};
 window.voice=voice;window.openPreview=()=>previewCamera(voice,'Wer ist an der Haustür?',voice.session);window.closePreview=()=>closeCameraInfo(voice);
 window.ready=true;
 </script></body></html>`;
 await page.route("http://relay-ui.test/**", route => route.fulfill({
-  contentType: route.request().url().endsWith("preview.js") ? "application/javascript" : "text/html",
-  body: route.request().url().endsWith("preview.js") ? source : html}));
+  contentType: route.request().url().endsWith(".js") ? "application/javascript" : "text/html",
+  body: route.request().url().endsWith("card.js") ? controller : route.request().url().endsWith(".js") ? source : html}));
 try {
   await page.goto("http://relay-ui.test/");
   await page.waitForFunction(() => window.ready);
@@ -69,5 +76,28 @@ try {
   await page.evaluate(() => {window.voice.generation++;window.voice.info.cameraView.update();});
   await dialog.waitFor({state:"detached"});
   assert.equal(await page.locator("fixture-camera").count(), 0);
+  // Exercise the production controller: view commands must finish before any Assist/TTS subscription.
+  await page.evaluate(() => {
+    const card=document.createElement('echo-relay-assist-card');card.setConfig({});card.hass=window.fixtureHass;document.body.append(card);
+    window.realCard=card;window.assistCalls=0;card.voice.mode='dashboard';
+    card.voice.subscribe=async()=>{window.assistCalls++;};
+  });
+  await page.evaluate(() => window.realCard.voice.intent('Zeige Haustürkamera',false));
+  await dialog.waitFor();
+  assert.equal(await page.evaluate(() => window.assistCalls),0);
+  assert.equal(await page.evaluate(() => window.realCard.voice.session),null);
+  assert.equal(await page.locator('.jv-camera-reply:visible').count(),0);
+  assert.equal(await page.getByText('Das aktuelle Einzelbild wird ausgewertet …').count(),1);
+  await page.clock.fastForward(30100);await dialog.waitFor({state:'detached'});
+  await page.evaluate(() => window.realCard.voice.intent('Zeige Kameras',false));
+  await page.locator('fixture-camera').nth(1).waitFor();
+  assert.equal(await page.locator('fixture-camera').count(),2);
+  assert.equal(await page.evaluate(() => window.assistCalls),0);
+  if(process.env.CAMERA_UI_SCREENSHOT)await page.screenshot({path:process.env.CAMERA_UI_SCREENSHOT.replace(/\.png$/,'-overview.png')});
+  await page.getByRole('button',{name:'Schließen ✕',exact:true}).click();
+  assert.equal(await page.locator('fixture-camera').count(),0);
+  await page.evaluate(() => window.realCard.voice.intent('Was siehst du in der Haustürkamera?',false));
+  assert.equal(await page.evaluate(() => window.assistCalls),1);
+  await page.evaluate(() => window.realCard.voice.stop());
   console.log("Camera UI: live configuration, speech text, persistent player, manual/automatic close, hard deadline and cancelled late load passed.");
 } finally { await browser.close(); }

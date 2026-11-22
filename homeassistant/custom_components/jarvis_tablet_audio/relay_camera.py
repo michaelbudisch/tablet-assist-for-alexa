@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 from .relay_frames import FrameStore, DEVICE, MAX_IMAGE
-from .relay_vision import describe, health, classify, resolve_camera
+from .relay_vision import describe, health, classify, resolve_camera_request
 
 API = "/api/jarvis_echo_relay"
 
@@ -87,12 +87,12 @@ class ResolveCameraView(HomeAssistantView):
         if selected is None:
             return web.json_response({"camera_entity_id": None}, headers={"Cache-Control": "no-store"})
         try:
-            entity_id = await resolve_camera(relay, selected[0], Context(user_id=request["hass_user"].id))
+            result = await resolve_camera_request(relay, selected, Context(user_id=request["hass_user"].id))
         except Unauthorized:
             raise web.HTTPForbidden() from None
         except ServiceValidationError:
             raise web.HTTPNotFound() from None
-        return web.json_response({"camera_entity_id": entity_id, "source": selected[0]}, headers={"Cache-Control": "no-store"})
+        return web.json_response(result, headers={"Cache-Control": "no-store"})
 
 class RegisterView(HomeAssistantView):
     url = API + "/register"
@@ -237,6 +237,11 @@ async def answer(hass, text, context):
     if relay is None:
         return "Die Kamerafunktion ist gerade nicht verfügbar."
     try:
+        if request[1] == "view":
+            await resolve_camera_request(relay, request, context)
+            # Visible dashboard clients handle these before Assist/TTS. Native clients
+            # receive an honest fallback and never invoke the vision worker.
+            return "Die Liveansicht kannst du im Jarvis-Dashboard öffnen."
         result = await describe(relay, *request, context)
         return "Auf dem gerade abgerufenen Einzelbild: " + result["description"]
     except (HomeAssistantError, ValueError, asyncio.TimeoutError):

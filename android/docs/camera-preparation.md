@@ -2,7 +2,7 @@
 
 ## Einrichtung
 
-1. HA benötigt den Kamera-Empfänger **Jarvis Tablet Audio 1.4.3** aus `homeassistant/custom_components/`. Bei bestehenden Installationen `const.py`, Zugangsdaten und eigene Dialog-/Sucherweiterungen behalten; Setup/Router gezielt um die Kameramodule ergänzen. Python-Codeupdates benötigen einen HA-Neustart. Neue portable Installationen verwenden `homeassistant/install.py`.
+1. HA benötigt den Kamera-Empfänger **Jarvis Tablet Audio 1.4.4** aus `homeassistant/custom_components/`. Bei bestehenden Installationen `const.py`, Zugangsdaten und eigene Dialog-/Sucherweiterungen behalten; Setup/Router gezielt um die Kameramodule ergänzen. Python-Codeupdates benötigen einen HA-Neustart. Neue portable Installationen verwenden `homeassistant/install.py`.
 2. In **Einstellungen → Geräte & Dienste → Jarvis Tablet Audio → Konfigurieren** Außen-/Haustürkamera auswählen. Eine leere Vision-Adresse nutzt den vorhandenen GPU-Host auf Port 10503. Alternativ lokale IP mit Port ohne Pfad angeben. Der bestehende Qwen-/Worker-Schlüssel wird genutzt. Voraussetzung: GPU Worker 1.7.0 mit Vision-Profil und installiertem Visionmodell. Die App benötigt keinen weiteren produktiven Docker-Dienst.
 3. In der App HA-Adresse/Token speichern, **Kameraeinstellungen öffnen**, Front-/Rückkamera auswählen, optional **Bildbewegung an HA melden** einschalten und **Kamera für HA starten** antippen. Die Kopplung benötigt einen HA-Administrator-Token. Der Audioplayer muss nicht laufen.
 4. Bilder erscheinen normalerweise als `camera.echo_relay_tablet`, Bewegung als `binary_sensor.echo_relay_bildbewegung`. Bei abweichenden Namen die Entitäten der Integration verwenden. Der Vision-Aufruf findet die Tablet-Kamera anhand ihrer eindeutigen ID.
@@ -10,7 +10,7 @@
 
 ## Kamera-Infobox und Haustürfragen
 
-Der aktualisierte Dashboard-Controller öffnet bei einer Kamerafrage automatisch die zugeordnete Kamera als HA-Infobox, während Jarvis das Einzelbild beschreibt. Das gilt nur für das anfragende, sichtbare Dashboard, nicht für andere Tablets oder nativen Companion Assist. Für die öffentliche Karte Version 1.0.3 zusammen mit `jarvis-camera-preview-v1.1.0.js` installieren; nach dem Update Dashboard neu laden. App 0.5.0 benötigt dafür kein Update.
+Der aktualisierte Dashboard-Controller öffnet bei einer Kamerafrage automatisch die zugeordnete Kamera als HA-Infobox, während Jarvis das Einzelbild beschreibt. Das gilt nur für das anfragende, sichtbare Dashboard, nicht für andere Tablets oder nativen Companion Assist. Für die öffentliche Karte Version 1.0.4 zusammen mit `jarvis-camera-preview-v1.2.0.js` installieren; nach dem Update Dashboard neu laden. App 0.5.0 benötigt dafür kein Update.
 
 Bei „Wer ist an der Haustür?“ sind allgemeine Beschreibungen sichtbarer Personen, Kleidung und mitgeführter Gegenstände möglich. Das Modell ordnet keine Namen zu und führt keinen Gesichtsabgleich durch. Auch „Wer steht gerade vor der Tür?“ ist eine Kamerafrage. „Öffne die Haustür“ und „Ist die Haustür abgeschlossen?“ bleiben Hausbefehle beziehungsweise Statusfragen.
 
@@ -53,3 +53,19 @@ For Jarvis router pipelines disable “Prefer handling commands locally”. The 
 Karte 1.0.3 und Vorschaumodul 1.1.0 starten die HA-Liveansicht stumm, ohne zusätzlichen Startknopf. Nach der Sprachantwort schließt die Infobox entsprechend „Infobox-Anzeige“ in den Jarvis-Einstellungen (Standard 30 s); die eigenständige Karte verwendet `camera_info_seconds` (15–90, Standard 30). „Länger anzeigen (+60 s)“ verlängert einmalig, insgesamt höchstens drei Minuten ab Öffnung. Schließen, eine neue Frage, Tabwechsel oder Verlassen des Dashboards beendet die Anzeige und trennt den Player. Andere HA-Karten und Aufnahmen werden dadurch nicht gestoppt. Ohne verfügbare Kamera bleibt die Fehlermeldung sichtbar, bis die Infobox schließt. Der Tablet-Feed besteht weiterhin aus aktualisierten Einzelbildern.
 
 The configured outdoor camera now answers “Vorderkamera” and “Vorderseite” visual questions. The live preview uses Home Assistant's standard picture-entity card in live mode with muted playback. It reuses the kiosk infobox delay (30 seconds by default after speech) or standalone `camera_info_seconds`, supports one 60-second extension and always closes within three minutes. Closing, a new question, hiding or removing the dashboard disposes the player. Description text still concerns a snapshot. Copy the new versioned JavaScript files and reload the dashboard; update the HA integration to 1.4.3 and restart HA for the new aliases. No APK or worker update is needed.
+
+## Nur anzeigen oder beschreiben / View or describe (1.4.4)
+
+Ab Karte 1.0.4 und Vorschaumodul 1.2.0 sind Anzeigen und Bildauswertung getrennt:
+
+| Befehl | Verhalten |
+|---|---|
+| „Zeige Haustürkamera“, „Zeige Haustür Kamera“, „Haustür“, „Haustürkamera“, „Kamera Haustür“, „Klingel“ | Nur Haustür-Feed, ohne KI-Auswertung oder Sprachausgabe |
+| „Zeige Vorderseite“, „Vorderseite“, „Vorderkamera“, „Vorderseite Kamera“, „Kamera Vorderseite“, „Zeig mir die Außenkamera“ | Nur Vorderseiten-/Außen-Feed |
+| „Zeige Kameras“, „Zeig mir alle Kameras“ | Übersicht der eingerichteten, für den Benutzer freigegebenen Kameras; Tablet nur bei frischem Bild |
+| „Was siehst du in der Haustürkamera?“, „Wer ist an der Haustür?“, „Was ist an der Klingel?“ | Haustür-Feed plus ausdrücklich angeforderte Bildbeschreibung |
+| „Was siehst du an der Vorderseite?“, „Was zeigt die Vorderkamera?“, „Was ist draußen los?“ | Außen-Feed plus Bildbeschreibung |
+
+Bei reiner Anzeige startet die Schließzeit sofort mit dem Öffnen. Bei einer Beschreibung beginnt sie nach der Sprachantwort. Verlängerung, maximale Öffnungsdauer und Beenden aller Player bleiben gleich. „Öffne die Haustür“ bleibt ein Hausbefehl und wird nicht zur Kameraanzeige. Definitionsfragen wie „Was ist eine Haustürkamera?“ werten kein Kamerabild aus.
+
+View-only commands bypass the dashboard Assist/TTS pipeline entirely and never call the vision worker. Bare camera aliases also show the feed. Explicit visual questions (or an explicit “describe” request) still infer a snapshot and speak its description. “Zeige Kameras” opens up to three authorized configured feeds in one responsive grid; closing the infobox removes every player. Native Companion Assist cannot open this dashboard-local view and returns a short dashboard hint, without inference. Update backend 1.4.4, the versioned module and controller, then restart HA and reload the dashboard. No APK or GPU-worker update is required.
