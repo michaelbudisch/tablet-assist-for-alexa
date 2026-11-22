@@ -40,6 +40,10 @@ flowchart LR
 
 Die native Assist-Integration bündelt STT, TTS und Gesprächsrouter ohne manuelle YAML-Bearbeitung. Der optionale Nginx-Proxy stellt ausschließlich kurzlebige MP3-Dateien bereit. Timer und Benachrichtigungsmanager des bisherigen Dashboards bleiben als manuelle Vorlagen erhalten; sie werden nicht durch den Marketplace installiert. Entwickler-Vorschau: keine vollständige Neuinstallation bestätigt.
 
+## Optionale Android-Audiobrücke
+
+**[HA Jarvis Echo Relay 0.2.0](android/README.de.md)** bietet einen deutschen/englischen Android-Player mit HA-Suche, einmaligem Token-QR-Scan, bestätigter Bluetooth-Ausgabe und optionalem nativem Silent-Keepalive. [Fertige Vorschau-APK](android/downloads/HA-Jarvis-Echo-Relay-0.2.0-preview.apk). Ein kompatibler Controller für die nativen Befehls-/Statushelfer ist erforderlich; die Marketplace-Integration richtet diesen Transport nicht automatisch ein.
+
 ## Installation
 
 ```bash

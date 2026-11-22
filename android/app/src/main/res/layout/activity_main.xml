@@ -1,0 +1,91 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:clipToPadding="false">
+<LinearLayout android:id="@+id/page_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+<ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_relay" android:importantForAccessibility="no"/>
+<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/ink" android:textSize="20sp" android:fontFamily="sans-serif-medium"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_tagline" android:textColor="@color/muted" android:textSize="12sp"/>
+</LinearLayout>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="end">
+<Button android:id="@+id/language_de" style="@style/Action" android:layout_width="wrap_content" android:minWidth="88dp" android:text="@string/language_de" android:contentDescription="@string/language_de"/>
+<Button android:id="@+id/language_en" style="@style/Action" android:layout_width="wrap_content" android:minWidth="88dp" android:layout_marginStart="8dp" android:text="@string/language_en" android:contentDescription="@string/language_en"/>
+</LinearLayout>
+<TextView style="@style/Heading" android:text="@string/intro_title" android:textSize="30sp" android:layout_marginTop="20dp" android:lineSpacingExtra="0dp"/>
+<TextView style="@style/Body" android:text="@string/intro_body" android:layout_marginBottom="24dp"/>
+<LinearLayout android:id="@+id/columns" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+<LinearLayout android:id="@+id/setup_column" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+<LinearLayout style="@style/Card">
+<TextView style="@style/Eyebrow" android:text="@string/step_bluetooth"/>
+<TextView style="@style/Heading" android:text="@string/bluetooth_title"/>
+<TextView style="@style/Body" android:text="@string/bluetooth_help"/>
+<Button android:id="@+id/bluetooth_settings" style="@style/Action" android:text="@string/bluetooth_settings"/>
+</LinearLayout>
+<LinearLayout style="@style/Card">
+<TextView style="@style/Eyebrow" android:text="@string/step_server"/>
+<TextView style="@style/Heading" android:text="@string/server_title"/>
+<TextView style="@style/Body" android:text="@string/server_help"/>
+<Button android:id="@+id/search" style="@style/Action" android:text="@string/search"/>
+<TextView android:id="@+id/search_message" style="@style/Body" android:accessibilityLiveRegion="polite"/>
+<LinearLayout android:id="@+id/search_results" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"/>
+<TextView style="@style/Body" android:text="@string/server_label" android:labelFor="@+id/server_address"/>
+<EditText android:id="@id/server_address" style="@style/Input" android:hint="@string/server_hint" android:inputType="textUri" android:importantForAutofill="no"/>
+<TextView style="@style/Body" android:text="@string/server_address_help" android:textSize="12sp"/>
+<LinearLayout android:id="@+id/http_panel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+<CheckBox android:id="@+id/allow_http" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="12dp" android:text="@string/http_consent" android:textColor="@color/warn" android:textSize="14sp" android:saveEnabled="false"/>
+<TextView style="@style/Body" android:text="@string/http_help" android:textSize="12sp" android:textColor="@color/warn"/>
+</LinearLayout>
+</LinearLayout>
+<LinearLayout style="@style/Card">
+<TextView style="@style/Eyebrow" android:text="@string/step_token"/>
+<TextView style="@style/Heading" android:text="@string/token_title"/>
+<TextView style="@style/Body" android:text="@string/token_help"/>
+<TextView style="@style/Body" android:text="@string/token_once" android:textColor="@color/warn"/>
+<Button android:id="@+id/scan_token" style="@style/Primary" android:text="@string/scan_token"/>
+<EditText android:id="@+id/token" style="@style/Input" android:hint="@string/token_hint" android:inputType="textPassword" android:saveEnabled="false" android:importantForAutofill="no"/>
+<TextView android:id="@+id/token_note" style="@style/Body" android:text="@string/token_storage" android:textSize="12sp"/>
+</LinearLayout>
+</LinearLayout>
+<LinearLayout android:id="@+id/player_column" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+<LinearLayout style="@style/Card">
+<TextView style="@style/Eyebrow" android:text="@string/player_section"/>
+<TextView android:id="@+id/player_status" style="@style/Heading" android:text="@string/status_stopped" android:textSize="26sp" android:accessibilityLiveRegion="polite"/>
+<TextView android:id="@+id/player_description" style="@style/Body" android:text="@string/status_stopped_help"/>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp">
+<TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/label_bluetooth"/>
+<TextView android:id="@+id/bluetooth_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_connected"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+<TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/label_ha"/>
+<TextView android:id="@+id/ha_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_checked"/>
+</LinearLayout>
+<Button android:id="@+id/player_start" style="@style/Primary" android:text="@string/player_start"/>
+<Button android:id="@+id/player_stop" style="@style/Action" android:text="@string/player_stop"/>
+<TextView android:id="@+id/setup_message" style="@style/Body" android:textColor="@color/warn" android:accessibilityLiveRegion="polite"/>
+<Button android:id="@+id/diagnostics_toggle" style="@style/Action" android:text="@string/diagnostics"/>
+<TextView android:id="@+id/diagnostics_text" style="@style/Body" android:textSize="12sp" android:fontFamily="monospace" android:visibility="gone" android:textIsSelectable="true"/>
+</LinearLayout>
+<LinearLayout style="@style/Card">
+<TextView style="@style/Heading" android:text="@string/keepalive_title" android:layout_marginTop="0dp"/>
+<TextView style="@style/Body" android:text="@string/keepalive_help"/>
+<CheckBox android:id="@+id/keepalive" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/keepalive_option" android:textColor="@color/ink" android:textSize="14sp"/>
+<TextView android:id="@+id/keepalive_status" style="@style/Body" android:text="@string/keepalive_off" android:textColor="@color/accent"/>
+<TextView style="@style/Body" android:text="@string/keepalive_one" android:textSize="12sp"/>
+</LinearLayout>
+<LinearLayout style="@style/Card">
+<TextView style="@style/Heading" android:text="@string/help_title" android:layout_marginTop="0dp"/>
+<Button android:id="@+id/help_toggle" style="@style/Action" android:text="@string/help_expand"/>
+<LinearLayout android:id="@+id/help_details" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+<TextView style="@style/Body" android:text="@string/help_text"/>
+<TextView style="@style/Heading" android:text="@string/help_idle" android:textSize="16sp"/>
+<TextView style="@style/Body" android:text="@string/help_idle_text"/>
+<TextView style="@style/Heading" android:text="@string/help_battery" android:textSize="16sp"/>
+<TextView style="@style/Body" android:text="@string/help_battery_text"/>
+<Button android:id="@+id/forget" style="@style/Action" android:text="@string/forget" android:textColor="@color/danger"/>
+</LinearLayout>
+</LinearLayout>
+</LinearLayout>
+</LinearLayout>
+<TextView android:id="@+id/footer" style="@style/Body" android:gravity="center" android:textSize="11sp" android:layout_marginBottom="12dp"/>
+</LinearLayout>
+</ScrollView>

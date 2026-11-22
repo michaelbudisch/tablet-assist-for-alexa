@@ -20,3 +20,12 @@ jarvis-public-source-*.json
 .stream-test.json
 .qwen-test.json
 .voice-test.json
+**/.gradle/
+**/build/
+**/local.properties
+**/.idea/
+**/.vscode/
+**/.build-cache/
+*.jks
+*.keystore
+!android/app/src/main/res/raw/keepalive_silence.wav

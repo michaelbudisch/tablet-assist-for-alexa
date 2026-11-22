@@ -42,6 +42,10 @@ The Marketplace integration includes STT, TTS, conversation routing and the opti
 
 After setup, a dedicated **Tablet Assist** sidebar panel is registered automatically, with native Assist launch, service status, optional Alexa announcements and Bluetooth keepalive. No legacy helper or private dashboard is required. Configuration and pipeline selection remain in Home Assistant.
 
+## Optional Android audio relay
+
+**[HA Jarvis Echo Relay 0.2.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.2.0-preview.apk). A compatible native command/status-helper controller is required; the Marketplace integration does not configure this transport automatically.
+
 ## Installation guides
 
 ```bash
