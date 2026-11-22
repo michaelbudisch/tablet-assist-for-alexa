@@ -1,8 +1,8 @@
 **Deutsch** | [English](en/worker.md) · [Projektübersicht](../README.de.md)
 
-# Optionaler KI-Zusatzrechner – Original-Worker v1.6.0
+# Optionaler KI-Zusatzrechner – Original-Worker v1.7.0
 
-Enthalten ist der bereitgestellte Jarvis GPU Worker 1.6.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
+Enthalten ist der bereitgestellte Jarvis GPU Worker 1.7.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
 
 ## 1. Konfiguration
 

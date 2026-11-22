@@ -1,5 +1,9 @@
 **English** | [Deutsch](CHANGELOG.de.md)
 
+# 1.7.0
+
+- Scene descriptions may include generic visible people, clothing and carried objects. No naming, face matching, sensitive-trait guesses or inference of movement/history from a still. Existing authenticated single-image API and fixed modes remain compatible.
+
 # 1.6.0
 
 - Optional authenticated single-image vision service sharing local Ollama; four allowed model tags, Qwen3-VL 4B Instruct default.

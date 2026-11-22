@@ -9,14 +9,14 @@ from PIL import Image, ImageOps
 import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.http import KEY_HASS
-from homeassistant.core import SupportsResponse, callback
+from homeassistant.core import SupportsResponse, callback, Context
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, ServiceValidationError
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 from .relay_frames import FrameStore, DEVICE, MAX_IMAGE
-from .relay_vision import describe, health, classify
+from .relay_vision import describe, health, classify, resolve_camera
 
 API = "/api/jarvis_echo_relay"
 
@@ -65,6 +65,34 @@ class RelayRuntime:
 
 def runtime(hass):
     return hass.data.get(DOMAIN, {}).get("relay_camera")
+
+class ResolveCameraView(HomeAssistantView):
+    url = API + "/resolve_camera"
+    name = "api:jarvis_echo_relay:resolve_camera"
+    requires_auth = True
+
+    async def post(self, request):
+        relay = runtime(request.app[KEY_HASS])
+        if relay is None:
+            raise web.HTTPServiceUnavailable()
+        if request.content_length is None or not 0 < request.content_length <= 4096:
+            raise web.HTTPBadRequest()
+        try:
+            data = await request.json()
+            if not isinstance(data, dict) or set(data) != {"text"} or not isinstance(data["text"], str) or len(data["text"]) > 500:
+                raise ValueError()
+        except (ValueError, TypeError):
+            raise web.HTTPBadRequest() from None
+        selected = classify(data["text"])
+        if selected is None:
+            return web.json_response({"camera_entity_id": None}, headers={"Cache-Control": "no-store"})
+        try:
+            entity_id = await resolve_camera(relay, selected[0], Context(user_id=request["hass_user"].id))
+        except Unauthorized:
+            raise web.HTTPForbidden() from None
+        except ServiceValidationError:
+            raise web.HTTPNotFound() from None
+        return web.json_response({"camera_entity_id": entity_id, "source": selected[0]}, headers={"Cache-Control": "no-store"})
 
 class RegisterView(HomeAssistantView):
     url = API + "/register"
@@ -152,6 +180,7 @@ async def async_setup(hass, entry):
     if not data.get("relay_views_registered"):
         hass.http.register_view(RegisterView())
         hass.http.register_view(FrameView())
+        hass.http.register_view(ResolveCameraView())
         data["relay_views_registered"] = True
 
     async def describe_service(call):

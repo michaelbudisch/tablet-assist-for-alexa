@@ -37,9 +37,11 @@ async def run(hass):
     check(frames.fresh, "fresh frame accepted")
     clock[0] = 17
     check(not frames.fresh and frames.expire() and frames.image is None, "stale image discarded")
-    for phrase in ("Wie wird das Wetter draußen?", "Schalte das Licht an", "Was ist ein Kameraobjektiv?"):
+    for phrase in ("Wie wird das Wetter draußen?", "Schalte das Licht an", "Was ist ein Kameraobjektiv?", "Öffne die Haustür", "Ist die Haustür abgeschlossen?", "Wer wartet auf den Bus?"):
         check(classify(phrase) is None, "ordinary request preserved: " + phrase)
     check(classify("Was ist draußen los?") == ("outside", "scene"), "outdoor sight question routed")
+    for phrase in ("Wer ist an der Haustür?", "Was ist an der Haustür?", "Wer steht gerade vor der Tür?", "Was ist vor meiner Haustür los?", "Hey Jarvis, kannst du mir bitte sagen, wer ist an der Haustuer?", "Who is at the front door?"):
+        check(classify(phrase) == ("door", "scene"), "door sight variant: " + phrase)
 
     image = Image.new("RGB", (640, 480), "white")
     ImageDraw.Draw(image).rectangle((80, 80, 300, 300), fill="red")
@@ -72,10 +74,13 @@ async def run(hass):
         check(hass.states.get(cid).state == "unavailable", "camera initially unavailable")
         admin = await hass.auth.async_create_user("Camera fixture", group_ids=["system-admin"])
         guest = await hass.auth.async_create_user("Guest fixture", group_ids=["system-users"])
+        restricted = await hass.auth.async_create_user("No camera access fixture", group_ids=[])
         refresh = await hass.auth.async_create_refresh_token(admin, client_id="https://camera-fixture.invalid")
         bearer = hass.auth.async_create_access_token(refresh)
         refresh2 = await hass.auth.async_create_refresh_token(guest, client_id="https://camera-fixture.invalid")
         guest_bearer = hass.auth.async_create_access_token(refresh2)
+        restricted_refresh = await hass.auth.async_create_refresh_token(restricted, client_id="https://camera-fixture.invalid")
+        restricted_bearer = hass.auth.async_create_access_token(restricted_refresh)
         base = "http://127.0.0.1:8123/api/jarvis_echo_relay"
         async with ClientSession() as client:
             async with client.post(base + "/register", json={"device_id": device}) as response:
@@ -113,9 +118,19 @@ async def run(hass):
                 check(response.status == 204, "paired tablet reconnects after reload")
             status = await hass.services.async_call("jarvis_tablet_audio", "camera_vision_status", {}, blocking=True, return_response=True, context=Context(user_id=admin.id))
             check(status["ready"] is True, "health uses existing worker token")
+            async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}) as response:
+                check(response.status == 401, "preview resolution requires authentication")
+            async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}, headers=auth) as response:
+                resolved = await response.json()
+                check(response.status == 200 and resolved["camera_entity_id"] == cid and resolved["source"] == "door", "requesting UI resolves configured door camera")
+            async with client.post(base + "/resolve_camera", json={"text": "Ist die Haustür abgeschlossen?"}, headers=auth) as response:
+                check((await response.json())["camera_entity_id"] is None, "door control query has no camera popup")
+            async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}, headers={"Authorization": "Bearer " + restricted_bearer}) as response:
+                check(response.status == 403, "preview obeys entity read permissions")
+            check(not seen, "preview resolution does not invoke model")
             result = await hass.services.async_call("jarvis_tablet_audio", "describe_camera", {"source": "tablet"}, blocking=True, return_response=True, context=Context(user_id=admin.id))
             check("Rechteck" in result["description"], "service describes tablet image")
-            reply = await conversation.async_converse(hass, text="Was ist draußen los?", conversation_id=None, agent_id=agent, language="de", context=Context(user_id=admin.id))
+            reply = await conversation.async_converse(hass, text="Wer ist an der Haustür?", conversation_id=None, agent_id=agent, language="de", context=Context(user_id=admin.id))
             check("Rechteck" in reply.response.as_dict()["speech"]["plain"]["speech"], "spoken question returns vision response")
             async with client.delete(base + "/frame", headers=headers) as response:
                 check(response.status == 204, "stop clears image")

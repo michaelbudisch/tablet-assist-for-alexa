@@ -1,5 +1,9 @@
 [English](CHANGELOG.md) | **Deutsch**
 
+# 1.7.0
+
+- Szenenbeschreibungen dürfen sichtbare Personen allgemein anhand von Kleidung, Position und getragenen Gegenständen beschreiben. Keine Namenszuordnung, Gesichtsvergleiche, sensiblen Zuschreibungen oder Bewegungsverläufe aus einem Einzelbild. Die authentifizierte Einzelbild-API bleibt kompatibel.
+
 # 1.6.0
 
 - Optionaler authentifizierter Einzelbilddienst über vorhandenes Ollama; vier erlaubte Modelle, Qwen3-VL 4B Instruct Standard.

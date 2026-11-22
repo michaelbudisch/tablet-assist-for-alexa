@@ -2,11 +2,17 @@
 
 ## Einrichtung
 
-1. HA benötigt den Kamera-Empfänger **Jarvis Tablet Audio 1.4.0** aus `homeassistant/custom_components/`. Bei bestehenden Installationen `const.py`, Zugangsdaten und eigene Dialog-/Sucherweiterungen behalten; Setup/Router gezielt um die Kameramodule ergänzen. Python-Codeupdates benötigen einen HA-Neustart. Neue portable Installationen verwenden `homeassistant/install.py`.
-2. In **Einstellungen → Geräte & Dienste → Jarvis Tablet Audio → Konfigurieren** Außen-/Haustürkamera auswählen. Eine leere Vision-Adresse nutzt den vorhandenen GPU-Host auf Port 10503. Alternativ lokale IP mit Port ohne Pfad angeben. Der bestehende Qwen-/Worker-Schlüssel wird genutzt. Voraussetzung: GPU Worker 1.6.0 mit Vision-Profil und installiertem Visionmodell. Die App benötigt keinen weiteren produktiven Docker-Dienst.
+1. HA benötigt den Kamera-Empfänger **Jarvis Tablet Audio 1.4.1** aus `homeassistant/custom_components/`. Bei bestehenden Installationen `const.py`, Zugangsdaten und eigene Dialog-/Sucherweiterungen behalten; Setup/Router gezielt um die Kameramodule ergänzen. Python-Codeupdates benötigen einen HA-Neustart. Neue portable Installationen verwenden `homeassistant/install.py`.
+2. In **Einstellungen → Geräte & Dienste → Jarvis Tablet Audio → Konfigurieren** Außen-/Haustürkamera auswählen. Eine leere Vision-Adresse nutzt den vorhandenen GPU-Host auf Port 10503. Alternativ lokale IP mit Port ohne Pfad angeben. Der bestehende Qwen-/Worker-Schlüssel wird genutzt. Voraussetzung: GPU Worker 1.7.0 mit Vision-Profil und installiertem Visionmodell. Die App benötigt keinen weiteren produktiven Docker-Dienst.
 3. In der App HA-Adresse/Token speichern, **Kameraeinstellungen öffnen**, Front-/Rückkamera auswählen, optional **Bildbewegung an HA melden** einschalten und **Kamera für HA starten** antippen. Die Kopplung benötigt einen HA-Administrator-Token. Der Audioplayer muss nicht laufen.
 4. Bilder erscheinen normalerweise als `camera.echo_relay_tablet`, Bewegung als `binary_sensor.echo_relay_bildbewegung`. Bei abweichenden Namen die Entitäten der Integration verwenden. Der Vision-Aufruf findet die Tablet-Kamera anhand ihrer eindeutigen ID.
-5. Mit dem Jarvis-Gesprächsrouter fragen: **„Was ist draußen los?“**, **„Was sieht die Haustürkamera?“**, **„Was siehst du?“**, **„Was halte ich in der Hand?“**. Alternativ `jarvis_tablet_audio.describe_camera` mit `source: outside`, `door` oder `tablet` und `mode: scene`, `objects` oder `object_in_hand` aufrufen. Die Aktion gibt `description` zurück. Andere Gespräche und Hausbefehle behalten ihren bisherigen Weg.
+5. Mit dem Jarvis-Gesprächsrouter fragen: **„Was ist draußen los?“**, **„Wer ist an der Haustür?“**, **„Was ist an der Haustür?“**, **„Was sieht die Haustürkamera?“**, **„Was siehst du?“**, **„Was halte ich in der Hand?“**. Alternativ `jarvis_tablet_audio.describe_camera` mit `source: outside`, `door` oder `tablet` und `mode: scene`, `objects` oder `object_in_hand` aufrufen. Die Aktion gibt `description` zurück. Andere Gespräche und Hausbefehle behalten ihren bisherigen Weg.
+
+## Kamera-Infobox und Haustürfragen
+
+Der aktualisierte Dashboard-Controller öffnet bei einer Kamerafrage automatisch die zugeordnete Kamera als HA-Infobox, während Jarvis das Einzelbild beschreibt. Das gilt nur für das anfragende, sichtbare Dashboard, nicht für andere Tablets oder nativen Companion Assist. Für die öffentliche Karte Version 1.0.2 zusammen mit `jarvis-camera-preview-v1.0.0.js` installieren; nach dem Update Dashboard neu laden. App 0.5.0 benötigt dafür kein Update.
+
+Bei „Wer ist an der Haustür?“ sind allgemeine Beschreibungen sichtbarer Personen, Kleidung und mitgeführter Gegenstände möglich. Das Modell ordnet keine Namen zu und führt keinen Gesichtsabgleich durch. Auch „Wer steht gerade vor der Tür?“ ist eine Kamerafrage. „Öffne die Haustür“ und „Ist die Haustür abgeschlossen?“ bleiben Hausbefehle beziehungsweise Statusfragen.
 
 ## Betrieb und Grenzen
 
@@ -21,6 +27,8 @@ Bildbewegung vergleicht grobe Pixeländerungen und unterdrückt gleichmäßige H
 ## English
 
 Use the matching HA receiver and existing GPU Worker vision service. Explicitly start camera delivery in app settings. Its dedicated foreground notification stops it independently of audio. Images are pushed roughly every two seconds using the saved HA origin and administrator token. No tablet image server, disk recording, automatic boot start or offline queue is created. Stop invalidates the session; images expire after 15 seconds without delivery. Select outdoor/door cameras in the integration options. `describe_camera` returns a description for tablet/outdoor/door images on explicit request.
+
+Camera questions such as “Who is at the front door?” also open the configured camera in the requesting visible dashboard with card 1.0.2 and the shared preview module. Other dashboards and native Companion Assist do not open automatically. Visible people can be described generically without names or face matching. The existing 0.5.0 APK remains compatible; reload the updated dashboard.
 
 ## Protocol and validation
 

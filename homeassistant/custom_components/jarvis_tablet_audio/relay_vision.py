@@ -16,8 +16,17 @@ from homeassistant.helpers import entity_registry as er
 from .const import QWEN_BASE
 
 def classify(text):
+    if not isinstance(text, str) or len(text) > 500:
+        return None
     phrase = re.sub(r"[^\wäöüß]+", " ", text.casefold()).strip()
     phrase = re.sub(r"^(?:hey )?jarvis ", "", phrase)
+    phrase = re.sub(r"^(?:bitte |kannst du (?:mir )?(?:bitte )?sagen |sag mir (?:bitte )?)+", "", phrase)
+    phrase = re.sub(r" bitte$", "", phrase)
+    door = r"(?:haus(?:tür|tuer)|eingangs(?:tür|tuer)|tür|tuer)"
+    if re.fullmatch(r"(?:wer|was) (?:ist|steht|sitzt|wartet|passiert|befindet sich)(?: (?:gerade|jetzt|denn|da))* (?:an|vor) (?:der|unserer|meiner) " + door + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase):
+        return ("door", "scene")
+    if phrase in {"who is at the door", "who is at the front door", "what is at the front door", "what is happening at the front door"}:
+        return ("door", "scene")
     groups = {
         ("tablet", "object_in_hand"): ("was halte ich in der hand", "was habe ich in der hand", "what am i holding"),
         ("tablet", "scene"): ("was siehst du", "was sieht die tabletkamera", "beschreibe das kamerabild", "what do you see"),
@@ -25,6 +34,17 @@ def classify(text):
         ("door", "scene"): ("was sieht die haustürkamera", "was ist vor der haustür zu sehen", "beschreibe die haustürkamera"),
     }
     return next((key for key, values in groups.items() if phrase in values), None)
+
+async def resolve_camera(relay, source, context):
+    """One mapping and permission check shared by descriptions and the requesting UI."""
+    entity_id = relay.camera_id() if source == "tablet" else relay.entry.options.get("vision_outside_camera" if source == "outside" else "vision_door_camera", "")
+    if not entity_id or not re.fullmatch(r"camera\.[a-z0-9_]+", entity_id):
+        raise ServiceValidationError("Select this camera in Jarvis integration options")
+    if context.user_id:
+        user = await relay.hass.auth.async_get_user(context.user_id)
+        if user is None or not user.permissions.check_entity(entity_id, POLICY_READ):
+            raise Unauthorized()
+    return entity_id
 
 def worker_url(entry):
     configured = entry.options.get("vision_url", "").strip()
@@ -75,13 +95,7 @@ async def describe(relay, source, mode, context):
     if relay.vision_lock.locked():
         raise ServiceValidationError("Vision is already busy")
     async with relay.vision_lock:
-        entity_id = relay.camera_id() if source == "tablet" else relay.entry.options.get("vision_outside_camera" if source == "outside" else "vision_door_camera", "")
-        if not entity_id or not re.fullmatch(r"camera\.[a-z0-9_]+", entity_id):
-            raise ServiceValidationError("Select this camera in Jarvis integration options")
-        if context.user_id:
-            user = await relay.hass.auth.async_get_user(context.user_id)
-            if user is None or not user.permissions.check_entity(entity_id, POLICY_READ):
-                raise Unauthorized()
+        entity_id = await resolve_camera(relay, source, context)
         if source == "tablet":
             if not relay.frames.fresh:
                 raise ServiceValidationError("Tablet camera has no fresh image")

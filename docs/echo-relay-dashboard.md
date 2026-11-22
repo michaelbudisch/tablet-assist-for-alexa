@@ -1,4 +1,4 @@
-# Echo Relay Assist dashboard / Lovelace-Karte (v1.0.1)
+# Echo Relay Assist dashboard / Lovelace-Karte (v1.0.2)
 
 Independent of the private Hauszentrale dashboard. Works with a Home Assistant dashboard and the Android Echo Relay command/status helper protocol. No changes to the APK. This is a developer preview; the three-state controller has been syntax- and state-transition-tested, not yet exercised on a clean HA instance or every Android WebView.
 
@@ -6,7 +6,7 @@ Independent of the private Hauszentrale dashboard. Works with a Home Assistant d
 
 1. Echo Relay installieren, mit HA verbinden und den Echo als Bluetooth-Medienausgang auswählen. Player starten. Das Mikrofon wird vom sichtbaren HA-Dashboard verwendet, nicht von der Relay-App.
 2. Unter **Einstellungen → Geräte & Dienste → Helfer** zwei Text-Helfer mit maximal 255 Zeichen anlegen: `input_text.jarvis_native_audio_command` und `input_text.jarvis_native_audio_status`. Vorhandene Helfer wiederverwenden. Alternativ die [YAML-Vorlage](../homeassistant/templates/echo-relay-helpers.yaml) in die bestehende, korrekt konfigurierte packages-Struktur übernehmen; keine doppelten Definitionen.
-3. [echo-relay-assist-card-v1.0.1.js](../homeassistant/www/jarvis/echo-relay-assist-card-v1.0.1.js) nach `/config/www/jarvis/` kopieren. Unter Einstellungen → Dashboards → Ressourcen als JavaScript-Modul eintragen: `/local/jarvis/echo-relay-assist-card-v1.0.1.js?v=1.0.1`.
+3. Auch [jarvis-camera-preview-v1.0.0.js](../homeassistant/www/jarvis/jarvis-camera-preview-v1.0.0.js) nach `/config/www/jarvis/` kopieren (dynamischer Import, kein eigener Ressourceneintrag). [echo-relay-assist-card-v1.0.2.js](../homeassistant/www/jarvis/echo-relay-assist-card-v1.0.2.js) nach `/config/www/jarvis/` kopieren. Unter Einstellungen → Dashboards → Ressourcen als JavaScript-Modul eintragen: `/local/jarvis/echo-relay-assist-card-v1.0.2.js?v=1.0.2`.
 4. Eine manuelle Karte in einem beliebigen Dashboard hinzufügen (Beispiel unten). Die bevorzugte Assist-Pipeline wird ohne Angabe verwendet. Wenn nötig eigene `pipeline_id` (STT/Intent/TTS) und `wake_pipeline_id` (Wakeword/STT) eintragen. Für Rufwortmodus ist ein konfigurierter serverseitiger Wakeword-Dienst erforderlich; ohne ihn Dauerbetrieb/Einmal sprechen verwenden.
 5. Mikrofonberechtigung im HTTPS-Dashboard erteilen. Einmal drücken = Rufwort (grün), zweimal = Dauerbetrieb (blau), dreimal = aus. Beim Wechsel auf einen nicht sichtbaren Tab oder beim Entfernen der Karte stoppt sie. Kein automatischer Mikrofonstart nach Reload. Während der Antwort ist das Mikrofon geschlossen. Nach Sprechpausen oder Antworten hört der Dauerbetrieb erneut zu.
 6. Im aufklappbaren Einstellungsbereich Echo Relay (Standard), Tablet/Bluetooth oder nativen Assist als Reserve wählen. Der Hauptbutton steuert immer den integrierten Assistenten. Der Android-Assistent wird als explizite Reserve geöffnet. Bei paralleler nativer Wakeword-Erkennung diese in der Companion App abschalten; optional `native_notify_service` mit passendem `mobile_app_...`-Dienst konfigurieren.
@@ -16,7 +16,7 @@ Independent of the private Hauszentrale dashboard. Works with a Home Assistant d
 
 1. Install Echo Relay on Android, pair the Echo using system Bluetooth settings, connect the app to HA and start its player.
 2. Create two Text helpers (maximum 255 characters): `input_text.jarvis_native_audio_command` and `input_text.jarvis_native_audio_status`. Reuse existing helpers, or use the optional [YAML template](../homeassistant/templates/echo-relay-helpers.yaml) in a configured packages directory. Do not define them twice.
-3. Copy [the card JavaScript](../homeassistant/www/jarvis/echo-relay-assist-card-v1.0.1.js) into `/config/www/jarvis/`, register `/local/jarvis/echo-relay-assist-card-v1.0.1.js?v=1.0.1` as a JavaScript module in Dashboard Resources and add a manual card.
+3. Copy [jarvis-camera-preview-v1.0.0.js](../homeassistant/www/jarvis/jarvis-camera-preview-v1.0.0.js) into `/config/www/jarvis/` too (dynamically imported; no separate resource entry). Copy [the card JavaScript](../homeassistant/www/jarvis/echo-relay-assist-card-v1.0.2.js) into `/config/www/jarvis/`, register `/local/jarvis/echo-relay-assist-card-v1.0.2.js?v=1.0.2` as a JavaScript module in Dashboard Resources and add a manual card.
 4. Use your preferred HA Assist pipeline, or set your own pipeline IDs below. Wake-word mode needs a configured server-side wake-word engine. Continuous and one-shot modes do not require it. Use HTTPS and grant microphone access.
 5. Tap the microphone: green wake word → blue continuous → off. It stops when hidden or disconnected and never starts automatically on reload; it pauses capture during playback and reopens for the next turn in continuous mode. Inform people nearby.
 6. Settings contain Echo Relay (default), browser/tablet playback and explicit native Assist fallback. The main button always controls the dashboard assistant. Disable concurrent Companion App wake-word detection, or configure the optional `native_notify_service`. Use only one active controller per app/helper pair. Android app 0.3.0 streams MP3/PCM WAV with a small startup buffer; 0.2.0 still downloads the whole file. The card does not update the APK.
@@ -34,7 +34,17 @@ title: Echo Relay
 
 The command/status entity names default to the app's fixed helper IDs. Only override `command_entity` and `relay_status_entity` if your Android client is configured to use the same pair. Optional direct Alexa fallback: configure both `alexa_script: your_script_service_name` (no script prefix) and `alexa_notify: notify.your_echo`. The script must accept `text` and `lautsprecher` fields. Direct Alexa may send audio via the Amazon cloud. Never use it for confidential replies. The browser card never stores HA access tokens; it uses the active authenticated HA connection.
 
+## Camera questions / Kamerafragen
+
+Mit **Jarvis Tablet Audio 1.4.1** und **GPU Worker 1.7.0**: Außen-/Haustürkamera in den Integrationsoptionen auswählen. Fragen wie „Wer ist an der Haustür?“, „Was ist an der Haustür?“ und „Was ist draußen los?“ öffnen die zugeordnete Kamera als native HA-Infobox im anfragenden, sichtbaren Dashboard. Gleichzeitig beschreibt Jarvis das abgerufene Einzelbild. Personen werden nur anhand sichtbarer Merkmale wie Kleidung oder mitgeführter Gegenstände beschrieben; keine Namenszuordnung oder Gesichtserkennung. Die Infobox kann eine Liveansicht anbieten, während die Beschreibung ein Einzelbild betrifft. Alle Bildbeschreibungen können falsch sein.
+
+With Jarvis Tablet Audio 1.4.1 and GPU Worker 1.7.0, configured door/outdoor/tablet camera questions open the corresponding native HA more-info dialog only on the requesting visible dashboard. Jarvis describes a snapshot, including generic visible people, clothing and carried objects, without identity recognition. The dialog may show a live view; the description remains a single-image observation and may be wrong. Other devices, hidden dashboards and native Companion Assist do not automatically open this dialog. Ordinary door controls retain their existing route. A failed preview never interrupts the spoken response.
+
+App **0.5.0** continues to work; no APK update is required. Copy both JavaScript files, update the card resource, restart HA after the backend update, then reload the dashboard. This also applies to the separately maintained Hauszentrale Kiosk controller when its preview hook is installed.
+
 ## Changes / Änderungen
+
+- v1.0.2: configured camera preview for camera questions, restricted to the active requesting dashboard; shared backend mapping and read permissions.
 
 - v1.0.1: wake-word and speech detection, processing/buffering and playback indicators (DE/EN). Speech detection indicates voiced audio, not speaker identity.
 

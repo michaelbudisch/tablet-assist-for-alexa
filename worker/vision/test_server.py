@@ -42,6 +42,13 @@ class VisionTests(unittest.TestCase):
     def test_alternative(self):
         self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,200)
         self.assertEqual(self.calls[0][1]["model"], "gemma3:4b")
+    def test_generic_people_without_identity(self):
+        self.assertEqual(self.post({"image":fixture(),"mode":"scene"}).status_code,200)
+        system=self.calls[0][1]["messages"][0]["content"]
+        instruction=self.calls[0][1]["messages"][1]["content"]
+        self.assertIn("sichtbare Personen allgemein",system)
+        self.assertIn("keine Namen oder Identitäten",system)
+        self.assertIn("getragener Gegenstände",instruction)
     def test_invalid_model_mode_and_extra(self):
         for extra in ({"model":"remote-cloud"}, {"mode":"identify"}, {"url":"https://example.org"}, {"question":"free text"}, {"mode":[]}, {"model":{}}):
             with self.subTest(extra=extra):
