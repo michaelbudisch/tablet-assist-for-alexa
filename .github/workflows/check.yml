@@ -30,3 +30,4 @@ jobs:
       - run: npx --prefix tests/ui playwright install --with-deps chromium
       - run: node tests/ui/camera-infobox.mjs
       - run: node tests/ui/model-settings.mjs
+      - run: node tests/ui/settings.mjs

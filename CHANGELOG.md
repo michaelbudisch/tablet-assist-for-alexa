@@ -2,6 +2,13 @@
 
 # Changelog
 
+## Lovelace settings 1.1.0 / control panel 1.6.0
+
+- Shared theme-aware settings with accessible voice/audio, display/cameras, AI/performance and history/diagnostics tabs.
+- Inline model/helper radio choices preserve pending selections during live HA updates and show rejected saves at the field.
+- Standalone card gains persisted microphone/conversation preferences, captions, memory-only history and explicit tablet fallback.
+- Portable dashboard template and installer include the shared modules; legacy house functions have grouped navigation. No APK, worker or backend update required.
+
 ## 0.3.1 — Developer Preview
 - Contextual follow-ups in the same conversation, bounded time and supported read-only topics.
 - Optional administrator-approved learning for generic unmatched home-data queries; no audio recording or general transcript log, bounded in-memory suggestions and local aliases.

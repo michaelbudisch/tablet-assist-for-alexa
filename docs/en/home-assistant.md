@@ -29,7 +29,10 @@ Check for conflicts with existing helpers and automations. The installer does no
 8. Register these JS resources as modules:
    - /local/jarvis/jarvis-dashboard-assist-v1.4.0.js
    - /local/jarvis/jarvis-bt-keepalive-v1.1.0.js
-   - /local/jarvis/jarvis-control-panel-v1.5.js
+   - /local/jarvis/jarvis-control-panel-v1.6.0.js
+   - /local/jarvis/echo-relay-assist-card-v1.1.0.js
+
+   Also copy `jarvis-settings-v1.0.0.js`, `jarvis-model-settings-v1.1.0.js` and `jarvis-camera-preview-v1.2.0.js` into `/config/www/jarvis/`. These modules are imported automatically and need no resource entries.
 
    Copy the generated jarvis-dashboard.yaml into a new dashboard's YAML editor. No private complete house dashboard is provided. Configure the kiosk/app fullscreen mode in the device browser.
 
@@ -60,3 +63,5 @@ In the local JSON configuration set media_player, notify and dnd for each config
 ```
 
 Unconfigured rooms are placeholders and must not produce output. Restrict the HTTPS proxy to expiring 32-character MP3 filenames only. Do not send confidential content. Configure quiet schedules. Automatic notifications start disabled. event_sources maps optional sensor IDs; rules without sources are omitted. The washer requires the matching states of an existing cycle-learning system rather than any power sensor. Verify units and state transitions of other sources. The legacy reminder supports **one** active appointment.
+
+See [Echo Relay Lovelace settings](../echo-relay-dashboard.md) for the shared modules and portable dashboard example.

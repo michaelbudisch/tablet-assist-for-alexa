@@ -2,6 +2,8 @@
 
 **English** | [Deutsch](README.de.md)
 
+**Echo Relay Lovelace settings 1.1.0:** grouped settings, theme colours, inline model choices and portable microphone/caption/history preferences. [Setup and dashboard example](docs/echo-relay-dashboard.md).
+
 Local AI voice assistant for Home Assistant using an Android tablet as a microphone and an Amazon Echo as a Bluetooth speaker. No custom Echo firmware required. The Echo retains its normal Alexa functions; its internal assistant is not replaced.
 
 The tablet runs native Assist, including supported Android wake word functionality. Whisper, Piper and optional Qwen TTS/LLM provide local speech processing. A GPU is not required for the CPU setup. Optional multiroom announcements use a compatible Alexa notify integration and temporary HTTPS MP3 links.

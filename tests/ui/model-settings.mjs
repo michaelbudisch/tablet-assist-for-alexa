@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {chromium} from "playwright";
-const source=await readFile(new URL("../../homeassistant/www/jarvis/jarvis-model-settings-v1.0.0.js",import.meta.url),"utf8");
-const card=await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.0.5.js",import.meta.url),"utf8");
+const source=await readFile(new URL("../../homeassistant/www/jarvis/jarvis-model-settings-v1.1.0.js",import.meta.url),"utf8");
+const shared=await readFile(new URL("../../homeassistant/www/jarvis/jarvis-settings-v1.0.0.js",import.meta.url),"utf8");
+const card=await readFile(new URL("../../homeassistant/www/jarvis/echo-relay-assist-card-v1.1.0.js",import.meta.url),"utf8");
 const html=`<!doctype html><meta charset="utf-8"><body style="background:#151b23;color:#eee;font:16px system-ui;padding:24px"><script type="module">
 import '/card.js';
 window.calls=[];window.failSave=false;
@@ -16,14 +17,14 @@ const c=document.createElement('echo-relay-assist-card');c.setConfig({title:'Jar
 const browser=await chromium.launch({headless:true,...(process.env.CAMERA_TEST_CHROME?{executablePath:process.env.CAMERA_TEST_CHROME}:{})});
 const page=await browser.newPage({viewport:{width:850,height:1000}});
 await page.route("http://relay-models.test/**",route=>route.fulfill({contentType:route.request().url().endsWith('.js')?'application/javascript':'text/html',
- body:route.request().url().endsWith('card.js')?card:route.request().url().endsWith('.js')?source:html}));
+ body:route.request().url().endsWith('card.js')?card:route.request().url().includes('jarvis-settings-')?shared:route.request().url().endsWith('.js')?source:html}));
 try{
  await page.goto('http://relay-models.test/');await page.waitForFunction(()=>window.ready);
  await page.getByText('Assistent und Audio · Einstellungen',{exact:true}).click();
- await page.getByText('KI-Modelle und Leistung',{exact:true}).click();
+ await page.getByRole('tab',{name:'KI & Leistung',exact:true}).click();
  await page.getByText('Getrennte Text- und Bildmodelle.',{exact:false}).waitFor();
- await page.getByLabel('Textmodell',{exact:true}).selectOption('qwen3-vl:4b-instruct');
- await page.getByLabel('Modelle warm halten',{exact:true}).selectOption('300');
+ await page.getByRole('group',{name:'Textmodell',exact:true}).getByRole('radio',{name:'Qwen3-VL 4B Instruct',exact:true}).check();
+ await page.getByRole('group',{name:'Modelle warm halten',exact:true}).getByRole('radio',{name:'5 min',exact:true}).check();
  await page.evaluate(()=>window.card.voice.processing=true);
  await page.getByRole('button',{name:'Für Jarvis speichern',exact:true}).click();
  assert.equal(await page.evaluate(()=>window.calls.filter(c=>c.service_data.action==='set').length),0);
@@ -40,6 +41,6 @@ try{
  await page.getByText('Nicht gespeichert.',{exact:false}).waitFor();
  await page.getByRole('button',{name:'Status aktualisieren',exact:true}).click();
  await page.getByText('Gemeinsames Text-/Bildmodell.',{exact:false}).waitFor();
- assert.equal(await page.getByLabel('Textmodell',{exact:true}).inputValue(),'qwen3-vl:4b-instruct');
+ assert.equal(await page.getByRole('group',{name:'Textmodell',exact:true}).getByRole('radio',{name:'Qwen3-VL 4B Instruct',exact:true}).isChecked(),true);
  console.log('Model settings UI: actual controller mount, installed-model choices, busy guard, versioned save, errors and refresh passed.');
 }finally{await browser.close();}

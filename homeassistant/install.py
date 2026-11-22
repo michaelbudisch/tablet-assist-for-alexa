@@ -43,6 +43,7 @@ for root in ['custom_components','www']:
         if f.name=='const.py' and f.parent.name=='jarvis_tablet_audio':txt=txt.replace(':10501',':10502')
         if f.name=='jarvis-dashboard-assist-v1.4.0.js':txt=txt.replace('pipeline_id:pipeline,start_listening:true','...(pipeline?{pipeline_id:pipeline}:{}),start_listening:true')
         if f.name=='jarvis-control-panel-v1.5.js':txt=txt.replace('class J extends HTMLElement {','class J extends HTMLElement {\nsetConfig(config){this._config=config||{};}\ngetCardSize(){return 6;}\ngetGridOptions(){return {columns:12,rows:"auto"};}').replace('entities[name].replace("media_player.","switch.")+"_bitte_nicht_storen"',f'({json.dumps(dnd,ensure_ascii=False)})[entities[name]]')
+        if f.name=='jarvis-control-panel-v1.6.0.js':txt=txt.replace('entities[name].replace("media_player.","switch.")+"_bitte_nicht_storen"',f'({json.dumps(dnd,ensure_ascii=False)})[entities[name]]')
         if f.suffix=='.py':ast.parse(txt)
         out.write_text(txt,encoding='utf-8')
 pack=json.loads(render((HERE/'templates/package.json').read_text(encoding='utf-8')))
@@ -63,5 +64,5 @@ for rule in json.loads(render((HERE/'templates/event-automations.json').read_tex
 # YAML accepts JSON flow syntax. Keep !secret as native YAML outside these values.
 output='\n'.join(f'{k}: '+json.dumps(v,ensure_ascii=False) for k,v in pack.items())+'\n'+render((HERE/'templates/rest-command.yaml').read_text(encoding='utf-8'))
 (a.output/'packages').mkdir();(a.output/'packages/jarvis.yaml').write_text(output,encoding='utf-8')
-(a.output/'jarvis-dashboard.yaml').write_text('title: Jarvis\nviews:\n  - title: Jarvis\n    path: main\n    type: panel\n    cards:\n      - type: custom:jarvis-control-panel\n',encoding='utf-8')
+(a.output/'jarvis-dashboard.yaml').write_text('title: Jarvis\nviews:\n  - title: Jarvis\n    path: main\n    type: sections\n    max_columns: 1\n    sections:\n      - type: grid\n        cards:\n          - type: custom:echo-relay-assist-card\n            title: HA Jarvis Echo Relay\n'+('            pipeline_id: '+pipeline+'\n' if pipeline else '')+'          - type: custom:jarvis-control-panel\n',encoding='utf-8')
 print('Prepared',a.output,'Review and copy only new files to HA /config. See docs/home-assistant.md.')

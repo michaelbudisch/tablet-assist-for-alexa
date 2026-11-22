@@ -2,6 +2,13 @@
 
 # Changelog
 
+## Lovelace-Einstellungen 1.1.0 / Bedienpanel 1.6.0
+
+- Gemeinsame Oberfläche mit Theme-Farben und Reitern für Sprache/Audio, Anzeige/Kameras, KI/Leistung und Verlauf/Diagnose.
+- Sichtbare Modell- und Helferauswahl statt Menüüberlagerungen; HA-Updates erhalten ausstehende Auswahlen, Speicherfehler stehen direkt am Feld.
+- Eigenständige Karte mit gespeicherten Mikrofon-/Gesprächswerten, Untertiteln, Verlauf im Arbeitsspeicher und optionaler Tablet-Reserve.
+- Lovelace-Vorlage und Installer enthalten die gemeinsamen Module; Hausfunktionen sind gruppiert. Kein APK-, Worker- oder Backend-Update nötig.
+
 ## 0.3.1 — Entwicklungsvorschau
 - Kontextbezogene Folgefragen in derselben Unterhaltung, begrenzte Dauer und unterstützte lesende Themen.
 - Optionale manuell freigegebene Lernfunktion für allgemeine nicht erkannte Hausdaten-Fragen; keine Audioaufnahmen, keine allgemeinen Transkriptlogs, begrenzte Vorschläge im RAM und lokale Alias-Speicherung.

@@ -28,7 +28,9 @@ bash homeassistant/install.sh config.local.json ./staging
 8. Für ein eigenes Dashboard folgende JS-Ressourcen als Module registrieren:
    - `/local/jarvis/jarvis-dashboard-assist-v1.4.0.js`
    - `/local/jarvis/jarvis-bt-keepalive-v1.1.0.js`
-   - `/local/jarvis/jarvis-control-panel-v1.5.js`
+   - `/local/jarvis/jarvis-control-panel-v1.6.0.js`
+   - `/local/jarvis/echo-relay-assist-card-v1.1.0.js`
+   Die Module `jarvis-settings-v1.0.0.js`, `jarvis-model-settings-v1.1.0.js` und `jarvis-camera-preview-v1.2.0.js` müssen ebenfalls in `/config/www/jarvis/` liegen; sie werden automatisch importiert und benötigen keinen eigenen Ressourceneintrag.
    Den Inhalt der Vorlage `jarvis-dashboard.yaml` in den YAML-Editor des neuen Dashboards übernehmen. Keine vollständige private Hauszentrale enthalten. Kiosk/App-Vollbild im Gerätebrowser einstellen.
 9. Native Sprachaufnahme testen: zunächst bekannte HA-Intents, dann optional LLM-Wissensfrage, anschließend Streaming und Klangprofil wechseln. Bei fehlendem LLM sind allgemeine KI-Fragen nicht möglich, lokale Intents bleiben verfügbar.
 
@@ -57,3 +59,5 @@ Die Bluetooth-Ausgabe benötigt keine öffentlich bereitgestellte MP3-Datei. Die
 ```
 
 Nicht konfigurierte Räume sind nur Platzhalter und dürfen keine Ausgabe erzeugen. Der HTTPS-Proxy muss nur zeitlich begrenzte 32-stellige MP3-Dateinamen ausliefern, keine anderen Routen. Nicht für vertrauliche Nachrichten verwenden. Raum-Ruhepläne konfigurieren. Automatische Hinweise starten ausgeschaltet. `event_sources` kann optionale Sensor-IDs ersetzen; Hinweise mit fehlenden Quellen werden nicht installiert. Waschmaschine setzt die passende Zustandslogik einer vorhandenen Waschgang-Erkennung voraus, nicht irgendeinen Leistungssensor. Statuswechsel und Einheiten der übrigen Quellen prüfen. Das Erinnerungsmodul unterstützt **einen** aktiven Termin.
+
+See [Echo Relay Lovelace settings](echo-relay-dashboard.md) for the shared settings modules, camera/model prerequisites and the complete portable dashboard example.

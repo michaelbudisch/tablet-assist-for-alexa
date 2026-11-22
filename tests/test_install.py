@@ -26,6 +26,9 @@ class Install(unittest.TestCase):
                     subprocess.run(['node', '--check', str(p)], check=True)
             panel = stage / 'www' / 'jarvis' / 'jarvis-control-panel-v1.5.js'
             self.assertIn('setConfig(config)', panel.read_text(encoding='utf-8'))
+            self.assertIn('custom:echo-relay-assist-card', (stage / 'jarvis-dashboard.yaml').read_text(encoding='utf-8'))
+            for name in ('echo-relay-assist-card-v1.1.0.js', 'jarvis-settings-v1.0.0.js', 'jarvis-model-settings-v1.1.0.js', 'jarvis-control-panel-v1.6.0.js'):
+                self.assertTrue((stage / 'www' / 'jarvis' / name).is_file())
             for name in ('jarvis_android', 'jarvis_tablet_audio'):
                 self.assertTrue((stage / 'custom_components' / name / 'manifest.json').is_file())
 

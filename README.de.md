@@ -2,6 +2,8 @@
 
 [English](README.md) | **Deutsch**
 
+**Echo Relay Lovelace-Einstellungen 1.1.0:** geordnete Bereiche, Theme-Farben, direkte Modellauswahl sowie Mikrofon-, Untertitel- und Verlaufseinstellungen für die eigenständige Karte. [Einrichtung und Dashboard-Vorlage](docs/echo-relay-dashboard.md).
+
 Ein Android-Tablet übernimmt Mikrofon, Wakeword und native Home-Assistant-Assist-Pipeline. Die Antwort wird über den Bluetooth-Lautsprecher (z. B. Amazon Echo) ausgegeben. Separat können Echo-Geräte über eine kompatible Alexa-Integration MP3-Durchsagen empfangen. Lokale Sprachverarbeitung mit Whisper, Piper und optional Qwen-TTS/LLM; eine GPU ist nicht zwingend notwendig.
 
 **Status:** v0.3.1, öffentliche Entwicklungsvorschau. Native Tablet-Ausgabe, Live-Klangprofile, Gesprächsrouter, Timer/Erinnerung, automatische Hinweise und Original-GPU-Worker 1.5.0. Keine vollständig auf einer frischen Installation verifizierte Version. Die native Android-/Echo-Kompatibilität ist geräteabhängig. Start mit einer Testinstanz empfohlen.
