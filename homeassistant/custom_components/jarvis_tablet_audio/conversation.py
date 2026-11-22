@@ -264,7 +264,7 @@ class JarvisConversation(conversation.ConversationEntity):
             active = None
             self._remember_closed(key, now)
         # Preserve local sentence handling if Assist forwards a request to this agent.
-        # The ordinary pipeline still handles its local intents before invoking us.
+        # Explicit camera/dialogue routes precede the native command fallback below.
         try:
             handler = getattr(conversation, "async_handle_sentence_triggers", None)
             if handler is not None:
@@ -281,6 +281,21 @@ class JarvisConversation(conversation.ConversationEntity):
         camera_reply = await answer(self.hass, user_input.text, user_input.context)
         if camera_reply is not None:
             return self._reply(user_input, chat_log, camera_reply)
+        # Jarvis must receive camera questions before broad native state queries.
+        # Set prefer_local_intents=False on Jarvis pipelines; retain native commands here.
+        from .relay_routing import native_reply
+        try:
+            local = await native_reply(self.hass, user_input)
+        except Exception:
+            _LOGGER.debug("Jarvis native command processing failed", exc_info=True)
+            return self._reply(user_input, chat_log, "Der lokale Hausbefehl konnte nicht abgeschlossen werden. Bitte prüfe den Gerätestatus.")
+        if local is not None:
+            chat_log.async_add_assistant_content_without_tools(conversation.AssistantContent(
+                agent_id=self.entity_id,
+                content=local.response.as_dict().get("speech", {}).get("plain", {}).get("speech", "Erledigt.")))
+            return conversation.ConversationResult(response=local.response,
+                conversation_id=chat_log.conversation_id, continue_conversation=False)
+
         profile = self.hass.states.get("input_select.jarvis_stt_profil")
         state = self.hass.states.get(LLM_AGENT)
         if (profile and profile.state == "Homeserver") or state is None or state.state == "unavailable":

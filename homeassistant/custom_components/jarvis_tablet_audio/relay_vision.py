@@ -25,6 +25,8 @@ def classify(text):
     door = r"(?:haus(?:tür|tuer)|eingangs(?:tür|tuer)|tür|tuer)"
     if re.fullmatch(r"(?:wer|was) (?:ist|steht|sitzt|wartet|passiert|befindet sich)(?: (?:gerade|jetzt|denn|da))* (?:an|vor) (?:der|unserer|meiner) " + door + r"(?: (?:gerade|jetzt|denn|da|los|zu sehen))*", phrase):
         return ("door", "scene")
+    if re.fullmatch(r"was (?:siehst|erkennst) du(?: (?:gerade|jetzt|denn|da))* (?:an|vor) (?:der|unserer|meiner) " + door + r"(?: (?:gerade|jetzt|denn|da))*", phrase):
+        return ("door", "scene")
     if phrase in {"who is at the door", "who is at the front door", "what is at the front door", "what is happening at the front door"}:
         return ("door", "scene")
     groups = {

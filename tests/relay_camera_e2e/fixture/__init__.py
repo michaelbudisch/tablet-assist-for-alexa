@@ -10,6 +10,7 @@ import traceback
 from aiohttp import web, ClientSession
 from PIL import Image, ImageDraw
 from homeassistant.core import Context
+from homeassistant.exceptions import Unauthorized, ServiceValidationError
 from homeassistant.components import camera, conversation
 from homeassistant.helpers import entity_registry as er
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -29,6 +30,10 @@ async def run(hass):
     from custom_components.jarvis_tablet_audio.relay_camera import runtime
     from custom_components.jarvis_tablet_audio.relay_frames import FrameStore
     from custom_components.jarvis_tablet_audio.relay_vision import classify
+    from custom_components.jarvis_tablet_audio.relay_pipeline import run_intent
+    from homeassistant.components.assist_pipeline.models import Pipeline
+    from homeassistant.setup import async_setup_component
+    await async_setup_component(hass, "assist_pipeline", {})
     clock = [1.0]
     frames = FrameStore(lambda: clock[0])
     device = "a" * 32
@@ -40,7 +45,7 @@ async def run(hass):
     for phrase in ("Wie wird das Wetter draußen?", "Schalte das Licht an", "Was ist ein Kameraobjektiv?", "Öffne die Haustür", "Ist die Haustür abgeschlossen?", "Wer wartet auf den Bus?"):
         check(classify(phrase) is None, "ordinary request preserved: " + phrase)
     check(classify("Was ist draußen los?") == ("outside", "scene"), "outdoor sight question routed")
-    for phrase in ("Wer ist an der Haustür?", "Was ist an der Haustür?", "Wer steht gerade vor der Tür?", "Was ist vor meiner Haustür los?", "Hey Jarvis, kannst du mir bitte sagen, wer ist an der Haustuer?", "Who is at the front door?"):
+    for phrase in ("Wer ist an der Haustür?", "Was ist an der Haustür?", "Was siehst du an der Haustür?", "Was erkennst du vor der Tür?", "Wer steht gerade vor der Tür?", "Was ist vor meiner Haustür los?", "Hey Jarvis, kannst du mir bitte sagen, wer ist an der Haustuer?", "Who is at the front door?"):
         check(classify(phrase) == ("door", "scene"), "door sight variant: " + phrase)
 
     image = Image.new("RGB", (640, 480), "white")
@@ -132,12 +137,43 @@ async def run(hass):
             check("Rechteck" in result["description"], "service describes tablet image")
             reply = await conversation.async_converse(hass, text="Wer ist an der Haustür?", conversation_id=None, agent_id=agent, language="de", context=Context(user_id=admin.id))
             check("Rechteck" in reply.response.as_dict()["speech"]["plain"]["speech"], "spoken question returns vision response")
+            pipeline = Pipeline(conversation_engine=agent, conversation_language="de", language="de", name="Camera routing fixture",
+                stt_engine=None, stt_language=None, tts_engine=None, tts_language=None, tts_voice=None,
+                wake_word_entity=None, wake_word_id=None, prefer_local_intents=False)
+            for phrase in ("Wer ist an der Tür?", "Wer ist an der Haustür?", "Was siehst du an der Haustür?"):
+                result = await run_intent(hass, pipeline, Context(user_id=admin.id), phrase)
+                check(not result["errors"] and "Rechteck" in result["speech"] and result["processed_locally"] is False,
+                    "full Assist pipeline reaches vision: " + phrase)
+            # No real devices: this synthetic service records native HA command execution.
+            lamp = registry.async_get_or_create("light", "relay_camera_ci", "routing-fixture", suggested_object_id="routing_fixture", original_name="Testlampe")
+            hass.states.async_set(lamp.entity_id, "off", {"friendly_name": "Testlampe", "supported_features": 0})
+            async def turn_on(call):
+                hass.states.async_set(lamp.entity_id, "on", {"friendly_name": "Testlampe", "supported_features": 0})
+            hass.services.async_register("light", "turn_on", turn_on)
+            result = await run_intent(hass, pipeline, Context(user_id=admin.id), "Schalte die Testlampe ein")
+            check(not result["errors"] and hass.states.is_state(lamp.entity_id, "on"), "native HA control preserved after Jarvis routing")
+            from custom_components.jarvis_tablet_audio.relay_routing import native_reply
+            from types import SimpleNamespace
+            unknown = SimpleNamespace(text="Erkläre Quantenverschränkung", context=Context(user_id=admin.id), language="de", device_id=None, satellite_id=None)
+            check(await native_reply(hass, unknown) is None, "unmatched native request remains eligible for LLM")
+            try:
+                await hass.services.async_call("jarvis_tablet_audio", "camera_pipeline_check", {"text": "Wer ist an der Haustür?"}, blocking=True, return_response=True, context=Context(user_id=guest.id))
+            except Unauthorized:
+                check(True, "camera pipeline diagnostic requires administrator")
+            else:
+                raise AssertionError("Non-admin pipeline diagnostic accepted")
+            try:
+                await hass.services.async_call("jarvis_tablet_audio", "camera_pipeline_check", {"text": "Schalte die Testlampe ein"}, blocking=True, return_response=True, context=Context(user_id=admin.id))
+            except ServiceValidationError:
+                check(True, "camera diagnostic rejects device commands")
+            else:
+                raise AssertionError("Diagnostic accepted device control")
             async with client.delete(base + "/frame", headers=headers) as response:
                 check(response.status == 204, "stop clears image")
             check(hass.states.get(cid).state == "unavailable" and relay.frames.image is None, "no stale fallback after stop")
             async with client.post(base + "/frame", headers={**headers, "X-Relay-Sequence": "2"}, data=jpeg) as response:
                 check(response.status == 409, "late frame after stop rejected")
-        check(len(seen) == 2, "vision called only for explicit service/question")
+        check(len(seen) == 5, "vision called only for explicit service/question")
     finally:
         await runner.cleanup()
 

@@ -15,6 +15,19 @@ describe_camera:
 camera_vision_status:
   name: Vision status
   description: Check local vision readiness without sending an image.
+camera_pipeline_check:
+  name: Check camera question pipeline
+  description: Administrator diagnostic. Run a camera question through the configured Jarvis Assist intent pipeline, without TTS or playback. Returns speech, local-routing status and run ID.
+  fields:
+    text:
+      required: true
+      example: "Wer ist an der Haustür?"
+      selector:
+        text:
+    pipeline_id:
+      description: Omit to use the preferred pipeline. Must use the Jarvis conversation router.
+      selector:
+        text:
 unpair_camera:
   name: Unpair camera
   description: Administrator action to invalidate the current camera session and allow pairing a different tablet.
