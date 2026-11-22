@@ -18,10 +18,12 @@ import java.util.ArrayList;
 public class UiSmokeInstrumentation extends Instrumentation {
     private String layout = "phone";
     private boolean streamOnly;
+    private boolean cameraOnly;
     @Override public void onCreate(Bundle args) {
         super.onCreate(args);
         if (args != null) layout = args.getString("layout", "phone");
         streamOnly = args != null && args.getString("stream_only", "false").equals("true");
+        cameraOnly = args != null && args.getString("camera_only", "false").equals("true");
         start();
     }
     private void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -29,6 +31,11 @@ public class UiSmokeInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         Activity screen = null;
         try {
+            if (cameraOnly) {
+                result.putString("stream", CameraSmoke.run(this));
+                finish(Activity.RESULT_OK, result);
+                return;
+            }
             if (streamOnly) {
                 result.putString("stream", StreamingSmoke.run(this));
                 finish(Activity.RESULT_OK, result);

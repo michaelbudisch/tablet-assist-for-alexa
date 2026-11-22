@@ -102,6 +102,7 @@ public class MainActivity extends Activity {
 
         findViewById(R.id.bluetooth_settings).setOnClickListener(v -> startActivity(new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)));
         findViewById(R.id.scan_token).setOnClickListener(v -> scanToken());
+        findViewById(R.id.camera_open).setOnClickListener(v -> startActivity(new Intent(this, CameraActivity.class)));
         findViewById(R.id.player_start).setOnClickListener(v -> startPlayer());
         findViewById(R.id.player_stop).setOnClickListener(v -> {
             stopService(new Intent(this, AudioService.class));

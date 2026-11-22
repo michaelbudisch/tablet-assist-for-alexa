@@ -1,3 +1,10 @@
+# 0.4.0 · Camera preparation
+- Add an optional, explicit-start Camera2 screen with front/rear selection, live preview and on-demand JPEG test images.
+- Request camera permission only after Start; explain denial and provide Android settings access when needed.
+- Bound output size and retain test images only in memory; clear/close on Stop, screen exit, screen-off and recreation, without automatic restart.
+- Preserve independent streaming audio, keepalive, QR scanning and credentials. No network camera endpoint or vision backend is enabled yet.
+- Add German/English help and isolated Android checks using emulated cameras.
+
 # 0.3.0 · Streaming
 - Decode MPEG Layer III incrementally with Android MediaCodec and play MP3/16-bit PCM WAV through AudioTrack before the HTTP response completes.
 - Use a 600 ms startup/rebuffer target and a bounded two-second PCM queue; handle unknown-length streaming WAV and arbitrary network packet boundaries.

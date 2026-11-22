@@ -73,6 +73,12 @@
 <TextView style="@style/Body" android:text="@string/keepalive_one" android:textSize="12sp"/>
 </LinearLayout>
 <LinearLayout style="@style/Card">
+<TextView style="@style/Eyebrow" android:text="@string/camera_optional"/>
+<TextView style="@style/Heading" android:text="@string/camera_title"/>
+<TextView style="@style/Body" android:text="@string/camera_intro"/>
+<Button android:id="@+id/camera_open" style="@style/Action" android:text="@string/camera_open"/>
+</LinearLayout>
+<LinearLayout style="@style/Card">
 <TextView style="@style/Heading" android:text="@string/help_title" android:layout_marginTop="0dp"/>
 <Button android:id="@+id/help_toggle" style="@style/Action" android:text="@string/help_expand"/>
 <LinearLayout android:id="@+id/help_details" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">

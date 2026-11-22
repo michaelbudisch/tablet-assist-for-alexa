@@ -1,27 +1,25 @@
-# HA Jarvis Echo Relay 0.3.0 · Streaming Preview
+# HA Jarvis Echo Relay 0.4.0 · Camera Preparation Preview
 
 ## Deutsch
 
-- Echtes progressives MP3- und 16-Bit-PCM/WAV-Streaming statt Warten auf die vollständige Datei.
-- Android MediaCodec dekodiert MP3 schrittweise; AudioTrack nutzt einen Startpuffer von 600 ms Audio und eine begrenzte PCM-Warteschlange.
-- Bluetooth wird mit Nulldaten geprüft, bevor Sprachsamples übergeben werden; die ersten Wörter bleiben erhalten.
-- Dateireserve aus derselben HTTP-Antwort nur vor Sprachbeginn. Kein neuer TTS-Auftrag und keine Wiederholung nach teilweise abgespielter Antwort.
-- Stopp bricht auch blockierte Netzwerkantworten ab. Diagnose enthält Modus, erste Bytes/PCM-Übergabe und Nachpufferungen.
-- Oberfläche, DE/EN, Token-Scan, Zugangsdaten, HTTP-Freigabe und optionaler Keepalive bleiben erhalten.
+- Optionaler Kamerabereich mit Front-/Rückkamera, lokaler Livevorschau und JPEG-Testbild mit Zeitstempel.
+- Kamerazugriff erst nach ausdrücklichem Start. Testbilder liegen nur im Arbeitsspeicher; Stopp und Verlassen der Seite löschen das Bild und schließen die Kamera. Kein automatischer Neustart.
+- Deutsche und englische Hilfetexte. Audiostreaming, Bluetooth-Prüfung, Keepalive und gespeicherte HA-Zugangsdaten bleiben erhalten.
 
-Die APK über die vorhandene App installieren. Die App-ID bleibt `de.jarvis.audio`; Adresse und Token bleiben erhalten. Signierter, nicht debuggbarer Release-Build mit dem bisherigen lokalen Testschlüssel für Update-Kompatibilität. Keine privaten Schlüssel enthalten. Die App benötigt weiterhin den dokumentierten nativen Audio-Helfervertrag.
+**Noch keine Bildübertragung an Home Assistant, kein Kamera-Dauerbetrieb und keine Vision-Auswertung.** Diese Version stellt die lokal testbare Kameragrundlage bereit. Kameraqualität und Orientierung müssen auch auf dem Zieltablet geprüft werden.
 
-JVM-Tests und Android-Lint sind bestanden. Im isolierten Android-Emulator wurden echte verzögerte HTTP-Antworten mit MP3 (24 kHz mono und 44,1 kHz stereo) sowie Streaming-WAV geprüft: Wiedergabebeginn vor vollständigem Empfang und bytegleiche PCM-Daten gegenüber vollständiger Dekodierung. Hinzu kommen native Netzwerkabbrüche, fehlendes Bluetooth und die bisherigen DE/EN-UI-Tests. Die tatsächliche Latenz und Keepalive-Wirkung auf Tablet/Echo erfordern Hardwaretests. Der 600-ms-Wert bezeichnet gepufferte Audiodauer, keine zugesicherte Startzeit. Antwortgenerierung und vorgeschaltete Puffer bleiben außerhalb der App.
+Über die vorhandene App installieren, damit Adresse und Token erhalten bleiben. App-ID `de.jarvis.audio`; nicht debuggbarer Release-Build mit demselben bisherigen lokalen Testschlüssel. Keine privaten Schlüssel enthalten.
+
+Geprüft: 22 JVM-Tests und Android-Lint; echter Berechtigungsdialog, Front-/Rückkamera-Vorschau und JPEG-Aufnahme mit emulierten Kameras, Abschalten/Löschen beim Verlassen, DE/EN-Oberfläche sowie die bisherigen nativen MP3/WAV-Streamingtests. Auch die signierte Release-APK hat den Kameratest bestanden.
 
 ## English
 
-- Progressive MP3 and 16-bit PCM/WAV streaming starts before the complete response has downloaded.
-- Android MediaCodec decodes MP3 incrementally; AudioTrack uses a 600 ms audio startup target and a bounded PCM queue.
-- Bluetooth is primed with zeros before speech submission, preserving the beginning of the answer.
-- Same-response file fallback is allowed only before speech, with no new TTS request and no replay after partial playback.
-- Stop interrupts blocked network responses. Diagnostics report mode, first bytes/PCM submission and rebuffering.
-- Existing interface, DE/EN, token scan, credentials, local HTTP consent and optional keepalive remain available.
+- Optional camera screen with front/rear selection, local live preview and timestamped JPEG test images.
+- Permission is requested only after explicit Start. Images stay in memory; Stop and leaving the screen clear the image and close the camera. No automatic restart.
+- German/English help. Streaming audio, Bluetooth route verification, keepalive and saved HA credentials remain available.
 
-Install over the existing app to retain credentials. The application ID remains `de.jarvis.audio`. This non-debuggable release APK uses the same local test signing key as earlier builds for update compatibility. Private signing keys are not included. A controller implementing the documented native audio helper contract is still required.
+**No Home Assistant image delivery, continuous background camera operation or vision inference yet.** This release provides a locally testable camera foundation. Camera quality and orientation also need checking on the target tablet.
 
-JVM tests and Android lint passed. Real delayed chunked HTTP responses were tested on an isolated Android emulator using MP3 (24 kHz mono and 44.1 kHz stereo) and streaming WAV: playback began before response completion and every decoded PCM byte matched complete decoding. Native HTTP cancellation, absent Bluetooth and existing German/English UI checks were also verified. Actual tablet/Echo latency and keepalive behavior need hardware testing. The 600 ms value is buffered audio duration, not a promised wall-clock start time. Answer generation and upstream buffering remain outside the app.
+Install over the existing app to retain credentials. Application ID `de.jarvis.audio`; non-debuggable release signed with the same previous local test key. Private keys are not included.
+
+Verified: 22 JVM tests and Android lint; actual permission dialog, front/rear preview and JPEG capture with emulated cameras, close/clear on screen exit, German/English UI and the existing native MP3/WAV streaming checks. The signed release APK also passed the camera check.

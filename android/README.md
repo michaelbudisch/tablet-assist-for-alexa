@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.3.0
+# HA Jarvis Echo Relay · Android 0.4.0
 
 **English** | [Deutsch](README.de.md)
 
@@ -8,7 +8,7 @@ A native audio bridge from Home Assistant through an Android device to a Bluetoo
 
 ## Download and update
 
-[Download the ready-to-install preview APK](downloads/HA-Jarvis-Echo-Relay-0.3.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Download the ready-to-install preview APK](downloads/HA-Jarvis-Echo-Relay-0.4.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 **Install over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; only the visible app name and icon change.
 
@@ -38,6 +38,14 @@ The response is also spooled to app-private cache, capped at 24 MiB, for the fil
 Diagnostics show the mode (`mp3`, `wav_pcm`, `file_fallback`), first network byte, first decoded PCM and first PCM submission times, received bytes and rebuffer count. Submission time does not include the Echo’s physical playback latency. HA status helper values and the command contract are unchanged.
 
 The cleaned-up HA dashboard does not need changes for this app update. An upstream server/proxy that buffers the whole response can still delay the first byte, and answer-text generation is outside the audio player’s control. Device-specific Bluetooth performance still requires testing on the target tablet.
+
+### Optional camera preparation
+
+Open **Open camera test** on the audio setup page. Select front/rear camera, tap **Start camera**, and grant access. Opening the page alone never requests permission or starts capture. The front camera is preferred initially; only the selected camera ID is saved.
+
+The live preview and **Take test image** verify Camera2 preview and JPEG capture on the tablet. Outputs are bounded to 1280 × 960 pixels (or a smaller supported size). Test images display capture time and dimensions, are kept only in memory, and can be cleared. Stop, leaving the camera screen, screen-off or activity recreation closes the camera and clears the image; returning always requires another explicit start. Denied access does not affect audio playback or require HA credentials. QR scanning uses the same Android camera permission.
+
+This is a local camera foundation, not an HA camera integration yet. No image server, uploads, video recording, background camera service, motion detection or model inference is started. Audio streaming/keepalive remains independent. See [camera architecture and next steps](docs/camera-preparation.md).
 
 ### Native Bluetooth keepalive
 

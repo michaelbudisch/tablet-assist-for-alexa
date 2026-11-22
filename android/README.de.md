@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.3.0
+# HA Jarvis Echo Relay · Android 0.4.0
 
 [English](README.md) | **Deutsch**
 
@@ -8,7 +8,7 @@ Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetoo
 
 ## Download und Update
 
-[Fertige Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.3.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Fertige Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.4.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Der sichtbare Name und das Icon ändern sich.
 
@@ -38,6 +38,14 @@ Für die Dateireserve wird die empfangene Antwort gleichzeitig im privaten App-C
 Die Diagnose zeigt den Modus (`mp3`, `wav_pcm`, `file_fallback`), Zeiten bis zum ersten Netzwerkbyte, ersten dekodierten PCM und ersten übergebenen PCM sowie Empfangsmenge und Nachpufferungen. Die Übergabezeit enthält nicht die physische Wiedergabelatenz des Echo. Statushelfer und Befehlsvertrag bleiben kompatibel.
 
 Für dieses App-Update muss das bereinigte HA-Dashboard nicht geändert werden. Ein vorgelagerter Server/Proxy, der die ganze Antwort puffert, kann das erste Byte weiterhin verzögern; die Erzeugung des Antworttexts liegt außerhalb des Audioplayers. Die tatsächliche Bluetooth-Geschwindigkeit muss auf dem Zieltablet geprüft werden.
+
+### Optionale Kameravorbereitung
+
+Öffne **Kameratest öffnen** auf der Audioeinrichtungsseite. Wähle Front- oder Rückkamera, tippe auf **Kamera starten** und erlaube den Zugriff. Das bloße Öffnen fordert keine Berechtigung an und startet keine Kamera. Anfangs wird die Frontkamera bevorzugt; gespeichert wird nur die gewählte Kamera-ID.
+
+Livevorschau und **Testbild aufnehmen** prüfen Camera2-Vorschau und JPEG-Aufnahme auf dem Tablet. Die Ausgaben sind auf 1280 × 960 Pixel oder eine kleinere unterstützte Auflösung begrenzt. Testbilder zeigen Aufnahmezeit und Abmessungen, liegen nur im Arbeitsspeicher und lassen sich löschen. Stoppen, Verlassen der Kameraseite, Ausschalten des Displays oder Neuerstellen der Activity schließt die Kamera und löscht das Bild. Nach der Rückkehr ist ein erneuter Start nötig. Verweigerter Zugriff beeinflusst Audio nicht; HA-Zugangsdaten sind für den Kameratest nicht nötig. Der QR-Scanner nutzt dieselbe Android-Kameraberechtigung.
+
+Dies ist die lokale Kameragrundlage. Bildserver, Uploads, Videoaufzeichnung, Kamera-Hintergrunddienst, Bewegungserkennung und Modellaufrufe sind noch nicht angebunden. Audiostreaming und Keepalive bleiben unabhängig. Siehe [Kameraarchitektur und nächste Schritte](docs/camera-preparation.md).
 
 ### Bluetooth wach halten
 
