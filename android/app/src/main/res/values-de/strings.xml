@@ -44,9 +44,9 @@
     <string name="status_connecting">Verbindung wird aufgebaut …</string>
     <string name="status_connecting_help">Prüfe Home Assistant und den Bluetooth-Ausgang.</string>
     <string name="status_ready">Bereit für Antworten</string>
-    <string name="status_ready_help">Kehre zu Home Assistant zurück und wähle im kompatiblen Dashboard Native Audio App (Beta) als Audioausgabe.</string>
+    <string name="status_ready_help">Kehre zu deinem Echo-Relay-Dashboard in Home Assistant zurück und starte eine Sprachanfrage. Lass diesen Player laufen.</string>
     <string name="status_buffering">Antwort wird vorbereitet</string>
-    <string name="status_buffering_help">Die Audiodatei wird vor der Wiedergabe geladen.</string>
+    <string name="status_buffering_help">Ein kleiner Audiopuffer wird gefüllt. MP3 und PCM/WAV können bereits spielen, während weiteres Audio ankommt.</string>
     <string name="status_playing">Wiedergabe über Bluetooth</string>
     <string name="status_playing_help">Der tatsächliche Bluetooth-Ausgang wurde bestätigt.</string>
     <string name="status_done">Antwort abgeschlossen</string>
@@ -76,7 +76,7 @@
     <string name="help_title">Einrichtung &amp; Hilfe</string>
     <string name="help_expand">Einrichtungstipps anzeigen</string>
     <string name="help_collapse">Einrichtungstipps ausblenden</string>
-    <string name="help_text">1. Echo mit diesem Android-Gerät koppeln und Medienaudio testen.\n\n2. Home Assistant auswählen und unter Profil → Sicherheit einen langlebigen Token erstellen. Den einmaligen QR-Code direkt im Erstellungsdialog scannen.\n\n3. Diesen Player starten. Benachrichtigungen erlauben, damit du ihn auch über die Android-Benachrichtigung stoppen kannst.\n\n4. Im kompatiblen HA-Dashboard Native Audio App (Beta) als Ausgabe wählen. Die Player-Benachrichtigung aktiv lassen.\n\nDiese App ist eine Audiobrücke, keine Mikrofon- oder Wakeword-App. Sie benötigt die in der Projektdokumentation beschriebenen Audio-Befehls- und Statushelfer. Ihre Installation richtet die HA-Integration nicht automatisch ein.</string>
+    <string name="help_text">1. Echo mit diesem Android-Gerät koppeln und Medienaudio testen.\n\n2. Home Assistant auswählen und unter Profil → Sicherheit einen langlebigen Token erstellen. Den einmaligen QR-Code direkt im Erstellungsdialog scannen.\n\n3. Diesen Player starten. Benachrichtigungen erlauben, damit du ihn auch über die Android-Benachrichtigung stoppen kannst.\n\n4. Im Echo-Relay-Dashboard in Home Assistant eine Sprachanfrage starten. Die Player-Benachrichtigung aktiv lassen.\n\nDiese App ist eine Audiobrücke, keine Mikrofon- oder Wakeword-App. Sie benötigt die in der Projektdokumentation beschriebenen Audio-Befehls- und Statushelfer. Ihre Installation richtet die HA-Integration nicht automatisch ein.</string>
     <string name="help_idle">Echo-Ansagen nach Ruhezeiten</string>
     <string name="help_idle_text">Die Ansage kommt vom Echo selbst. Keepalive kann Ruhepausen überbrücken, unterdrückt Echo-Ansagen aber nicht garantiert. Player stoppen beendet auch dessen Keepalive. Nach einem Neustart wird nichts automatisch gestartet.</string>
     <string name="help_battery">Android-Hintergrundbetrieb</string>

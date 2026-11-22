@@ -17,9 +17,11 @@ import java.util.ArrayList;
 /** Runs on an isolated emulator. No real token, HA server or Bluetooth device is used. */
 public class UiSmokeInstrumentation extends Instrumentation {
     private String layout = "phone";
+    private boolean streamOnly;
     @Override public void onCreate(Bundle args) {
         super.onCreate(args);
         if (args != null) layout = args.getString("layout", "phone");
+        streamOnly = args != null && args.getString("stream_only", "false").equals("true");
         start();
     }
     private void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -27,6 +29,11 @@ public class UiSmokeInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         Activity screen = null;
         try {
+            if (streamOnly) {
+                result.putString("stream", StreamingSmoke.run(this));
+                finish(Activity.RESULT_OK, result);
+                return;
+            }
             getTargetContext().getSharedPreferences(MainActivity.PREF, 0).edit().clear().putString("ui_language", "de").commit();
             MediaPlayer silenceDecoder = new MediaPlayer();
             try (AssetFileDescriptor source = getTargetContext().getResources().openRawResourceFd(R.raw.keepalive_silence)) {

@@ -29,3 +29,5 @@ jarvis-public-source-*.json
 *.jks
 *.keystore
 !android/app/src/main/res/raw/keepalive_silence.wav
+!android/app/src/androidTest/assets/stream-*.mp3
+!android/app/src/androidTest/assets/stream-*.wav

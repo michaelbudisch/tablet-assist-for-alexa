@@ -1,3 +1,11 @@
+# 0.3.0 · Streaming
+- Decode MPEG Layer III incrementally with Android MediaCodec and play MP3/16-bit PCM WAV through AudioTrack before the HTTP response completes.
+- Use a 600 ms startup/rebuffer target and a bounded two-second PCM queue; handle unknown-length streaming WAV and arbitrary network packet boundaries.
+- Prime/verify Bluetooth with zeros before submitting speech, preserving the first words; monitor route changes during playback and buffering.
+- Spool the same response to private cache for unsupported-format fallback only before speech; never regenerate or replay an answer after partial playback.
+- Cancel blocked network reads, delete temporary audio and retain the existing HA command/status helper contract, credentials and keepalive.
+- Add timing diagnostics and JVM/native Android tests using synthetic delayed chunked MP3/WAV responses.
+
 # 0.2.0 · HA Jarvis Echo Relay
 - Redesign phone/tablet setup with a custom vector icon, three setup cards, readable playback states and expandable diagnostics.
 - Add complete English/German interface, setup help and notification localization, including an in-app language switch.

@@ -266,7 +266,7 @@ public class MainActivity extends Activity {
         TextView ha = findViewById(R.id.ha_status);
         ha.setText(AudioService.haConnected ? R.string.connected : AudioService.running ? R.string.not_connected : R.string.not_checked);
         ha.setTextColor(getColor(AudioService.haConnected ? R.color.accent : R.color.muted));
-        ((TextView) findViewById(R.id.diagnostics_text)).setText(raw);
+        ((TextView) findViewById(R.id.diagnostics_text)).setText(raw + "\n" + AudioService.streamDiagnostics);
         String keepalive = AudioService.keepaliveStatus;
         int keepaliveText = keepalive.equals("active") ? R.string.keepalive_active : keepalive.equals("waiting")
                 ? R.string.keepalive_waiting : keepalive.equals("starting") ? R.string.keepalive_starting

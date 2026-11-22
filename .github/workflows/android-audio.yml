@@ -49,6 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           tag="audio-v$(tr -d '\r\n' < android/VERSION)"
+          version="$(tr -d '\r\n' < android/VERSION)"
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'Preview already exists; keep existing release unchanged.'
             exit 0
@@ -56,5 +57,5 @@ jobs:
           gh release create "$tag" --target "$GITHUB_SHA" --prerelease \
             --title "HA Jarvis Echo Relay $(cat android/VERSION) · Preview" \
             --notes-file android/RELEASE_NOTES.md \
-            android/downloads/HA-Jarvis-Echo-Relay-0.2.0-preview.apk android/downloads/SHA256SUMS \
+            "android/downloads/HA-Jarvis-Echo-Relay-$version-preview.apk" android/downloads/SHA256SUMS \
             android/licenses/APACHE-2.0.txt android/THIRD_PARTY_NOTICES.md

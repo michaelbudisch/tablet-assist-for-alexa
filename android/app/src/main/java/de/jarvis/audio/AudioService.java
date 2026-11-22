@@ -12,14 +12,15 @@ import java.util.concurrent.*;
 import java.util.regex.Pattern;
 
 public class AudioService extends Service {
-    static volatile String ui="stopped", keepaliveStatus="off";
+    static volatile String ui="stopped", keepaliveStatus="off", streamDiagnostics="";
     static volatile boolean running=false, haConnected=false;
     private BluetoothKeepalive keepalive;
     static final String COMMAND="input_text.jarvis_native_audio_command", STATUS="input_text.jarvis_native_audio_status";
     static final Pattern PATH=Pattern.compile("/api/tts_proxy/[A-Za-z0-9_.~-]{1,200}");
     final Handler main=new Handler(Looper.getMainLooper());
     final ScheduledExecutorService io=Executors.newSingleThreadScheduledExecutor();
-    final ExecutorService download=Executors.newSingleThreadExecutor();
+    private StreamingSession streaming;
+    private Runnable streamWatchdog;
     volatile boolean active=false,busy=false; volatile String id="", cachedStatus="";
     String base,token,httpConsent,lastCommand=""; boolean baseline=false; long heartbeat=0;
     MediaPlayer player; File file; AudioManager am; AudioFocusRequest focus; boolean audible=false,seeked=false,preferredAccepted=false; int preferredId=-1,routeAttempts=0; long checkUntil=0,playUntil=0,routeRetryAt=0;
@@ -70,24 +71,69 @@ public class AudioService extends Service {
     private void publish(String status)throws Exception{HttpURLConnection c=connection("/api/services/input_text/set_value","POST");try{c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");byte[] data=new JSONObject().put("entity_id",STATUS).put("value",status).toString().getBytes(StandardCharsets.UTF_8);try(OutputStream out=c.getOutputStream()){out.write(data);}if(c.getResponseCode()!=200)throw new IOException("HA status HTTP "+c.getResponseCode());}finally{c.disconnect();}}
     private void state(String status){cachedStatus=status;ui=status; if(!io.isShutdown())io.execute(()->{if(active)try{publish(status);}catch(Exception ignored){}});}
     AudioDeviceInfo bluetooth(){for(AudioDeviceInfo d:am.getDevices(AudioManager.GET_DEVICES_OUTPUTS))if(d.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)return d;return null;}
-    private void poll(){if(!active)return;try{String cmd=readCommand();if(!baseline){lastCommand=cmd;baseline=true;}else if(!cmd.equals(lastCommand)){lastCommand=cmd;try{JSONObject j=new JSONObject(cmd);String next=j.optString("id"),path=j.optString("path");long age=System.currentTimeMillis()-j.optLong("ts",0);if(next.matches("[a-zA-Z0-9-]{1,40}")&&age>=-5000&&age<15000){if(j.optBoolean("stop")){if(next.equals(id))main.post(()->finish("cancelled"));}else if(!busy&&PATH.matcher(path).matches()){busy=true;id=next;state(id+"|buffering");download.execute(()->fetch(next,path));}}}catch(Exception ignored){}}
+    private void poll(){if(!active)return;try{String cmd=readCommand();if(!baseline){lastCommand=cmd;baseline=true;}else if(!cmd.equals(lastCommand)){lastCommand=cmd;try{JSONObject j=new JSONObject(cmd);String next=j.optString("id"),path=j.optString("path");long age=System.currentTimeMillis()-j.optLong("ts",0);if(next.matches("[a-zA-Z0-9-]{1,40}")&&age>=-5000&&age<15000){if(j.optBoolean("stop")){if(next.equals(id))main.post(()->finish("cancelled"));}else if(!busy&&PATH.matcher(path).matches()){busy=true;id=next;state(id+"|buffering");main.post(()->startStreaming(next,path));}}}catch(Exception ignored){}}
         long now=System.currentTimeMillis();if(!busy&&now-heartbeat>5000){heartbeat=now;String status=bluetooth()!=null?"ready|"+now:"no_bluetooth|"+now;publish(status);ui=status;}else if(busy&&now-heartbeat>6000){heartbeat=now;if(!cachedStatus.isEmpty())publish(cachedStatus);}
         haConnected=true;
       }catch(Exception e){haConnected=false;if(!busy)ui=e.getMessage()!=null&&(e.getMessage().contains("401")||e.getMessage().contains("403"))?"credentials_error":"connection_error|"+e.getClass().getSimpleName();}}
-    private void fetch(String request,String path){File temp=null;try{if(bluetooth()==null)throw new IOException("Bluetooth fehlt");temp=File.createTempFile("jarvis-",".audio",getCacheDir());HttpURLConnection c=connection(path,"GET");try{if(c.getResponseCode()!=200)throw new IOException("Audio HTTP "+c.getResponseCode());try(InputStream in=c.getInputStream();OutputStream out=new FileOutputStream(temp)){byte[] buf=new byte[16384];int n,total=0;while((n=in.read(buf))!=-1){if(!active||!request.equals(id)||!busy)throw new IOException("cancelled");total+=n;if(total>24*1024*1024)throw new IOException("Audio zu groß");out.write(buf,0,n);}if(total==0)throw new IOException("empty audio");}}finally{c.disconnect();}File result=temp;main.post(()->{if(active&&busy&&request.equals(id))startPlayer(result);else result.delete();});}catch(Exception e){if(temp!=null)temp.delete();main.post(()->{if(active&&busy&&request.equals(id))finish("error_download");});}}
+    private boolean takeSpeechFocus() {
+        if(focus!=null)am.abandonAudioFocusRequest(focus);
+        String focusId=id;
+        AudioAttributes attrs=new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
+        focus=new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).setAudioAttributes(attrs)
+                .setOnAudioFocusChangeListener(change->{
+                    if(change==AudioManager.AUDIOFOCUS_LOSS||change==AudioManager.AUDIOFOCUS_LOSS_TRANSIENT){
+                        if(focusId.equals(id)){
+                            finish("error_focus");
+                            if(keepalive!=null&&getSharedPreferences(MainActivity.PREF,0).getBoolean("keepalive_enabled",false))keepalive.pauseForFocus();
+                        }
+                    }
+                },main).build();
+        return am.requestAudioFocus(focus)==AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+    }
+
+    private void startStreaming(String request,String path) {
+        if(!active||!busy||!request.equals(id))return;
+        if(bluetooth()==null){finish("error_no_bluetooth");return;}
+        if(!takeSpeechFocus()){finish("error_focus");return;}
+        streamDiagnostics="mode=preparing; startup_buffer_ms="+StreamingSession.START_BUFFER_MS;
+        StreamCallbacks callbacks=new StreamCallbacks(request);
+        streaming=new StreamingSession(getCacheDir(),()->connection(path,"GET"),
+                first->new AndroidMp3Decoder(first,()->!active||!busy||!request.equals(id)),
+                stopped->new BluetoothPcmOutput(am,stopped),callbacks);
+        callbacks.owner=streaming;
+        StreamingSession session=streaming;
+        streamWatchdog=()->{if(streaming==session&&busy)finish("error_stream_timeout");};
+        main.postDelayed(streamWatchdog,120000);
+        session.start();
+    }
+
+    private final class StreamCallbacks implements StreamingSession.Listener {
+        final String request;
+        StreamingSession owner;
+        StreamCallbacks(String request){this.request=request;}
+        boolean current(){return active&&busy&&request.equals(id)&&streaming==owner;}
+        public void onPlaying(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|playing|bluetooth");}});}
+        public void onBuffering(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|buffering");}});}
+        public void onDone(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;finish("done");}});}
+        public void onError(String error,String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;finish(error);}});}
+        public void onFallback(File cached,String diagnostic){
+            main.post(()->{
+                if(!current()){cached.delete();return;}
+                streamDiagnostics=diagnostic;streaming=null;
+                if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);
+                streamWatchdog=null;
+                state(id+"|buffering");startPlayer(cached);
+            });
+        }
+    }
     private void startPlayer(File f) {
         file = f;
         try {
             if (bluetooth() == null) { finish("error_no_bluetooth"); return; }
-            String focusId = id;
             AudioAttributes attrs = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
-            focus = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).setAudioAttributes(attrs)
-                    .setOnAudioFocusChangeListener(change -> {
-                        if (change == AudioManager.AUDIOFOCUS_LOSS || change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
-                            main.post(() -> { if (focusId.equals(id)) { finish("error_focus"); if(keepalive!=null&&getSharedPreferences(MainActivity.PREF,0).getBoolean("keepalive_enabled",false))keepalive.pauseForFocus(); } });
-                    }).build();
-            if (am.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            if (!takeSpeechFocus()) {
                 finish("error_focus"); return;
             }
             player = new MediaPlayer();
@@ -142,6 +188,6 @@ public class AudioService extends Service {
             MediaPlayer waiting=player;main.postDelayed(()->{if(busy&&player==waiting&&!seeked)finish("error_seek");},2000);
         }catch(Exception e){finish("error_route");}
     }};
-    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();state(ended+"|"+result);}
-    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");io.shutdownNow();download.shutdownNow();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
+    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();state(ended+"|"+result);}
+    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");io.shutdownNow();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }
