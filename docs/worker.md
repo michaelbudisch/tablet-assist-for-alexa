@@ -1,6 +1,6 @@
 **Deutsch** | [English](en/worker.md) · [Projektübersicht](../README.de.md)
 
-# Optionaler KI-Zusatzrechner – Original-Worker v1.7.0
+# Optionaler KI-Zusatzrechner – Original-Worker v1.8.0
 
 Enthalten ist der bereitgestellte Jarvis GPU Worker 1.7.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
 
@@ -59,3 +59,11 @@ Datei nur lokal, root-only. `systemctl restart jarvis-mp3`. Im Dashboard Automat
 ## 4. Testen
 
 Windows: `Test-Stream.ps1`, `Test-Voice.ps1` aus dem Worker-Verzeichnis. Linux: mit eigenen lokalen Werten und API-Token `/health`, `/synthesize` und `/stream` prüfen. Keine Token in Screenshots, Logs oder Commit-Verlauf. Anschließend native Assist-Ausgabe und MP3 bei ausgeschaltetem GPU-Rechner prüfen.
+
+## Jarvis model settings / Modelleinstellungen (1.8.0)
+
+With Jarvis Tablet Audio 1.5.0, the dashboard's **AI models and performance** panel selects installed text and vision models and a matching context (2048/4096/8192 tokens) and residency (0/60/120/300/600 seconds). Selecting `qwen3-vl:4b-instruct` for both avoids alternating model weights; verify real VRAM peaks alongside Whisper and TTS. Ollama still permits one loaded model and one parallel request. No automatic downloads, new service, public Ollama endpoint or volume changes are added. Legacy vision callers retain immediate unload by default.
+
+The authenticated `GET /runtime` reports only allowlisted installed/loaded models. `POST /describe` additionally accepts bounded `keep_alive` and `num_ctx` and reports inference timing metrics. The HA integration supplies saved parameters; its existing Ollama conversation agent receives matching settings through native config-subentry persistence, preserving prompts, tools and history. Browser clients never receive the worker key. Camera-display commands still bypass both inference models. Settings changes apply on the next request; the first request after idle/restart may load the model.
+
+DE: Unter **Jarvis → Assistent und Audio → KI-Modelle und Leistung** Text-/Bildmodell, Warmhaltezeit und Kontext wählen. Für gemeinsamen Betrieb beide Modelle auf Qwen3-VL 4B Instruct setzen und speichern. Zurückwechseln: Textmodell Qwen3 4B Instruct, Bildmodell Qwen3-VL 4B Instruct. Die Einstellungen gelten zentral für alle Jarvis-Geräte. Höhere Kontextwerte benötigen mehr GPU-Speicher. Vorhandene `.env`, Modelle und Volumes behalten; beim Update nur den Dienst `vision` neu bauen/starten. Kein APK-Update erforderlich.

@@ -19,6 +19,9 @@ class VisionTests(unittest.TestCase):
             self.calls.append((path, data, timeout))
             if path == "/api/tags":
                 return {"models": [{"name": DEFAULT_MODEL}]}
+            if path == "/api/ps":
+                return {"models": [{"name": DEFAULT_MODEL, "size_vram": 3500000000, "context_length": 4096},
+                    {"name": "private-unrelated-model", "secret": "not exposed"}]}
             return {"message": {"content": "Eine blaue Fläche."}}
         self.client = create_app(TOKEN, call=fake).test_client()
     def post(self, data):
@@ -42,6 +45,24 @@ class VisionTests(unittest.TestCase):
     def test_alternative(self):
         self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,200)
         self.assertEqual(self.calls[0][1]["model"], "gemma3:4b")
+    def test_residency_and_matching_context(self):
+        self.assertEqual(self.post({"image":fixture(),"keep_alive":300,"num_ctx":2048}).status_code,200)
+        self.assertEqual(self.calls[0][1]["keep_alive"],300)
+        self.assertEqual(self.calls[0][1]["options"]["num_ctx"],2048)
+        self.assertFalse(self.calls[0][1]["think"])
+    def test_residency_limits(self):
+        for extra in ({"keep_alive":-1},{"keep_alive":True},{"keep_alive":"300s"},{"keep_alive":86400},{"num_ctx":131072},{"num_ctx":True}):
+            with self.subTest(extra=extra):
+                self.assertEqual(self.post({"image":fixture(),**extra}).status_code,400)
+        self.assertEqual(self.calls,[])
+    def test_runtime_no_loading_or_private_models(self):
+        result=self.client.get("/runtime",headers=HEADERS)
+        self.assertEqual(result.status_code,200)
+        self.assertEqual(result.json["settings_api"],1)
+        self.assertEqual(result.json["vision_models"],[DEFAULT_MODEL])
+        self.assertEqual(len(result.json["loaded"]),1)
+        self.assertEqual([x[0] for x in self.calls],["/api/tags","/api/ps"])
+        self.assertEqual(self.client.get("/runtime").status_code,401)
     def test_generic_people_without_identity(self):
         self.assertEqual(self.post({"image":fixture(),"mode":"scene"}).status_code,200)
         system=self.calls[0][1]["messages"][0]["content"]

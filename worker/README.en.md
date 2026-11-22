@@ -17,7 +17,7 @@ docker compose --profile stream up -d --build qwen-stream
 The Wyoming service uses port 10300; streaming TTS uses 10502. Only allow the necessary internal HA and CPU speech server clients. Do not forward these ports through your router. The optional older TTS profile on port 10501 is a separate model; do not run both TTS profiles simultaneously. Native CPU fallback remains available.
 
 
-## Optional vision (1.7.0)
+## Optional vision (1.8.0)
 
 The optional `vision` profile uses the existing private Ollama for explicitly requested single-image descriptions. Existing text, Whisper, TTS and volumes are unchanged. Default `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); alternatives `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Preserve .env; run on the GPU computer, not Proxmox.
 
@@ -77,3 +77,11 @@ The fast, styled and design streaming profiles from 1.2.0 remain available. The 
 Use Test-Stream.ps1 for latency, Test-Voice.ps1 to listen to locally generated audio, or Test-Qwen.ps1 for the older non-streaming service. First requests may include CUDA warm-up. Test CPU fallback with the GPU unavailable, voice changes and Bluetooth playback. GPU inference and device compatibility require real hardware validation.
 
 [Worker changelog](CHANGELOG.md) · [German changelog](CHANGELOG.de.md) · [Main repository](../README.md)
+
+## Jarvis model settings / Modelleinstellungen (1.8.0)
+
+With Jarvis Tablet Audio 1.5.0, the dashboard's **AI models and performance** panel selects installed text and vision models and a matching context (2048/4096/8192 tokens) and residency (0/60/120/300/600 seconds). Selecting `qwen3-vl:4b-instruct` for both avoids alternating model weights; verify real VRAM peaks alongside Whisper and TTS. Ollama still permits one loaded model and one parallel request. No automatic downloads, new service, public Ollama endpoint or volume changes are added. Legacy vision callers retain immediate unload by default.
+
+The authenticated `GET /runtime` reports only allowlisted installed/loaded models. `POST /describe` additionally accepts bounded `keep_alive` and `num_ctx` and reports inference timing metrics. The HA integration supplies saved parameters; its existing Ollama conversation agent receives matching settings through native config-subentry persistence, preserving prompts, tools and history. Browser clients never receive the worker key. Camera-display commands still bypass both inference models. Settings changes apply on the next request; the first request after idle/restart may load the model.
+
+DE: Unter **Jarvis → Assistent und Audio → KI-Modelle und Leistung** Text-/Bildmodell, Warmhaltezeit und Kontext wählen. Für gemeinsamen Betrieb beide Modelle auf Qwen3-VL 4B Instruct setzen und speichern. Zurückwechseln: Textmodell Qwen3 4B Instruct, Bildmodell Qwen3-VL 4B Instruct. Die Einstellungen gelten zentral für alle Jarvis-Geräte. Höhere Kontextwerte benötigen mehr GPU-Speicher. Vorhandene `.env`, Modelle und Volumes behalten; beim Update nur den Dienst `vision` neu bauen/starten. Kein APK-Update erforderlich.

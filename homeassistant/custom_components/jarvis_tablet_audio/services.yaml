@@ -31,3 +31,36 @@ camera_pipeline_check:
 unpair_camera:
   name: Unpair camera
   description: Administrator action to invalidate the current camera session and allow pairing a different tablet.
+model_settings:
+  name: Jarvis AI model settings
+  description: Administrator action. Read installed/loaded models or save text/vision model, matching context and residency. Preserves Ollama prompts, tools and history settings; does not download models or restart the camera.
+  fields:
+    action:
+      default: get
+      selector:
+        select:
+          options: [get, set]
+    text_model:
+      selector:
+        text:
+    vision_model:
+      selector:
+        text:
+    keep_alive:
+      description: Shared residency in seconds; allowed 0, 60, 120, 300, 600.
+      selector:
+        number:
+          min: 0
+          max: 600
+          mode: box
+    num_ctx:
+      description: Matching text/vision context; allowed 2048, 4096, 8192.
+      selector:
+        number:
+          min: 2048
+          max: 8192
+          mode: box
+    revision:
+      description: Revision returned by get; required for saving to prevent stale settings writes.
+      selector:
+        text:

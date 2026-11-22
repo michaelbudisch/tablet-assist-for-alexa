@@ -202,6 +202,13 @@ async def async_setup(hass, entry):
             raise ServiceValidationError("Echo Relay unavailable")
         return await check_camera_pipeline(current, call)
 
+    async def models_service(call):
+        from .relay_models import model_settings
+        current = runtime(hass)
+        if current is None:
+            raise ServiceValidationError("Echo Relay unavailable")
+        return await model_settings(current, call)
+
     async def unpair(call):
         user = await hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
         if not user or not user.is_admin:
@@ -217,6 +224,11 @@ async def async_setup(hass, entry):
     hass.services.async_register(DOMAIN, "camera_pipeline_check", pipeline_service,
         schema=vol.Schema({vol.Required("text"): vol.All(str, vol.Length(min=1, max=500)),
             vol.Optional("pipeline_id"): str}), supports_response=SupportsResponse.ONLY)
+    hass.services.async_register(DOMAIN, "model_settings", models_service,
+        schema=vol.Schema({vol.Optional("action", default="get"): vol.In(["get", "set"]),
+            vol.Optional("text_model"): str, vol.Optional("vision_model"): str,
+            vol.Optional("keep_alive"): int, vol.Optional("num_ctx"): int,
+            vol.Optional("revision"): vol.All(str, vol.Length(max=64))}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "unpair_camera", unpair, schema=vol.Schema({}))
 
 def async_unload(hass):
@@ -225,7 +237,7 @@ def async_unload(hass):
         current.frames.clear()
         current.notify()
     hass.data.get(DOMAIN, {}).pop("relay_camera", None)
-    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "unpair_camera"):
+    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "unpair_camera"):
         hass.services.async_remove(DOMAIN, service)
 
 async def answer(hass, text, context):

@@ -1,5 +1,9 @@
 [English](CHANGELOG.md) | **Deutsch**
 
+# 1.8.0
+
+- Authenticated installed/loaded model status and bounded per-request residency/context for matching HA text/vision settings. Legacy immediate-unload defaults remain compatible; response timings support load-cost diagnosis. No additional service, model download, endpoint exposure or speech changes.
+
 # 1.7.0
 
 - Szenenbeschreibungen dürfen sichtbare Personen allgemein anhand von Kleidung, Position und getragenen Gegenständen beschreiben. Keine Namenszuordnung, Gesichtsvergleiche, sensiblen Zuschreibungen oder Bewegungsverläufe aus einem Einzelbild. Die authentifizierte Einzelbild-API bleibt kompatibel.

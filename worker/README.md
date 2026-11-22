@@ -1,6 +1,6 @@
 **Deutsch** | [English](README.en.md) · [Installation](../docs/worker.md)
 
-# Jarvis GPU Worker v1.7.0 – Optionales Visionmodell
+# Jarvis GPU Worker v1.8.0 – Optionales Visionmodell
 
 Das Profil `vision` ergänzt Ollama um ausdrücklich angeforderte Einzelbildbeschreibungen; Qwen3 4B Instruct, Whisper und TTS bleiben unverändert. Standard: `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); Alternativen: `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Update am GPU-PC, nicht auf Proxmox: bestehende `.env` und Volumes behalten.
 
@@ -144,3 +144,11 @@ docker compose --profile stream logs -f qwen-stream
 Nach `Faster Qwen ready on port 10502` mit Strg+C die Logansicht beenden und `./Test-Stream.ps1` ausführen. Keine Volumes löschen. Keine Zugangsdaten teilen. Der Fix wurde statisch geprüft, nicht auf einer GPU ausgeführt.
 
 Referenz: https://github.com/andimarafioti/faster-qwen3-tts/blob/main/README.md
+
+## Jarvis model settings / Modelleinstellungen (1.8.0)
+
+With Jarvis Tablet Audio 1.5.0, the dashboard's **AI models and performance** panel selects installed text and vision models and a matching context (2048/4096/8192 tokens) and residency (0/60/120/300/600 seconds). Selecting `qwen3-vl:4b-instruct` for both avoids alternating model weights; verify real VRAM peaks alongside Whisper and TTS. Ollama still permits one loaded model and one parallel request. No automatic downloads, new service, public Ollama endpoint or volume changes are added. Legacy vision callers retain immediate unload by default.
+
+The authenticated `GET /runtime` reports only allowlisted installed/loaded models. `POST /describe` additionally accepts bounded `keep_alive` and `num_ctx` and reports inference timing metrics. The HA integration supplies saved parameters; its existing Ollama conversation agent receives matching settings through native config-subentry persistence, preserving prompts, tools and history. Browser clients never receive the worker key. Camera-display commands still bypass both inference models. Settings changes apply on the next request; the first request after idle/restart may load the model.
+
+DE: Unter **Jarvis → Assistent und Audio → KI-Modelle und Leistung** Text-/Bildmodell, Warmhaltezeit und Kontext wählen. Für gemeinsamen Betrieb beide Modelle auf Qwen3-VL 4B Instruct setzen und speichern. Zurückwechseln: Textmodell Qwen3 4B Instruct, Bildmodell Qwen3-VL 4B Instruct. Die Einstellungen gelten zentral für alle Jarvis-Geräte. Höhere Kontextwerte benötigen mehr GPU-Speicher. Vorhandene `.env`, Modelle und Volumes behalten; beim Update nur den Dienst `vision` neu bauen/starten. Kein APK-Update erforderlich.

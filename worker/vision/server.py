@@ -15,6 +15,9 @@ from PIL import Image, UnidentifiedImageError, ImageOps
 MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct",
           "qwen3-vl:8b-instruct", "gemma3:4b")
 DEFAULT_MODEL = "qwen3-vl:4b-instruct"
+TEXT_MODELS = ("qwen3:4b-instruct",) + MODELS
+KEEP_ALIVE = (0, 60, 120, 300, 600)
+CONTEXTS = (2048, 4096, 8192)
 OLLAMA = "http://ollama:11434"
 MAX_BYTES = 2 * 1024 * 1024
 MAX_PIXELS = 12_000_000
@@ -90,9 +93,9 @@ def normalize_image(encoded):
     except (binascii.Error, OSError, UnidentifiedImageError, Image.DecompressionBombError):
         raise ValueError("invalid image") from None
 
-def payload(model, mode, image):
-    return {"model": model, "stream": False, "keep_alive": 0,
-            "options": {"num_ctx": 4096, "num_predict": 160, "temperature": 0.1},
+def payload(model, mode, image, keep_alive=0, num_ctx=4096):
+    return {"model": model, "stream": False, "keep_alive": keep_alive, "think": False,
+            "options": {"num_ctx": num_ctx, "num_predict": 160, "temperature": 0.1},
             "messages": [{"role": "system", "content": SYSTEM},
                          {"role": "user", "content": PROMPTS[mode], "images": [image]}]}
 
@@ -134,10 +137,13 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
     @app.post("/describe")
     def describe():
         data = request.get_json(silent=True)
-        if not isinstance(data, dict) or set(data) - {"image", "mode", "model"}:
+        if not isinstance(data, dict) or set(data) - {"image", "mode", "model", "keep_alive", "num_ctx"}:
             return jsonify(error="expected image, optional mode and model"), 400
         model = data.get("model", default_model)
         mode = data.get("mode", "scene")
+        keep_alive, num_ctx = data.get("keep_alive", 0), data.get("num_ctx", 4096)
+        if type(keep_alive) is not int or keep_alive not in KEEP_ALIVE or type(num_ctx) is not int or num_ctx not in CONTEXTS:
+            return jsonify(error="unsupported residency or context size"), 400
         if not isinstance(model, str) or model not in MODELS:
             return jsonify(error="unsupported local vision model"), 400
         if not isinstance(mode, str) or mode not in PROMPTS:
@@ -150,11 +156,14 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
             except ValueError as exc:
                 return jsonify(error=str(exc)), 400
             try:
-                result = call("/api/chat", payload(model, mode, image), timeout=100)
+                result = call("/api/chat", payload(model, mode, image, keep_alive, num_ctx), timeout=100)
                 answer = result.get("message", {}).get("content")
                 if not isinstance(answer, str) or not answer.strip():
                     raise RuntimeError("empty answer")
-                return jsonify(description=answer.strip()[:700], model=model, mode=mode,
+                metrics = {name.removesuffix("_duration") + "_ms": round(result.get(name, 0) / 1e6, 1)
+                    for name in ("load_duration", "prompt_eval_duration", "eval_duration")
+                    if isinstance(result.get(name, 0), (int, float))}
+                return jsonify(description=answer.strip()[:700], model=model, mode=mode, metrics=metrics,
                                limitation="single image; may be inaccurate")
             except ModelUnavailable:
                 return jsonify(error="model not installed; pull locally first"), 503
@@ -162,6 +171,20 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
                 return jsonify(error="vision inference unavailable"), 503
         finally:
             lock.release()
+    @app.get("/runtime")
+    def runtime():
+        try:
+            tags = call("/api/tags")
+            loaded = call("/api/ps").get("models", [])
+            installed = {m.get("name") or m.get("model") for m in tags.get("models", []) if isinstance(m, dict)}
+            return jsonify(settings_api=1,
+                text_models=[m for m in TEXT_MODELS if m in installed],
+                vision_models=[m for m in MODELS if m in installed],
+                loaded=[{k: m.get(k) for k in ("name", "size", "size_vram", "context_length", "expires_at")}
+                    for m in loaded if isinstance(m, dict) and m.get("name") in TEXT_MODELS],
+                busy=lock.locked())
+        except Exception:
+            return jsonify(error="ollama runtime unavailable"), 503
     return app
 
 if __name__ == "__main__":

@@ -64,6 +64,7 @@ async def run(hass):
     ImageDraw.Draw(image).rectangle((80, 80, 300, 300), fill="red")
     binary = io.BytesIO(); image.save(binary, "JPEG"); jpeg = binary.getvalue()
     seen = []
+    vision_payloads = []
     worker = web.Application()
     async def health(request):
         check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "worker authentication")
@@ -71,12 +72,18 @@ async def run(hass):
     async def describe(request):
         check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "vision authenticated")
         data = await request.json()
-        check(set(data) == {"image", "mode"}, "no arbitrary prompt or URL forwarded")
+        check(set(data) == {"image", "mode", "model", "keep_alive", "num_ctx"}, "no arbitrary prompt or URL forwarded")
+        vision_payloads.append(data)
         with Image.open(io.BytesIO(base64.b64decode(data["image"]))) as img:
             check(img.width <= 1280 and img.height <= 1280, "vision image bounded")
         seen.append(data["mode"])
         return web.json_response({"description": "Ein rotes Rechteck auf hellem Hintergrund.", "model": "synthetic-ci"})
     worker.router.add_get("/health", health); worker.router.add_post("/describe", describe)
+    async def model_runtime(request):
+        check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "model runtime authentication")
+        return web.json_response({"settings_api":1,"text_models":["qwen3:4b-instruct","qwen3-vl:4b-instruct"],
+            "vision_models":["qwen3-vl:4b-instruct"],"loaded":[],"busy":False})
+    worker.router.add_get("/runtime", model_runtime)
     runner = web.AppRunner(worker); await runner.setup(); await web.TCPSite(runner, "127.0.0.1", 15003).start()
     try:
         flow = await hass.config_entries.flow.async_init("jarvis_tablet_audio", context={"source": "user"})
@@ -191,12 +198,53 @@ async def run(hass):
                 check(True, "camera diagnostic rejects device commands")
             else:
                 raise AssertionError("Diagnostic accepted device control")
+            # Native config-entry/subentry persistence, with no real Ollama process or credentials.
+            from homeassistant.config_entries import ConfigEntry, ConfigEntryDisabler
+            from types import MappingProxyType
+            from custom_components.jarvis_tablet_audio import conversation as jarvis_router
+            model_entry = ConfigEntry(version=3,minor_version=3,domain="ollama",title="Model settings fixture",
+                data={"url":"http://127.0.0.1:15003"},options={},source="user",unique_id=None,
+                disabled_by=ConfigEntryDisabler.USER,discovery_keys=MappingProxyType({}),subentries_data=[{"subentry_type":"conversation","title":"Fixture KI",
+                    "unique_id":None,"data":{"model":"qwen3:4b-instruct","keep_alive":120,"num_ctx":4096,
+                        "prompt":"fixture prompt kept","max_history":6,"think":False}}])
+            await hass.config_entries.async_add(model_entry)
+            subentry=next(iter(model_entry.subentries.values()))
+            model_agent=registry.async_get_or_create("conversation","ollama",subentry.subentry_id,
+                config_entry=model_entry,config_subentry_id=subentry.subentry_id,suggested_object_id="fixture_ki")
+            jarvis_router.LLM_AGENT=model_agent.entity_id
+            async def models(data, user=admin):
+                return await hass.services.async_call("jarvis_tablet_audio","model_settings",data,
+                    blocking=True,return_response=True,context=Context(user_id=user.id))
+            try:
+                await models({"action":"get"},guest)
+            except Unauthorized:
+                check(True,"model settings require administrator")
+            else:
+                raise AssertionError("Guest model settings accepted")
+            before=await models({"action":"get"})
+            saved=await models({"action":"set","revision":before["revision"],"text_model":"qwen3-vl:4b-instruct",
+                "vision_model":"qwen3-vl:4b-instruct","keep_alive":300,"num_ctx":2048})
+            await hass.async_block_till_done()
+            check(saved["saved"] and saved["shared"] and subentry.data["model"]=="qwen3-vl:4b-instruct", "shared model persisted in native Ollama subentry")
+            check(subentry.data["prompt"]=="fixture prompt kept" and subentry.data["max_history"]==6 and subentry.data["think"] is False,"model switch preserves prompt history and think settings")
+            check(runtime(hass) is relay and relay.frames.fresh,"model settings preserve camera runtime and pairing session")
+            for invalid in ({"revision":before["revision"]},{"keep_alive":-1},{"num_ctx":True},{"text_model":"qwen3-vl:8b-instruct"}):
+                data={"action":"set","revision":saved["revision"],"text_model":"qwen3-vl:4b-instruct",
+                    "vision_model":"qwen3-vl:4b-instruct","keep_alive":300,"num_ctx":2048,**invalid}
+                try:
+                    await models(data)
+                except ServiceValidationError:
+                    check(True,"invalid or stale model change rejected: "+str(invalid))
+                else:
+                    raise AssertionError("Invalid model settings accepted")
+            await hass.services.async_call("jarvis_tablet_audio","describe_camera",{"source":"tablet"},blocking=True,return_response=True,context=Context(user_id=admin.id))
+            check(vision_payloads[-1]["keep_alive"]==300 and vision_payloads[-1]["num_ctx"]==2048 and vision_payloads[-1]["model"]==subentry.data["model"],"vision shares text model residency and context")
             async with client.delete(base + "/frame", headers=headers) as response:
                 check(response.status == 204, "stop clears image")
             check(hass.states.get(cid).state == "unavailable" and relay.frames.image is None, "no stale fallback after stop")
             async with client.post(base + "/frame", headers={**headers, "X-Relay-Sequence": "2"}, data=jpeg) as response:
                 check(response.status == 409, "late frame after stop rejected")
-        check(len(seen) == 8, "vision called only for explicit service/question")
+        check(len(seen) == 9, "vision called only for explicit service/question")
     finally:
         await runner.cleanup()
 

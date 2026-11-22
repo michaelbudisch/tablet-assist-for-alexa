@@ -1,5 +1,9 @@
 **English** | [Deutsch](CHANGELOG.de.md)
 
+# 1.8.0
+
+- Authenticated installed/loaded model status and bounded per-request residency/context for matching HA text/vision settings. Legacy immediate-unload defaults remain compatible; response timings support load-cost diagnosis. No additional service, model download, endpoint exposure or speech changes.
+
 # 1.7.0
 
 - Scene descriptions may include generic visible people, clothing and carried objects. No naming, face matching, sensitive-trait guesses or inference of movement/history from a still. Existing authenticated single-image API and fixed modes remain compatible.

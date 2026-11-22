@@ -166,9 +166,13 @@ async def describe(relay, source, mode, context):
             captured_at = None
         if len(image) > 2 * 1024 * 1024:
             raise ServiceValidationError("Image too large")
-        result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": mode})
+        result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": mode,
+            "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
+            "keep_alive": relay.entry.options.get("model_keep_alive", 0),
+            "num_ctx": relay.entry.options.get("model_num_ctx", 4096)})
         description = result.get("description")
         if not isinstance(description, str) or not description.strip():
             raise ServiceValidationError("Empty vision reply")
         return {"description": description.strip()[:700], "camera_entity_id": entity_id, "captured_at": captured_at,
-                "model": str(result.get("model", ""))[:100], "limitation": "single image; may be inaccurate"}
+                "model": str(result.get("model", ""))[:100], "metrics": result.get("metrics", {}),
+                "limitation": "single image; may be inaccurate"}
