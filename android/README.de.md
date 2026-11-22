@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.4.0
+# HA Jarvis Echo Relay · Android 0.5.0
 
 [English](README.md) | **Deutsch**
 
@@ -8,7 +8,7 @@ Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetoo
 
 ## Download und Update
 
-[Fertige Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.4.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Fertige Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Der sichtbare Name und das Icon ändern sich.
 
@@ -39,13 +39,11 @@ Die Diagnose zeigt den Modus (`mp3`, `wav_pcm`, `file_fallback`), Zeiten bis zum
 
 Für dieses App-Update muss das bereinigte HA-Dashboard nicht geändert werden. Ein vorgelagerter Server/Proxy, der die ganze Antwort puffert, kann das erste Byte weiterhin verzögern; die Erzeugung des Antworttexts liegt außerhalb des Audioplayers. Die tatsächliche Bluetooth-Geschwindigkeit muss auf dem Zieltablet geprüft werden.
 
-### Optionale Kameravorbereitung
+### Kamera und lokales Visionmodell
 
-Öffne **Kameratest öffnen** auf der Audioeinrichtungsseite. Wähle Front- oder Rückkamera, tippe auf **Kamera starten** und erlaube den Zugriff. Das bloße Öffnen fordert keine Berechtigung an und startet keine Kamera. Anfangs wird die Frontkamera bevorzugt; gespeichert wird nur die gewählte Kamera-ID.
+Öffne **Kameraeinstellungen öffnen**, wähle Front-/Rückkamera und tippe auf **Kamera für HA starten**. Der ausdrücklich gestartete Kamera-Dienst sendet ungefähr alle zwei Sekunden ein JPEG und bleibt außerhalb der App aktiv. Stoppen kannst du ihn hier oder über seine eigene Benachrichtigung. Audio/Keepalive bleiben unabhängig; nach einem Neustart startet nichts automatisch.
 
-Livevorschau und **Testbild aufnehmen** prüfen Camera2-Vorschau und JPEG-Aufnahme auf dem Tablet. Die Ausgaben sind auf 1280 × 960 Pixel oder eine kleinere unterstützte Auflösung begrenzt. Testbilder zeigen Aufnahmezeit und Abmessungen, liegen nur im Arbeitsspeicher und lassen sich löschen. Stoppen, Verlassen der Kameraseite, Ausschalten des Displays oder Neuerstellen der Activity schließt die Kamera und löscht das Bild. Nach der Rückkehr ist ein erneuter Start nötig. Verweigerter Zugriff beeinflusst Audio nicht; HA-Zugangsdaten sind für den Kameratest nicht nötig. Der QR-Scanner nutzt dieselbe Android-Kameraberechtigung.
-
-Dies ist die lokale Kameragrundlage. Bildserver, Uploads, Videoaufzeichnung, Kamera-Hintergrunddienst, Bewegungserkennung und Modellaufrufe sind noch nicht angebunden. Audiostreaming und Keepalive bleiben unabhängig. Siehe [Kameraarchitektur und nächste Schritte](docs/camera-preparation.md).
+Voraussetzung sind der passende Empfänger **Jarvis Tablet Audio 1.4.0** und der vorhandene lokale Vision-Worker. HA stellt Tablet-Kamera und optionalen Bildbewegungssensor bereit. Außen-/Haustürkamera werden in den Integrationsoptionen gewählt; Sichtfragen beantwortet der Jarvis-Router. Bilder liegen im Arbeitsspeicher und verfallen nach 15 Sekunden ohne Nachschub. Dies sind regelmäßig neue Einzelbilder, kein Video mit voller Bildrate und keine Personenerkennung. Siehe [Einrichtung und Sichtfragen](docs/camera-preparation.md).
 
 ### Bluetooth wach halten
 

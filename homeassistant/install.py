@@ -37,7 +37,7 @@ if a.output.exists() and any(a.output.iterdir()):raise SystemExit('Output must b
 a.output.mkdir(parents=True,exist_ok=True)
 for root in ['custom_components','www']:
     for f in (HERE/root).rglob('*'):
-        if not f.is_file() or f.suffix not in ('.py','.json','.js'):continue
+        if not f.is_file() or f.suffix not in ('.py','.json','.js','.yaml'):continue
         out=a.output/f.relative_to(HERE);out.parent.mkdir(parents=True,exist_ok=True)
         txt=render(f.read_text(encoding='utf-8'))
         if f.name=='const.py' and f.parent.name=='jarvis_tablet_audio':txt=txt.replace(':10501',':10502')

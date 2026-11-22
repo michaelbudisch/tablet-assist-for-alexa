@@ -11,6 +11,9 @@ import android.hardware.display.DisplayManager;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Size;
 import android.view.*;
@@ -32,6 +35,17 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
     private Size bufferSize;
     private int sensorOrientation;
     private boolean visible,startRequested,permissionPending;
+    private boolean relayPermissionPending;
+    private final Handler handler=new Handler(Looper.getMainLooper());
+    private final Runnable refreshRelay=new Runnable(){public void run(){
+        ((TextView)findViewById(R.id.camera_relay_status)).setText(relayMessage(CameraActivity.this));
+        boolean relay=CameraRelayService.running;
+        findViewById(R.id.camera_relay_start).setEnabled(!relay&&!available.isEmpty());
+        findViewById(R.id.camera_relay_stop).setEnabled(relay);
+        findViewById(R.id.camera_motion).setEnabled(!relay);
+        if(controller==null){lenses.setEnabled(!relay);findViewById(R.id.camera_start).setEnabled(!relay&&!available.isEmpty());}
+        handler.postDelayed(this,1000);
+    }};
     private DisplayManager displays;
     private final DisplayManager.DisplayListener displayListener=new DisplayManager.DisplayListener(){
         public void onDisplayAdded(int id){}
@@ -57,6 +71,11 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
             controller.capture(rotation());
         });
         findViewById(R.id.camera_clear).setOnClickListener(v->clearSnapshot());
+        CheckBox motion=findViewById(R.id.camera_motion);
+        motion.setChecked(getSharedPreferences(MainActivity.PREF,0).getBoolean("camera_motion",false));
+        motion.setOnCheckedChangeListener((button,checked)->getSharedPreferences(MainActivity.PREF,0).edit().putBoolean("camera_motion",checked).apply());
+        findViewById(R.id.camera_relay_start).setOnClickListener(v->requestRelay());
+        findViewById(R.id.camera_relay_stop).setOnClickListener(v->stopService(new Intent(this,CameraRelayService.class)));
         try {
             available=CameraPreviewController.lenses(this);
             ArrayList<String> labels=new ArrayList<>();
@@ -82,7 +101,7 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
         displays=getSystemService(DisplayManager.class);
     }
     private void requestStart(){
-        if(available.isEmpty()||!visible)return;
+        if(available.isEmpty()||!visible||CameraRelayService.running)return;
         if(checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED){
             permissionPending=true;
             requestPermissions(new String[]{Manifest.permission.CAMERA},CAMERA_PERMISSION);return;
@@ -92,6 +111,29 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
         findViewById(R.id.camera_start).setAlpha(0.45f);
         lenses.setEnabled(false);
         if(preview.isAvailable())openCamera();
+    }
+    private void requestRelay(){
+        if(!visible||available.isEmpty()||CameraRelayService.running)return;
+        if(!getSharedPreferences(MainActivity.PREF,0).contains("secret")){
+            CameraRelayService.status="camera_setup_required";
+            ((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_setup_required);return;
+        }
+        if(checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED){
+            relayPermissionPending=true;requestPermissions(new String[]{Manifest.permission.CAMERA},CAMERA_PERMISSION);return;
+        }
+        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},201);
+        stopCamera();
+        try{startForegroundService(new Intent(this,CameraRelayService.class).setAction("start"));}
+        catch(Exception error){((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_error);}
+    }
+    static String relayMessage(Context context){
+        int resource=context.getResources().getIdentifier(CameraRelayService.status,"string",context.getPackageName());
+        String message=context.getString(resource==0?R.string.camera_upload_error:resource);
+        if(CameraRelayService.running&&CameraRelayService.sent>0)
+            message+="\n"+context.getString(R.string.camera_relay_count,CameraRelayService.sent,
+                    DateFormat.getTimeInstance(DateFormat.MEDIUM).format(new Date(CameraRelayService.lastSent)));
+        return message;
     }
     private void openCamera(){
         if(!visible||!startRequested||controller!=null)return;
@@ -165,6 +207,8 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
         super.onRequestPermissionsResult(request,permissions,results);
         if(request!=CAMERA_PERMISSION)return;
+        if(relayPermissionPending){relayPermissionPending=false;if(visible&&results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)requestRelay();
+            else {CameraRelayService.status="camera_denied";((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_denied);}return;}
         boolean pending=permissionPending;permissionPending=false;
         if(!visible||!pending)return;
         if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)requestStart();
@@ -176,8 +220,8 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
                                 startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+getPackageName())))).show();
         }
     }
-    @Override protected void onStart(){super.onStart();visible=true;displays.registerDisplayListener(displayListener,null);}
-    @Override protected void onStop(){visible=false;stopCamera();displays.unregisterDisplayListener(displayListener);super.onStop();}
+    @Override protected void onStart(){super.onStart();visible=true;displays.registerDisplayListener(displayListener,null);handler.post(refreshRelay);}
+    @Override protected void onStop(){visible=false;handler.removeCallbacksAndMessages(null);stopCamera();displays.unregisterDisplayListener(displayListener);super.onStop();}
     @Override protected void onDestroy(){if(controller!=null)controller.close();super.onDestroy();}
     @Override public void onSurfaceTextureAvailable(SurfaceTexture texture,int width,int height){openCamera();}
     @Override public void onSurfaceTextureSizeChanged(SurfaceTexture texture,int width,int height){transform();}

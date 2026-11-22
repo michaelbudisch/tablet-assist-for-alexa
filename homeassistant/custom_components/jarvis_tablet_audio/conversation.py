@@ -277,6 +277,10 @@ class JarvisConversation(conversation.ConversationEntity):
             _LOGGER.debug("Jarvis local sentence failed")
             return self._reply(user_input, chat_log, "Die lokale Abfrage konnte nicht abgeschlossen werden. Bitte versuche es erneut.")
 
+        from .relay_camera import answer
+        camera_reply = await answer(self.hass, user_input.text, user_input.context)
+        if camera_reply is not None:
+            return self._reply(user_input, chat_log, camera_reply)
         profile = self.hass.states.get("input_select.jarvis_stt_profil")
         state = self.hass.states.get(LLM_AGENT)
         if (profile and profile.state == "Homeserver") or state is None or state.state == "unavailable":

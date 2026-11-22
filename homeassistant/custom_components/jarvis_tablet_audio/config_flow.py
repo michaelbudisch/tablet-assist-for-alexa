@@ -1,7 +1,7 @@
 """Setup without exposing credentials in entity state."""
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType, EntitySelector, EntitySelectorConfig
 from .const import DOMAIN
 
 def schema():
@@ -11,6 +11,10 @@ def schema():
 
 class JarvisTabletFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        return VisionOptions()
 
     async def async_step_user(self, user_input=None):
         if self._async_current_entries():
@@ -39,3 +43,26 @@ class JarvisTabletFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_updates={"qwen_token": token},
                 )
         return self.async_show_form(step_id="reconfigure", data_schema=schema(), errors=errors)
+
+class VisionOptions(config_entries.OptionsFlow):
+    async def async_step_init(self, user_input=None):
+        errors = {}
+        if user_input is not None:
+            from types import SimpleNamespace
+            from .relay_vision import worker_url
+            try:
+                worker_url(SimpleNamespace(options=user_input))
+            except Exception:
+                errors["vision_url"] = "invalid_url"
+            else:
+                # Preserve options not owned by this form.
+                owned = {"vision_url", "vision_outside_camera", "vision_door_camera"}
+                return self.async_create_entry(title="", data={**{k: v for k, v in self.config_entry.options.items() if k not in owned}, **user_input})
+        options = self.config_entry.options
+        fields = {
+            vol.Optional("vision_url", default=options.get("vision_url", "")): str,
+        }
+        for key in ("vision_outside_camera", "vision_door_camera"):
+            field = vol.Optional(key, default=options[key]) if options.get(key) else vol.Optional(key)
+            fields[field] = EntitySelector(EntitySelectorConfig(domain="camera"))
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields), errors=errors)

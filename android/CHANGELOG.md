@@ -1,3 +1,9 @@
+# 0.5.0 · HA camera and local vision
+- Add explicit-start background camera delivery with its own Stop notification, normalized JPEGs and authenticated same-origin HA push.
+- Add memory-only images, paired sessions/sequences, remote Stop, 15-second image expiry and optional coarse motion detection.
+- Add Jarvis Tablet Audio 1.4.0 camera/motion entities, outdoor/door selectors and local vision actions/spoken questions.
+- Preserve streaming audio, keepalive, credentials, DE/EN and local camera tests. Add native background/HTTP and real-HA receiver/routing checks before APK publication.
+
 # 0.4.0 · Camera preparation
 - Add an optional, explicit-start Camera2 screen with front/rear selection, live preview and on-demand JPEG test images.
 - Request camera permission only after Start; explain denial and provide Android settings access when needed.

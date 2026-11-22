@@ -103,6 +103,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.bluetooth_settings).setOnClickListener(v -> startActivity(new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)));
         findViewById(R.id.scan_token).setOnClickListener(v -> scanToken());
         findViewById(R.id.camera_open).setOnClickListener(v -> startActivity(new Intent(this, CameraActivity.class)));
+        findViewById(R.id.camera_main_stop).setOnClickListener(v -> stopService(new Intent(this, CameraRelayService.class)));
         findViewById(R.id.player_start).setOnClickListener(v -> startPlayer());
         findViewById(R.id.player_stop).setOnClickListener(v -> {
             stopService(new Intent(this, AudioService.class));
@@ -121,6 +122,7 @@ public class MainActivity extends Activity {
                 .setTitle(R.string.forget_title).setMessage(R.string.forget_help)
                 .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.forget, (dialog, which) -> {
                     stopService(new Intent(this, AudioService.class));
+                    stopService(new Intent(this, CameraRelayService.class));
                     stopDiscovery();
                     prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).apply();
                     tokenInput.setText(""); urlInput.setText("");
@@ -164,6 +166,7 @@ public class MainActivity extends Activity {
             if (selected) return;
             getSharedPreferences(PREF, 0).edit().putString("ui_language", language).apply();
             if (AudioService.running) startService(new Intent(this, AudioService.class).setAction("refresh_ui"));
+            if (CameraRelayService.running) startService(new Intent(this, CameraRelayService.class).setAction("refresh_ui"));
             recreate();
         });
     }
@@ -196,6 +199,8 @@ public class MainActivity extends Activity {
             if (token.isEmpty() && !base.equals(HaAddress.normalize(prefs.getString("base", ""))))
                 throw new IllegalArgumentException("token_server_changed");
             var edit = prefs.edit().putString("base", base);
+            if(CameraRelayService.running&&(!base.equals(prefs.getString("base",""))||!token.isEmpty()))
+                stopService(new Intent(this,CameraRelayService.class));
             if (HaAddress.isHttp(base)) edit.putString(HTTP_CONSENT, base); else edit.remove(HTTP_CONSENT);
             if (!token.isEmpty()) edit.putString("secret", encrypt(token));
             edit.apply(); tokenInput.setText("");
@@ -238,6 +243,8 @@ public class MainActivity extends Activity {
     }
 
     private void refreshStatus() {
+        ((TextView)findViewById(R.id.camera_main_status)).setText(CameraActivity.relayMessage(this));
+        findViewById(R.id.camera_main_stop).setVisibility(CameraRelayService.running?View.VISIBLE:View.GONE);
         String raw = AudioService.ui;
         String stage = raw;
         if (raw.contains("|") && !raw.startsWith("ready|") && !raw.startsWith("no_bluetooth|") && !raw.startsWith("connection_error|"))

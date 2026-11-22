@@ -1,25 +1,17 @@
-# HA Jarvis Echo Relay 0.4.0 · Camera Preparation Preview
+# HA Jarvis Echo Relay 0.5.0 · Camera and Vision Preview
 
 ## Deutsch
 
-- Optionaler Kamerabereich mit Front-/Rückkamera, lokaler Livevorschau und JPEG-Testbild mit Zeitstempel.
-- Kamerazugriff erst nach ausdrücklichem Start. Testbilder liegen nur im Arbeitsspeicher; Stopp und Verlassen der Seite löschen das Bild und schließen die Kamera. Kein automatischer Neustart.
-- Deutsche und englische Hilfetexte. Audiostreaming, Bluetooth-Prüfung, Keepalive und gespeicherte HA-Zugangsdaten bleiben erhalten.
+Front-/Rückkamera als authentifizierte HA-Bildquelle mit ungefähr einem neuen JPEG alle zwei Sekunden, eigenem Kamera-Vordergrunddienst und Stopp-Benachrichtigung. Optionaler Bildbewegungssensor, Bilder im Arbeitsspeicher, Sitzungsschutz und Ablauf alter Bilder nach 15 Sekunden ohne Nachschub. Kein automatischer Start nach Neustart.
 
-**Noch keine Bildübertragung an Home Assistant, kein Kamera-Dauerbetrieb und keine Vision-Auswertung.** Diese Version stellt die lokal testbare Kameragrundlage bereit. Kameraqualität und Orientierung müssen auch auf dem Zieltablet geprüft werden.
+Passender HA-Empfänger Jarvis Tablet Audio 1.4.0 mit Kameraauswahl und lokalen Vision-Aktionen. Beispiele: „Was ist draußen los?“, „Was siehst du?“ und „Was halte ich in der Hand?“. Der bestehende GPU Worker 1.6.0 wird genutzt; die App benötigt keinen weiteren produktiven Docker-Dienst. Audiostreaming, Bluetooth-Prüfung, Keepalive, DE/EN und Zugangsdaten bleiben erhalten.
 
-Über die vorhandene App installieren, damit Adresse und Token erhalten bleiben. App-ID `de.jarvis.audio`; nicht debuggbarer Release-Build mit demselben bisherigen lokalen Testschlüssel. Keine privaten Schlüssel enthalten.
+Über die vorhandene App installieren, dann **Kameraeinstellungen öffnen → Kamera für HA starten**. Die Kopplung verwendet den gespeicherten HA-Administrator-Token. Andere Installationen benötigen zuerst den passenden HA-Empfänger und ein installiertes Visionmodell. [Anleitung](https://github.com/michaelbudisch/tablet-assist-for-alexa/blob/main/android/docs/camera-preparation.md).
 
-Geprüft: 22 JVM-Tests und Android-Lint; echter Berechtigungsdialog, Front-/Rückkamera-Vorschau und JPEG-Aufnahme mit emulierten Kameras, Abschalten/Löschen beim Verlassen, DE/EN-Oberfläche sowie die bisherigen nativen MP3/WAV-Streamingtests. Auch die signierte Release-APK hat den Kameratest bestanden.
+25 JVM-Tests, Android-Lint, native Kamera-/Hintergrund-/HTTP-, Oberflächen- und Streamingtests sowie isolierte echte HA-Empfänger-/Routingtests sind bestanden. Der signierte Release-Build hat den Hintergrund-/Uploadtest bestanden. Das Display-aus-Verhalten benötigt weiterhin den Test auf dem Zieltablet. Bewegung vergleicht Pixel; Vision beschreibt Einzelbilder und kann irren. Dies ist kein Video mit voller Bildrate.
 
 ## English
 
-- Optional camera screen with front/rear selection, local live preview and timestamped JPEG test images.
-- Permission is requested only after explicit Start. Images stay in memory; Stop and leaving the screen clear the image and close the camera. No automatic restart.
-- German/English help. Streaming audio, Bluetooth route verification, keepalive and saved HA credentials remain available.
+Explicit-start camera foreground delivery pushes bounded, upright JPEGs to the authenticated HA receiver about every two seconds. A separate notification stops it; audio remains independent. Optional image movement, memory-only images, session invalidation and a 15-second freshness limit are included. The matching HA integration selects tablet/outdoor/door images and calls the existing local vision worker for explicit questions/actions.
 
-**No Home Assistant image delivery, continuous background camera operation or vision inference yet.** This release provides a locally testable camera foundation. Camera quality and orientation also need checking on the target tablet.
-
-Install over the existing app to retain credentials. Application ID `de.jarvis.audio`; non-debuggable release signed with the same previous local test key. Private keys are not included.
-
-Verified: 22 JVM tests and Android lint; actual permission dialog, front/rear preview and JPEG capture with emulated cameras, close/clear on screen exit, German/English UI and the existing native MP3/WAV streaming checks. The signed release APK also passed the camera check.
+Install over the previous app to retain credentials. Application ID `de.jarvis.audio`; non-debuggable release signed with the same previous local test key. No private keys included. JVM, lint, native Android camera/background/HTTP/UI/audio and real-HA receiver/routing checks passed. Actual tablet battery/screen-off behavior still needs hardware validation. See the linked setup guide.

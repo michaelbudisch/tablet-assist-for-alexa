@@ -26,7 +26,7 @@
     <string name="address_selected">Adresse übernommen. Token hinzufügen und den Player starten.</string>
     <string name="address_selected_http">Adresse übernommen. Vor dem Start die HTTP-Freigabe prüfen.</string>
     <string name="http_consent">Unverschlüsseltes HTTP für diese lokale Adresse erlauben</string>
-    <string name="http_help">Bei HTTP werden Token und Audio im lokalen Netzwerk unverschlüsselt übertragen. Die Freigabe gilt nur für die oben eingetragene Adresse einschließlich Port.</string>
+    <string name="http_help">Bei HTTP werden Token, Audio und aktivierte Kamerabilder im lokalen Netzwerk unverschlüsselt übertragen. Die Freigabe gilt nur für die oben eingetragene Adresse einschließlich Port.</string>
     <string name="http_required">HTTP · Freigabe erforderlich</string>
     <string name="step_token">03  /  PLAYER BERECHTIGEN</string>
     <string name="token_title">Home-Assistant-Token scannen</string>
@@ -96,10 +96,10 @@
     <string name="no_camera">Keine Kamera verfügbar. Token stattdessen einfügen oder eingeben.</string>
     <string name="scan_prompt">HA-Token-QR-Code scannen · Zurück zum Abbrechen</string>
     <string name="camera_permission">Zum Scannen dieses Tokens wird Kamerazugriff benötigt. Du kannst den Token auch manuell einfügen.</string>
-    <string name="camera_optional">OPTIONAL / KAMERAVORSCHAU</string>
-    <string name="camera_title">Kamera vorbereiten</string>
-    <string name="camera_intro">Teste Front- oder Rückkamera und erstelle ein lokales Testbild. Der erste Schritt zu Kamerafragen in Home Assistant.</string>
-    <string name="camera_open">Kameratest öffnen</string>
+    <string name="camera_optional">OPTIONAL / KAMERA</string>
+    <string name="camera_title">Kamera und Vision</string>
+    <string name="camera_intro">Stelle Front- oder Rückkamera in HA bereit, melde optional Bildbewegung oder führe einen lokalen Kameratest aus.</string>
+    <string name="camera_open">Kameraeinstellungen öffnen</string>
     <string name="camera_back">Zurück zur Audioeinrichtung</string>
     <string name="camera_local_help">Wähle eine Kamera und tippe auf Starten. Erst dann wird der Zugriff angefragt. Vorschau und Testbild bleiben auf dieser Seite. Beim Verlassen wird die Kamera ausgeschaltet und das Bild gelöscht.</string>
     <string name="camera_select">Kamera</string>
@@ -118,7 +118,7 @@
     <string name="camera_snapshot_label">Letztes lokales Testbild</string>
     <string name="camera_snapshot_ready">Testbild von %1$s · %2$d × %3$d · nur auf diesem Gerät</string>
     <string name="camera_clear">Testbild löschen</string>
-    <string name="camera_future_help">Diese Version bereitet Kamerazugriff und JPEG-Aufnahme vor. Bildübertragung an Home Assistant, dauerhafter Hintergrundbetrieb, Bewegungserkennung und Vision-Auswertung sind noch nicht angebunden. Die Audiowiedergabe läuft unabhängig weiter.</string>
+    <string name="camera_future_help">Nutze in HA camera.echo_relay_tablet für Bilder und Jarvis Tablet Audio: Kamerabild beschreiben für das lokale Visionmodell. Wähle Außen-/Haustürkamera in den Integrationsoptionen. Bildbewegung vergleicht nur Pixel und kann auf Lichtwechsel reagieren; Personen oder Objekte werden dabei nicht erkannt. Dauerbetrieb benötigt Strom und gegebenenfalls angepasste Android-Akkueinstellungen. Nach einem Neustart startet nichts automatisch.</string>
     <string name="camera_unavailable">Auf diesem Gerät ist keine Kamera verfügbar.</string>
     <string name="camera_error">Die Kamera konnte nicht verwendet werden. Möglicherweise nutzt eine andere App die Kamera oder das Gerät unterstützt die Vorschau nicht. Schließe andere Kamera-Apps und versuche es erneut.</string>
     <string name="camera_denied">Kamerazugriff wurde nicht erlaubt. Du kannst ihn in den Android-App-Einstellungen freigeben und erneut auf Starten tippen. Audio funktioniert ohne Kamerazugriff.</string>
@@ -131,4 +131,22 @@
     <string name="language_de">Deutsch</string>
     <string name="language_en">English</string>
     <string name="footer">Community-Projekt · Android 9+ · v%1$s</string>
+    <string name="camera_relay_title">Kamera für Home Assistant</string>
+    <string name="camera_relay_help">Übertrage die gewählte Kamera alle zwei Sekunden mit deiner gespeicherten HA-Anmeldung. Die Übertragung läuft auch im Dashboard und bei ausgeschaltetem Display. Starte ausdrücklich und stoppe hier oder über die eigene Kamera-Benachrichtigung. Bilder werden nicht aufgezeichnet. Der passende Kamera-Empfänger von Jarvis Tablet Audio muss zuvor in HA installiert sein.</string>
+    <string name="camera_relay_start">Kamera für HA starten</string>
+    <string name="camera_relay_stop">HA-Kamera stoppen</string>
+    <string name="camera_local_title">Lokaler Kameratest</string>
+    <string name="camera_motion_option">Bildbewegung an HA melden (optional)</string>
+    <string name="camera_relay_off">HA-Kamera aus</string>
+    <string name="camera_relay_starting">HA-Kamera startet…</string>
+    <string name="camera_relay_active">HA-Kamera aktiv · Bilder kommen an</string>
+    <string name="camera_relay_count">%1$d Bilder gesendet · zuletzt %2$s</string>
+    <string name="camera_setup_required">Speichere zuerst HA-Adresse und Token in der Audioeinrichtung. Für die Kamera muss der Audioplayer nicht laufen.</string>
+    <string name="camera_upload_error">Bildübertragung unterbrochen · neuer Versuch folgt. Prüfe WLAN und HA. Alte Bilder verfallen in HA nach 15 Sekunden.</string>
+    <string name="camera_auth_error">HA-Kamerazugriff verweigert. Nutze einen gültigen Administrator-Token des gekoppelten HA-Benutzers.</string>
+    <string name="camera_integration_missing">Installiere/aktualisiere den Kamera-Empfänger von Jarvis Tablet Audio in HA und lade diese Integration neu.</string>
+    <string name="camera_pairing_error">Ein anderes Tablet ist gekoppelt. Stoppe es und nutze in HA die Aktion Jarvis Tablet Audio: Kamerakopplung aufheben, bevor du dieses Gerät koppelst.</string>
+    <string name="camera_image_error">Das Kamerabild konnte nicht vorbereitet werden. Stoppe und starte die HA-Kamera erneut.</string>
+    <string name="camera_notification_channel">Kamera-Bildübertragung</string>
+    <string name="camera_notification_text">Kamera aktiv · Bilder werden an Home Assistant übertragen</string>
 </resources>

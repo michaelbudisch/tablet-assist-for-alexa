@@ -77,6 +77,8 @@
 <TextView style="@style/Heading" android:text="@string/camera_title"/>
 <TextView style="@style/Body" android:text="@string/camera_intro"/>
 <Button android:id="@+id/camera_open" style="@style/Action" android:text="@string/camera_open"/>
+<TextView android:id="@+id/camera_main_status" style="@style/Body" android:text="@string/camera_relay_off"/>
+<Button android:id="@+id/camera_main_stop" style="@style/Action" android:text="@string/camera_relay_stop" android:visibility="gone"/>
 </LinearLayout>
 <LinearLayout style="@style/Card">
 <TextView style="@style/Heading" android:text="@string/help_title" android:layout_marginTop="0dp"/>

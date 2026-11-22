@@ -19,11 +19,13 @@ public class UiSmokeInstrumentation extends Instrumentation {
     private String layout = "phone";
     private boolean streamOnly;
     private boolean cameraOnly;
+    private boolean relayOnly;
     @Override public void onCreate(Bundle args) {
         super.onCreate(args);
         if (args != null) layout = args.getString("layout", "phone");
         streamOnly = args != null && args.getString("stream_only", "false").equals("true");
         cameraOnly = args != null && args.getString("camera_only", "false").equals("true");
+        relayOnly = args != null && args.getString("relay_only", "false").equals("true");
         start();
     }
     private void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -31,6 +33,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         Activity screen = null;
         try {
+            if(relayOnly){result.putString("stream", CameraRelaySmoke.run(this));finish(Activity.RESULT_OK,result);return;}
             if (cameraOnly) {
                 result.putString("stream", CameraSmoke.run(this));
                 finish(Activity.RESULT_OK, result);

@@ -2,9 +2,9 @@ name: Android audio app
 on:
   push:
     branches: [main]
-    paths: ['android/**', '.github/workflows/android-audio.yml']
+    paths: ['android/**', 'homeassistant/custom_components/jarvis_tablet_audio/**', 'tests/relay_camera_e2e/**', '.github/workflows/android-audio.yml']
   pull_request:
-    paths: ['android/**', '.github/workflows/android-audio.yml']
+    paths: ['android/**', 'homeassistant/custom_components/jarvis_tablet_audio/**', 'tests/relay_camera_e2e/**', '.github/workflows/android-audio.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,8 +34,15 @@ jobs:
         with:
           name: HA-Jarvis-Echo-Relay-ci-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+  camera-receiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test authenticated camera and vision routing in real HA
+        run: bash tests/relay_camera_e2e/run.sh
   preview:
-    needs: checks
+    needs: [checks, camera-receiver]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

@@ -23,5 +23,21 @@
       "already_configured": "Bereits eingerichtet",
       "reconfigure_successful": "Konfiguration aktualisiert"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Kamera und lokales Visionmodell",
+        "description": "Worker-Token bleibt im bestehenden Qwen-Feld. Leere Worker-Adresse nutzt den GPU-Host auf Port 10503.",
+        "data": {
+          "vision_url": "Vision-Worker URL (optional)",
+          "vision_outside_camera": "Außenkamera",
+          "vision_door_camera": "Haustürkamera"
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Lokale IP-Adresse mit Port ohne Pfad angeben."
+    }
   }
 }

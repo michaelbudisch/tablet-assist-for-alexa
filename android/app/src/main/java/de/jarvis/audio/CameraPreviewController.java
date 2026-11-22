@@ -44,6 +44,7 @@ final class CameraPreviewController implements AutoCloseable {
     private CameraDevice camera;
     private CameraCaptureSession session;
     private ImageReader reader;
+    private ImageReader backgroundPreview;
     private Surface previewSurface;
     private boolean capturing,ready;
     private int sensor;
@@ -89,8 +90,17 @@ final class CameraPreviewController implements AutoCloseable {
                 if(config==null){fail();return;}
                 Size jpeg=choose(config.getOutputSizes(ImageFormat.JPEG),4.0/3);
                 Size preview=choose(config.getOutputSizes(SurfaceTexture.class),(double)jpeg.getWidth()/jpeg.getHeight());
-                texture.setDefaultBufferSize(preview.getWidth(),preview.getHeight());
-                previewSurface=new Surface(texture);
+                if(texture!=null){
+                    texture.setDefaultBufferSize(preview.getWidth(),preview.getHeight());
+                    previewSurface=new Surface(texture);
+                }else{
+                    Size drainSize=choose(config.getOutputSizes(ImageFormat.YUV_420_888),4.0/3);
+                    backgroundPreview=ImageReader.newInstance(drainSize.getWidth(),drainSize.getHeight(),ImageFormat.YUV_420_888,2);
+                    backgroundPreview.setOnImageAvailableListener(source->{
+                        try(Image image=source.acquireLatestImage()){}catch(IllegalStateException ignored){}
+                    },worker);
+                    previewSurface=backgroundPreview.getSurface();
+                }
                 reader=ImageReader.newInstance(jpeg.getWidth(),jpeg.getHeight(),ImageFormat.JPEG,2);
                 reader.setOnImageAvailableListener(source->{
                     try(Image image=source.acquireLatestImage()) {
@@ -164,6 +174,7 @@ final class CameraPreviewController implements AutoCloseable {
         if(session!=null){session.close();session=null;}
         if(camera!=null){camera.close();camera=null;}
         if(reader!=null){reader.close();reader=null;}
+        if(backgroundPreview!=null){backgroundPreview.close();backgroundPreview=null;}
         if(previewSurface!=null){previewSurface.release();previewSurface=null;}
     }
     @Override public void close() {

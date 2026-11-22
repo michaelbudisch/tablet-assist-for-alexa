@@ -44,7 +44,7 @@ After setup, a dedicated **Tablet Assist** sidebar panel is registered automatic
 
 ## Optional Android audio relay
 
-**[HA Jarvis Echo Relay 0.4.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.4.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
+**[HA Jarvis Echo Relay 0.5.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
 
 ## Installation guides
 

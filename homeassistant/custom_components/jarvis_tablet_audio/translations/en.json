@@ -23,5 +23,21 @@
       "already_configured": "Already configured",
       "reconfigure_successful": "Configuration updated"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Camera and local vision",
+        "description": "The existing Qwen token is used for the worker. Empty URL uses the GPU host on port 10503.",
+        "data": {
+          "vision_url": "Vision-Worker URL (optional)",
+          "vision_outside_camera": "Outdoor camera",
+          "vision_door_camera": "Door camera"
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Use a local IP address and port without a path."
+    }
   }
 }

@@ -1,0 +1,20 @@
+describe_camera:
+  name: Describe camera
+  description: Describe one fresh image with the local vision worker. Cameras are selected in integration options.
+  fields:
+    source:
+      default: outside
+      selector:
+        select:
+          options: [tablet, outside, door]
+    mode:
+      default: scene
+      selector:
+        select:
+          options: [scene, objects, object_in_hand]
+camera_vision_status:
+  name: Vision status
+  description: Check local vision readiness without sending an image.
+unpair_camera:
+  name: Unpair camera
+  description: Administrator action to invalidate the current camera session and allow pairing a different tablet.

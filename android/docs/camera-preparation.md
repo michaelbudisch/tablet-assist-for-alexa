@@ -1,28 +1,33 @@
-# Camera preparation · 0.4.0
+# Kamera und lokales Visionmodell · 0.5.0
 
-The optional camera screen is a local test of the future image source. It does not yet expose a Home Assistant camera or contact a vision model.
+## Einrichtung
 
-![Camera preview with a synthetic emulator scene](ui-camera-tablet.png)
+1. HA benötigt den Kamera-Empfänger **Jarvis Tablet Audio 1.4.0** aus `homeassistant/custom_components/`. Bei bestehenden Installationen `const.py`, Zugangsdaten und eigene Dialog-/Sucherweiterungen behalten; Setup/Router gezielt um die Kameramodule ergänzen. Python-Codeupdates benötigen einen HA-Neustart. Neue portable Installationen verwenden `homeassistant/install.py`.
+2. In **Einstellungen → Geräte & Dienste → Jarvis Tablet Audio → Konfigurieren** Außen-/Haustürkamera auswählen. Eine leere Vision-Adresse nutzt den vorhandenen GPU-Host auf Port 10503. Alternativ lokale IP mit Port ohne Pfad angeben. Der bestehende Qwen-/Worker-Schlüssel wird genutzt. Voraussetzung: GPU Worker 1.6.0 mit Vision-Profil und installiertem Visionmodell. Die App benötigt keinen weiteren produktiven Docker-Dienst.
+3. In der App HA-Adresse/Token speichern, **Kameraeinstellungen öffnen**, Front-/Rückkamera auswählen, optional **Bildbewegung an HA melden** einschalten und **Kamera für HA starten** antippen. Die Kopplung benötigt einen HA-Administrator-Token. Der Audioplayer muss nicht laufen.
+4. Bilder erscheinen normalerweise als `camera.echo_relay_tablet`, Bewegung als `binary_sensor.echo_relay_bildbewegung`. Bei abweichenden Namen die Entitäten der Integration verwenden. Der Vision-Aufruf findet die Tablet-Kamera anhand ihrer eindeutigen ID.
+5. Mit dem Jarvis-Gesprächsrouter fragen: **„Was ist draußen los?“**, **„Was sieht die Haustürkamera?“**, **„Was siehst du?“**, **„Was halte ich in der Hand?“**. Alternativ `jarvis_tablet_audio.describe_camera` mit `source: outside`, `door` oder `tablet` und `mode: scene`, `objects` oder `object_in_hand` aufrufen. Die Aktion gibt `description` zurück. Andere Gespräche und Hausbefehle behalten ihren bisherigen Weg.
 
-## Implemented
+## Betrieb und Grenzen
 
-- `CameraPreviewController`: Camera2 device/session lifecycle on a dedicated handler thread; local preview and on-demand JPEG callback. No dependency on audio service, HA credentials, storage or networking.
-- `Lens`: camera ID and facing; default preference for front-facing hardware, with selection persisted separately from HA credentials.
-- `Snapshot`: bounded JPEG bytes with camera-provided EXIF orientation and an app-receipt timestamp. Future transports must preserve/honor orientation and carry capture time; they must not treat an old image as live.
-- `CameraActivity`: explicit permission/start, fit-and-mirror front preview, orientation-aware local JPEG display, clear and stop. Preview/JPEG surfaces are limited to 1280 × 960 pixels or a smaller supported size. Mirroring is for the front preview; the captured image retains the camera's original view for future OCR/vision.
-- Stop, screen exit, screen-off and configuration recreation release camera resources and clear the visible in-memory image. Returning never restarts capture automatically. No recording or persistent image file is created.
-- No camera foreground service is declared because there is no background capture in this release. Audio playback continues in its existing independent service.
+Der separat gestartete Kamera-Vordergrunddienst bleibt nach Verlassen der App aktiv und hat eine eigene Stopp-Benachrichtigung. **HA-Kamera stoppen** beendet nur die Kamera. Audio und Keepalive bleiben unabhängig. Nach einem Neustart startet die Kamera nicht automatisch. Der lokale Kameratest ist separat und schließt seine Vorschau beim Verlassen.
 
-## Proposed next steps — not implemented
+Dies sind aktualisierte Einzelbilder ungefähr alle zwei Sekunden, kein Video mit voller Bildrate. Bilder bleiben im Arbeitsspeicher; es gibt keine Aufnahme, Offline-Warteschlange oder offenen Kamera-Port auf dem Tablet. Die Übertragung nutzt die gespeicherte HA-Adresse, Standard-TLS-Prüfung und HA-Authentifizierung ohne Weiterleitungen. Bei freigegebenem lokalem HTTP sind auch Bilder unverschlüsselt.
 
-Worker 1.6.0 now separately provides authenticated single-image `POST /describe` requests with base64 JPEG/PNG and a 2 MiB input limit. This app does not call it. The future HA adapter must enforce that smaller transport limit, honor JPEG orientation, carry freshness information separately, and use the worker's own credential. The local capture guard of 8 MiB is not a promise that every captured JPEG fits that API.
+Die Kopplung bindet eine Tablet-ID an den HA-Administrator. Zum Wechsel das alte Tablet stoppen, dann als Administrator `jarvis_tablet_audio.unpair_camera` aufrufen. Stopp sperrt die Sitzung und löscht das Bild. Ohne Nachschub wird es nach 15 Sekunden nicht mehr als verfügbar angeboten. `jarvis_tablet_audio.camera_vision_status` prüft Worker und Kamera-Zuordnung ohne Bildübertragung.
 
-1. Choose authenticated local snapshot delivery: an opt-in LAN endpoint consumed by HA or an authenticated push receiver in a dedicated HA integration. Do not reuse the HA bearer token as a publicly exposed camera URL/credential. Define TLS/local transport consent separately.
-2. Add HA `camera` integration/availability and fresh snapshot requests with timeout and timestamps, explicit start/stop, visible camera state and no stale-image substitution.
-3. Add a separate user-started camera foreground service only if continuous operation is required, including notification Stop, OS permission/start restrictions, screen-off and device power testing. Keep it separate from the audio service.
-4. Add on-demand vision requests for selected HA cameras. Existing outdoor camera snapshots can be used independently of this tablet camera.
-5. Optionally add motion/event detection with rate limits; run semantic vision analysis on selected frames/events rather than every video frame.
+Bildbewegung vergleicht grobe Pixeländerungen und unterdrückt gleichmäßige Helligkeitswechsel. Sie erkennt keine Personen/Objekte, kann Bewegungen übersehen und auf Licht reagieren. Für zuverlässige Video-/Objekterkennung eignet sich separat beispielsweise Frigate. Vision beschreibt ein Einzelbild und kann irren; Außenkameras können ein älteres Standbild liefern. Modellwechsel und Bildabruf können die Antwort verzögern. Dauerbetrieb und Display-aus-Verhalten hängen von Android und Akkuverwaltung ab.
 
-## Validation
+## English
 
-The Android camera instrumentation uses an isolated emulator with synthetic front/rear cameras. It checks the actual permission denial flow, explicit start, both preview sessions and JPEG capture, image bounds, clear/stop and background cleanup without automatic restart. It does not access a real camera, HA server or model. Hardware-specific image orientation, camera contention and long-running behavior still require target-device testing.
+Use the matching HA receiver and existing GPU Worker vision service. Explicitly start camera delivery in app settings. Its dedicated foreground notification stops it independently of audio. Images are pushed roughly every two seconds using the saved HA origin and administrator token. No tablet image server, disk recording, automatic boot start or offline queue is created. Stop invalidates the session; images expire after 15 seconds without delivery. Select outdoor/door cameras in the integration options. `describe_camera` returns a description for tablet/outdoor/door images on explicit request.
+
+## Protocol and validation
+
+- Authenticated `POST /api/jarvis_echo_relay/register` pairs a stable 32-hex device ID and returns an ephemeral session.
+- `POST /api/jarvis_echo_relay/frame` accepts JPEGs up to 2 MiB with session/device, increasing sequence, capture time and optional motion headers. Normalization strips metadata; only the latest image is retained. Old sessions/frames are rejected.
+- `DELETE /api/jarvis_echo_relay/frame` stops the remote session and clears the image.
+- Native Android tests use emulated cameras and a private HTTP receiver to verify background JPEG delivery, authentication, sequence/motion metadata and remote Stop.
+- `tests/relay_camera_e2e/run.sh` tests pairing, camera/motion entities, authorization, options/reload, spoken routing and stale/late frames in isolated real HA with synthetic image/model fixtures. Publication waits for this check and Android checks.
+
+![Camera screen with emulated scene](ui-camera-tablet.png)
