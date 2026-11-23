@@ -16,7 +16,8 @@ Jarvis verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Mode
 | Audio | Piper als CPU-Basis, optional Qwen-Streaming, Echo Relay über Bluetooth |
 | Haussteuerung | Lokale HA-Intents, Wetter, Energie, Heizung, Bring!, Abfall, Erinnerungen |
 | KI | Optionales lokales Ollama-LLM, Modellwahl und Kontext-Einstellungen |
-| Vision | Lokale Einzelbildbeschreibung, Kamera-Liveansicht, optionale strukturierte Bewegungsauswertung |
+| Native Android-App | Echo Relay, Bluetooth-Streaming, Front-/Rückkamera, optionale Bildbewegungserkennung für HA |
+| Vision | Lokale Einzelbildbeschreibung, Kameraansicht, optionale strukturierte Bewegungsauswertung |
 | HA-Automationen | Wiederverwendbare Sprachausgabe mit Bestätigung, Wetterhinweise, Begrüßung, Testtimer |
 | Familie | Drei optionale Namensfelder in HA-Helfern; keine Identitätserkennung |
 | Durchsagen | Optionale Alexa-MP3-Durchsagen über temporäre HTTPS-Links |
@@ -57,9 +58,11 @@ flowchart LR
 
 Die native Assist-Integration bündelt STT, TTS und Gesprächsrouter ohne manuelle YAML-Bearbeitung. Der optionale Nginx-Proxy stellt ausschließlich kurzlebige MP3-Dateien bereit. Timer und Benachrichtigungsmanager des bisherigen Dashboards bleiben als manuelle Vorlagen erhalten; sie werden nicht durch den Marketplace installiert. Entwickler-Vorschau: keine vollständige Neuinstallation bestätigt.
 
-## Optionale Android-Audiobrücke
+## Native Android-App: Audio, Kamera und Bewegung
 
 **[HA Jarvis Echo Relay 0.5.0](android/README.de.md)** bietet einen deutschen/englischen Android-Player mit HA-Suche, einmaligem Token-QR-Scan, bestätigter Bluetooth-Ausgabe und optionalem nativem Silent-Keepalive. [Fertige Vorschau-APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). Die eigenständige [Echo Relay Assist Lovelace-Karte](docs/echo-relay-dashboard.md) verbindet die App ohne Hauszentrale mit einem beliebigen HA-Dashboard. Die Befehls-/Statushelfer werden separat eingerichtet; die Marketplace-Integration tut dies nicht automatisch.
+
+Die App ist nicht nur ein Audioplayer: Sie kann ein Android-Smartphone oder Tablet als zusätzliche Kamera für Home Assistant bereitstellen. Die vorhandene Front- oder Rückkamera liefert nach ausdrücklicher Freigabe regelmäßig aktualisierte Einzelbilder. HA erhält eine Kamera-Entität und optional einen Bildbewegungssensor. Der lokale Vision-Worker kann für freigegebene Sichtfragen und HA-Automationen eingesetzt werden. Die Kamera-Funktion ist unabhängig von der Audiowiedergabe und muss bewusst gestartet werden; sie startet nicht automatisch nach einem Geräte-Neustart. Die Bilder werden nicht archiviert. Es handelt sich um Einzelbilder, nicht um einen vollwertigen Video-Livestream. [Details zur Android-App](android/README.de.md#kamera-und-lokales-visionmodell).
 
 ## Installation
 
