@@ -148,11 +148,18 @@ async def describe(relay, source, mode, context):
         raise ServiceValidationError("Vision is already busy")
     async with relay.vision_lock:
         entity_id = await resolve_camera(relay, source, context)
+        if mode == "ring_video" and source == "tablet":
+            raise ServiceValidationError("Video analysis requires a configured Ring recording camera")
+        frame_count = 1
         if source == "tablet":
             if not relay.frames.fresh:
                 raise ServiceValidationError("Tablet camera has no fresh image")
             image = relay.frames.image
             captured_at = relay.frames.captured_at
+        elif mode == "ring_video":
+            from .relay_ring_video import ring_storyboard
+            image, frame_count = await ring_storyboard(relay.hass, entity_id)
+            captured_at = None
         else:
             state = relay.hass.states.get(entity_id)
             if state is None or state.state in ("unknown", "unavailable"):
@@ -166,13 +173,17 @@ async def describe(relay, source, mode, context):
             captured_at = None
         if len(image) > 2 * 1024 * 1024:
             raise ServiceValidationError("Image too large")
-        result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": mode,
+        result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": "scene" if mode == "ring_video" else mode,
             "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
             "keep_alive": relay.entry.options.get("model_keep_alive", 0),
             "num_ctx": relay.entry.options.get("model_num_ctx", 4096)})
         description = result.get("description")
         if not isinstance(description, str) or not description.strip():
             raise ServiceValidationError("Empty vision reply")
-        return {"description": description.strip()[:700], "camera_entity_id": entity_id, "captured_at": captured_at,
+        text = description.strip()
+        if mode == "ring_video":
+            text = f"Ring-Video ({frame_count} Zeitpunkte ca. +3/+8/+13/+18 s): " + text
+        return {"description": text[:700], "camera_entity_id": entity_id, "captured_at": captured_at,
                 "model": str(result.get("model", ""))[:100], "metrics": result.get("metrics", {}),
-                "limitation": "single image; may be inaccurate"}
+                "frames_analyzed": frame_count,
+                "limitation": "multi-frame contact sheet; may be inaccurate" if mode == "ring_video" else "single image; may be inaccurate"}
