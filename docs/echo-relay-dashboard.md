@@ -27,6 +27,8 @@ title: Echo Relay
 
 Befehls- und Statusentitäten verwenden standardmäßig die festen App-Helfer. `command_entity` und `relay_status_entity` nur ändern, wenn der Android-Client dasselbe Paar unterstützt. Optionale direkte Alexa-Reserve: `alexa_script: your_script_service_name` (ohne script-Präfix) und `alexa_notify: notify.your_echo`. Das Skript erwartet die Felder `text` und `lautsprecher`. Direkte Alexa-Durchsagen können Audio über die Amazon-Cloud übertragen; keine vertraulichen Antworten dafür verwenden. Die Browserkarte verwendet die authentifizierte HA-Verbindung und speichert keine HA-Token.
 
+<a id="bewegungsgesteuerte-aktionen--motion-triggered-actions"></a>
+
 ## Bewegungsgesteuerte Aktionen
 
 Voraussetzung: **Jarvis Tablet Audio 1.6.0**, **GPU Worker 1.9.0**, App **0.5.0** mit aktivierter Kamera und Bildbewegung. Die App selbst benötigt kein Update. Alle fünf Frontend-Dateien nach `/config/www/jarvis/` kopieren: `echo-relay-assist-card-v1.2.0.js`, `jarvis-settings-v1.1.0.js`, `jarvis-model-settings-v1.1.0.js`, `jarvis-camera-preview-v1.2.0.js`, **`jarvis-proactive-v1.0.0.js`**. Nur die Assist-Karte als Ressource registrieren. Backend aktualisieren, HA einmal neu starten und Dashboard vollständig neu laden.

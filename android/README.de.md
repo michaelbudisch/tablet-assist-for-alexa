@@ -80,4 +80,4 @@ JVM-Tests prüfen Framing, zerstückeltes WAV mit unbekannter Länge, begrenzten
 
 ## Lizenz
 
-Eigener Code und Vektor-Icon: MIT wie das Hauptprojekt. ZXing Android Embedded, ZXing Core und AndroidX: Apache 2.0; siehe [THIRD_PARTY_NOTICES.de.md](THIRD_PARTY_NOTICES.md). Unabhängiges Community-Projekt, keine offizielle App von Home Assistant oder Amazon.
+Eigener Code und Vektor-Icon: MIT wie das Hauptprojekt. ZXing Android Embedded, ZXing Core und AndroidX: Apache 2.0; siehe [THIRD_PARTY_NOTICES.de.md](THIRD_PARTY_NOTICES.de.md). Unabhängiges Community-Projekt, keine offizielle App von Home Assistant oder Amazon.

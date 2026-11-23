@@ -43,7 +43,7 @@ Ollama shares the GPU. Test services one at a time with limited VRAM. Use the au
 
 ## Optional: vision
 
-The vision profile shares Ollama, port 10503 restricted to HA. [Setup and API](../../worker/README.md#optional-vision-160). HA camera selection is separate.
+The vision profile shares Ollama, port 10503 restricted to HA. [Setup and API](../../worker/README.md#optional-vision-180). HA camera selection is separate.
 
 ## 3. Connect Home Assistant and CPU server
 

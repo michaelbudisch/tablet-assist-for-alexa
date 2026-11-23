@@ -65,16 +65,19 @@ git clone https://github.com/michaelbudisch/tablet-assist-for-alexa.git
 cd tablet-assist-for-alexa
 ```
 
-1. [Proxmox / Debian Sprachserver](docs/proxmox.md) — CPU-Basis und optionale LXC-Erstellung.
-2. [Marketplace-Installation](docs/marketplace.md) — neue Integration empfohlen; oder [manuelle Legacy-Installation](docs/home-assistant.md) — Integrationen, Pipeline, Dashboard, Tablet-/Echo-Kopplung.
-3. [Optional: Windows oder Linux KI-Rechner](docs/worker.md) — Faster Whisper, Qwen-TTS, Streaming, Ollama.
-4. [Optionaler Nginx-Proxy-CT](docs/nginx-proxy.md) — nur für Alexa-MP3-Durchsagen; DuckDNS-App, Certbot und vorhandene Nginx-Proxy-CTs werden beschrieben.
-5. [Sicherheit und Datenschutz](docs/security.md) — LAN-Zugriff, Bluetooth und Alexa-Ausgabe.
-6. [Tests und Releasehinweise](docs/release.md).
-7. [Echo Relay Dashboard](docs/echo-relay-dashboard.md) — Lovelace-Karte.
-8. [HA-Automationen](docs/ha-automations.md) — Familienfelder und universelle Sprachausgabe.
-9. [Lokale Datenquellen](docs/data-sources.md) — Sprachbefehle und Entitäten.
-10. [Änderungsverlauf](CHANGELOG.de.md).
+| Anleitung | Beschreibung |
+|---|---|
+| [CPU-Sprachserver / Proxmox](docs/proxmox.md) | Lokale Sprachdienste |
+| [Marketplace und Konfiguration](docs/marketplace.md) | HA-Integration und Einrichtung |
+| [Android-Tablet / Bluetooth](docs/home-assistant.md) | Manuelle Altinstallation |
+| [Echo Relay Dashboard](docs/echo-relay-dashboard.md) | Lovelace-Installation |
+| [HA-Automationen](docs/ha-automations.md) | Familienfelder und universelle Sprachausgabe |
+| [Optionaler GPU-Rechner](docs/worker.md) | Windows/Linux, STT, TTS und lokale KI |
+| [Optionaler Nginx-Proxy](docs/nginx-proxy.md) | DuckDNS und Certbot |
+| [Lokale Datenquellen](docs/data-sources.md) | Sprachbefehle und unterstützte Entitäten |
+| [Sicherheit und Datenschutz](docs/security.md) | Netzwerk- und Datenschutzgrenzen |
+| [Tests und Release-Checkliste](docs/release.md) | Prüfstatus |
+| [Versionshistorie](CHANGELOG.de.md) | Änderungsverlauf |
 
 Die Skripte sind für **Neuinstallationen**, nicht für die Migration einer bestehenden Jarvis-Installation. Keine produktive Konfiguration überschreiben. Eigene Hosts, Gerätezuordnungen und Schlüssel ausschließlich lokal konfigurieren.
 
