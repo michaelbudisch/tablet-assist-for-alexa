@@ -4,17 +4,17 @@ Ring's camera "Last recording" exposes a signed, short-lived video_url.
 Only that Ring-owned URL is accepted, never a caller-supplied URL.
 The signed clip is held briefly in a private temporary file, then deleted.
 No extracted frames are stored.
-Requires the ffmpeg executable on the Home Assistant host.
+Uses Home Assistant\'s configured ffmpeg binary.
 """
 import asyncio
 import io
 import os
-import shutil
 import tempfile
 from urllib.parse import urlsplit
 
 import aiohttp
 from PIL import Image, ImageDraw, ImageOps
+from homeassistant.components import ffmpeg
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -77,16 +77,16 @@ def _write_private_clip(video):
             raise
 
 
-async def _decode(video):
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise ServiceValidationError("ffmpeg is not installed on the Home Assistant host")
+async def _decode(hass, video):
+    binary = ffmpeg.get_ffmpeg_manager(hass).binary
+    if not binary:
+        raise ServiceValidationError("Home Assistant ffmpeg binary is unavailable")
     video_path = await asyncio.to_thread(_write_private_clip, video)
     proc = None
     try:
         # Sample about +3/+8/+13/+18 seconds, even for ordinary non-faststart MP4.
         proc = await asyncio.create_subprocess_exec(
-            ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
+            binary, "-hide_banner", "-loglevel", "error", "-nostdin",
             "-ss", "3", "-i", video_path,
             "-vf", "fps=1/5,scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
             "-frames:v", str(MAX_FRAMES),
@@ -154,7 +154,7 @@ async def ring_storyboard(hass, camera_entity):
     if not _ring_download_url(url):
         raise ServiceValidationError("No approved Ring MP4 URL on this camera")
     video = await _download(hass, url)
-    frames = await _decode(video)
+    frames = await _decode(hass, video)
     try:
         return await hass.async_add_executor_job(_contact_sheet, _split_mjpeg(frames))
     except (ValueError, OSError, Image.DecompressionBombError) as exc:
