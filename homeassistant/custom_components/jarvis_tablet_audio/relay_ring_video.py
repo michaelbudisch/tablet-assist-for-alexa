@@ -71,7 +71,7 @@ async def _decode(video):
     proc = await asyncio.create_subprocess_exec(
         ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
         "-ss", "3", "-i", "pipe:0",
-        "-vf", "fps=1/5,scale=640:-2",
+        "-vf", "fps=1/5,scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
         "-frames:v", str(MAX_FRAMES),
         "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1",
         stdin=asyncio.subprocess.PIPE,
