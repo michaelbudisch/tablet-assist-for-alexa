@@ -1,10 +1,12 @@
-# TAFA Home Dashboard · Vorschau 0.1.3
+# TAFA Home Dashboard · Vorschau 0.2.0
 
 [English](README.md) | **Deutsch** · [TAFA-Projekt](../README.de.md)
 
 Optionale, responsive und konfigurierbare Lovelace-Hauszentrale auf Basis des bisherigen Designs. Sie läuft unabhängig vom bisherigen Kiosk. Es wird keine private Hauskonfiguration mitgeliefert.
 
 ## Funktionen
+
+- Design der ursprünglichen Hauszentrale: kompakter Kopfbereich mit Uhr, Wetterkarte, Energiekennzahlen, günstigstes zusammenhängendes Zweistunden-Tariffenster (passende Viertelstunden-Tarifattribute erforderlich), gruppierte Navigation mit fester mobiler Tab-Leiste und Desktop-Seitenleiste sowie Alltags-, Geräte- und Heizungszeilen.
 
 - 14 optionale Module und 39 konfigurierbare Datenrollen mit einer oder mehreren Quellen je nach Rolle.
 - Grafischer Karteneditor mit Entitäts-/Einheitenprüfung, Namensvorschlägen, Suchfilter, Modulreihenfolge, Design, Akzentfarbe, Anzeigedichte, Deutsch/Englisch und lokalem Konfigurationsimport/-export.
@@ -16,7 +18,7 @@ Optionale, responsive und konfigurierbare Lovelace-Hauszentrale auf Basis des bi
 ## Installation
 
 1. Die Dateien `www/tafa-home/dashboard.js` und `www/tafa-home/model.js` aus diesem Verzeichnis nach `/config/www/tafa-home/` kopieren.
-2. In HA unter Einstellungen → Dashboards → Ressourcen `/local/tafa-home/dashboard.js?v=0.1.3` als JavaScript-Modul registrieren. Browser vollständig neu laden. Bestehendes Dashboard nicht überschreiben und nicht zwei Versionen der Karte parallel registrieren.
+2. In HA unter Einstellungen → Dashboards → Ressourcen `/local/tafa-home/dashboard.js?v=0.2.0` als JavaScript-Modul registrieren. Browser vollständig neu laden. Bestehendes Dashboard nicht überschreiben und nicht zwei Versionen der Karte parallel registrieren.
 3. Ein separates Dashboard namens TAFA Home Dashboard mit Panel-Ansicht anlegen und eine manuelle Karte hinzufügen:
    ```yaml
    type: custom:tafa-home-dashboard

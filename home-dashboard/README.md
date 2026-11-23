@@ -1,10 +1,12 @@
-# TAFA Home Dashboard · 0.1.3 Preview
+# TAFA Home Dashboard · 0.2.0 Preview
 
 **English** | [Deutsch](README.de.md) · [TAFA project](../README.md)
 
 Optional, responsive, configurable Lovelace dashboard inspired by the original Hauszentrale. It runs independently of the original kiosk. No private household configuration is distributed.
 
 ## Features
+
+- Original Hauszentrale visual design: compact header and clock, weather hero, live energy metrics, cheapest contiguous two-hour tariff window (requires supported 15-minute tariff attributes), grouped navigation with fixed mobile bottom bar and desktop sidebar, everyday/device/heating rows.
 
 - 14 optional modules and 39 configurable data roles; one or multiple sources depending on the role.
 - Visual configuration editor with domain/unit checks, name-based suggestions, source filtering, module ordering, theme, accent, density, English/German language and local configuration import/export.
@@ -16,7 +18,7 @@ Optional, responsive, configurable Lovelace dashboard inspired by the original H
 ## Installation
 
 1. Download `www/tafa-home/dashboard.js` and `www/tafa-home/model.js` from this directory and copy both to `/config/www/tafa-home/`.
-2. In HA Settings → Dashboards → Resources, register `/local/tafa-home/dashboard.js?v=0.1.3` as a JavaScript module. Hard-refresh the browser. Do not overwrite your existing dashboard or load two versions of this card.
+2. In HA Settings → Dashboards → Resources, register `/local/tafa-home/dashboard.js?v=0.2.0` as a JavaScript module. Hard-refresh the browser. Do not overwrite your existing dashboard or load two versions of this card.
 3. Create a new storage dashboard called TAFA Home Dashboard with a panel view. Add a manual card:
    ```yaml
    type: custom:tafa-home-dashboard
