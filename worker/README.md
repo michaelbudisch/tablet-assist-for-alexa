@@ -2,6 +2,8 @@
 
 # Jarvis GPU Worker v1.9.0 – Optionales Visionmodell
 
+> **Schema-Update zu Worker 1.9.0:** Der lokale `/detect`-Endpunkt liefert zusätzlich `genders` mit den groben, unsicheren Erscheinungskategorien `man`, `woman`, `unknown`. Keine tatsächliche Geschlechts- oder Identitätsfeststellung. Vorhandene `.env` und Modellvolumes beibehalten, nur Vision neu bauen; HA-Backend gemeinsam aktualisieren. [HA-Automationen](../docs/ha-automations.md).
+
 Der bestehende Vision-Container bietet zusätzlich die ausdrücklich aktivierbare strukturierte Bewegungsauswertung. [Proaktive Einrichtung](../docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions). Es wird kein weiterer Container und kein zusätzliches Modell benötigt.
 
 Das Profil `vision` ergänzt Ollama um ausdrücklich angeforderte Einzelbildbeschreibungen; Qwen3 4B Instruct, Whisper und TTS bleiben unverändert. Standard: `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); Alternativen: `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Update am GPU-PC, nicht auf Proxmox: bestehende `.env` und Volumes behalten.
