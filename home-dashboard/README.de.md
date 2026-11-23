@@ -34,6 +34,6 @@ Optionale, responsive und konfigurierbare Lovelace-Hauszentrale auf Basis des bi
 
 ## Prüfung und Grenzen
 
-`node tests.mjs` mit einer aktuellen Node.js-Version ausführen. Die Tests prüfen Konfiguration, Rollen, fehlende Entitäten, Einheiten, Netz-Vorzeichen, Sprache, HTML-Escaping, native Kartenkonfigurationen und synthetisches HTML. Dateien und Dashboard-Konfiguration sind bereits in einer getrennten HA-Instanz installiert; der optische Test auf einem echten Tablet und eine vollständige Neuinstallation stehen noch aus.
+`node tests.mjs` mit einer aktuellen Node.js-Version ausführen. Die Tests prüfen Konfiguration, Rollen, fehlende Entitäten, Einheiten, Netz-Vorzeichen, Sprache, HTML-Escaping, native Kartenkonfigurationen und synthetisches HTML. Dateien und Dashboard-Konfiguration sind bereits als separates Dashboard in einer bestehenden HA-Instanz installiert; der optische Test auf einem echten Tablet und eine vollständige Neuinstallation stehen noch aus.
 
 Dies ist eine portable Entwicklungsvorschau und noch kein vollständiger Ersatz des alten Kiosks. Detaillierte Tibber-Kostenrekonstruktion, intelligenter Energieplaner und Geräteprogrammlernen, spezielle Heizungs-/L3-Erkennung, Tankkalibrierung sowie seitenübergreifender Sprachassistent und Infoboxen müssen noch als generische Module übernommen werden. Bestehende Sensoren und Automationen werden nicht ersetzt. Kamera und Sprachausgabe sind bewusst zu aktivieren. Keine echten Zuordnungen oder Backup-Archive öffentlich teilen.
