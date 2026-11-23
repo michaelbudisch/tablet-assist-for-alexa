@@ -42,27 +42,61 @@ def _ring_download_url(url):
         return False
 
 
-async def _download(hass, url):
-    session = async_get_clientsession(hass)
+def _approved_redirect(url):
+    """Ring may redirect signed clips to trusted Amazon storage/CDN hosts."""
+    if not isinstance(url, str) or len(url) > 8192:
+        return False
     try:
-        async with session.get(
-            url, allow_redirects=False,
-            timeout=aiohttp.ClientTimeout(total=25, sock_read=12)
-        ) as response:
-            if response.status != 200:
-                raise ServiceValidationError("Ring recording download unavailable")
-            if response.content_length is not None and response.content_length > MAX_VIDEO_BYTES:
-                raise ServiceValidationError("Ring recording exceeds size limit")
-            data = bytearray()
-            async for chunk in response.content.iter_chunked(65536):
-                data.extend(chunk)
-                if len(data) > MAX_VIDEO_BYTES:
+        parsed = urlsplit(url)
+        host = (parsed.hostname or "").lower()
+        suffixes = ("amazonaws.com", "cloudfront.net", "ring.com",
+                    "ring-video.com", "devices.amazon.dev")
+        return (
+            parsed.scheme == "https" and parsed.port in (None, 443)
+            and parsed.username is None and parsed.password is None
+            and not parsed.fragment
+            and any(host == suffix or host.endswith("." + suffix)
+                    for suffix in suffixes)
+        )
+    except ValueError:
+        return False
+
+
+async def _download(hass, url):
+    from urllib.parse import urljoin
+
+    session = async_get_clientsession(hass)
+    for redirect in range(4):
+        try:
+            async with session.get(
+                url, allow_redirects=False,
+                timeout=aiohttp.ClientTimeout(total=25, sock_read=12)
+            ) as response:
+                if response.status in (301, 302, 303, 307, 308):
+                    location = response.headers.get("Location", "")
+                    next_url = urljoin(url, location)
+                    if not location or not _approved_redirect(next_url):
+                        raise ServiceValidationError("Ring recording redirect was blocked")
+                    url = next_url
+                    continue
+                if response.status != 200:
+                    raise ServiceValidationError(
+                        f"Ring recording HTTP {response.status}"
+                    )
+                if (response.content_length is not None
+                        and response.content_length > MAX_VIDEO_BYTES):
                     raise ServiceValidationError("Ring recording exceeds size limit")
-            if len(data) < 200 or b"ftyp" not in data[:64]:
-                raise ServiceValidationError("Ring recording is not a supported MP4")
-            return bytes(data)
-    except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
-        raise ServiceValidationError("Ring recording download failed") from exc
+                data = bytearray()
+                async for chunk in response.content.iter_chunked(65536):
+                    data.extend(chunk)
+                    if len(data) > MAX_VIDEO_BYTES:
+                        raise ServiceValidationError("Ring recording exceeds size limit")
+                if len(data) < 200 or b"ftyp" not in data[:64]:
+                    raise ServiceValidationError("Ring recording is not a supported MP4")
+                return bytes(data)
+        except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
+            raise ServiceValidationError("Ring recording download failed") from exc
+    raise ServiceValidationError("Ring recording has too many redirects")
 
 
 def _write_private_clip(video):
