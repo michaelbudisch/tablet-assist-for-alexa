@@ -206,7 +206,7 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
                 body = {"model": model, "stream": False, "think": False, "keep_alive": keep,
                     "format": DETECTION_SCHEMA, "options": {"num_ctx": context, "num_predict": 180, "temperature": 0},
                     "messages": [{"role": "system", "content": DETECTION_SYSTEM},
-                        {"role": "user", "content": "Count visible people and dogs. Return person_count, dog_count, age_groups (adult/child/unknown), uncertain. Use unknown for unclear age groups. Return the fixed JSON schema only.", "images": [image]}]}
+                        {"role": "user", "content": "Count visible people and dogs. Return person_count, dog_count, age_groups (adult/child/unknown), genders (apparent presentation man/woman/unknown), uncertain. Use unknown for unclear age groups or genders. Return the fixed JSON schema only.", "images": [image]}]}
                 result = call("/api/chat", body, timeout=45)
                 detection = validate_detection(result.get("message", {}).get("content"))
                 return jsonify(detection=detection, labels=detection_labels(detection), model=model,
