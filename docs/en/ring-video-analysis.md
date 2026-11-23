@@ -27,3 +27,6 @@ Ring's `camera.haustur_letzte_aufnahme` and `camera.vorderseite_letzte_aufnahme`
 
 ## Rollback
 If MP4 retrieval or ffmpeg fails, the request reports an error rather than falsely claiming a successful multi-frame analysis. Switch the action back to `mode: scene` for the previous still-image behavior. The existing 30-minute cooldown and the disabled Echo announcement are unchanged.
+
+## Independent frame inference
+In `ring_video` mode, **each of the four frames is sent to the local vision model separately** using `mode: objects`. The 2×2 image is **debug-preview only**, no longer an AI inference input. The service returns `frame_results` with `frame`, `second`, `description`, `success`, together with `frames_analyzed` and `frames_extracted`. TAFA displays each frame description under **Cameras → AI Frames from Ring Videos**. If one inference fails, the remaining frames are still processed. AI descriptions may be inaccurate.
