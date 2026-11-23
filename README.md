@@ -32,6 +32,13 @@ Jarvis combines local speech recognition, Home Assistant data, optional AI model
 
 ## Architecture
 
+![TAFA architecture overview with Android phone, tablet, Home Assistant, local AI and Echo](docs/tafa-architecture.jpg)
+
+*Simplified system overview. Bluetooth audio is routed from the Android device to the Echo; CPU-based speech processing is part of the baseline setup.*
+
+<details>
+<summary>Detailed technical architecture</summary>
+
 ```mermaid
 flowchart TB
     subgraph DEV["01 · Android smartphone / tablet"]
@@ -97,6 +104,8 @@ flowchart TB
     style GPU fill:#f5f3ff,stroke:#c4b5fd,color:#4c1d95,stroke-width:1.5px
     style OUTPUT fill:#fffbeb,stroke:#fcd34d,color:#78350f,stroke-width:1.5px
 ```
+
+</details>
 
 *Blue: Android devices · Teal: Home Assistant · Purple: optional AI · Grey: CPU baseline · Amber: audio output. Dashed arrows denote optional paths.*
 

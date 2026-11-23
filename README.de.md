@@ -32,6 +32,13 @@ Jarvis verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Mode
 
 ## Architektur
 
+![TAFA – Architekturübersicht mit Android-Smartphone, Tablet, Home Assistant, KI-Rechner und Echo](docs/tafa-architecture.jpg)
+
+*Vereinfachte Systemübersicht. Die Bluetooth-Audioverbindung läuft tatsächlich vom Android-Gerät zum Echo; die CPU-basierte Sprachverarbeitung gehört zur Basisinstallation.*
+
+<details>
+<summary>Technisches Architekturdiagramm</summary>
+
 ```mermaid
 flowchart TB
     subgraph DEV["01 · Android-Smartphone / Tablet"]
@@ -97,6 +104,8 @@ flowchart TB
     style GPU fill:#f5f3ff,stroke:#c4b5fd,color:#4c1d95,stroke-width:1.5px
     style OUTPUT fill:#fffbeb,stroke:#fcd34d,color:#78350f,stroke-width:1.5px
 ```
+
+</details>
 
 *Blau: Android-Geräte · Türkis: Home Assistant · Violett: optionale KI · Grau: CPU-Basis · Orange: Audioausgabe. Gestrichelte Pfeile kennzeichnen optionale Pfade.*
 
