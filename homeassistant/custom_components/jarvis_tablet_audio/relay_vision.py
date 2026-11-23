@@ -157,10 +157,51 @@ async def describe(relay, source, mode, context):
             image = relay.frames.image
             captured_at = relay.frames.captured_at
         elif mode == "ring_video":
-            from .relay_ring_video import ring_storyboard
-            image, frame_count = await ring_storyboard(relay.hass, entity_id)
-            relay.save_ring_storyboard(source, image, frame_count)
-            captured_at = None
+            # The 2x2 image is retained for debugging only; inference runs on
+            # four *separate* 640x360 frames to preserve small people/objects.
+            from .relay_ring_video import ring_frames, ring_contact_sheet
+            samples = await ring_frames(relay.hass, entity_id)
+            montage, extracted = await ring_contact_sheet(relay.hass, samples)
+            relay.save_ring_storyboard(source, montage, extracted)
+            reports = []
+            successful = []
+            last_model = ""
+            for index, (frame, second) in enumerate(samples, 1):
+                if len(frame) > 2 * 1024 * 1024:
+                    raise ServiceValidationError("Ring frame too large")
+                try:
+                    result = await request(relay, "/describe", {
+                        "image": base64.b64encode(frame).decode("ascii"),
+                        "mode": "objects",
+                        "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
+                        "keep_alive": relay.entry.options.get("model_keep_alive", 0),
+                        "num_ctx": relay.entry.options.get("model_num_ctx", 4096),
+                    })
+                    description = result.get("description")
+                    if not isinstance(description, str) or not description.strip():
+                        raise ServiceValidationError("Empty Ring frame description")
+                    description = description.strip()[:350]
+                    last_model = str(result.get("model", ""))[:100]
+                    reports.append({"frame": index, "second": round(second, 1),
+                                    "description": description, "success": True})
+                    successful.append((index, second, description))
+                except ServiceValidationError:
+                    reports.append({"frame": index, "second": round(second, 1),
+                                    "description": "KI-Auswertung fehlgeschlagen",
+                                    "success": False})
+            relay.save_ring_storyboard(source, montage, extracted, reports)
+            if not successful:
+                raise ServiceValidationError("No Ring video frame could be analyzed")
+            descriptions = " ".join(
+                f"Bild {index} (+{second:.1f}s): {description[:160].rstrip('.')}."
+                for index, second, description in successful
+            )
+            combined = f"Ring-Video ({len(successful)}/{extracted} Einzelprüfungen). " + descriptions
+            return {"description": combined[:950], "camera_entity_id": entity_id,
+                    "captured_at": None, "model": last_model,
+                    "frame_results": reports, "frames_analyzed": len(successful),
+                    "frames_extracted": extracted,
+                    "limitation": "separate frame descriptions; visual estimates may be inaccurate"}
         else:
             state = relay.hass.states.get(entity_id)
             if state is None or state.state in ("unknown", "unavailable"):
