@@ -1,6 +1,6 @@
 describe_camera:
   name: Describe camera
-  description: Describe one fresh image with the local vision worker. Cameras are selected in integration options.
+  description: Describe a camera image or (ring_video) a four-frame storyboard sampled from an authorized Ring MP4 recording. Cameras are selected in integration options.
   fields:
     source:
       default: outside
@@ -11,7 +11,7 @@ describe_camera:
       default: scene
       selector:
         select:
-          options: [scene, objects, object_in_hand]
+          options: [scene, objects, object_in_hand, ring_video]
 camera_vision_status:
   name: Vision status
   description: Check local vision readiness without sending an image.
