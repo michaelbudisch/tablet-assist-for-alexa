@@ -2,7 +2,7 @@
 
 ![TAFA – Architekturübersicht mit Android-Smartphone, Tablet, Home Assistant, KI-Rechner und Echo](docs/tafa-architecture.jpg)
 
-[English](README.md) · **Deutsch**
+[English](README.md) | **Deutsch**
 
 **Dein lokaler KI-Sprachassistent für Home Assistant – mit Android-Tablet und Echo-Lautsprecher.**
 
@@ -71,6 +71,10 @@ cd tablet-assist-for-alexa
 4. [Optionaler Nginx-Proxy-CT](docs/nginx-proxy.md) — nur für Alexa-MP3-Durchsagen; DuckDNS-App, Certbot und vorhandene Nginx-Proxy-CTs werden beschrieben.
 5. [Sicherheit und Datenschutz](docs/security.md) — LAN-Zugriff, Bluetooth und Alexa-Ausgabe.
 6. [Tests und Releasehinweise](docs/release.md).
+7. [Echo Relay Dashboard](docs/echo-relay-dashboard.md) — Lovelace-Karte.
+8. [HA-Automationen](docs/ha-automations.md) — Familienfelder und universelle Sprachausgabe.
+9. [Lokale Datenquellen](docs/data-sources.md) — Sprachbefehle und Entitäten.
+10. [Änderungsverlauf](CHANGELOG.de.md).
 
 Die Skripte sind für **Neuinstallationen**, nicht für die Migration einer bestehenden Jarvis-Installation. Keine produktive Konfiguration überschreiben. Eigene Hosts, Gerätezuordnungen und Schlüssel ausschließlich lokal konfigurieren.
 

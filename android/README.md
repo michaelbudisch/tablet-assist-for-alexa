@@ -1,6 +1,6 @@
 # HA Jarvis Echo Relay · Android 0.5.0
 
-**English** | [Deutsch](README.de.md)
+**English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
 A native audio bridge from Home Assistant through an Android device to a Bluetooth speaker, including Amazon Echo. Android 9+. No microphone access, wake word or automatic startup after reboot.
 
@@ -55,7 +55,7 @@ This may reduce idle gaps and Echo’s “Playing from…” prompts. The Echo g
 
 ## Required Home Assistant connection
 
-This optional bridge implements the existing native audio helper contract. It does not replace the Companion App or configure an Assist pipeline. The public Marketplace integration does not automatically provision this transport: a compatible dashboard/controller is required. The repository includes a [standalone Echo Relay Assist card](../docs/echo-relay-dashboard.md).
+This optional bridge implements the existing native audio helper contract. It does not replace the Companion App or configure an Assist pipeline. The public Marketplace integration does not automatically provision this transport: a compatible dashboard/controller is required. The repository includes a [standalone Echo Relay Assist card](../docs/en/echo-relay-dashboard.md).
 
 - `input_text.jarvis_native_audio_command`: JSON `{id,path,ts}` or `{id,stop:true,ts}`. IDs contain 1–40 letters/digits/hyphens; timestamps are Unix milliseconds. Only same-origin `/api/tts_proxy/…` paths are accepted. Commands older than 15 seconds and the command present at player startup are ignored.
 - `input_text.jarvis_native_audio_status`: `ready|timestamp`, `no_bluetooth|timestamp`, or `id|buffering`, `id|playing|bluetooth`, `id|done`, `id|error_…`.

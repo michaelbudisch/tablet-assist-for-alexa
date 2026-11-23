@@ -1,6 +1,6 @@
-[Deutsch](../release.md) | **English** · [Project overview](../../README.md)
-
 # Tests and release checklist
+
+**English** | [Deutsch](../release.md) · [Project overview](../../README.md)
 
 Public developer preview 0.3.1 (not a production-ready stable release).
 

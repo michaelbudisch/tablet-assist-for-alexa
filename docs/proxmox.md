@@ -1,6 +1,6 @@
-**Deutsch** | [English](en/proxmox.md) · [Projektübersicht](../README.de.md)
-
 # CPU-Sprachserver
+
+[English](en/proxmox.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Voraussetzungen: aktuelles Proxmox VE oder Debian 12/13 mit systemd; für die CPU-Basis zunächst 4 vCPU, 4 GiB RAM und 20 GiB Speicher als Startgröße (abhängig vom Modell). Unterstützte Architektur und Python-Version der Abhängigkeiten prüfen. Eine NVIDIA-GPU ist nicht notwendig. Download der Modelle benötigt Internet; Laufzeit kann anschließend lokal bleiben.
 

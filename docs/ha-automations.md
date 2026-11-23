@@ -1,36 +1,34 @@
-# Jarvis · Native Home Assistant automations (preview)
+# Jarvis · Native Home-Assistant-Automationen (Vorschau)
 
-**Optional** · HA backend 1.6.0 with updated detection validator · GPU Worker 1.9.0 with updated vision schema · Echo Relay APK 0.5.0 · Lovelace card 1.3.0.
+[English](en/ha-automations.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-## Setup / Einrichtung
+**Optional** · HA-Backend 1.6.0 mit aktualisierter Erkennungsvalidierung · GPU-Worker 1.9.0 mit erweitertem Vision-Schema · Echo Relay APK 0.5.0 · Lovelace-Karte 1.3.0.
 
-1. Install the existing integration, audio relay and worker following [the regular guide](echo-relay-dashboard.md). Enable camera sharing and motion detection explicitly on the tablet only if everyone affected agrees. Keep captures local, do not archive images and do not use the feature for access control or identification.
-2. Add [the optional package](../homeassistant/templates/echo-relay-automation-package.yaml) to an already configured HA packages directory. **Do not duplicate existing helpers or scripts.** The package adds three empty name helpers, speech status/bridge helpers, last-greeting timestamp, a five-minute timer, the speech script and a disabled greeting automation. Set the last-greeting helper to an earlier date before first testing. Replace `weather.home` in the automation with your own weather entity. Restart HA after installing package/integration updates.
-3. Copy the five modules below to `/config/www/jarvis/`. Register **only** the card module as a Lovelace resource, replacing the old card resource. Reload the tablet dashboard fully. This is an optional preview path; legacy installer and templates still use the original card.
+## Einrichtung
+
+1. Integration, Audiobrücke und Worker anhand der [regulären Anleitung](echo-relay-dashboard.md) installieren. Kamera und Bildbewegung nur mit Zustimmung aller Betroffenen aktivieren. Einzelbilder lokal halten, nicht archivieren und niemals zur Zugangskontrolle oder Identifizierung einsetzen.
+2. Das [optionale Paket](../homeassistant/templates/echo-relay-automation-package.yaml) in ein bereits konfiguriertes HA-Paketverzeichnis übernehmen. **Keine vorhandenen Helfer oder Skripte doppelt anlegen.** Enthalten sind drei leere Namensfelder, Helfer für Sprechstatus und Sprachbridge, Zeitstempel der letzten Begrüßung, Fünf-Minuten-Timer, Sprechskript und deaktivierte Begrüßungsautomation. Den Zeitstempel vor dem ersten Test auf ein früheres Datum setzen. `weather.home` durch die eigene Wetter-Entität ersetzen. HA nach Installation von Paket und Integration neu starten.
+3. Die fünf Module nach `/config/www/jarvis/` kopieren. Nur das Kartenmodul als Lovelace-Ressource registrieren und den alten Eintrag ersetzen. Dashboard vollständig neu laden. Diese Karte ist ein optionaler Vorschaupfad; Altinstaller und Vorlagen verwenden weiterhin die ursprüngliche Karte.
    - `echo-relay-assist-card-v1.3.0.js`
    - `jarvis-settings-v1.6.0.js`
    - `jarvis-proactive-v1.6.0.js`
    - `jarvis-model-settings-v1.1.0.js`
    - `jarvis-camera-preview-v1.2.0.js`
-4. Use the existing [motion automation](../homeassistant/templates/echo-relay-proactive-automation.yaml). Configure its motion entity. Using the admin-only `jarvis_tablet_audio.proactive` get/set API, preserve the complete returned settings dictionary (exclude revision/status/entity lists from the settings payload), set enabled and test_mode true, greeting false, script_entity empty, and select person in classes. The backend continues to limit checks by freshness, cooldown and worker availability. The HA greeting automation owns its own time window and daily guard. Disable the motion automation when not needed. Legacy internal greeting must stay off to avoid duplicate audio.
-5. In the new **Family / Familie** tab, set optional manually chosen names. They are stored in HA input_text helpers and read on each greeting. Apparent categories are fallible estimates, **not actual gender or identity recognition**. Multiple or ambiguous people get neutral greetings; uncertain detections produce no event. Never use a guessed name as authentication.
-6. With the tablet dashboard visible and Echo Relay ready, test the reusable script `script.jarvis_sprechen` with a simple message and followup=false. The bridge status must be recent and ready. A started response confirms playback started, not completion. Enable greeting only after this test. Start `timer.jarvis_begrussung_testfenster` for an opt-in five-minute test; success cancels the timer without marking today's regular greeting. Regular schedule: 06:00–10:00, once per day after confirmed playback.
+4. Vorhandene [Bewegungsautomation](../homeassistant/templates/echo-relay-proactive-automation.yaml) verwenden und die eigene Bewegungs-Entität einstellen. Über die Administrator-Aktion `jarvis_tablet_audio.proactive` (get/set) das vollständige Einstellungsobjekt übernehmen (ohne Revision, Status und Entitätslisten im Objekt settings). `enabled` und `test_mode` auf true, `greeting` auf false, `script_entity` leer lassen sowie `person` in `classes` auswählen. Das Backend begrenzt Prüfungen weiterhin durch Bildaktualität, Sperrzeit und Worker-Verfügbarkeit. Zeitfenster und Tagesgrenze regelt die HA-Automation. Die alte interne Begrüßung bleibt aus; Bewegungsautomation bei Nichtgebrauch deaktivieren.
+5. Im Reiter **Familie** optionale Namen hinterlegen. HA speichert sie in Texthelfern; die Automation liest sie bei jeder Begrüßung. Kategorien sind fehleranfällige Schätzungen des sichtbaren Erscheinungsbilds, keine tatsächliche Geschlechts- oder Identitätsfeststellung. Bei mehreren oder unklaren Personen bleibt die Anrede neutral, unsichere Ergebnisse lösen kein Ereignis aus. Namen niemals zur Authentifizierung verwenden.
+6. Bei sichtbarem Tablet-Dashboard und bereitem Echo Relay das Skript `script.jarvis_sprechen` zunächst mit kurzem Text und `followup: false` testen. Der Bereitschaftsstatus muss aktuell sein. `started` bestätigt den Wiedergabestart, nicht das Ende. Erst danach die Begrüßungsautomation aktivieren. Mit `timer.jarvis_begrussung_testfenster` ein fünfminütiges Testfenster starten; bei Erfolg endet es ohne Markierung des regulären Tages. Regulär: 06:00–10:00 Uhr, einmal täglich nach bestätigtem Wiedergabestart.
 
-## Reusable actions / Wiederverwendbare Aktionen
+## Wiederverwendbare Aktionen
 
 ```yaml
 action: script.jarvis_sprechen
 data:
-  message: "The washing machine is finished."
+  message: "Die Waschmaschine ist fertig."
   followup: false
   daily_overview: false
 response_variable: speech_result
 ```
 
-Status: started, skipped, error, timeout, tablet_offline or tablet_busy. Follow-up is optional and uses the visible dashboard; no continuous recording is enabled by the script. Use one designated tablet for this preview bridge; multi-client arbitration of this generic event is not yet tested.
+Mögliche Statuswerte: `started`, `skipped`, `error`, `timeout`, `tablet_offline`, `tablet_busy`. Eine Rückfrage ist optional und erfordert ein sichtbares Dashboard; das Skript aktiviert keine dauerhafte Aufnahme. Für diese Vorschau ein fest zugeordnetes Tablet verwenden; die Koordination mehrerer Tablets ist für dieses Ereignis noch nicht getestet.
 
-The main private Hauszentrale also has an event-driven infobox action (`jarvis_infobox_show`) and a disabled Ring example. These are **kiosk-specific reference features**, not installed by this package. Standard portable card integration and fresh-install tests remain pending. Existing on-demand camera preview and local descriptions are separate from the automatic greeting.
-
-## Deutsch – Kurzfassung
-
-HA-Automationen übernehmen Bedingungen, Begrüßungstext, Wetter, Tagesgrenze und Testfenster. Im Reiter Familie stehen nur die Namensfelder. Die Felder sind keine Personenidentifikation. Die allgemeine Sprachausgabe kann in beliebigen Automationen genutzt werden. Die alte interne Begrüßung ausschalten, bevor die neue aktiviert wird. Der Worker verwendet die vorhandene lokale Vision-Schnittstelle; keine zusätzliche Kamera oder GPU erforderlich. Eine Neuinstallation der öffentlichen Karte wurde noch nicht auf physischer Hardware geprüft.
+Die private Hauszentrale enthält zusätzlich die ereignisbasierte Infobox (`jarvis_infobox_show`) und ein deaktiviertes Ring-Beispiel. Diese kioskspezifischen Referenzfunktionen sind im Paket nicht enthalten. Die öffentliche Karte und eine vollständige Neuinstallation müssen noch auf echter Hardware getestet werden. Die bestehenden Sichtfragen und Kameravorschauen bleiben von der automatischen Begrüßung getrennt.

@@ -1,6 +1,6 @@
-**Deutsch** | [English](en/home-assistant.md) · [Projektübersicht](../README.de.md)
-
 # Home Assistant und Android-Tablet (manuelle Altinstallation)
+
+[English](en/home-assistant.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Für Neuinstallationen ist die [Marketplace-Integration](marketplace.md) empfohlen. Die folgenden Schritte sind nur der alternative Altinstallationsweg; seine Oberfläche und Sprachbefehle bleiben deutsch.
 

@@ -1,6 +1,6 @@
 # HA Jarvis Echo Relay · Android 0.5.0
 
-[English](README.md) | **Deutsch**
+[English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetooth-Lautsprecher, zum Beispiel einem Amazon Echo. Android 9 oder neuer. Kein Mikrofonzugriff, kein Wakeword und kein automatischer Start nach dem Booten.
 
@@ -43,7 +43,7 @@ Für dieses App-Update muss das bereinigte HA-Dashboard nicht geändert werden. 
 
 Öffne **Kameraeinstellungen öffnen**, wähle Front-/Rückkamera und tippe auf **Kamera für HA starten**. Der ausdrücklich gestartete Kamera-Dienst sendet ungefähr alle zwei Sekunden ein JPEG und bleibt außerhalb der App aktiv. Stoppen kannst du ihn hier oder über seine eigene Benachrichtigung. Audio/Keepalive bleiben unabhängig; nach einem Neustart startet nichts automatisch.
 
-Voraussetzung sind der passende Empfänger **Jarvis Tablet Audio 1.4.0** und der vorhandene lokale Vision-Worker. HA stellt Tablet-Kamera und optionalen Bildbewegungssensor bereit. Außen-/Haustürkamera werden in den Integrationsoptionen gewählt; Sichtfragen beantwortet der Jarvis-Router. Bilder liegen im Arbeitsspeicher und verfallen nach 15 Sekunden ohne Nachschub. Dies sind regelmäßig neue Einzelbilder, kein Video mit voller Bildrate und keine Personenerkennung. Siehe [Einrichtung und Sichtfragen](docs/camera-preparation.md).
+Voraussetzung sind der passende Empfänger **Jarvis Tablet Audio 1.4.0** und der vorhandene lokale Vision-Worker. HA stellt Tablet-Kamera und optionalen Bildbewegungssensor bereit. Außen-/Haustürkamera werden in den Integrationsoptionen gewählt; Sichtfragen beantwortet der Jarvis-Router. Bilder liegen im Arbeitsspeicher und verfallen nach 15 Sekunden ohne Nachschub. Dies sind regelmäßig neue Einzelbilder, kein Video mit voller Bildrate und keine Personenerkennung. Siehe [Einrichtung und Sichtfragen](docs/camera-preparation.de.md).
 
 ### Bluetooth wach halten
 
@@ -80,4 +80,4 @@ JVM-Tests prüfen Framing, zerstückeltes WAV mit unbekannter Länge, begrenzten
 
 ## Lizenz
 
-Eigener Code und Vektor-Icon: MIT wie das Hauptprojekt. ZXing Android Embedded, ZXing Core und AndroidX: Apache 2.0; siehe [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Unabhängiges Community-Projekt, keine offizielle App von Home Assistant oder Amazon.
+Eigener Code und Vektor-Icon: MIT wie das Hauptprojekt. ZXing Android Embedded, ZXing Core und AndroidX: Apache 2.0; siehe [THIRD_PARTY_NOTICES.de.md](THIRD_PARTY_NOTICES.md). Unabhängiges Community-Projekt, keine offizielle App von Home Assistant oder Amazon.

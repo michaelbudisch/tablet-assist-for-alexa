@@ -1,6 +1,6 @@
-**Deutsch** | [English](en/release.md) · [Projektübersicht](../README.de.md)
-
 # Tests und Release-Checkliste
+
+[English](en/release.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Öffentliche Entwicklungsvorschau 0.3.1 (keine stabile produktionsfertige Version).
 

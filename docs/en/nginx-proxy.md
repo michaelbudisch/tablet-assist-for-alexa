@@ -1,6 +1,6 @@
-[Deutsch](../nginx-proxy.md) | **English** · [Project overview](../../README.md)
-
 # Optional Nginx proxy container for Alexa announcements
+
+**English** | [Deutsch](../nginx-proxy.md) · [Project overview](../../README.md)
 
 **Only required for optional Alexa MP3 playback.** Native Assist responses played through a tablet-to-Echo Bluetooth connection do not require a public audio URL. Never publish the speech generation API.
 

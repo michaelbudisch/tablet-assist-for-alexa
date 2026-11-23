@@ -1,6 +1,6 @@
-**Deutsch** | [English](en/marketplace.md) · [Projektübersicht](../README.de.md)
+# Marketplace – TAFA
 
-# Marketplace – Tablet Assist for Alexa
+[English](en/marketplace.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Home Assistant Core ab 2026.11; Entwicklungsvorschau 0.3.1. Auf einer Testinstanz beginnen und die funktionierende Altinstallation nicht überschreiben.
 

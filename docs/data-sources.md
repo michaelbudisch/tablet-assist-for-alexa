@@ -1,6 +1,6 @@
 # Lokale Datenquellen und Sprachbefehle (0.3.1)
 
-[English](en/data-sources.md) · [Installation](marketplace.md)
+[English](en/data-sources.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Die neue Standalone-Integration benötigt keine Helfer oder Entitäten einer fremden Hauszentrale. Unter **Tablet Assist → Datenquellen** siehst du den Konfigurationsstatus. Über den Link zur Integration → **Optionen** kann ein Administrator die eigenen Entitäten auswählen oder wieder abwählen. Alle Felder sind optional. Die Integration wird beim Speichern neu geladen. Private Daten bleiben im lokalen HA-Konfigurationseintrag; die öffentliche Version enthält keine konkrete Haushaltszuordnung.
 

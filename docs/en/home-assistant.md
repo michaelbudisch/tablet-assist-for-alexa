@@ -1,6 +1,6 @@
-[Deutsch](../home-assistant.md) | **English** · [Project overview](../../README.md)
-
 # Manual Home Assistant setup and Android tablet (legacy)
+
+**English** | [Deutsch](../home-assistant.md) · [Project overview](../../README.md)
 
 The repository contains sanitized legacy integrations and templates. The [Marketplace path](marketplace.md) is recommended for new users; the following is an alternative, not an upgrade procedure.
 
@@ -64,4 +64,4 @@ In the local JSON configuration set media_player, notify and dnd for each config
 
 Unconfigured rooms are placeholders and must not produce output. Restrict the HTTPS proxy to expiring 32-character MP3 filenames only. Do not send confidential content. Configure quiet schedules. Automatic notifications start disabled. event_sources maps optional sensor IDs; rules without sources are omitted. The washer requires the matching states of an existing cycle-learning system rather than any power sensor. Verify units and state transitions of other sources. The legacy reminder supports **one** active appointment.
 
-See [Echo Relay Lovelace settings](../echo-relay-dashboard.md) for the shared modules and portable dashboard example.
+See [Echo Relay Lovelace settings](echo-relay-dashboard.md) for the shared modules and portable dashboard example.

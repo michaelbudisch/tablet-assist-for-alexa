@@ -1,6 +1,6 @@
-**Deutsch** | [English](en/nginx-proxy.md) · [Projektübersicht](../README.de.md)
-
 # Optional: Nginx-Proxy-CT für Alexa-Durchsagen
+
+[English](en/nginx-proxy.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 **Nur für die optionale Alexa-MP3-Ausgabe notwendig.** Native Assist-Antworten über die Bluetooth-Verbindung Tablet → Echo benötigen keine öffentliche Audio-URL. Der Proxy stellt keine Sprachgenerierungs-API bereit.
 

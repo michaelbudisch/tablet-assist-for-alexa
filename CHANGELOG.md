@@ -1,6 +1,6 @@
-**English** | [Deutsch](CHANGELOG.de.md)
-
 # Changelog
+
+**English** | [Deutsch](CHANGELOG.de.md) · [Project overview](README.md)
 
 ## Native HA automation preview — optional card 1.3.0
 

@@ -1,6 +1,6 @@
-[Deutsch](../security.md) | **English** · [Project overview](../../README.md)
-
 # Security and privacy
+
+**English** | [Deutsch](../security.md) · [Project overview](../../README.md)
 
 - Local speech processing: the dashboard does not make additional continuous microphone recordings. Native Assist and its debugging or caching features may retain requests; review HA retention settings.
 - Never publish credentials, actual device IPs, HA configuration backups, audio recordings or personal voices. Local JSON configuration, secrets, virtual environments and model files are excluded from Git.

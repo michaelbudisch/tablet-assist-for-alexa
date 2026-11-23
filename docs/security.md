@@ -1,6 +1,6 @@
-**Deutsch** | [English](en/security.md) · [Projektübersicht](../README.de.md)
-
 # Datenschutz und Sicherheit
+
+[English](en/security.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 - Lokale Sprachverarbeitung: keine zusätzliche dauerhafte Mikrofonaufnahme im Browser. Native Assist und seine eigenen Debug-/Cache-Einstellungen können dennoch Anfragen speichern. Aufbewahrung in HA prüfen.
 - Keine Zugangsdaten, IPs realer Geräte, HA-Konfigurationssicherungen, Audiodateien oder persönliche Stimmen veröffentlichen. Lokale JSON-Dateien, Secrets, venvs und Modelle sind von Git ausgeschlossen.

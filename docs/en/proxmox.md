@@ -1,6 +1,6 @@
-[Deutsch](../proxmox.md) | **English** · [Project overview](../../README.md)
-
 # CPU speech server
+
+**English** | [Deutsch](../proxmox.md) · [Project overview](../../README.md)
 
 Requirements: current Proxmox VE or Debian 12/13 with systemd. Start with 4 vCPUs, 4 GiB RAM and 20 GiB disk, depending on model size. Check the architecture and Python requirements of dependencies. No NVIDIA GPU is required. Downloading models requires Internet access; inference can run locally afterwards.
 

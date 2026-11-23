@@ -1,5 +1,7 @@
 # Third-party components
 
+**English** | [Deutsch](THIRD_PARTY_NOTICES.de.md) · [Project overview](../README.md)
+
 The original Android app code and vector artwork are distributed under the repository MIT license.
 
 - [ZXing Android Embedded 4.3.0](https://github.com/journeyapps/zxing-android-embedded/tree/v4.3.0) — Copyright ZXing authors and Journey Mobile; Apache License 2.0.

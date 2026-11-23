@@ -2,7 +2,7 @@
 
 ![TAFA architecture overview with Android phone, tablet, Home Assistant, local AI and Echo](docs/tafa-architecture.jpg)
 
-**English** · [Deutsch](README.de.md)
+**English** | [Deutsch](README.de.md)
 
 **Your local AI voice assistant for Home Assistant — powered by an Android tablet and an Echo speaker.**
 
@@ -30,7 +30,7 @@ TAFA combines local speech recognition, Home Assistant data, optional AI models 
 
 ## New: native HA automations
 
-[Set up automation templates and family settings](docs/ha-automations.md). The dashboard edits names while Home Assistant owns conditions, weather and time windows. Vision categories are fallible visual estimates, not facial or identity recognition. Enable automatic image analysis only with informed consent from affected people.
+[Set up automation templates and family settings](docs/en/ha-automations.md). The dashboard edits names while Home Assistant owns conditions, weather and time windows. Vision categories are fallible visual estimates, not facial or identity recognition. Enable automatic image analysis only with informed consent from affected people.
 
 ## Architecture
 
@@ -56,7 +56,7 @@ After setup, a dedicated **Tablet Assist** sidebar panel is registered automatic
 
 ## Native Android app: audio, camera and motion
 
-**[HA Jarvis Echo Relay 0.5.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
+**[HA Jarvis Echo Relay 0.5.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/en/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
 
 The app is more than an audio player: it can expose the front or rear camera of an Android smartphone or tablet to Home Assistant. With explicit permission, the app supplies periodically refreshed still images; HA exposes a camera entity and an optional image-motion sensor. The local vision worker supports authorized camera questions and HA automations. Camera capture is independent of audio playback, must be explicitly started and does not automatically resume after device reboot. Images are not archived. These are refreshed stills, not a full-rate live video stream. [Android camera details](android/README.md#camera-and-local-vision).
 
@@ -67,16 +67,19 @@ git clone https://github.com/michaelbudisch/tablet-assist-for-alexa.git
 cd tablet-assist-for-alexa
 ```
 
-| Guide | English | Deutsch |
-|---|---|---|
-| CPU speech server / Proxmox | [Read](docs/en/proxmox.md) | [Lesen](docs/proxmox.md) |
-| Marketplace and configuration | [Read](docs/en/marketplace.md) | [Lesen](docs/marketplace.md) |
-| Android tablet / Bluetooth / legacy setup | [Read](docs/en/home-assistant.md) | [Lesen](docs/home-assistant.md) |
-| Optional GPU computer (Windows/Linux) | [Read](docs/en/worker.md) | [Lesen](docs/worker.md) |
-| Optional Nginx proxy, DuckDNS and Certbot | [Read](docs/en/nginx-proxy.md) | [Lesen](docs/nginx-proxy.md) |
-| Security / privacy | [Read](docs/en/security.md) | [Lesen](docs/security.md) |
-| Tests and release checklist | [Read](docs/en/release.md) | [Lesen](docs/release.md) |
-| Version history | [Changelog](CHANGELOG.md) | [Änderungen](CHANGELOG.de.md) |
+| Guide | Description |
+|---|---|
+| [CPU speech server / Proxmox](docs/en/proxmox.md) | Local CPU speech services |
+| [Marketplace and configuration](docs/en/marketplace.md) | HA integration and setup |
+| [Android tablet / Bluetooth](docs/en/home-assistant.md) | Manual legacy setup |
+| [Echo Relay dashboard](docs/en/echo-relay-dashboard.md) | Lovelace installation |
+| [HA automations](docs/en/ha-automations.md) | Family settings and reusable speech |
+| [Optional GPU computer](docs/en/worker.md) | Windows/Linux, STT, TTS, local AI |
+| [Optional Nginx proxy](docs/en/nginx-proxy.md) | DuckDNS and Certbot |
+| [Local data sources](docs/en/data-sources.md) | Voice commands and supported entities |
+| [Security / privacy](docs/en/security.md) | Network and privacy boundaries |
+| [Tests and release checklist](docs/en/release.md) | Validation status |
+| [Version history](CHANGELOG.md) | Changelog |
 
 Use installers for **new installations**; they do not migrate an existing Jarvis setup. Do not overwrite production configuration. Configure your own hosts, speaker entities and secrets locally. The Nginx installer also has a shared-proxy mode for a new unused hostname on an existing proxy.
 
