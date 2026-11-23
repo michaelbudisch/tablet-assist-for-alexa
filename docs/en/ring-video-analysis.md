@@ -12,7 +12,7 @@ Ring's `camera.haustur_letzte_aufnahme` and `camera.vorderseite_letzte_aufnahme`
 
 ## Deployment
 - Back up and update the Python integration files under `/config/custom_components/jarvis_tablet_audio/`. Do not mix versions from incompatible builds.
-- `ffmpeg` must be available in the Home Assistant Core runtime's PATH; an ffmpeg binary installed elsewhere is not sufficient.
+- The integration uses Home Assistant's managed ffmpeg executable.
 - Restart Home Assistant for the updated Python service to load.
 - **Only after deployment**, change the existing `script.ring_ki_bildanalyse_seriell` service action to `mode: ring_video` instead of `mode: scene`. All other queue logic stays unchanged.
 - Test `jarvis_tablet_audio.describe_camera` with `source: door` and `source: outside`, both with `mode: ring_video`. The response should include `frames_analyzed` and `limitation`.
@@ -20,7 +20,7 @@ Ring's `camera.haustur_letzte_aufnahme` and `camera.vorderseite_letzte_aufnahme`
 
 ## Boundaries
 - Cloud event notifications and expiring MP4 URLs can still cause delays or failed downloads.
-- Recording URLs are taken from the configured Ring camera entity, not caller input. Clips have bounded sizes and downloads use no redirects.
+- Recording URLs are taken from the configured Ring camera entity, not caller input. Clips have bounded sizes and redirects are followed only to vetted Ring/Amazon CDN hosts.
 - The MP4 is written only to a private temporary file for decoding and removed immediately; extracted images are not stored. Do not log signed download URLs.
 - Four sampled frames can still miss a person or parcel. The model's description is an uncertain visual estimate, not identity recognition.
 - Respect the privacy of everyone in the camera's field of view.
