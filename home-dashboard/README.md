@@ -34,6 +34,6 @@ Optional, responsive, configurable Lovelace dashboard inspired by the original H
 
 ## Validation and limitations
 
-Run `node tests.mjs` with a current Node.js version. Tests cover the normalized configuration, role validation, missing entities, unit conversion, grid sign, locale, escaped friendly names, native card configs and synthetic HTML rendering. A separate working HA instance has the files and dashboard configuration installed; screen rendering on a physical tablet and fresh-install testing remain outstanding.
+Run `node tests.mjs` with a current Node.js version. Tests cover the normalized configuration, role validation, missing entities, unit conversion, grid sign, locale, escaped friendly names, native card configs and synthetic HTML rendering. The files are installed as a separate dashboard in an existing HA instance; screen rendering on a physical tablet and fresh-install testing remain outstanding.
 
 This is a portable development preview, not a feature-complete release of the old kiosk. Advanced Tibber cost reconstruction, intelligent energy planning and device programme learning, specialised heating/L3 detection, tank calibration, and cross-page voice/infobox behavior still require generic modules. It uses existing HA sensors rather than replacing the user's automation logic. The native camera preview and speech are opt-in. Do not share real exported household bindings or backup archives in public issues.
