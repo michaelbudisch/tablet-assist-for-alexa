@@ -54,7 +54,9 @@ class RingFramesCamera(Camera):
     @property
     def extra_state_attributes(self):
         item = self.relay.get_ring_storyboard(self.source)
-        return {"frames_analyzed": item["frames"] if item else None,
+        return {"frames_extracted": item["frames"] if item else None,
+                "frames_analyzed": sum(x.get("success", False) for x in item.get("frame_results", [])) if item else None,
+                "frame_results": item.get("frame_results", []) if item else [],
                 "recorded_at": item["event_time"] if item else None,
                 "stored_for_seconds": 3600}
 
