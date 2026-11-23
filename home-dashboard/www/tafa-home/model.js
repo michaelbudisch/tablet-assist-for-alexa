@@ -24,7 +24,7 @@ function createModel(){
  function normalize(raw={}){
   raw=raw&&typeof raw==="object"?raw:{};
   const enabled=[...new Set(Array.isArray(raw.modules)?raw.modules.filter(x=>typeof x==="string"&&byId.has(x)):[])];
-  const out={type:"custom:tafa-home-dashboard",version:1,modules:enabled,bindings:{},language:["auto","en","de"].includes(raw.language)?raw.language:"auto",theme:["dark","light","ha"].includes(raw.theme)?raw.theme:"dark",density:["comfortable","compact"].includes(raw.density)?raw.density:"comfortable",accent:["teal","blue","violet"].includes(raw.accent)?raw.accent:"teal",assist:{},title:typeof raw.title==="string"?raw.title.trim().slice(0,60):""};
+  const out={type:"custom:tafa-home-dashboard",version:1,modules:enabled,bindings:{},language:["auto","en","de"].includes(raw.language)?raw.language:"auto",theme:["dark","light","ha"].includes(raw.theme)?raw.theme:"dark",density:["comfortable","compact"].includes(raw.density)?raw.density:"comfortable",accent:["teal","blue","violet"].includes(raw.accent)?raw.accent:"teal",assist:{},gridSign:raw.gridSign==="export"?"export":"import",title:typeof raw.title==="string"?raw.title.trim().slice(0,60):""};
   for(const r of roles){const b=raw.bindings&&typeof raw.bindings==="object"&&Object.hasOwn(raw.bindings,r.key)?raw.bindings[r.key]:[];out.bindings[r.key]=[...new Set((Array.isArray(b)?b:typeof b==="string"?[b]:[]).filter(x=>typeof x==="string"&&ENTITY.test(x)&&r.domains.includes(x.split(".")[0])))].slice(0,r.multiple?100:1);}
   for(const k of ["pipeline_id","wake_pipeline_id"])if(typeof raw.assist?.[k]==="string"&&/^[A-Za-z0-9_-]{1,100}$/.test(raw.assist[k]))out.assist[k]=raw.assist[k];
   return out;
@@ -39,6 +39,7 @@ function createModel(){
  function sum(states,ids,kind){const factors=units[kind];if(!factors)return null;const unique=[...new Set(ids)];if(!unique.length)return null;let result=0;for(const id of unique){const s=value(states,id),unit=s?.attributes?.unit_of_measurement;if(!s||!Object.hasOwn(factors,unit)||!Number.isFinite(Number(s.state)))return null;const n=Number(s.state)*factors[unit];if(n<0)return null;result+=n;}return Number.isFinite(result)?result:null;}
  function area(hass,id){const reg=hass?.entities?.[id],device=reg?.device_id?hass?.devices?.[reg.device_id]:null,aid=reg?.area_id||device?.area_id;return aid?String(hass?.areas?.[aid]?.name||""):"";}
  const escape=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- return {modules,roles,byId,byRole,normalize,eligible,candidates,value,sum,area,escape,label,name,language};
+ function flow(cfg,states){const b=cfg.bindings;const measured=(k)=>sum(states,b[k]||[],"power");const gridId=(b.grid_power||[])[0],gs=value(states,gridId),u=gs?.attributes?.unit_of_measurement;const raw=gs&&Object.hasOwn(units.power,u)&&Number.isFinite(Number(gs.state))?Number(gs.state)*units.power[u]:null;const grid=raw===null?null:raw*(cfg.gridSign==="export"?-1:1);return {pv:measured("solar_power"),grid,home:measured("home_power"),charge:cfg.modules.includes("battery")?measured("battery_charge"):null,discharge:cfg.modules.includes("battery")?measured("battery_discharge"):null,hasBattery:cfg.modules.includes("battery")};}
+ return {modules,roles,byId,byRole,normalize,eligible,candidates,value,sum,area,escape,label,name,language,flow};
 }
 export const model = createModel();
