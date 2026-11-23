@@ -66,12 +66,13 @@ class RelayRuntime:
         item = self.ring_storyboards.get(source)
         return item if item and monotonic() - item["saved_at"] < 3600 else None
 
-    def save_ring_storyboard(self, source, jpeg, count):
+    def save_ring_storyboard(self, source, jpeg, count, results=None):
         if source not in ("door", "outside") or not isinstance(jpeg, bytes) or len(jpeg) > MAX_IMAGE:
             raise ValueError("Invalid Ring storyboard")
         sensor = "sensor.haustur_letzte_aufzeichnung" if source == "door" else "sensor.vorderseite_letzte_aufzeichnung"
         state = self.hass.states.get(sensor)
         self.ring_storyboards[source] = {"image": jpeg, "frames": count,
+                                         "frame_results": results or [],
                                          "saved_at": monotonic(),
                                          "event_time": state.state if state else None}
         self.notify()
