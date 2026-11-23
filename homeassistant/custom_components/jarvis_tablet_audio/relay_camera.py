@@ -222,7 +222,7 @@ async def async_setup(hass, entry):
         current.notify()
 
     hass.services.async_register(DOMAIN, "describe_camera", describe_service,
-        schema=vol.Schema({vol.Optional("source", default="outside"): vol.In(["tablet", "outside", "door"]), vol.Optional("mode", default="scene"): vol.In(["scene", "objects", "object_in_hand"])}), supports_response=SupportsResponse.ONLY)
+        schema=vol.Schema({vol.Optional("source", default="outside"): vol.In(["tablet", "outside", "door"]), vol.Optional("mode", default="scene"): vol.In(["scene", "objects", "object_in_hand", "ring_video"])}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "camera_vision_status", health_service, schema=vol.Schema({}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "camera_pipeline_check", pipeline_service,
         schema=vol.Schema({vol.Required("text"): vol.All(str, vol.Length(min=1, max=500)),
