@@ -28,3 +28,6 @@ Die Ring-Entitäten `camera.haustur_letzte_aufnahme` und `camera.vorderseite_let
 
 ## Rückfall
 Falls ffmpeg fehlt oder die MP4 nicht geladen werden kann, wird die Anforderung als Fehler gemeldet; sie darf **nicht stillschweigend** als Vier-Frame-Erfolg gelten. Den Aufruf wieder auf `mode: scene` zurückstellen, um die bisherige Einzelbild-Erkennung zu nutzen. Die Echo-Durchsage und die 30-Minuten-Sperre werden von dieser Änderung nicht verändert.
+
+## Einzelbildanalyse statt KI-Collage
+Die vier Frames werden im Modus `ring_video` **jeweils getrennt** mit `mode: objects` an das lokale Vision-Modell gesendet. Die 2×2-Montage dient **nur als Debug-Vorschau**, nicht mehr als KI-Eingabe. Der Service liefert `frame_results` mit `frame`, `second`, `description`, `success`, außerdem `frames_analyzed` und `frames_extracted`. In TAFA erscheinen die vier Bildbeschreibungen unter **Kameras → KI-Frames aus Ring-Videos**; bei fehlgeschlagenem Einzelaufruf werden die anderen Frames weiter geprüft. Die Textbeschreibungen bleiben fehleranfällige KI-Schätzungen.
