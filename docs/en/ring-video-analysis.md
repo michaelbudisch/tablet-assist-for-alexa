@@ -6,7 +6,7 @@ Ring's `camera.haustur_letzte_aufnahme` and `camera.vorderseite_letzte_aufnahme`
 1. The existing HA Ring automation checks that the activity timestamp matches the latest recording timestamp.
 2. Both cameras already share the serial `script.ring_ki_bildanalyse_seriell` vision queue.
 3. For `ring_video`, Jarvis fetches the current signed Ring MP4 (max 20 MiB) from a vetted Ring download host.
-4. A local `ffmpeg` executable extracts approximately +3, +8, +13, and +18 seconds (fewer if the clip is short).
+4. A local `ffmpeg` executable extracts approximately four timestamps spaced across the actual clip duration (fewer if the clip is short).
 5. The worker receives a labeled 2×2 storyboard JPEG using its existing `scene` endpoint. This is **multi-frame still-image analysis**, not continuous video understanding.
 6. The result flows into `jarvis_infobox_update`, the existing package-detection text rule, and TAFA's recognition history.
 
