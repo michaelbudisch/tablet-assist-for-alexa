@@ -182,7 +182,7 @@ async def describe(relay, source, mode, context):
             raise ServiceValidationError("Empty vision reply")
         text = description.strip()
         if mode == "ring_video":
-            text = f"Ring-Video ({frame_count} Zeitpunkte ca. +3/+8/+13/+18 s): " + text
+            text = f"Ring-Video ({frame_count} über die Aufnahmelänge verteilte Zeitpunkte): " + text
         return {"description": text[:700], "camera_entity_id": entity_id, "captured_at": captured_at,
                 "model": str(result.get("model", ""))[:100], "metrics": result.get("metrics", {}),
                 "frames_analyzed": frame_count,
