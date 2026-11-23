@@ -159,6 +159,7 @@ async def describe(relay, source, mode, context):
         elif mode == "ring_video":
             from .relay_ring_video import ring_storyboard
             image, frame_count = await ring_storyboard(relay.hass, entity_id)
+            relay.save_ring_storyboard(source, image, frame_count)
             captured_at = None
         else:
             state = relay.hass.states.get(entity_id)
