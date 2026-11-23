@@ -1,4 +1,6 @@
-# Jarvis · Tablet Assist for Alexa
+# TAFA · Tablet Assistant for Alexa
+
+![TAFA – Architekturübersicht mit Android-Smartphone, Tablet, Home Assistant, KI-Rechner und Echo](docs/tafa-architecture.jpg)
 
 [English](README.md) · **Deutsch**
 
@@ -6,7 +8,7 @@
 
 ![Developer Preview](https://img.shields.io/badge/Status-Developer%20Preview-orange) ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Integration-03a9f4) ![Local AI](https://img.shields.io/badge/AI-Lokal-0f766e)
 
-Jarvis verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Modelle und natürliche Sprachausgabe. Ein Android-Tablet dient als Mikrofon und Oberfläche; der Echo behält seine gewohnten Bluetooth- und Alexa-Funktionen.
+TAFA verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Modelle und natürliche Sprachausgabe. Ein Android-Tablet dient als Mikrofon und Oberfläche; der Echo behält seine gewohnten Bluetooth- und Alexa-Funktionen.
 
 ## Funktionsübersicht
 
@@ -32,82 +34,15 @@ Jarvis verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Mode
 
 ## Architektur
 
-![TAFA – Architekturübersicht mit Android-Smartphone, Tablet, Home Assistant, KI-Rechner und Echo](docs/tafa-architecture.jpg)
+Home Assistant ist die zentrale Steuerung. Das Android-Gerät übernimmt Spracheingabe, Kamera und Bluetooth-Audioausgabe über die native Echo Relay-App.
 
-*Vereinfachte Systemübersicht. Die Bluetooth-Audioverbindung läuft tatsächlich vom Android-Gerät zum Echo; die CPU-basierte Sprachverarbeitung gehört zur Basisinstallation.*
+**Sprache:** Android-Mikrofon → Home Assistant Assist → Whisper (STT) → Gesprächsrouter → lokale HA-Intents oder LLM → Piper oder Qwen (TTS) → Echo Relay auf Android → Bluetooth → Amazon Echo.
 
-<details>
-<summary>Technisches Architekturdiagramm</summary>
+**Kamera & Bewegung:** Android-Front-/Rückkamera → Home Assistant (Kamera-Entität und Bewegungssensor) → optionaler Vision-Worker → Bildbeschreibung oder HA-Erkennungsereignis.
 
-```mermaid
-flowchart TB
-    subgraph DEV["01 · Android-Smartphone / Tablet"]
-        direction LR
-        MIC["Assist-Dashboard<br/>Mikrofon · Rufwort"]
-        CAM["Native Echo Relay-App<br/>Front- / Rückkamera"]
-    end
+**Automatisierungen:** HA-Ereignis → Bedingungen und Aktionen → optionale Sprachausgabe über Echo Relay.
 
-    subgraph CORE["02 · HOME ASSISTANT · ZENTRALE STEUERUNG"]
-        direction TB
-        STT["STT-Router"] --> CHAT["Gesprächsrouter<br/>Lokale HA-Intents"] --> TTS["Streaming-TTS + DSP"]
-        RX["Kameraempfänger<br/>Bildbewegungssensor"] --> VIEW["Kamera-Entität<br/>Dashboard-Vorschau"]
-        AUTO["HA-Automationen<br/>Bedingungen · Wetter · Begrüßung"] --> SAY["Universelle Sprechaktion"] --> TTS
-        NAMES["Namenshelfer für Familie"] --> AUTO
-    end
-
-    subgraph CPU["03 · CPU · BASISSYSTEM"]
-        direction LR
-        W["Faster Whisper<br/>Wyoming STT"]
-        P["Piper TTS"]
-    end
-
-    subgraph GPU["04 · GPU-WORKER · OPTIONAL"]
-        direction LR
-        GW["GPU Whisper"]
-        LLM["Ollama<br/>Lokales Sprachmodell"]
-        Q["Qwen Streaming-TTS"]
-        V["Ollama Vision<br/>Lokale Bildauswertung"]
-    end
-
-    subgraph OUTPUT["05 · AUDIOAUSGABE"]
-        direction LR
-        PLAYER["Nativer Echo Relay<br/>Android-Streamingplayer"] -->|Bluetooth| ECHO(["Amazon Echo<br/>Bluetooth-Lautsprecher"])
-        ANN["MP3-API + HTTPS-Proxy<br/>Optionale Alexa-Durchsagen"] -.->|Alexa notify| ECHO
-    end
-
-    MIC --> STT
-    CAM -->|JPEG-Einzelbilder| RX
-    STT <--> W
-    STT <-.-> GW
-    CHAT <-.-> LLM
-    TTS <--> P
-    TTS <-.-> Q
-    RX -.-> V
-    V -.->|Erkennungsereignis| AUTO
-    TTS --> PLAYER
-    CHAT -.-> ANN
-
-    classDef device fill:#1d4ed8,stroke:#1e40af,color:#ffffff,stroke-width:1.5px;
-    classDef home fill:#0f766e,stroke:#115e59,color:#ffffff,stroke-width:1.5px;
-    classDef baseline fill:#475569,stroke:#334155,color:#ffffff,stroke-width:1.5px;
-    classDef optional fill:#6d28d9,stroke:#5b21b6,color:#ffffff,stroke-width:1.5px;
-    classDef audio fill:#b45309,stroke:#92400e,color:#ffffff,stroke-width:1.5px;
-
-    class MIC,CAM device;
-    class STT,CHAT,TTS,RX,VIEW,AUTO,SAY,NAMES home;
-    class W,P baseline;
-    class GW,LLM,Q,V optional;
-    class PLAYER,ECHO,ANN audio;
-    style DEV fill:#eff6ff,stroke:#93c5fd,color:#1e3a8a,stroke-width:1.5px
-    style CORE fill:#f0fdfa,stroke:#5eead4,color:#134e4a,stroke-width:1.5px
-    style CPU fill:#f1f5f9,stroke:#94a3b8,color:#334155,stroke-width:1.5px
-    style GPU fill:#f5f3ff,stroke:#c4b5fd,color:#4c1d95,stroke-width:1.5px
-    style OUTPUT fill:#fffbeb,stroke:#fcd34d,color:#78350f,stroke-width:1.5px
-```
-
-</details>
-
-*Blau: Android-Geräte · Türkis: Home Assistant · Violett: optionale KI · Grau: CPU-Basis · Orange: Audioausgabe. Gestrichelte Pfeile kennzeichnen optionale Pfade.*
+Die CPU-Basis nutzt Whisper und Piper ohne separate Grafikkarte. Ein optionaler GPU-Worker erweitert sie um beschleunigtes STT, Qwen Streaming-TTS, lokale Ollama-Sprachmodelle und Vision. Alternativ sind Alexa-Durchsagen über eine MP3-API und einen HTTPS-Proxy möglich.
 
 ## Home Assistant Marketplace
 
