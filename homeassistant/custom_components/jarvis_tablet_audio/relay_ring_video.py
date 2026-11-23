@@ -193,14 +193,23 @@ def _contact_sheet(samples):
     return target.getvalue(), len(frames)
 
 
-async def ring_storyboard(hass, camera_entity):
-    """Return (JPEG storyboard, frame count), or raise a bounded error."""
+async def ring_frames(hass, camera_entity):
+    """Return at most four separate (JPEG, seconds) frames from the Ring MP4."""
     state = hass.states.get(camera_entity)
     url = state.attributes.get("video_url") if state is not None else None
     if not _ring_download_url(url):
         raise ServiceValidationError("No approved Ring MP4 URL on this camera")
     video = await _download(hass, url)
-    frames = await _decode(hass, video)
+    return await _decode(hass, video)
+
+
+async def ring_storyboard(hass, camera_entity):
+    """Return (JPEG storyboard, frame count); kept for compatibility."""
+    return await ring_contact_sheet(hass, await ring_frames(hass, camera_entity))
+
+
+async def ring_contact_sheet(hass, frames):
+    """Generate a debug-only 2x2 image; inference uses original frames separately."""
     try:
         return await hass.async_add_executor_job(_contact_sheet, frames)
     except (ValueError, OSError, Image.DecompressionBombError) as exc:
