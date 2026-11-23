@@ -16,7 +16,8 @@ Jarvis combines local speech recognition, Home Assistant data, optional AI model
 | Audio | CPU Piper, optional Qwen streaming, Echo Relay via Bluetooth |
 | Home control | Native HA intents, weather, energy, heating, Bring!, waste collection, reminders |
 | AI | Optional local Ollama LLM, model and context settings |
-| Vision | Local still-image description, live camera view, optional structured motion detection |
+| Native Android app | Echo Relay, Bluetooth streaming, front/rear camera, optional image-motion detection for HA |
+| Vision | Local still-image description, camera preview, optional structured motion detection |
 | HA automations | Reusable speech action with acknowledgement, weather advice, greeting, test timer |
 | Family | Three optional name helpers; no identity recognition |
 | Announcements | Optional Alexa MP3 announcements via temporary HTTPS links |
@@ -59,9 +60,11 @@ The Marketplace integration includes STT, TTS, conversation routing and the opti
 
 After setup, a dedicated **Tablet Assist** sidebar panel is registered automatically, with native Assist launch, service status, optional Alexa announcements and Bluetooth keepalive. No legacy helper or private dashboard is required. Configuration and pipeline selection remain in Home Assistant.
 
-## Optional Android audio relay
+## Native Android app: audio, camera and motion
 
 **[HA Jarvis Echo Relay 0.5.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
+
+The app is more than an audio player: it can expose the front or rear camera of an Android smartphone or tablet to Home Assistant. With explicit permission, the app supplies periodically refreshed still images; HA exposes a camera entity and an optional image-motion sensor. The local vision worker supports authorized camera questions and HA automations. Camera capture is independent of audio playback, must be explicitly started and does not automatically resume after device reboot. Images are not archived. These are refreshed stills, not a full-rate live video stream. [Android camera details](android/README.md#camera-and-local-vision).
 
 ## Installation guides
 
