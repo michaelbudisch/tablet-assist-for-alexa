@@ -6,7 +6,7 @@ Die Ring-Entitäten `camera.haustur_letzte_aufnahme` und `camera.vorderseite_let
 1. Home Assistant wartet, bis `Letzte Aktivität` und `Letzte Aufzeichnung` zum selben Ereignis passen.
 2. Die bereits vorhandene gemeinsame KI-Warteschlange ruft `jarvis_tablet_audio.describe_camera` auf.
 3. Mit `mode: ring_video` wird die signierte Ring-MP4 (maximal 20 MiB) heruntergeladen. Der erste Downloadhost und eventuelle Weiterleitungen auf erlaubte Ring-/Amazon-Speicherhosts werden geprüft.
-4. Ein lokal vorhandenes `ffmpeg` extrahiert ungefähr die Sekunden 3, 8, 13 und 18. Kürzere Clips ergeben entsprechend weniger Bilder.
+4. Ein lokal vorhandenes `ffmpeg` extrahiert ungefähr die Sekunden vier über die tatsächliche Cliplänge verteilten. Kürzere Clips ergeben entsprechend weniger Bilder.
 5. Vier beschriftete Standbilder werden als 2×2-Montage von Qwen3-VL im bestehenden `scene`-Modus bewertet. Das ist **keine echte kontinuierliche Videoanalyse**.
 6. Die Beschreibung geht wie bisher an `jarvis_infobox_update`; die bestehende Post-/Paket-Textregel und der TAFA-KI-Verlauf bleiben aktiv.
 
