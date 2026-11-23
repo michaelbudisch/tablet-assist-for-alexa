@@ -9,6 +9,7 @@ Uses Home Assistant\'s configured ffmpeg binary.
 import asyncio
 import io
 import os
+import re
 import tempfile
 from urllib.parse import urlsplit
 
@@ -112,73 +113,84 @@ def _write_private_clip(video):
 
 
 async def _decode(hass, video):
+    """Sample across the actual clip length, including short Ring clips."""
     binary = ffmpeg.get_ffmpeg_manager(hass).binary
     if not binary:
         raise ServiceValidationError("Home Assistant ffmpeg binary is unavailable")
     video_path = await asyncio.to_thread(_write_private_clip, video)
-    proc = None
     try:
-        # Sample about +3/+8/+13/+18 seconds, even for ordinary non-faststart MP4.
-        proc = await asyncio.create_subprocess_exec(
-            binary, "-hide_banner", "-loglevel", "error", "-nostdin",
-            "-ss", "3", "-i", video_path,
-            "-vf", "fps=1/5,scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
-            "-frames:v", str(MAX_FRAMES),
-            "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1",
+        info = await asyncio.create_subprocess_exec(
+            binary, "-hide_banner", "-i", video_path,
             stdin=asyncio.subprocess.DEVNULL,
-            stdout=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.PIPE,
         )
         try:
-            stdout, _stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+            _, details = await asyncio.wait_for(info.communicate(), timeout=8)
         except asyncio.TimeoutError as exc:
-            proc.kill()
-            await proc.communicate()
-            raise ServiceValidationError("Ring video decoding timed out") from exc
-        if proc.returncode != 0 or not stdout or len(stdout) > MAX_OUTPUT_BYTES:
-            raise ServiceValidationError("Ring video decoding failed")
-        return stdout
+            info.kill()
+            await info.communicate()
+            raise ServiceValidationError("Ring clip duration lookup timed out") from exc
+        match = re.search(rb"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", details[:32768])
+        if not match:
+            raise ServiceValidationError("Ring clip duration unavailable")
+        duration = int(match[1]) * 3600 + int(match[2]) * 60 + float(match[3])
+        if not 0.2 <= duration <= 300:
+            raise ServiceValidationError("Ring clip duration outside safe limits")
+        # Four locations distributed through the clip. For a 6s Ring event,
+        # approx. +0.6, +2.1, +3.6, +5.1s instead of only +3s.
+        positions = [round(duration * fraction, 3)
+                     for fraction in (0.1, 0.35, 0.6, 0.85)]
+        samples = []
+        total_size = 0
+        for position in positions:
+            proc = await asyncio.create_subprocess_exec(
+                binary, "-hide_banner", "-loglevel", "error", "-nostdin",
+                "-ss", str(position), "-i", video_path, "-frames:v", "1",
+                "-vf", "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
+                "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1",
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                frame, _ = await asyncio.wait_for(proc.communicate(), timeout=9)
+            except asyncio.TimeoutError as exc:
+                proc.kill()
+                await proc.communicate()
+                raise ServiceValidationError("Ring frame extraction timed out") from exc
+            total_size += len(frame)
+            if proc.returncode != 0 or len(frame) < 100 or total_size > MAX_OUTPUT_BYTES:
+                raise ServiceValidationError("Ring frame extraction failed")
+            samples.append((frame, position))
+        return samples
     finally:
         await asyncio.to_thread(os.unlink, video_path)
 
 
-def _contact_sheet(jpegs):
-    """Re-encode only clean, bounded images into a labeled 2x2 storyboard."""
+def _contact_sheet(samples):
+    """Re-encode only bounded images into a timestamped 2x2 storyboard."""
     frames = []
-    for chunk in jpegs[:MAX_FRAMES]:
+    for chunk, position in samples[:MAX_FRAMES]:
         with Image.open(io.BytesIO(chunk)) as source:
             if source.width * source.height > 640 * 480:
                 raise ValueError("Frame too large")
             frame = ImageOps.exif_transpose(source).convert("RGB")
             frame.thumbnail(FRAME_SIZE)
-            frames.append(frame.copy())
+            frames.append((frame.copy(), position))
     if not frames:
         raise ValueError("No decodable frames")
     canvas = Image.new("RGB", (1280, 760), (16, 24, 34))
     draw = ImageDraw.Draw(canvas)
-    for i, frame in enumerate(frames):
+    for i, (frame, position) in enumerate(frames):
         x, y = (i % 2) * 640, (i // 2) * 380
         canvas.paste(frame, (x, y + 20))
-        draw.text((x + 10, y + 4), f"Ring clip: approx. +{3 + 5*i}s", fill=(255, 255, 255))
+        draw.text((x + 10, y + 4), f"Ring video: +{position:.1f}s", fill=(255, 255, 255))
     target = io.BytesIO()
     canvas.save(target, "JPEG", quality=80, optimize=True)
     if target.tell() > 2 * 1024 * 1024:
         raise ValueError("Contact sheet too large")
     return target.getvalue(), len(frames)
-
-
-def _split_mjpeg(blob):
-    results, index = [], 0
-    while len(results) < MAX_FRAMES:
-        start = blob.find(b"\xff\xd8", index)
-        if start < 0:
-            break
-        end = blob.find(b"\xff\xd9", start + 2)
-        if end < 0:
-            break
-        results.append(blob[start:end + 2])
-        index = end + 2
-    return results
 
 
 async def ring_storyboard(hass, camera_entity):
@@ -190,6 +202,6 @@ async def ring_storyboard(hass, camera_entity):
     video = await _download(hass, url)
     frames = await _decode(hass, video)
     try:
-        return await hass.async_add_executor_job(_contact_sheet, _split_mjpeg(frames))
+        return await hass.async_add_executor_job(_contact_sheet, frames)
     except (ValueError, OSError, Image.DecompressionBombError) as exc:
         raise ServiceValidationError("Could not construct Ring video storyboard") from exc
