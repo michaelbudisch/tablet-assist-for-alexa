@@ -33,22 +33,72 @@ Jarvis verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Mode
 ## Architektur
 
 ```mermaid
-flowchart LR
-  A[Android tablet: native Assist] --> B[Home Assistant STT router]
-  B --> C[CPU: Wyoming Faster Whisper]
-  B -. optional .-> D[GPU: Wyoming STT]
-  B --> E[Conversation router]
-  E --> F[Local HA intents]
-  E -. optional .-> G[Local LLM]
-  E --> H[Streaming TTS with DSP]
-  H --> I[CPU: Piper]
-  H -. optional .-> J[GPU: Qwen TTS]
-  H --> K[Android audio]
-  K -->|Bluetooth| O[Echo speaker]
-  E --> M[MP3 announcement API]
-  M --> N[Temporary HTTPS MP3]
-  N -->|optional Alexa notify| O
+flowchart TB
+    subgraph DEV["01 · Android-Smartphone / Tablet"]
+        direction LR
+        MIC["Assist-Dashboard<br/>Mikrofon · Rufwort"]
+        CAM["Native Echo Relay-App<br/>Front- / Rückkamera"]
+    end
+
+    subgraph CORE["02 · HOME ASSISTANT · ZENTRALE STEUERUNG"]
+        direction TB
+        STT["STT-Router"] --> CHAT["Gesprächsrouter<br/>Lokale HA-Intents"] --> TTS["Streaming-TTS + DSP"]
+        RX["Kameraempfänger<br/>Bildbewegungssensor"] --> VIEW["Kamera-Entität<br/>Dashboard-Vorschau"]
+        AUTO["HA-Automationen<br/>Bedingungen · Wetter · Begrüßung"] --> SAY["Universelle Sprechaktion"] --> TTS
+        NAMES["Namenshelfer für Familie"] --> AUTO
+    end
+
+    subgraph CPU["03 · CPU · BASISSYSTEM"]
+        direction LR
+        W["Faster Whisper<br/>Wyoming STT"]
+        P["Piper TTS"]
+    end
+
+    subgraph GPU["04 · GPU-WORKER · OPTIONAL"]
+        direction LR
+        GW["GPU Whisper"]
+        LLM["Ollama<br/>Lokales Sprachmodell"]
+        Q["Qwen Streaming-TTS"]
+        V["Ollama Vision<br/>Lokale Bildauswertung"]
+    end
+
+    subgraph OUTPUT["05 · AUDIOAUSGABE"]
+        direction LR
+        PLAYER["Nativer Echo Relay<br/>Android-Streamingplayer"] -->|Bluetooth| ECHO(["Amazon Echo<br/>Bluetooth-Lautsprecher"])
+        ANN["MP3-API + HTTPS-Proxy<br/>Optionale Alexa-Durchsagen"] -.->|Alexa notify| ECHO
+    end
+
+    MIC --> STT
+    CAM -->|JPEG-Einzelbilder| RX
+    STT <--> W
+    STT <-.-> GW
+    CHAT <-.-> LLM
+    TTS <--> P
+    TTS <-.-> Q
+    RX -.-> V
+    V -.->|Erkennungsereignis| AUTO
+    TTS --> PLAYER
+    CHAT -.-> ANN
+
+    classDef device fill:#1d4ed8,stroke:#1e40af,color:#ffffff,stroke-width:1.5px;
+    classDef home fill:#0f766e,stroke:#115e59,color:#ffffff,stroke-width:1.5px;
+    classDef baseline fill:#475569,stroke:#334155,color:#ffffff,stroke-width:1.5px;
+    classDef optional fill:#6d28d9,stroke:#5b21b6,color:#ffffff,stroke-width:1.5px;
+    classDef audio fill:#b45309,stroke:#92400e,color:#ffffff,stroke-width:1.5px;
+
+    class MIC,CAM device;
+    class STT,CHAT,TTS,RX,VIEW,AUTO,SAY,NAMES home;
+    class W,P baseline;
+    class GW,LLM,Q,V optional;
+    class PLAYER,ECHO,ANN audio;
+    style DEV fill:#eff6ff,stroke:#93c5fd,color:#1e3a8a,stroke-width:1.5px
+    style CORE fill:#f0fdfa,stroke:#5eead4,color:#134e4a,stroke-width:1.5px
+    style CPU fill:#f1f5f9,stroke:#94a3b8,color:#334155,stroke-width:1.5px
+    style GPU fill:#f5f3ff,stroke:#c4b5fd,color:#4c1d95,stroke-width:1.5px
+    style OUTPUT fill:#fffbeb,stroke:#fcd34d,color:#78350f,stroke-width:1.5px
 ```
+
+*Blau: Android-Geräte · Türkis: Home Assistant · Violett: optionale KI · Grau: CPU-Basis · Orange: Audioausgabe. Gestrichelte Pfeile kennzeichnen optionale Pfade.*
 
 ## Home Assistant Marketplace
 
