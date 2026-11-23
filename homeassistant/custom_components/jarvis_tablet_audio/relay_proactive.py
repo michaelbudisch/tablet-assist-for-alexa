@@ -23,7 +23,8 @@ DEFAULTS = {"enabled": False, "test_mode": True, "cooldown": 60, "start": "06:00
     "classes": ["person", "dog"], "greeting": True, "greeting_class": "adult", "name": "",
     "offer_overview": True, "weather_entity": "", "script_entity": ""}
 PROACTIVE_OPTIONS = frozenset(("proactive_settings",))
-CLASSES = ("person", "adult", "child", "dog")
+CLASSES = ("person", "adult", "child", "man", "woman", "dog")
+DETECTION_KEYS = {"person_count", "dog_count", "age_groups", "uncertain"}
 
 
 def validate_settings(values):
@@ -38,7 +39,7 @@ def validate_settings(values):
         if not isinstance(values[key], str) or not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", values[key]):
             raise ServiceValidationError("Invalid time")
     classes = values["classes"]
-    if not isinstance(classes, list) or not classes or len(classes) > 4 or any(type(c) is not str or c not in CLASSES for c in classes) or len(set(classes)) != len(classes):
+    if not isinstance(classes, list) or not classes or len(classes) > len(CLASSES) or any(type(c) is not str or c not in CLASSES for c in classes) or len(set(classes)) != len(classes):
         raise ServiceValidationError("Select supported classes")
     if values["greeting_class"] not in ("person", "adult", "child"):
         raise ServiceValidationError("Invalid greeting class")
@@ -52,16 +53,22 @@ def validate_settings(values):
 
 
 def validate_detection(value):
-    if not isinstance(value, dict) or set(value) != {"person_count", "dog_count", "age_groups", "uncertain"}:
+    # "genders" is new in worker detection_api 1; tolerate a worker that does not send it yet.
+    if not isinstance(value, dict) or set(value) not in (DETECTION_KEYS, DETECTION_KEYS | {"genders"}):
         raise ServiceValidationError("Invalid detection")
     if any(type(value[k]) is not int or not 0 <= value[k] <= 10 for k in ("person_count", "dog_count")) or type(value["uncertain"]) is not bool:
         raise ServiceValidationError("Invalid detection")
     groups = value["age_groups"]
     if not isinstance(groups, list) or len(groups) > 3 or any(type(g) is not str or g not in ("adult", "child", "unknown") for g in groups) or len(set(groups)) != len(groups):
         raise ServiceValidationError("Invalid age groups")
-    if (value["person_count"] == 0 and groups) or (value["person_count"] > 0 and not groups):
+    genders = value.get("genders", [])
+    if not isinstance(genders, list) or len(genders) > 3 or any(type(g) is not str or g not in ("man", "woman", "unknown") for g in genders) or len(set(genders)) != len(genders):
+        raise ServiceValidationError("Invalid genders")
+    if (value["person_count"] == 0 and (groups or genders)) or (value["person_count"] > 0 and not groups):
         raise ServiceValidationError("Inconsistent detection")
-    labels = (["person"] + [g for g in groups if g != "unknown"] if value["person_count"] else []) + (["dog"] if value["dog_count"] else [])
+    if "genders" in value and value["person_count"] > 0 and not genders:
+        raise ServiceValidationError("Inconsistent detection")
+    labels = (["person"] + [g for g in groups if g != "unknown"] + [g for g in genders if g != "unknown"] if value["person_count"] else []) + (["dog"] if value["dog_count"] else [])
     return [] if value["uncertain"] else labels
 
 
