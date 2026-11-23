@@ -1,5 +1,7 @@
 # Jarvis GPU Worker 1.9.0
 
+> **Worker 1.9.0 schema update:** The local `/detect` response adds `genders` with coarse, fallible apparent presentation categories `man`, `woman`, `unknown`. This is not actual gender or identity recognition. Keep existing `.env` and model volumes; rebuild vision and update the HA backend together. [HA automations](../docs/ha-automations.md).
+
 The existing optional vision container now also supports opt-in structured motion detections for the Echo Relay Lovelace controller. [Proactive setup](../docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions). No additional container or model is needed.
 
 **English** | [Deutsch](README.md)

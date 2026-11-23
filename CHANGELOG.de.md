@@ -2,6 +2,12 @@
 
 # Changelog
 
+## Native HA-Automationen — optionale Karte 1.3.0
+
+- Erweitertes Vision-Schema mit grob geschätzten Erscheinungskategorien; unklare und ungültige Ergebnisse werden abgefangen.
+- Optionale Familienhelfer, Sprachauftrag mit Bestätigung und native Begrüßungsautomation.
+- Sprachausgabe und Begrüßung in bestehender Hauszentrale getestet; eigenständige Karte bleibt Vorschau.
+
 ## Echo Relay proaktiv — Backend 1.6.0 / Worker 1.9.0 / Karte 1.2.0
 
 - Optionale Bewegungsauswertung mit festem Personen-/Hund-Ergebnis und grober Einschätzung erwachsen/Kind/unklar; keine Identitäts- oder Geschlechtserkennung.

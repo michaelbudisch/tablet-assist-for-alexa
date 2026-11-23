@@ -1,20 +1,34 @@
-# Tablet Assist for Alexa — 0.3.1 (Entwicklungsvorschau)
+# Jarvis · Tablet Assist for Alexa
 
-[English](README.md) | **Deutsch**
+[English](README.md) · **Deutsch**
 
-**Echo Relay proaktiv im Testmodus:** optionale lokale Bildprüfung bei Bewegung, wiederholbare Begrüßung, HA-Regenhinweise und konfigurierbare Automationsereignisse. Backend 1.6.0 / GPU Worker 1.9.0, vorhandene APK 0.5.0. [Lovelace-Einrichtung](docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions).
+**Dein lokaler KI-Sprachassistent für Home Assistant – mit Android-Tablet und Echo-Lautsprecher.**
 
-**Echo Relay Lovelace-Einstellungen 1.1.0:** geordnete Bereiche, Theme-Farben, direkte Modellauswahl sowie Mikrofon-, Untertitel- und Verlaufseinstellungen für die eigenständige Karte. [Einrichtung und Dashboard-Vorlage](docs/echo-relay-dashboard.md).
+![Developer Preview](https://img.shields.io/badge/Status-Developer%20Preview-orange) ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Integration-03a9f4) ![Local AI](https://img.shields.io/badge/AI-Lokal-0f766e)
 
-Ein Android-Tablet übernimmt Mikrofon, Wakeword und native Home-Assistant-Assist-Pipeline. Die Antwort wird über den Bluetooth-Lautsprecher (z. B. Amazon Echo) ausgegeben. Separat können Echo-Geräte über eine kompatible Alexa-Integration MP3-Durchsagen empfangen. Lokale Sprachverarbeitung mit Whisper, Piper und optional Qwen-TTS/LLM; eine GPU ist nicht zwingend notwendig.
+Jarvis verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Modelle und natürliche Sprachausgabe. Ein Android-Tablet dient als Mikrofon und Oberfläche; der Echo behält seine gewohnten Bluetooth- und Alexa-Funktionen.
 
-**Status:** v0.3.1, öffentliche Entwicklungsvorschau. Native Tablet-Ausgabe, Live-Klangprofile, Gesprächsrouter, Timer/Erinnerung, automatische Hinweise und Original-GPU-Worker 1.5.0. Keine vollständig auf einer frischen Installation verifizierte Version. Die native Android-/Echo-Kompatibilität ist geräteabhängig. Start mit einer Testinstanz empfohlen.
+## Funktionsübersicht
 
-Nach erfolgreicher Einrichtung erscheint eine eigene **Tablet Assist**-Sprachzentrale in der Sidebar. Keine private Hauszentrale oder zusätzliche Lovelace-Konfiguration nötig. Die mitgelieferte Sprachpipeline ist weiterhin deutsch.
+| Bereich | Funktionen |
+|---|---|
+| Sprache | Whisper STT, Rufwort, Gesprächsführung, Anschlussfragen |
+| Audio | Piper als CPU-Basis, optional Qwen-Streaming, Echo Relay über Bluetooth |
+| Haussteuerung | Lokale HA-Intents, Wetter, Energie, Heizung, Bring!, Abfall, Erinnerungen |
+| KI | Optionales lokales Ollama-LLM, Modellwahl und Kontext-Einstellungen |
+| Native Android-App | Echo Relay, Bluetooth-Streaming, Front-/Rückkamera, optionale Bildbewegungserkennung für HA |
+| Vision | Lokale Einzelbildbeschreibung, Kameraansicht, optionale strukturierte Bewegungsauswertung |
+| HA-Automationen | Wiederverwendbare Sprachausgabe mit Bestätigung, Wetterhinweise, Begrüßung, Testtimer |
+| Familie | Drei optionale Namensfelder in HA-Helfern; keine Identitätserkennung |
+| Durchsagen | Optionale Alexa-MP3-Durchsagen über temporäre HTTPS-Links |
 
-**Neu in 0.3.1:** Lokale Absichtserkennung, frei konfigurierbare Wetter-, Bring!-, Abfall-, Heizungs- und Energiedaten sowie ein persistenter Erinnerungsdialog. [Datenquellen und Sprachbefehle](docs/data-sources.md).
+**In der bestehenden privaten Hauszentrale getestet:** native Bluetooth-Sprachausgabe, HA-Sprechaktion, personalisierte Begrüßung und Testtimer. Die universelle Infobox ist dort eingerichtet; Ring-Ablauf und öffentliche neue Karte benötigen noch einen vollständigen End-to-End-Test.
 
-**Neu:** Kontextbezogene Folgefragen und freiwillige, administrativ freigegebene Lernzuordnungen. [Anleitung](docs/data-sources.md).
+> **Entwicklungsvorschau:** Basisintegration 0.3.1, Backend 1.6.0, GPU Worker 1.9.0 (aktualisiertes Schema), APK 0.5.0. Optionale Karte 1.3.0 und Automationsvorlagen sind noch kein vollständig geprüfter Neuinstallations-Release. Keine GPU für die CPU-Basis erforderlich.
+
+## Neu: Native HA-Automationen
+
+[Einrichtung der Automationsvorlagen und Familienfelder](docs/ha-automations.md). Das Dashboard bearbeitet die Namen, Home Assistant verwaltet Bedingungen, Wetter und Zeitfenster. Vision-Kategorien sind unsichere visuelle Schätzungen, keine Gesichtserkennung oder Identitätsfeststellung. Automatische Bildauswertung nur mit Zustimmung aller Betroffenen aktivieren.
 
 ## Architektur
 
@@ -44,9 +58,11 @@ flowchart LR
 
 Die native Assist-Integration bündelt STT, TTS und Gesprächsrouter ohne manuelle YAML-Bearbeitung. Der optionale Nginx-Proxy stellt ausschließlich kurzlebige MP3-Dateien bereit. Timer und Benachrichtigungsmanager des bisherigen Dashboards bleiben als manuelle Vorlagen erhalten; sie werden nicht durch den Marketplace installiert. Entwickler-Vorschau: keine vollständige Neuinstallation bestätigt.
 
-## Optionale Android-Audiobrücke
+## Native Android-App: Audio, Kamera und Bewegung
 
 **[HA Jarvis Echo Relay 0.5.0](android/README.de.md)** bietet einen deutschen/englischen Android-Player mit HA-Suche, einmaligem Token-QR-Scan, bestätigter Bluetooth-Ausgabe und optionalem nativem Silent-Keepalive. [Fertige Vorschau-APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). Die eigenständige [Echo Relay Assist Lovelace-Karte](docs/echo-relay-dashboard.md) verbindet die App ohne Hauszentrale mit einem beliebigen HA-Dashboard. Die Befehls-/Statushelfer werden separat eingerichtet; die Marketplace-Integration tut dies nicht automatisch.
+
+Die App ist nicht nur ein Audioplayer: Sie kann ein Android-Smartphone oder Tablet als zusätzliche Kamera für Home Assistant bereitstellen. Die vorhandene Front- oder Rückkamera liefert nach ausdrücklicher Freigabe regelmäßig aktualisierte Einzelbilder. HA erhält eine Kamera-Entität und optional einen Bildbewegungssensor. Der lokale Vision-Worker kann für freigegebene Sichtfragen und HA-Automationen eingesetzt werden. Die Kamera-Funktion ist unabhängig von der Audiowiedergabe und muss bewusst gestartet werden; sie startet nicht automatisch nach einem Geräte-Neustart. Die Bilder werden nicht archiviert. Es handelt sich um Einzelbilder, nicht um einen vollwertigen Video-Livestream. [Details zur Android-App](android/README.de.md#kamera-und-lokales-visionmodell).
 
 ## Installation
 

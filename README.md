@@ -1,20 +1,34 @@
-# Tablet Assist for Alexa — 0.3.1 (Developer Preview)
+# Jarvis · Tablet Assist for Alexa
 
-**English** | [Deutsch](README.de.md)
+**English** · [Deutsch](README.de.md)
 
-**Echo Relay proactive test mode:** optional motion-triggered local vision, repeated greetings, HA rain advice and configurable automation events. Requires backend 1.6.0 / GPU Worker 1.9.0; existing APK 0.5.0 works. [Lovelace setup](docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen--motion-triggered-actions).
+**Your local AI voice assistant for Home Assistant — powered by an Android tablet and an Echo speaker.**
 
-**Echo Relay Lovelace settings 1.1.0:** grouped settings, theme colours, inline model choices and portable microphone/caption/history preferences. [Setup and dashboard example](docs/echo-relay-dashboard.md).
+![Developer Preview](https://img.shields.io/badge/Status-Developer%20Preview-orange) ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Integration-03a9f4) ![Local AI](https://img.shields.io/badge/AI-Local-0f766e)
 
-Local AI voice assistant for Home Assistant using an Android tablet as a microphone and an Amazon Echo as a Bluetooth speaker. No custom Echo firmware required. The Echo retains its normal Alexa functions; its internal assistant is not replaced.
+Jarvis combines local speech recognition, Home Assistant data, optional AI models and natural speech. An Android tablet acts as the microphone and interface; the Echo retains its ordinary Bluetooth and Alexa functions.
 
-The tablet runs native Assist, including supported Android wake word functionality. Whisper, Piper and optional Qwen TTS/LLM provide local speech processing. A GPU is not required for the CPU setup. Optional multiroom announcements use a compatible Alexa notify integration and temporary HTTPS MP3 links.
+## Features at a glance
 
-**Status:** Developer preview. The shipped speech pipeline, default models and custom voice-command grammar are German. The Marketplace interface, help and active installation documentation are available in German and English. End-to-end installation and device compatibility require testing. Start with a test instance.
+| Area | Capabilities |
+|---|---|
+| Voice | Whisper STT, wake word, conversation, follow-up questions |
+| Audio | CPU Piper, optional Qwen streaming, Echo Relay via Bluetooth |
+| Home control | Native HA intents, weather, energy, heating, Bring!, waste collection, reminders |
+| AI | Optional local Ollama LLM, model and context settings |
+| Native Android app | Echo Relay, Bluetooth streaming, front/rear camera, optional image-motion detection for HA |
+| Vision | Local still-image description, camera preview, optional structured motion detection |
+| HA automations | Reusable speech action with acknowledgement, weather advice, greeting, test timer |
+| Family | Three optional name helpers; no identity recognition |
+| Announcements | Optional Alexa MP3 announcements via temporary HTTPS links |
 
-**New in 0.3.1:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](docs/en/data-sources.md).
+**Tested in the existing private home dashboard:** native Bluetooth playback, HA speech action, personalized greeting and automatic test-timer cancellation. The generic infobox is installed there; the Ring workflow and standalone updated card still need end-to-end testing.
 
-**New:** Contextual follow-ups and optional administrator-approved aliases. [Guide](docs/en/data-sources.md).
+> **Developer preview:** base integration 0.3.1, backend 1.6.0, GPU Worker 1.9.0 (updated schema), APK 0.5.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
+
+## New: native HA automations
+
+[Set up automation templates and family settings](docs/ha-automations.md). The dashboard edits names while Home Assistant owns conditions, weather and time windows. Vision categories are fallible visual estimates, not facial or identity recognition. Enable automatic image analysis only with informed consent from affected people.
 
 ## Architecture
 
@@ -46,9 +60,11 @@ The Marketplace integration includes STT, TTS, conversation routing and the opti
 
 After setup, a dedicated **Tablet Assist** sidebar panel is registered automatically, with native Assist launch, service status, optional Alexa announcements and Bluetooth keepalive. No legacy helper or private dashboard is required. Configuration and pipeline selection remain in Home Assistant.
 
-## Optional Android audio relay
+## Native Android app: audio, camera and motion
 
 **[HA Jarvis Echo Relay 0.5.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
+
+The app is more than an audio player: it can expose the front or rear camera of an Android smartphone or tablet to Home Assistant. With explicit permission, the app supplies periodically refreshed still images; HA exposes a camera entity and an optional image-motion sensor. The local vision worker supports authorized camera questions and HA automations. Camera capture is independent of audio playback, must be explicitly started and does not automatically resume after device reboot. Images are not archived. These are refreshed stills, not a full-rate live video stream. [Android camera details](android/README.md#camera-and-local-vision).
 
 ## Installation guides
 

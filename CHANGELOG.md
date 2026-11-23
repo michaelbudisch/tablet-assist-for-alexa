@@ -2,6 +2,12 @@
 
 # Changelog
 
+## Native HA automation preview — optional card 1.3.0
+
+- Structured detection schema supports coarse apparent presentation labels, with unknown and invalid-result guards.
+- Optional portable family helpers, speech request/ack bridge, and native greeting automation package.
+- Private kiosk speech and greeting tested on an existing installation; standalone card deployment remains a preview.
+
 ## Echo Relay proactive actions — backend 1.6.0 / worker 1.9.0 / card 1.2.0
 
 - Opt-in motion-triggered structured people/dog detections, coarse adult/child/unknown appearance and no identity or gender inference.

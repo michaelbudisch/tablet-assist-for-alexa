@@ -2,6 +2,10 @@
 
 # 1.9.0
 
+## 1.9.0 — Schema-Erweiterung
+
+- Übernommenes Worker-Schema mit geschätzten Erscheinungskategorien, ohne Identitäts- oder Gesichtserkennung. HA akzeptiert weiterhin alte Ergebnisse.
+
 - Authentifizierter `/detect`-Endpunkt mit festem validiertem Personen-/Hund-Schema und grober Einschätzung erwachsen/Kind/unklar. Keine Namen, Identitäten, Geschlechter, freien Prompts oder durch die KI gewählten Aktionen.
 - Nutzt den bestehenden Vision-Container, Ollama sowie gewähltes Modell, Kontext und Warmhaltezeit. Vierzehn isolierte Worker-Tests prüfen Erkennung und bisherige Beschreibungen. Freigabe, Sperrzeit und Wiedergabekoordination übernimmt HA-Backend 1.6.0.
 

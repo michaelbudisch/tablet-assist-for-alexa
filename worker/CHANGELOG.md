@@ -2,6 +2,10 @@
 
 # 1.9.0
 
+## 1.9.0 — schema update
+
+- Updated uploaded worker schema includes optional appearance-based categories; no identity or facial recognition. HA validator accepts legacy results as well.
+
 - Authenticated `/detect` endpoint with a fixed validated people/dog schema and coarse adult/child/unknown appearance. No names, identity, gender, arbitrary prompts or model-chosen actions.
 - Reuses the existing vision container, Ollama and selected model/context/residency. Fourteen isolated worker tests cover the new response validation and existing descriptions. HA opt-in, cooldown and playback coordination live in backend 1.6.0.
 
