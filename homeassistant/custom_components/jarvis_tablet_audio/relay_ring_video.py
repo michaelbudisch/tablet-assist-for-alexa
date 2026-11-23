@@ -2,12 +2,15 @@
 
 Ring's camera "Last recording" exposes a signed, short-lived video_url.
 Only that Ring-owned URL is accepted, never a caller-supplied URL.
-The clip is held in memory briefly and no frames are written to disk.
+The signed clip is held briefly in a private temporary file, then deleted.
+No extracted frames are stored.
 Requires the ffmpeg executable on the Home Assistant host.
 """
 import asyncio
 import io
+import os
 import shutil
+import tempfile
 from urllib.parse import urlsplit
 
 import aiohttp
@@ -62,31 +65,47 @@ async def _download(hass, url):
         raise ServiceValidationError("Ring recording download failed") from exc
 
 
+def _write_private_clip(video):
+    # MP4 atoms can be at the end of a file, which ffmpeg cannot seek on stdin.
+    # NamedTemporaryFile uses mode 0600; the clip is unlinked immediately after use.
+    with tempfile.NamedTemporaryFile(prefix="ring-vision-", suffix=".mp4", delete=False) as tmp:
+        try:
+            tmp.write(video)
+            return tmp.name
+        except BaseException:
+            os.unlink(tmp.name)
+            raise
+
+
 async def _decode(video):
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise ServiceValidationError("ffmpeg is not installed on the Home Assistant host")
-    # Start near 3s, then sample roughly every 5s: 3, 8, 13, 18 seconds.
-    # The entire MP4 comes from a size-bounded, Ring-owned signed URL.
-    proc = await asyncio.create_subprocess_exec(
-        ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
-        "-ss", "3", "-i", "pipe:0",
-        "-vf", "fps=1/5,scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
-        "-frames:v", str(MAX_FRAMES),
-        "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1",
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    video_path = await asyncio.to_thread(_write_private_clip, video)
+    proc = None
     try:
-        stdout, _stderr = await asyncio.wait_for(proc.communicate(video), timeout=30)
-    except asyncio.TimeoutError as exc:
-        proc.kill()
-        await proc.communicate()
-        raise ServiceValidationError("Ring video decoding timed out") from exc
-    if proc.returncode != 0 or not stdout or len(stdout) > MAX_OUTPUT_BYTES:
-        raise ServiceValidationError("Ring video decoding failed")
-    return stdout
+        # Sample about +3/+8/+13/+18 seconds, even for ordinary non-faststart MP4.
+        proc = await asyncio.create_subprocess_exec(
+            ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
+            "-ss", "3", "-i", video_path,
+            "-vf", "fps=1/5,scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
+            "-frames:v", str(MAX_FRAMES),
+            "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1",
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, _stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+        except asyncio.TimeoutError as exc:
+            proc.kill()
+            await proc.communicate()
+            raise ServiceValidationError("Ring video decoding timed out") from exc
+        if proc.returncode != 0 or not stdout or len(stdout) > MAX_OUTPUT_BYTES:
+            raise ServiceValidationError("Ring video decoding failed")
+        return stdout
+    finally:
+        await asyncio.to_thread(os.unlink, video_path)
 
 
 def _contact_sheet(jpegs):
