@@ -1,0 +1,41 @@
+name: GPU Worker checks
+
+on:
+  push:
+    paths: ['worker/**', '.github/workflows/worker-ci.yml']
+  pull_request:
+    paths: ['worker/**', '.github/workflows/worker-ci.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install lightweight test dependencies
+        run: python -m pip install -r worker/vision/requirements.txt
+      - name: Python syntax
+        run: python -m compileall -q worker/vision worker/qwen-stream worker/ops worker/check_release.py
+      - name: Vision API and queue tests
+        working-directory: worker/vision
+        run: python -m unittest -v test_server test_priority_gate
+      - name: TTS text tests
+        working-directory: worker/qwen-stream
+        run: python -m unittest -v test_text_processing
+      - name: Diagnostics tests
+        working-directory: worker/ops
+        run: python -m unittest -v test_server
+      - name: Release validation and package test
+        working-directory: worker
+        run: python -m unittest -v test_release
+      - name: Docker Compose configuration validation
+        env:
+          LAN_IP: 127.0.0.1
+          JARVIS_TTS_TOKEN: test-only-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        run: docker compose -f worker/compose.yaml --profile vision --profile stream --profile ops config --quiet
