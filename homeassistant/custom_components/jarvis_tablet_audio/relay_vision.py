@@ -148,11 +148,180 @@ async def describe(relay, source, mode, context):
         raise ServiceValidationError("Vision is already busy")
     async with relay.vision_lock:
         entity_id = await resolve_camera(relay, source, context)
+        if mode == "ring_video" and source == "tablet":
+            raise ServiceValidationError("Video analysis requires a configured Ring recording camera")
+        frame_count = 1
         if source == "tablet":
             if not relay.frames.fresh:
                 raise ServiceValidationError("Tablet camera has no fresh image")
             image = relay.frames.image
             captured_at = relay.frames.captured_at
+        elif mode == "ring_video":
+            # Independent high-resolution frames; the contact sheet is for UI only.
+            from .relay_ring_video import ring_frames, ring_contact_sheet, ring_person_focus
+            samples = await ring_frames(relay.hass, entity_id)
+            montage, extracted = await ring_contact_sheet(relay.hass, samples)
+            relay.save_ring_storyboard(source, montage, extracted)
+            reports = []
+            successful = []
+            last_model = ""
+            model_options = {
+                "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
+                "keep_alive": relay.entry.options.get("model_keep_alive", 0),
+                "num_ctx": relay.entry.options.get("model_num_ctx", 4096),
+            }
+            for index, (frame, second) in enumerate(samples, 1):
+                if len(frame) > 2 * 1024 * 1024:
+                    raise ServiceValidationError("Ring frame too large")
+                encoded = base64.b64encode(frame).decode("ascii")
+                confirmed, possible, counted, checked = False, False, 0, False
+                detected_with = ""
+                description = ""
+                # The worker's 'objects' prompt ignored people. Use its dedicated
+                # structured people detector, not the object listing, and keep a
+                # non-identifying scene description for the dashboard.
+                try:
+                    result = await request(relay, "/detect", {"image": encoded, **model_options})
+                    detection = result.get("detection", {})
+                    if isinstance(detection, dict):
+                        counted = detection.get("person_count", 0)
+                        if type(counted) is not int or not 0 <= counted <= 10:
+                            counted = 0
+                        uncertain = detection.get("uncertain") is True
+                        confirmed = counted > 0 and not uncertain
+                        possible = counted > 0 and uncertain
+                        detected_with = "whole_frame" if counted > 0 else ""
+                except ServiceValidationError:
+                    pass
+                # Search the distant/right driveway at native resolution if the
+                # full-frame detector missed people. Do not turn a vague visual
+                # possibility into a confirmed detection.
+                if source == "outside" and not confirmed:
+                    try:
+                        focus = await ring_person_focus(relay.hass, frame)
+                        checked = True
+                        roi = await request(relay, "/detect", {
+                            "image": base64.b64encode(focus).decode("ascii"),
+                            **model_options,
+                        })
+                        crop_result = roi.get("detection", {})
+                        if isinstance(crop_result, dict):
+                            crop_count = crop_result.get("person_count", 0)
+                            if type(crop_count) is int and 0 < crop_count <= 10:
+                                if crop_result.get("uncertain") is True:
+                                    possible = True
+                                else:
+                                    confirmed, counted = True, max(counted, crop_count)
+                                    detected_with = "right_side"
+                    except (ServiceValidationError, ValueError):
+                        pass
+                success = False
+                try:
+                    result = await request(relay, "/describe", {
+                        "image": encoded, "mode": "scene", **model_options,
+                    })
+                    answer = result.get("description")
+                    if isinstance(answer, str) and answer.strip():
+                        description = answer.strip()[:350]
+                        last_model = str(result.get("model", ""))[:100]
+                        success = True
+                except ServiceValidationError:
+                    pass
+                if not description:
+                    description = "Szenenbeschreibung nicht verfügbar"
+                # The dedicated detector can return an uncertain count even
+                # when the separate scene description explicitly sees someone.
+                # Keep the evidence source visible; never count negated phrases.
+                described_person = False
+                described_uncertain = False
+                word = r"\b(?:person(?:en)?|mann|frau|mensch(?:en)?|passant(?:in|en)?|zusteller(?:in)?|postbot(?:e|in))\b"
+                for sentence in re.split(r"[.!?]+", description.casefold()):
+                    if not re.search(word, sentence):
+                        continue
+                    if (re.search(r"\b(?:kein(?:e|en|er|es)?|niemand|ohne)\b.{0,55}" + word, sentence)
+                            or re.search(word + r".{0,45}\b(?:nicht|unsichtbar|unerkennbar)\b", sentence)):
+                        continue
+                    if re.search(r"\b(?:vielleicht|möglicherweise|eventuell|könnte|koennte|ähnlich|vermutlich)\b", sentence):
+                        described_uncertain = True
+                    else:
+                        described_person = True
+                if described_person and not confirmed:
+                    confirmed = True
+                    detected_with = "scene_description"
+                elif described_uncertain and not confirmed:
+                    possible = True
+                if source == "outside" and not confirmed:
+                    # A focused scene description can spot a small distant
+                    # person that the structured count misses in this camera.
+                    try:
+                        focus_image = await ring_person_focus(relay.hass, frame)
+                        focus_result = await request(relay, "/describe", {
+                            "image": base64.b64encode(focus_image).decode("ascii"),
+                            "mode": "scene", **model_options,
+                        })
+                        focus_text = focus_result.get("description", "")
+                        if isinstance(focus_text, str):
+                            for sentence in re.split(r"[.!?]+", focus_text.casefold()):
+                                if not re.search(word, sentence):
+                                    continue
+                                if (re.search(r"\b(?:kein(?:e|en|er|es)?|niemand|ohne)\b.{0,55}" + word, sentence)
+                                        or re.search(word + r".{0,45}\b(?:nicht|unsichtbar|unerkennbar)\b", sentence)):
+                                    continue
+                                if re.search(r"\b(?:vielleicht|möglicherweise|eventuell|könnte|koennte|ähnlich|vermutlich)\b", sentence):
+                                    possible = True
+                                else:
+                                    confirmed = True
+                                    detected_with = "focus_description"
+                                    break
+                            if confirmed:
+                                description = (description[:200] + " | Rechts vergrößert: " + focus_text[:220])[:350]
+                    except (ServiceValidationError, ValueError):
+                        pass
+                status = ("Person laut KI-Szenenbeschreibung sichtbar"
+                          if confirmed and detected_with == "scene_description"
+                          else "Person im rechten Bildbereich beschrieben" if confirmed and detected_with == "focus_description"
+                          else "Person erkannt" if confirmed
+                          else "Person möglicherweise sichtbar" if possible
+                          else "Keine Person eindeutig erkannt")
+                reports.append({
+                    "frame": index, "second": round(second, 1),
+                    "description": description,
+                    "person_detected": confirmed,
+                    "person_possible": possible and not confirmed,
+                    "person_count": counted if detected_with != "scene_description" and confirmed else None,
+                    "person_status": status,
+                    "detection_source": detected_with or ("uncertain" if possible else "none"),
+                    "focus_checked": checked,
+                    "success": success or confirmed or possible,
+                })
+                if success or confirmed or possible:
+                    successful.append((index, second, description))
+            relay.save_ring_storyboard(source, montage, extracted, reports)
+            if not successful:
+                raise ServiceValidationError("No Ring frame inference succeeded")
+            confirmed_frames = [str(r["frame"]) for r in reports if r["person_detected"]]
+            possible_frames = [str(r["frame"]) for r in reports if r["person_possible"]]
+            if confirmed_frames:
+                summary = "Person erkannt in Bild " + ", ".join(confirmed_frames) + ". "
+            elif possible_frames:
+                summary = "Mögliche Person in Bild " + ", ".join(possible_frames) + " (unsicher). "
+            else:
+                summary = "Keine Person eindeutig erkannt. "
+            details = " ".join(
+                f"Bild {r['frame']} (+{r['second']:.1f}s): {r['person_status']}. {r['description'][:125].rstrip('.')}."
+                for r in reports
+            )
+            combined = f"Ring-Video ({len(successful)}/{extracted} Einzelprüfungen). " + summary + details
+            return {
+                "description": combined[:950], "camera_entity_id": entity_id,
+                "captured_at": None, "model": last_model,
+                "frame_results": reports, "frames_analyzed": len(successful),
+                "frames_extracted": extracted,
+                "person_detected": bool(confirmed_frames),
+                "person_possible": bool(possible_frames),
+                "person_frames": [int(x) for x in confirmed_frames],
+                "limitation": "four independent scene descriptions and structured person checks; estimates may be inaccurate",
+            }
         else:
             state = relay.hass.states.get(entity_id)
             if state is None or state.state in ("unknown", "unavailable"):
@@ -166,13 +335,17 @@ async def describe(relay, source, mode, context):
             captured_at = None
         if len(image) > 2 * 1024 * 1024:
             raise ServiceValidationError("Image too large")
-        result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": mode,
+        result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": "scene" if mode == "ring_video" else mode,
             "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
             "keep_alive": relay.entry.options.get("model_keep_alive", 0),
             "num_ctx": relay.entry.options.get("model_num_ctx", 4096)})
         description = result.get("description")
         if not isinstance(description, str) or not description.strip():
             raise ServiceValidationError("Empty vision reply")
-        return {"description": description.strip()[:700], "camera_entity_id": entity_id, "captured_at": captured_at,
+        text = description.strip()
+        if mode == "ring_video":
+            text = f"Ring-Video ({frame_count} über die Aufnahmelänge verteilte Zeitpunkte): " + text
+        return {"description": text[:700], "camera_entity_id": entity_id, "captured_at": captured_at,
                 "model": str(result.get("model", ""))[:100], "metrics": result.get("metrics", {}),
-                "limitation": "single image; may be inaccurate"}
+                "frames_analyzed": frame_count,
+                "limitation": "multi-frame contact sheet; may be inaccurate" if mode == "ring_video" else "single image; may be inaccurate"}
