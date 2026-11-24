@@ -1,27 +1,25 @@
 # Jarvis GPU Worker 2.1.0
 
- 
-## 2.1.0 – Ring-Videotest mit mehreren Frames (optional)
+[English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-**Kein Eingriff in die produktive Ring-Erkennung.** Der separate, nur an 127.0.0.1 gebundene Container `vision-ab` stellt den authentifizierten Endpunkt `POST /benchmark/sequence` über Port 10505 bereit vergleicht vier **einzeln** beschriebene Bilder mit 4, 8 oder 12 Bildern, die **gemeinsam** an Qwen3-VL übergeben werden. Die Bilder kommen als Base64-JPEG/PNG mit aufsteigenden Zeitstempeln. Der Worker liefert Modelltexte sowie Vorbereitungs-, Inferenz- und Ollama-Zeiten zurück, speichert keine Aufnahmen und lädt keine Ring-Videos selbst. Das ist zeitlich geordnete *Mehrbildanalyse*, noch keine direkte Verarbeitung einer MP4.
+## 2.1.0 – Automatischer Ring-A/B-Test (ohne zusätzlichen Container)
 
-Nach der Aktualisierung auf dem GPU-Rechner bestehende `.env` und Modell-Volumes beibehalten; ausschließlich Vision neu bauen:
+**Der bestehende GPU-Vision-Container bleibt erhalten.** Der neue authentifizierte Endpunkt `POST /benchmark/sequence` läuft auf dem bisherigen privaten **Port 10503**. Der produktive Ring-Ablauf mit vier Einzelbildern und bisherigen Meldungen bleibt bestehen. Der zusätzliche Test nutzt dieselbe von Home Assistant bereits automatisch heruntergeladene Ring-MP4, nicht eine manuell exportierte Videodatei.
+
+Nach dem Entpacken von **jarvis-gpu-worker-2.1.0** auf dem GPU-Rechner die vorhandene `.env` und Modellvolumes beibehalten. Im bestehenden Worker-Verzeichnis nur den vorhandenen Vision-Dienst neu bauen:
 
 ```bash
-docker compose --profile benchmark up -d --build --no-deps vision-ab
+docker compose --profile vision up -d --build --no-deps vision
 docker compose exec vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate
 ```
 
-Eine berechtigt exportierte **lokale Ring-MP4** auf dem GPU-Rechner mit installiertem FFmpeg/FFprobe testen:
+Danach die fünf Dateien aus dem CI-Artefakt **jarvis-ring-ab-backend-1.6.1** in die *bestehende* HA-Installation unter `/config/custom_components/jarvis_tablet_audio/` übernehmen. Nichts anderes in dem Ordner löschen. Home Assistant muss einmal neu gestartet werden, damit das Backend die neue Analyse aktiviert. Der installierte Backend-Stand vor dem Update enthält bereits den Ring-MP4-Abruf; das Overlay basiert ausdrücklich auf diesem aktuellen Quellstand.
 
-```powershell
-python tools/benchmark_ring_video.py "C:\Videos\Ring-Test.mp4" --env-file .env --output ring-ab-results.json
-```
+Der vorhandene Ablauf `jarvis_tablet_audio.describe_camera` mit `mode: ring_video` löst nach der produktiven Analyse automatisch eine begrenzte A/B-Messung aus, wenn `input_boolean.jarvis_ring_a_b_test_aktiv` eingeschaltet ist. Der Test vergleicht **4 Bilder einzeln**, **4/8/12 Bilder gemeinsam** bei gleicher Aufnahme, protokolliert Inferenz- und Gesamtdauer und stellt die Daten über `jarvis_tablet_audio.ring_benchmark_status` bereit. Eine Kurzfassung erscheint in `input_text.jarvis_ring_a_b_status`. Maximal vier Versuche, mindestens 20 Minuten Abstand; danach schaltet sich der Test aus. Keine zusätzlichen Echo-Ansagen oder Ring-Benachrichtigungen.
 
-Standardziel ist `http://127.0.0.1:10505` direkt auf dem GPU-Rechner (kein Netzwerkzugriff von außen). Den Testcontainer anschließend mit `docker compose --profile benchmark stop vision-ab` stoppen. Ollama und GPU werden während der Tests weiterhin mit dem Produktivbetrieb geteilt; daher möglichst ohne gleichzeitige Ring-Ereignisse testen. Der lokale JSON-Bericht enthält ausschließlich Antworten und Laufzeiten, **keine Videodaten, JPEGs oder Zugangsdaten**. Die produktiven HA-Automationen und Infoboxen bleiben unverändert. Bei zu hohem VRAM-/Kontextbedarf kann besonders die 12-Frame-Variante scheitern; das ist ein relevantes Testergebnis, keine automatische Umstellung. Für den direkten Geschwindigkeitsvergleich werden dieselben vier Frames im Einzel- und gemeinsamen Modus verwendet.
+Aufnahmen bleiben kurzzeitig im Speicher, temporäre MP4-Dateien zum Dekodieren werden gelöscht. Der Vision-Worker erhält ausschließlich ausgewählte, verkleinerte Frames über das lokale Netz, niemals den signierten Ring-Link. Es handelt sich um **zeitlich geordnete Bildfolgen**, nicht direkte MP4-Video-Tokenverarbeitung. Bei zu großem Kontextbedarf, belegtem Worker oder GPU-Problemen bleibt die bisherige Ring-Erkennung unverändert. Das getestete Zielmodell ist Qwen3-VL 4B Instruct.
 
-
-[English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+Optional bleibt der **manuelle** Testläufer für bereits vorhandene lokale MP4-Dateien verfügbar: `python tools/benchmark_ring_video.py ...` (Standardziel Port 10503). Für die automatische Ring-Auswertung ist er **nicht nötig**.
 
 ## 2.0.0 – Abschluss und Betrieb
 
