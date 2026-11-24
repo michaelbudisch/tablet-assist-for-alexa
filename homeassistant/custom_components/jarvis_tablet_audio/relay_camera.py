@@ -42,6 +42,10 @@ class RelayRuntime:
     def __init__(self, hass, entry):
         self.hass, self.entry = hass, entry
         self.frames = FrameStore()
+        self.ring_storyboards = {}
+        self.ring_ab_running = False
+        self.ring_ab_last_started = 0.0
+        self.ring_ab_reports = []
         self.listeners = set()
         self.upload_lock = asyncio.Lock()
         self.vision_lock = asyncio.Lock()
@@ -53,8 +57,28 @@ class RelayRuntime:
 
     @callback
     def expire(self, _now):
-        if self.frames.expire():
+        changed = self.frames.expire()
+        for source, item in tuple(self.ring_storyboards.items()):
+            if monotonic() - item["saved_at"] >= 3600:
+                del self.ring_storyboards[source]
+                changed = True
+        if changed:
             self.notify()
+
+    def get_ring_storyboard(self, source):
+        item = self.ring_storyboards.get(source)
+        return item if item and monotonic() - item["saved_at"] < 3600 else None
+
+    def save_ring_storyboard(self, source, jpeg, count, results=None):
+        if source not in ("door", "outside") or not isinstance(jpeg, bytes) or len(jpeg) > MAX_IMAGE:
+            raise ValueError("Invalid Ring storyboard")
+        sensor = "sensor.haustur_letzte_aufzeichnung" if source == "door" else "sensor.vorderseite_letzte_aufzeichnung"
+        state = self.hass.states.get(sensor)
+        self.ring_storyboards[source] = {"image": jpeg, "frames": count,
+                                         "frame_results": results or [],
+                                         "saved_at": monotonic(),
+                                         "event_time": state.state if state else None}
+        self.notify()
 
     def is_owner(self, user):
         return bool(user and user.is_admin and (not self.entry.data.get("relay_owner")
@@ -222,8 +246,21 @@ async def async_setup(hass, entry):
         current.notify()
 
     hass.services.async_register(DOMAIN, "describe_camera", describe_service,
-        schema=vol.Schema({vol.Optional("source", default="outside"): vol.In(["tablet", "outside", "door"]), vol.Optional("mode", default="scene"): vol.In(["scene", "objects", "object_in_hand"])}), supports_response=SupportsResponse.ONLY)
+        schema=vol.Schema({vol.Optional("source", default="outside"): vol.In(["tablet", "outside", "door"]), vol.Optional("mode", default="scene"): vol.In(["scene", "objects", "object_in_hand", "ring_video"])}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "camera_vision_status", health_service, schema=vol.Schema({}), supports_response=SupportsResponse.ONLY)
+
+    async def ring_ab_status_service(call):
+        current = runtime(hass)
+        if current is None:
+            raise ServiceValidationError("Ring benchmark unavailable")
+        user = await hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
+        if call.context.user_id and (user is None or not user.is_admin):
+            raise Unauthorized()
+        from .relay_ring_benchmark import status as benchmark_status
+        return benchmark_status(current)
+
+    hass.services.async_register(DOMAIN, "ring_benchmark_status", ring_ab_status_service,
+        schema=vol.Schema({}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "camera_pipeline_check", pipeline_service,
         schema=vol.Schema({vol.Required("text"): vol.All(str, vol.Length(min=1, max=500)),
             vol.Optional("pipeline_id"): str}), supports_response=SupportsResponse.ONLY)
@@ -250,7 +287,7 @@ def async_unload(hass):
         current.frames.clear()
         current.notify()
     hass.data.get(DOMAIN, {}).pop("relay_camera", None)
-    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "unpair_camera", "proactive"):
+    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "ring_benchmark_status", "unpair_camera", "proactive"):
         hass.services.async_remove(DOMAIN, service)
 
 async def answer(hass, text, context):
