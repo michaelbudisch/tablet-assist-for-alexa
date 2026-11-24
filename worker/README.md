@@ -3,12 +3,12 @@
  
 ## 2.1.0 — Optional Ring multi-frame A/B benchmark
 
-This is **opt-in** and does not change the existing /describe, /detect, Home Assistant Ring automation, MP3 announcements or infoboxes. Authenticated `POST /benchmark/sequence` on private vision port 10503 compares four **independent** image descriptions with 4, 8 or 12 **joint** images in one Ollama Qwen3-VL request. Each frame must have an increasing `second` timestamp and a base64 JPEG/PNG `image`. The endpoint returns model responses, preparation time, inference time and Ollama timings; it neither downloads Ring footage nor archives images. It does **not** accept MP4 directly.
+This is **opt-in** and does not change the existing /describe, /detect, Home Assistant Ring automation, MP3 announcements or infoboxes. The separate localhost-only `vision-ab` container exposes authenticated `POST /benchmark/sequence` on port 10505 compares four **independent** image descriptions with 4, 8 or 12 **joint** images in one Ollama Qwen3-VL request. Each frame must have an increasing `second` timestamp and a base64 JPEG/PNG `image`. The endpoint returns model responses, preparation time, inference time and Ollama timings; it neither downloads Ring footage nor archives images. It does **not** accept MP4 directly.
 
 On the GPU machine, after updating the worker source while preserving your existing .env and volumes:
 
 ```bash
-docker compose --profile vision up -d --build --no-deps vision
+docker compose --profile benchmark up -d --build --no-deps vision-ab
 docker compose exec vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate
 ```
 
@@ -18,7 +18,7 @@ For an **explicitly exported, authorized local Ring MP4**, install FFmpeg/FFprob
 python tools/benchmark_ring_video.py "C:\Videos\Ring-Test.mp4" --env-file .env --output ring-ab-results.json
 ```
 
-By default the script targets `http://127.0.0.1:10503`; use `--base-url http://YOUR_PRIVATE_GPU_IP:10503` only on a trusted LAN. No video or image data are included in the local JSON results file, only model descriptions and timings. Do not send recordings or the worker token to public hosts. Inference for 12 frames may run out of context or GPU memory; a failed test leaves the production path unchanged. For a fair A/B test, use the **same** sample video, model and 4096-token context first; compare quality and timing. Because frames are sampled, this is *not* native MP4/video-token inference.
+By default the script targets `http://127.0.0.1:10505` on the GPU machine (not reachable from other LAN devices). Stop the test service afterwards with `docker compose --profile benchmark stop vision-ab`. Inference still shares Ollama/GPU resources with production, so benchmark during a quiet period. No video or image data are included in the local JSON results file, only model descriptions and timings. Do not send recordings or the worker token to public hosts. Inference for 12 frames may run out of context or GPU memory; a failed test leaves the production path unchanged. For a fair A/B test, use the **same** sample video, model and 4096-token context first; compare quality and timing. Because frames are sampled, this is *not* native MP4/video-token inference.
 
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
