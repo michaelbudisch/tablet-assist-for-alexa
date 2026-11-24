@@ -42,7 +42,7 @@ services:
     profiles: ["tts"]
   qwen-stream:
     build: ./qwen-stream
-    image: jarvis-qwen-stream:1.5.0
+    image: jarvis-qwen-stream:2.0.0
     deploy:
       resources:
         reservations:
@@ -58,6 +58,9 @@ services:
       STREAM_VOICE_MODE: ${STREAM_VOICE_MODE:-fast}
       STREAM_FIXED_MODEL_SIZE: ${STREAM_FIXED_MODEL_SIZE:-1.7B}
       STREAM_VOICE_VARIANT: ${STREAM_VOICE_VARIANT:-1}
+      STREAM_TEXT_CLEANUP: ${STREAM_TEXT_CLEANUP:-1}
+      STREAM_SPEECH_SPLIT: ${STREAM_SPEECH_SPLIT:-0}
+      STREAM_PRONUNCIATION: ${STREAM_PRONUNCIATION:-}
       STREAM_VOICE_STYLE: ${STREAM_VOICE_STYLE:-A mature male voice with a warm low-mid register, calm and precise delivery, clear natural German diction, subtle British-influenced cadence, and a professional, composed tone. Moderate pace, no theatrical exaggeration.}
       HF_HOME: /models
       HF_HUB_DISABLE_TELEMETRY: "1"
@@ -102,7 +105,7 @@ services:
     networks: [llm-private]
   vision:
     build: ./vision
-    image: jarvis-vision:1.9.0
+    image: jarvis-vision:2.0.0
     environment:
       JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       VISION_MODEL: ${VISION_MODEL:-qwen3-vl:4b-instruct}
@@ -119,9 +122,32 @@ services:
     security_opt:
       - no-new-privileges:true
     cap_drop: [ALL]
+  ops:
+    build: ./ops
+    image: jarvis-ops:2.0.0
+    environment:
+      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
+      NVIDIA_DRIVER_CAPABILITIES: utility
+    ports:
+      - "${LAN_IP}:10504:10504"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles: ["ops"]
+    networks: [default, llm-private]
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    restart: unless-stopped
 volumes:
   whisper-data:
   qwen-data:
   ollama-data:
 networks:
+  default:
   llm-private:

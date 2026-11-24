@@ -12,6 +12,7 @@ import torch
 from flask import Flask, Response, jsonify, request
 from faster_qwen3_tts import FasterQwen3TTS
 from waitress import serve
+from text_processing import dictionary, prepare_text, split_sentences
 
 TOKEN = os.environ.get('JARVIS_TTS_TOKEN', '')
 if len(TOKEN) < 32:
@@ -56,6 +57,10 @@ model = FasterQwen3TTS.from_pretrained(MODEL)
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16384
 lock = threading.Lock()
+cancel_event = threading.Event()
+SPEECH_CLEANUP = os.environ.get('STREAM_TEXT_CLEANUP', '1') == '1'
+SPEECH_SPLIT = os.environ.get('STREAM_SPEECH_SPLIT', '0') == '1'
+PRONUNCIATION = dictionary(os.environ.get('STREAM_PRONUNCIATION', ''))
 
 
 def requested_reference(data):
@@ -82,38 +87,41 @@ def voice_headers(selection):
 
 def pcm_chunks(text, ref=None):
     total = 0
-    kwargs = dict(text=text, language='German', chunk_size=8)
-    if MODE == 'fixed':
-        # All utterances reuse the same synthetic speaker sample. The library
-        # caches the acoustic prompt for this path/text within the model process.
-        iterator = model.generate_voice_clone_streaming(
-            **kwargs, ref_audio=str(ref or REFERENCE), ref_text=REFERENCE_TEXT,
-            xvec_only=False, non_streaming_mode=True,
-        )
-    elif MODE == 'design':
-        iterator = model.generate_voice_design_streaming(**kwargs, instruct=STYLE)
-    else:
-        if MODE == 'styled':
-            kwargs['instruct'] = STYLE
-        iterator = model.generate_custom_voice_streaming(**kwargs, speaker=SPEAKER)
-    for audio, rate, _timing in iterator:
-        if rate != RATE:
-            raise ValueError('Unexpected sample rate')
-        data = np.asarray(audio, dtype=np.float32).reshape(-1)
-        if not data.size:
-            continue
-        if not np.isfinite(data).all():
-            raise ValueError('Invalid sample')
-        pcm = (np.clip(data, -1.0, 1.0) * 32767).astype('<i2').tobytes()
-        total += len(pcm)
-        if total > MAX_BYTES:
-            raise ValueError('Audio exceeds size limit')
-        yield pcm
-
+    segments = split_sentences(text, 180) if SPEECH_SPLIT and len(text) > 180 else [text]
+    for sentence in segments:
+        if cancel_event.is_set():
+            return
+        kwargs = dict(text=sentence, language='German', chunk_size=8)
+        if MODE == 'fixed':
+            iterator = model.generate_voice_clone_streaming(
+                **kwargs, ref_audio=str(ref or REFERENCE), ref_text=REFERENCE_TEXT,
+                xvec_only=False, non_streaming_mode=True,
+            )
+        elif MODE == 'design':
+            iterator = model.generate_voice_design_streaming(**kwargs, instruct=STYLE)
+        else:
+            if MODE == 'styled':
+                kwargs['instruct'] = STYLE
+            iterator = model.generate_custom_voice_streaming(**kwargs, speaker=SPEAKER)
+        for audio, rate, _timing in iterator:
+            if cancel_event.is_set():
+                return
+            if rate != RATE:
+                raise ValueError('Unexpected sample rate')
+            data = np.asarray(audio, dtype=np.float32).reshape(-1)
+            if not data.size:
+                continue
+            if not np.isfinite(data).all():
+                raise ValueError('Invalid sample')
+            pcm = (np.clip(data, -1.0, 1.0) * 32767).astype('<i2').tobytes()
+            total += len(pcm)
+            if total > MAX_BYTES:
+                raise ValueError('Audio exceeds size limit')
+            yield pcm
 
 @app.get('/health')
 def health():
-    return jsonify(ready=True, backend='faster-qwen', busy=lock.locked(), rate=RATE, model=MODEL, voice_mode=MODE, speaker=SPEAKER if MODE in ('fast', 'styled') else None, voice_id=VOICE_ID)
+    return jsonify(ready=True, worker_version='2.0.0', backend='faster-qwen', busy=lock.locked(), rate=RATE, model=MODEL, voice_mode=MODE, speaker=SPEAKER if MODE in ('fast', 'styled') else None, voice_id=VOICE_ID, speech_cleanup=SPEECH_CLEANUP, sentence_splitting=SPEECH_SPLIT, supports_cancel=True)
 
 
 def validated_text():
@@ -123,7 +131,22 @@ def validated_text():
     text = data.get('text') if isinstance(data, dict) else None
     if not isinstance(text, str) or not 0 < len(text.strip()) <= 500:
         return None, (jsonify(error='invalid text'), 400)
-    return text.strip(), None
+    try:
+        return prepare_text(text.strip(), PRONUNCIATION) if SPEECH_CLEANUP else text.strip(), None
+    except ValueError:
+        return None, (jsonify(error='invalid processed speech text'), 400)
+
+
+@app.post('/cancel')
+def cancel():
+    # Cooperative cancellation. Playback clients must still stop their own
+    # audio; an active GPU generation can only stop between generated chunks.
+    if not hmac.compare_digest(request.headers.get('X-API-Key', ''), TOKEN):
+        return jsonify(error='unauthorized'), 401
+    busy = lock.locked()
+    if busy:
+        cancel_event.set()
+    return jsonify(cancel_requested=busy, worker_version='2.0.0'), 202
 
 
 @app.post('/stream')
@@ -133,6 +156,7 @@ def stream():
         return error
     if not lock.acquire(blocking=False):
         return jsonify(error='busy'), 503
+    cancel_event.clear()
     start = time.monotonic()
     selection = requested_reference(request.get_json(silent=True))
     iterator = pcm_chunks(text, selection[0])
@@ -159,8 +183,12 @@ def stream():
 
     def body():
         try:
-            yield first
-            yield from iterator
+            if not cancel_event.is_set():
+                yield first
+            for chunk in iterator:
+                if cancel_event.is_set():
+                    break
+                yield chunk
             print(f'Stream completed: {time.monotonic()-start:.3f}s', flush=True)
         finally:
             cleanup()
@@ -181,8 +209,11 @@ def synthesize():
     if not lock.acquire(blocking=False):
         return jsonify(error='busy'), 503
     try:
+        cancel_event.clear()
         selection = requested_reference(request.get_json(silent=True))
         pcm = b''.join(pcm_chunks(text, selection[0]))
+        if cancel_event.is_set():
+            return jsonify(error='synthesis cancelled'), 503
         if not pcm:
             raise ValueError('No audio')
         out = io.BytesIO()

@@ -1,6 +1,52 @@
-# Jarvis GPU Worker 1.9.0
+# Jarvis GPU Worker 2.0.0
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
+
+## 2.0.0 — operations-ready update (compatible defaults)
+
+The worker now has an optional **read-only diagnostics profile** at private-LAN
+port **10504**. Start it with `docker compose --profile ops up -d --build ops`;
+query authenticated `GET /health`, `GET /status` or `GET /selftest` using
+`X-API-Key: <existing JARVIS_TTS_TOKEN>`. The endpoint checks whether configured
+services are reachable and reports GPU statistics only when `nvidia-smi` is
+available in the container. It **does not** run speech recognition, synthesis,
+or inference in the background. Inactive Compose profiles show as unavailable.
+
+**Vision scheduling:** optional `priority: "interactive" | "background"` and
+`wait_ms: 0..20000` on `/describe` and `/detect`. Default is immediate
+busy response (compatible with existing Home Assistant clients). The queue
+is limited to six waiters and affects **only vision requests in that one
+container**, not Whisper, TTS, or separate Ollama chats. `GET /capabilities`
+advertises the available interface.
+
+**Streaming TTS:** deterministic text cleanup is enabled by default
+(`STREAM_TEXT_CLEANUP=1`); optional `STREAM_PRONUNCIATION` JSON dictionary,
+e.g. `{"kWh":"Kilowattstunden"}`, and opt-in
+`STREAM_SPEECH_SPLIT=1` for long replies. Authenticated `POST /cancel`
+requests cooperative interruption between synthesized audio chunks; clients
+must stop playback locally too. Existing `/stream` and `/synthesize`
+requests remain supported.
+
+**Whisper diagnostics:** `python tools/check_audio.py recording.wav`
+checks a local 16-bit PCM WAV for silence, clipping and too-short samples,
+without uploading or storing the recording. Wyoming Whisper's VAD and
+microphone end-of-speech settings are still controlled by the client/HA
+pipeline; this is not an automatic VAD replacement.
+
+**Release gate:** run `python check_release.py` (or
+`python check_release.py --package ../jarvis-gpu-worker-2.0.0.zip`)
+and all unit tests before deployment. Archive generation uses a file
+allowlist and excludes `.env`, keys, sample recordings, caches and ZIPs.
+Do **not** commit your real `.env`; keep existing model volumes.
+Run `docker compose --profile vision --profile stream --profile ops config --quiet`
+then rebuild only the services you use.
+
+**Limits:** This release does not magically coordinate GPU scheduling across
+all independent Docker containers, and continuous audio playback cancellation
+depends on the connected client. Real RTX/Whisper/Qwen-TTS integration must
+still be checked on the GPU machine after deployment.
+
+
 
 > **Worker 1.9.0 schema update:** The local `/detect` response adds `genders` with coarse, fallible apparent presentation categories `man`, `woman`, `unknown`. This is not actual gender or identity recognition. Keep existing `.env` and model volumes; rebuild vision and update the HA backend together. [HA automations](../docs/en/ha-automations.md).
 
