@@ -54,6 +54,9 @@ class RoomAudioView(HomeAssistantView):
             elif action == "status":
                 result = transport.status(principal, data.get("id"))
                 result["device_id"] = transport.settings.get(result["room"], {}).get("device_id", "")
+            elif action == "activity":
+                transport.activity(principal, data.get("busy"))
+                result = {"accepted": True}
             elif action == "submit":
                 job = transport.submit(principal, data.get("path"))
                 result = {"id": job, "accepted": bool(job)}
@@ -157,7 +160,7 @@ async def setup_room_audio(hass, entry):
                 for r in targets:
                     if quiet_now(transport.settings.get(r, {}), dt_util.now()):
                         results[r] = {"accepted": False, "status": "quiet_hours"}
-                    elif not transport.status(transport.rooms[r])["ready"]:
+                    elif not transport.announcement_ready(r):
                         results[r] = {"accepted": False, "status": "not_ready"}
                     else:
                         stream = async_create_stream(hass, engine, language="de")

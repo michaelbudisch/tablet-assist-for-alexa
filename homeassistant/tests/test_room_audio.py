@@ -71,6 +71,16 @@ class TransportTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.r.submit("a", bad)
 
+    def test_announcement_does_not_interrupt_active_dashboard(self):
+        self.r.activity("a", True)
+        self.assertFalse(self.r.announcement_ready("office"))
+        self.assertTrue(self.r.announcement_ready("living"))
+        self.assertIsNotNone(self.r.submit("a", P))  # explicitly requested reply
+        self.r.activity("b", True)
+        self.now += 11
+        self.r.poll("b", self.b, True)
+        self.assertTrue(self.r.announcement_ready("living"))
+
     def test_independent_jobs(self):
         a, b = self.r.submit("a", P), self.r.submit("b", P)
         self.assertNotEqual(a, b)

@@ -25,6 +25,7 @@ public class AudioService extends Service {
     String base,token,httpConsent,lastCommand=""; boolean baseline=false; long heartbeat=0;
     private boolean roomMode=false;
     private String roomSession="";
+    private volatile String roomTerminal="";
     private long roomRetryAt=0;
     MediaPlayer player; File file; AudioManager am; AudioFocusRequest focus; boolean audible=false,seeked=false,preferredAccepted=false; int preferredId=-1,routeAttempts=0; long checkUntil=0,playUntil=0,routeRetryAt=0;
     @Override public IBinder onBind(Intent i){return null;}
@@ -103,6 +104,7 @@ public class AudioService extends Service {
         if(stage.startsWith("error"))stage="error";
         if(!stage.matches("buffering|playing|done|cancelled|error"))return;
         roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",parts[0]).put("stage",stage));
+        if(status.equals(roomTerminal))roomTerminal="";
     }
     private void pollRoom(){
         try{
@@ -114,6 +116,7 @@ public class AudioService extends Service {
                 if(!candidate.matches("[a-f0-9]{64}"))throw new IOException("Invalid room session");
                 roomSession=candidate;
             }
+            if(!roomTerminal.isEmpty())reportRoom(roomTerminal);
             boolean ready=!busy&&bluetooth()!=null;
             JSONObject job=roomApi(new JSONObject().put("action","poll").put("session",roomSession).put("ready",ready));
             String next=job.optString("id"),path=job.optString("path");
@@ -134,7 +137,7 @@ public class AudioService extends Service {
             haConnected=false;
             String msg=e.getMessage()==null?"":e.getMessage();
             if(msg.contains("403")||msg.contains("409")){
-                roomSession="";roomRetryAt=System.currentTimeMillis()+3000;
+                roomSession="";roomTerminal="";roomRetryAt=System.currentTimeMillis()+3000;
                 if(busy)main.post(()->finish("error_room_session"));
             }
             if(!busy)ui=msg.contains("401")||msg.contains("403")?"credentials_error":"connection_error|"+e.getClass().getSimpleName();
@@ -253,6 +256,6 @@ public class AudioService extends Service {
             MediaPlayer waiting=player;main.postDelayed(()->{if(busy&&player==waiting&&!seeked)finish("error_seek");},2000);
         }catch(Exception e){finish("error_route");}
     }};
-    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();state(ended+"|"+result);}
-    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");io.shutdownNow();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
+    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();if(roomMode)roomTerminal=ended+"|"+result;state(ended+"|"+result);}
+    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");if(roomMode){try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();}else io.shutdownNow();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }

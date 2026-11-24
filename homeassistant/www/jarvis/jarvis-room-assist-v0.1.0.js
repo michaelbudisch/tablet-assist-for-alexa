@@ -86,7 +86,16 @@
     setMode(mode){if(mode!=="dashboard")return;if(mode===this.mode||!["native","dashboard"].includes(mode))return;this.stop("Bereit");this.mode=mode;save(this.cfg,"mode",mode);this.state("Bereit",mode==="dashboard"?"Im Dashboard · Mikrofon aus":"Nativer Android-Assistent");this.report("mode|"+mode);this.setNativeWake(false);}
     nativeAudioReady(){return this._roomStatus?.ready===true&&Date.now()-(this._roomStatusAt||0)<7000;}
     roomRpc(data){return this.h.callApi("POST","jarvis_echo_relay/room_audio",data);}
-    async refreshRoom(){try{this._roomStatus=await this.roomRpc({action:"status"});this._roomStatusAt=Date.now();}catch{this._roomStatus=null;}if(this.card.isConnected)this.update();}
+    async refreshRoom(){
+      if(this._roomRefreshing||!this.card.isConnected)return;
+      this._roomRefreshing=true;
+      try{
+        await this.roomRpc({action:"activity",busy:!!(this.session||this.processing||this.playing)});
+        this._roomStatus=await this.roomRpc({action:"status"});this._roomStatusAt=Date.now();
+      }catch{this._roomStatus=null;}
+      finally{this._roomRefreshing=false;}
+      if(this.card.isConnected)this.update();
+    }
     cancelNativeAudio(){
       const id=this._nativeRequest;this._nativeRequest=null;
       if(id)void this.roomRpc({action:"cancel",id}).catch(()=>{});
@@ -188,6 +197,9 @@
       }catch(e){if(this.alive(s))this.fail(s,e?.name==="NotAllowedError"?"Mikrofon nicht freigegeben. Android-/WebView-Berechtigung prüfen.":fmt(e?.message||e));}
     }
     async subscribe(s,opts){
+      if(!this._roomStatus)await this.refreshRoom();
+      if(!this._roomStatus)throw Error(de(this.h)?"Raumkonto nicht eingerichtet":"Room account not provisioned");
+      await this.roomRpc({action:"activity",busy:true});
       const conn=this.h?.connection;
       if(!conn?.socket||conn.socket.readyState!==1)throw Error("Home Assistant nicht verbunden");
       s.socket=conn.socket;

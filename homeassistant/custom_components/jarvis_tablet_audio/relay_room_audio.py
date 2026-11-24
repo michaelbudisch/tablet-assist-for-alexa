@@ -41,6 +41,7 @@ class RoomAudioTransport:
         self.rooms = {}
         self.sessions = {}
         self.jobs = {}
+        self.frontend_activity = {}
 
     def provision(self, room, principal):
         if (not isinstance(room, str) or not ROOM.fullmatch(room)
@@ -56,6 +57,7 @@ class RoomAudioTransport:
     def revoke(self, room):
         self.rooms.pop(room, None)
         self.sessions.pop(room, None)
+        self.frontend_activity.pop(room, None)
         self.jobs = {k: v for k, v in self.jobs.items() if v.room != room}
 
     def room_for(self, principal):
@@ -100,12 +102,27 @@ class RoomAudioTransport:
         s.seen = self.clock()
         return room, s
 
+    def activity(self, principal, busy):
+        room = self.room_for(principal)
+        if type(busy) is not bool:
+            raise ValueError("invalid busy flag")
+        self.frontend_activity[room] = (self.clock(), busy)
+
+    def announcement_ready(self, room):
+        self._prune()
+        activity = self.frontend_activity.get(room)
+        if activity and self.clock() - activity[0] < 10 and activity[1]:
+            return False
+        return room in self.rooms and self.status(self.rooms[room])["ready"]
+
     def status(self, principal, request_id=None):
         self._prune()
         room = self.room_for(principal)
         s = self.sessions.get(room)
         result = {"room": room, "online": s is not None,
                   "ready": bool(s and s.ready and not self._active(room))}
+        current = self._active(room)
+        result["active_stage"] = current.stage if current else ""
         if request_id is not None:
             job = self.jobs.get(request_id)
             result["stage"] = job.stage if job and job.room == room else "unknown"
