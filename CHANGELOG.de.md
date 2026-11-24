@@ -1,5 +1,12 @@
 # Changelog
 
+## Raumbezogene Multiroom-Kameraerkennung — Backend 1.7.1
+- Der administrative Vision-Check kann über `room` gezielt die freigegebene Raumkamera statt des alten globalen Kamerastreams verwenden.
+- Raumbezogene Ereignisse `jarvis_echo_relay_detection` enthalten die Raumkennung; veraltete oder ersetzte Kamerasitzungen werden verworfen.
+- DE/EN-Migrationsanleitung für die vorbereitete Büro-Begrüßung ohne doppelte Ansagen. Der bisherige Einzelgeräte-Modus bleibt erhalten.
+- Die HA-Integration muss manuell aktualisiert und neu geladen werden; es erfolgt keine automatische Installation.
+
+
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](README.de.md)
 
 ## Multiroom — Backend 1.7.0 / Android 0.6.0 / Raumkarten 0.2.0 und 0.1.1
