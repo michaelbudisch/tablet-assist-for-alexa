@@ -131,25 +131,31 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
             return jsonify(error=str(exc)), 400
         preparation_ms = round((time.perf_counter() - started) * 1000, 1)
 
-        if not lock.acquire(priority=priority, wait_ms=wait_ms):
-            return jsonify(error="vision busy", **lock.snapshot()), 503
         try:
             results = []
             metrics = []
             invoke_started = time.perf_counter()
             groups = [[frame] for frame in frames] if mode == "independent" else [frames]
             for group in groups:
-                body = {
-                    "model": model, "stream": False, "think": False,
-                    "keep_alive": keep,
-                    "options": {
-                        "num_ctx": context,
-                        "num_predict": 130 if mode == "independent" else 230,
-                        "temperature": 0,
-                    },
-                    "messages": _messages(group, joint=(mode == "joint")),
-                }
-                response = call("/api/chat", body, timeout=110)
+                # Release after EACH inference, not after the full 4-frame
+                # baseline. This gives production Ring requests a chance
+                # to acquire the same gate between background test frames.
+                if not lock.acquire(priority=priority, wait_ms=wait_ms):
+                    return jsonify(error="vision busy", **lock.snapshot()), 503
+                try:
+                    body = {
+                        "model": model, "stream": False, "think": False,
+                        "keep_alive": keep,
+                        "options": {
+                            "num_ctx": context,
+                            "num_predict": 130 if mode == "independent" else 230,
+                            "temperature": 0,
+                        },
+                        "messages": _messages(group, joint=(mode == "joint")),
+                    }
+                    response = call("/api/chat", body, timeout=110)
+                finally:
+                    lock.release()
                 answer = response.get("message", {}).get("content")
                 if not isinstance(answer, str) or not answer.strip():
                     raise RuntimeError("empty model response")
@@ -175,5 +181,3 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
             return jsonify(error="local vision model not installed"), 503
         except Exception:
             return jsonify(error="benchmark inference unavailable"), 503
-        finally:
-            lock.release()
