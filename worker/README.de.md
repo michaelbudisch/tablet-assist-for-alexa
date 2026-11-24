@@ -1,4 +1,25 @@
-# Jarvis GPU Worker 2.0.0
+# Jarvis GPU Worker 2.1.0
+
+ 
+## 2.1.0 – Ring-Videotest mit mehreren Frames (optional)
+
+**Kein Eingriff in die produktive Ring-Erkennung.** Der authentifizierte Endpunkt `POST /benchmark/sequence` auf dem privaten Vision-Port 10503 vergleicht vier **einzeln** beschriebene Bilder mit 4, 8 oder 12 Bildern, die **gemeinsam** an Qwen3-VL übergeben werden. Die Bilder kommen als Base64-JPEG/PNG mit aufsteigenden Zeitstempeln. Der Worker liefert Modelltexte sowie Vorbereitungs-, Inferenz- und Ollama-Zeiten zurück, speichert keine Aufnahmen und lädt keine Ring-Videos selbst. Das ist zeitlich geordnete *Mehrbildanalyse*, noch keine direkte Verarbeitung einer MP4.
+
+Nach der Aktualisierung auf dem GPU-Rechner bestehende `.env` und Modell-Volumes beibehalten; ausschließlich Vision neu bauen:
+
+```bash
+docker compose --profile vision up -d --build --no-deps vision
+docker compose exec vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate
+```
+
+Eine berechtigt exportierte **lokale Ring-MP4** auf dem GPU-Rechner mit installiertem FFmpeg/FFprobe testen:
+
+```powershell
+python tools/benchmark_ring_video.py "C:\Videos\Ring-Test.mp4" --env-file .env --output ring-ab-results.json
+```
+
+Standardziel ist `http://127.0.0.1:10503`; bei getrennten Rechnern `--base-url http://PRIVATE_GPU_IP:10503` nur im vertrauenswürdigen LAN verwenden. Der lokale JSON-Bericht enthält ausschließlich Antworten und Laufzeiten, **keine Videodaten, JPEGs oder Zugangsdaten**. Die produktiven HA-Automationen und Infoboxen bleiben unverändert. Bei zu hohem VRAM-/Kontextbedarf kann besonders die 12-Frame-Variante scheitern; das ist ein relevantes Testergebnis, keine automatische Umstellung. Für den direkten Geschwindigkeitsvergleich werden dieselben vier Frames im Einzel- und gemeinsamen Modus verwendet.
+
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
