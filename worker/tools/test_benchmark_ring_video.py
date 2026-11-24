@@ -11,8 +11,8 @@ from benchmark_ring_video import _private_base, _token, main
 
 class RingBenchmarkCliTests(unittest.TestCase):
     def test_worker_url_must_be_local(self):
-        self.assertEqual(_private_base("http://127.0.0.1:10505"),
-                         "http://127.0.0.1:10505")
+        self.assertEqual(_private_base("http://127.0.0.1:10503"),
+                         "http://127.0.0.1:10503")
         self.assertEqual(_private_base("http://192.168.178.115:10505/"),
                          "http://192.168.178.115:10505")
         for url in ("https://example.com:10505",
@@ -39,7 +39,7 @@ class RingBenchmarkCliTests(unittest.TestCase):
             seen = []
 
             def fake_send(base, key, *, images, mode, ctx, model):
-                self.assertEqual(base, "http://127.0.0.1:10505")
+                self.assertEqual(base, "http://127.0.0.1:10503")
                 self.assertEqual(key, token)
                 seen.append((mode, [x["second"] for x in images]))
                 return {
