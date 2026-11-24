@@ -1,6 +1,10 @@
 # GPU-Worker – Änderungsverlauf
 
  
+## 2.1.1
+
+- Kontextüberlauf bei gemeinsamen Qwen3-VL-Benchmark-Anfragen behoben: begrenzter interner Mindestkontext 8192 Tokens für vier Frames und 16384 für acht oder zwölf. Einzelbild- und Produktiv-Anfragen bleiben unverändert. Angeforderter und tatsächlich verwendeter Kontext stehen in den Messdaten. Offline-Tests prüfen alle drei Größen; GPU-Speicher und Laufzeit müssen praktisch geprüft werden.
+
 ## 2.1.0
 
 - Optionaler privater Endpunkt `/benchmark/sequence`: vier Bilder einzeln gegen 4, 8 oder 12 Bilder gemeinsam mit Qwen3-VL analysieren; bestehende Einzelbild-Endpunkte und Ring-Automationen bleiben unverändert.

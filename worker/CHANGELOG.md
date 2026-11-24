@@ -1,6 +1,10 @@
 # GPU worker changelog
 
  
+## 2.1.1
+
+- Fix joint Qwen3-VL benchmark context overflow: use bounded internal context floors of 8192 tokens for four frames and 16384 for eight or twelve, leaving independent and production requests unchanged. Report requested and effective context in benchmark metrics. Offline tests verify all three sizes; real GPU memory and timing still require testing.
+
 ## 2.1.0
 
 - Added opt-in private `/benchmark/sequence` endpoint for 4 independent frames versus 4/8/12 jointly described Qwen3-VL frames; production still-image endpoints and Ring automations are unchanged.

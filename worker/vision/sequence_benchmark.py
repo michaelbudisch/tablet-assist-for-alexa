@@ -14,6 +14,9 @@ from PIL import Image
 MAX_BENCH_BODY = 9 * 1024 * 1024
 FRAME_SIZE = 768
 FRAME_COUNTS = (4, 8, 12)
+# The real 768px Qwen3-VL four-frame prompt exceeded 4096 tokens.
+# Apply bounded floors only within this opt-in endpoint, never to normal vision.
+JOINT_CONTEXT_FLOORS = {4: 8192, 8: 16384, 12: 16384}
 BENCH_MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct", "qwen3-vl:8b-instruct")
 SYSTEM = (
     "Du analysierst eine ausdrücklich bereitgestellte, zeitlich geordnete "
@@ -129,6 +132,7 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
             frames = _frames(data.get("frames"), normalize_image)
         except ValueError as exc:
             return jsonify(error=str(exc)), 400
+        effective_context = max(context, JOINT_CONTEXT_FLOORS[len(frames)]) if mode == "joint" else context
         preparation_ms = round((time.perf_counter() - started) * 1000, 1)
 
         try:
@@ -147,7 +151,7 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
                         "model": model, "stream": False, "think": False,
                         "keep_alive": keep,
                         "options": {
-                            "num_ctx": context,
+                            "num_ctx": effective_context,
                             "num_predict": 130 if mode == "independent" else 230,
                             "temperature": 0,
                         },
@@ -167,6 +171,8 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
                 timestamps=[round(sec, 2) for sec, _ in frames],
                 descriptions=results,
                 metrics={
+                    "requested_num_ctx": context,
+                    "effective_num_ctx": effective_context,
                     "preparation_ms": preparation_ms,
                     "inference_ms": inference_ms,
                     "total_ms": round((time.perf_counter() - started) * 1000, 1),

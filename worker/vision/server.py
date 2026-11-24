@@ -145,7 +145,7 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
 
     @app.get("/capabilities")
     def capabilities():
-        return jsonify(worker_version="2.1.0", api_version=2, benchmark_api=1,
+        return jsonify(worker_version="2.1.1", api_version=2, benchmark_api=1,
                        endpoints=["/describe", "/detect", "/health", "/runtime", "/capabilities",
                                   "/benchmark/sequence"],
                        modes=tuple(PROMPTS), detection_api=1,

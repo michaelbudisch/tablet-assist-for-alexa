@@ -1,8 +1,10 @@
-# Jarvis GPU Worker 2.1.0
+# Jarvis GPU Worker 2.1.1
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-## 2.1.0 — Automatic Ring multi-frame benchmark (no separate container)
+## 2.1.1 — Automatic Ring multi-frame benchmark (no separate container)
+
+For this patch, update the worker only if backend 1.6.1 is already installed. Joint benchmarks automatically use at least 8192 context tokens for four frames and 16384 for eight/twelve; the independent baseline and production contexts are unchanged. Context changes can reload Ollama's runner and increase GPU memory use; measured latency includes that cost.
 
 The existing GPU Vision service keeps private LAN port **10503**, now with authenticated `POST /benchmark/sequence`. Existing `/describe`, `/detect`, Ring notifications and tablet UI remain unchanged. Home Assistant downloads each Ring MP4 automatically as before; no manual MP4 export is required for automatic benchmarking.
 

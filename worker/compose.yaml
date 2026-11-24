@@ -42,7 +42,7 @@ services:
     profiles: ["tts"]
   qwen-stream:
     build: ./qwen-stream
-    image: jarvis-qwen-stream:2.1.0
+    image: jarvis-qwen-stream:2.1.1
     deploy:
       resources:
         reservations:
@@ -105,7 +105,7 @@ services:
     networks: [llm-private]
   vision:
     build: ./vision
-    image: jarvis-vision:2.1.0
+    image: jarvis-vision:2.1.1
     environment:
       JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       VISION_MODEL: ${VISION_MODEL:-qwen3-vl:4b-instruct}
@@ -124,7 +124,7 @@ services:
     cap_drop: [ALL]
   ops:
     build: ./ops
-    image: jarvis-ops:2.1.0
+    image: jarvis-ops:2.1.1
     environment:
       JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       NVIDIA_DRIVER_CAPABILITIES: utility

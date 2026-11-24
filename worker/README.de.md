@@ -1,12 +1,14 @@
-# Jarvis GPU Worker 2.1.0
+# Jarvis GPU Worker 2.1.1
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-## 2.1.0 – Automatischer Ring-A/B-Test (ohne zusätzlichen Container)
+## 2.1.1 – Automatischer Ring-A/B-Test (ohne zusätzlichen Container)
+
+Für diesen Patch reicht bei bereits installiertem Backend 1.6.1 das Worker-Update. Gemeinsame Benchmarks verwenden automatisch mindestens 8192 Kontext-Tokens für vier Frames und 16384 für acht/zwölf. Einzelbild-Baseline und Produktiv-Kontext bleiben unverändert. Kontextwechsel können Ollamas Runner neu laden und mehr GPU-Speicher benötigen; diese Kosten fließen in die Laufzeitmessung ein.
 
 **Der bestehende GPU-Vision-Container bleibt erhalten.** Der neue authentifizierte Endpunkt `POST /benchmark/sequence` läuft auf dem bisherigen privaten **Port 10503**. Der produktive Ring-Ablauf mit vier Einzelbildern und bisherigen Meldungen bleibt bestehen. Der zusätzliche Test nutzt dieselbe von Home Assistant bereits automatisch heruntergeladene Ring-MP4, nicht eine manuell exportierte Videodatei.
 
-Nach dem Entpacken von **jarvis-gpu-worker-2.1.0** auf dem GPU-Rechner die vorhandene `.env` und Modellvolumes beibehalten. Im bestehenden Worker-Verzeichnis nur den vorhandenen Vision-Dienst neu bauen:
+Nach dem Entpacken von **jarvis-gpu-worker-2.1.1** auf dem GPU-Rechner die vorhandene `.env` und Modellvolumes beibehalten. Im bestehenden Worker-Verzeichnis nur den vorhandenen Vision-Dienst neu bauen:
 
 ```bash
 docker compose --profile vision up -d --build --no-deps vision

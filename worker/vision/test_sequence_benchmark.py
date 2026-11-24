@@ -61,7 +61,9 @@ class SequenceBenchmarkTests(unittest.TestCase):
         self.assertEqual(len(body["messages"][1]["images"]), 4)
         self.assertEqual(body["model"], DEFAULT_MODEL)
         self.assertEqual(body["keep_alive"], 300)
-        self.assertEqual(body["options"]["num_ctx"], 4096)
+        self.assertEqual(body["options"]["num_ctx"], 8192)
+        self.assertEqual(result.json["metrics"]["requested_num_ctx"], 4096)
+        self.assertEqual(result.json["metrics"]["effective_num_ctx"], 8192)
         self.assertEqual(body["think"], False)
         self.assertFalse(body["stream"])
         self.assertIn("Bild 4", body["messages"][1]["content"])
@@ -79,6 +81,8 @@ class SequenceBenchmarkTests(unittest.TestCase):
                 self.assertEqual(len(self.requests), 1)
                 imgs = self.requests[0][1]["messages"][1]["images"]
                 self.assertEqual(len(imgs), count)
+                self.assertEqual(self.requests[0][1]["options"]["num_ctx"], 16384)
+                self.assertEqual(result.json["metrics"]["effective_num_ctx"], 16384)
                 with Image.open(io.BytesIO(base64.b64decode(imgs[0]))) as img:
                     self.assertLessEqual(max(img.size), 768)
                     self.assertEqual(img.format, "JPEG")
@@ -88,6 +92,8 @@ class SequenceBenchmarkTests(unittest.TestCase):
         self.assertEqual(result.status_code, 200, result.json)
         self.assertEqual(len(result.json["descriptions"]), 4)
         self.assertEqual(len(self.requests), 4)
+        self.assertTrue(all(req[1]["options"]["num_ctx"] == 4096 for req in self.requests))
+        self.assertEqual(result.json["metrics"]["effective_num_ctx"], 4096)
         self.assertTrue(all(len(req[1]["messages"][1]["images"]) == 1
                             for req in self.requests))
         self.assertTrue(all("Keine Annahmen" in req[1]["messages"][1]["content"]
@@ -160,7 +166,7 @@ class SequenceBenchmarkTests(unittest.TestCase):
 
     def test_endpoint_advertised_without_changing_existing_contract(self):
         info = self.client.get("/capabilities", headers=AUTH)
-        self.assertEqual(info.json["worker_version"], "2.1.0")
+        self.assertEqual(info.json["worker_version"], "2.1.1")
         self.assertEqual(info.json["benchmark_api"], 1)
         self.assertIn("/benchmark/sequence", info.json["endpoints"])
         self.assertIn("/describe", info.json["endpoints"])
