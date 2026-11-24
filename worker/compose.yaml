@@ -122,6 +122,25 @@ services:
     security_opt:
       - no-new-privileges:true
     cap_drop: [ALL]
+  vision-ab:
+    build: ./vision
+    image: jarvis-vision-ab:2.1.0
+    environment:
+      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
+      VISION_MODEL: ${VISION_MODEL:-qwen3-vl:4b-instruct}
+    ports:
+      - "127.0.0.1:10505:10503"
+    depends_on:
+      - ollama
+    restart: "no"
+    profiles: ["benchmark"]
+    networks: [llm-private]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
   ops:
     build: ./ops
     image: jarvis-ops:2.1.0
