@@ -1,0 +1,39 @@
+# Optional example. Replace sensor and room; opt-in only.
+# No camera or identity tracking. Install as an HA package after review.
+input_datetime:
+  jarvis_room_example_last_greeting:
+    name: Jarvis room example last greeting
+    has_date: true
+    has_time: true
+automation:
+  - id: jarvis_room_example_greeting
+    alias: "Jarvis · Raumbegrüßung (Beispiel)"
+    initial_state: false
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.example_room_motion
+        to: "on"
+    conditions:
+      - condition: time
+        after: "06:00:00"
+        before: "10:00:00"
+      - condition: template
+        value_template: "{{ states('input_datetime.jarvis_room_example_last_greeting')[:10] != now().strftime('%Y-%m-%d') }}"
+    actions:
+      - action: jarvis_tablet_audio.room_audio
+        data:
+          action: announce
+          room: example_room
+          message: "Guten Morgen! Ich wünsche dir einen guten Start in den Tag."
+        response_variable: result
+      - if:
+          - condition: template
+            value_template: "{{ result.get('results', {}).get('example_room', {}).get('accepted', false) }}"
+        then:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.jarvis_room_example_last_greeting
+            data:
+              timestamp: "{{ as_timestamp(now()) }}"
+    mode: single
+# The daily marker is based on queue acceptance, not confirmed playback.

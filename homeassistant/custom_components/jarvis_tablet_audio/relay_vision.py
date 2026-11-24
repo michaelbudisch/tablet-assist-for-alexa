@@ -58,9 +58,25 @@ def classify(text):
     return next((key for key, values in groups.items() if phrase in values), None)
 
 
+def room_camera_context(relay, context):
+    from .relay_room_camera import hub
+    current = hub(relay.hass)
+    if current and context.user_id:
+        try:
+            room = current.transport.room_for(context.user_id)
+        except PermissionError:
+            return None, None
+        return current, room
+    return None, None
+
+
 async def resolve_camera(relay, source, context):
     """One mapping and permission check shared by descriptions and the requesting UI."""
     entity_id = relay.camera_id() if source == "tablet" else relay.entry.options.get("vision_outside_camera" if source == "outside" else "vision_door_camera", "")
+    if source == "tablet":
+        current, room = room_camera_context(relay, context)
+        if current:
+            entity_id = current.entity_id(room, "camera") if current.store.enabled(room) else None
     if not entity_id or not re.fullmatch(r"camera\.[a-z0-9_]+", entity_id):
         raise ServiceValidationError("Select this camera in Jarvis integration options")
     if context.user_id:
@@ -89,7 +105,7 @@ async def resolve_camera_request(relay, selection, context):
                 raise
             continue
         state = relay.hass.states.get(entity_id)
-        if source == "all" and (state is None or selected == "tablet" and not relay.frames.fresh):
+        if source == "all" and (state is None or state.state in ("unknown", "unavailable")):
             continue
         if entity_id not in entities:
             entities.append(entity_id)
@@ -224,10 +240,14 @@ async def describe(relay, source, mode, context):
             raise ServiceValidationError("Video analysis requires a configured Ring recording camera")
         frame_count = 1
         if source == "tablet":
-            if not relay.frames.fresh:
+            current, room = room_camera_context(relay, context)
+            if current and not current.store.fresh(room):
+                raise ServiceValidationError("Room camera has no fresh image")
+            frames = current.store.frames[room] if current else relay.frames
+            if not frames.fresh:
                 raise ServiceValidationError("Tablet camera has no fresh image")
-            image = relay.frames.image
-            captured_at = relay.frames.captured_at
+            image = frames.image
+            captured_at = frames.captured_at
         elif mode == "ring_video":
             # Download once; joint chronological inference is the production path.
             from .relay_ring_video import (ring_recording, ring_sequence_frames,

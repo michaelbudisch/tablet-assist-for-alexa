@@ -6,6 +6,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([RelayCamera(runtime(hass), entry),
                         RingFramesCamera(runtime(hass), entry, 'door'),
                         RingFramesCamera(runtime(hass), entry, 'outside')])
+    from .relay_room_camera import hub
+    if current := hub(hass):
+        current.attach('camera', async_add_entities, RoomRelayCamera)
 
 class RelayCamera(Camera):
     _attr_name = "Echo Relay Tablet"
@@ -70,3 +73,33 @@ class RingFramesCamera(Camera):
         await super().async_added_to_hass()
         self.relay.listeners.add(self.async_write_ha_state)
         self.async_on_remove(lambda: self.relay.listeners.discard(self.async_write_ha_state))
+
+class RoomRelayCamera(Camera):
+    _attr_should_poll = False
+    _attr_content_type = "image/jpeg"
+    _attr_has_entity_name = True
+    _attr_name = "Kamera"
+
+    def __init__(self, hub, room):
+        super().__init__()
+        self.hub, self.room = hub, room
+        self._attr_unique_id = hub.uid(room, "camera")
+        self._attr_device_info = hub.device_info(room)
+
+    @property
+    def available(self):
+        return self.hub.store.fresh(self.room)
+
+    @property
+    def extra_state_attributes(self):
+        return {"image_interval_seconds": self.hub.store.intervals.get(self.room),
+                "max_image_age_seconds": 15, "room": self.room}
+
+    async def async_camera_image(self, width=None, height=None):
+        return self.hub.store.frames[self.room].image if self.available else None
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        listeners = self.hub.listeners.setdefault(self.room, set())
+        listeners.add(self.async_write_ha_state)
+        self.async_on_remove(lambda: listeners.discard(self.async_write_ha_state))

@@ -1,0 +1,22 @@
+name: Experimental multiroom routing tests
+on:
+  push:
+    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
+  pull_request:
+    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
+permissions:
+  contents: read
+jobs:
+  routing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s homeassistant/tests -p 'test_room*.py' -v
+      - run: python -m compileall -q homeassistant/custom_components/jarvis_tablet_audio tests/relay_camera_e2e/fixture
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check homeassistant/www/jarvis/jarvis-room-assist-v0.1.0.js && node --check homeassistant/www/jarvis/jarvis-room-admin-v0.1.0.js

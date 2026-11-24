@@ -7,6 +7,8 @@ PLATFORMS = [Platform.TTS, Platform.CONVERSATION, Platform.CAMERA, Platform.BINA
 async def async_setup_entry(hass, entry):
     from .relay_camera import async_setup
     await async_setup(hass, entry)
+    from .relay_room_adapter import setup_room_audio
+    await setup_room_audio(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     options = dict(entry.options)
     from .relay_models import MODEL_OPTIONS
@@ -23,4 +25,6 @@ async def async_unload_entry(hass, entry):
     if unloaded:
         from .relay_camera import async_unload
         async_unload(hass)
+        from .relay_room_adapter import unload_room_audio
+        unload_room_audio(hass)
     return unloaded
