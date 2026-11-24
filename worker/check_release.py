@@ -28,7 +28,7 @@ def validate():
         if f"## {version}" not in (ROOT / name).read_text(encoding="utf-8"):
             raise RuntimeError(f"{name} lacks changelog entry {version}")
     compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")
-    for service in ("vision", "qwen-stream", "ops"):
+    for service in ("vision", "vision-ab", "qwen-stream", "ops"):
         if f"image: jarvis-{service}:{version}" not in compose:
             raise RuntimeError(f"compose image tag for {service} is not {version}")
     return version
