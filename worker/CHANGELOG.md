@@ -1,5 +1,14 @@
 # GPU worker changelog
 
+ 
+## 2.1.0
+
+- Added opt-in private `/benchmark/sequence` endpoint for 4 independent frames versus 4/8/12 jointly described Qwen3-VL frames; production still-image endpoints and Ring automations are unchanged.
+- Added local FFmpeg MP4 sampler with identical reference frames, per-mode latency measurements and optional redacted JSON report; no recording, images or keys are retained.
+- Authentication, strict frame/timestamp/model/context bounds and shared vision admission gate apply; no external video URLs or native MP4 upload.
+- Added offline tests, container build inclusion and documentation; real RTX/GPU timings require deployment and a locally authorized clip.
+
+
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
 ## 2.0.0
