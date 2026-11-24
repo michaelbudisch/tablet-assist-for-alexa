@@ -136,7 +136,7 @@ def _send(base, token, *, images, mode, ctx, model):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Private Ring multi-frame A/B benchmark")
     parser.add_argument("video", type=Path, help="An explicitly exported, authorized local MP4 clip")
-    parser.add_argument("--base-url", default="http://127.0.0.1:10503",
+    parser.add_argument("--base-url", default="http://127.0.0.1:10505",
                         help="Private vision worker URL, never a public address")
     parser.add_argument("--env-file", type=Path,
                         help="Existing worker .env file containing JARVIS_TTS_TOKEN")
