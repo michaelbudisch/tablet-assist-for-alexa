@@ -1,6 +1,7 @@
 """Offline mocked checks for the opt-in multi-frame benchmark API."""
 import base64
 import io
+import json
 import unittest
 
 from PIL import Image
@@ -166,11 +167,81 @@ class SequenceBenchmarkTests(unittest.TestCase):
 
     def test_endpoint_advertised_without_changing_existing_contract(self):
         info = self.client.get("/capabilities", headers=AUTH)
-        self.assertEqual(info.json["worker_version"], "2.1.1")
+        self.assertEqual(info.json["worker_version"], "2.2.0")
         self.assertEqual(info.json["benchmark_api"], 1)
         self.assertIn("/benchmark/sequence", info.json["endpoints"])
         self.assertIn("/describe", info.json["endpoints"])
         self.assertIn("/detect", info.json["endpoints"])
+
+
+
+class ProductionSequenceTests(unittest.TestCase):
+    def setUp(self):
+        self.requests = []
+        self.answer = {"description": "Eine Person trägt ein Paket.",
+                       "person": "yes", "vehicle": "no", "parcel_carried": "yes",
+                       "parcel_placed": "no", "delivery_vehicle": "no",
+                       "delivery_clothing": "no"}
+        def fake(path, data=None, timeout=8):
+            self.requests.append((path, data, timeout))
+            return {"message": {"content": json.dumps(self.answer)}}
+        self.client = create_app(TOKEN, call=fake).test_client()
+
+    def send(self, count=12, **kw):
+        return self.client.post("/describe/sequence", headers=AUTH,
+                                json={"frames": frames(count), **kw})
+
+    def test_standard_contract(self):
+        result = self.send()
+        self.assertEqual(result.status_code, 200, result.json)
+        self.assertEqual(result.json["delivery_assessment"], "likely")
+        self.assertEqual(result.json["evidence"]["parcel_carried"], "yes")
+        self.assertEqual(result.json["frames"], 12)
+        self.assertEqual(result.json["sequence_api"], 1)
+        self.assertEqual(len(self.requests), 1)
+        body = self.requests[0][1]
+        self.assertEqual(body["options"]["num_ctx"], 16384)
+        self.assertEqual(len(body["messages"][1]["images"]), 12)
+        self.assertEqual(body["format"]["additionalProperties"], False)
+        self.assertEqual(result.headers["Cache-Control"], "no-store")
+
+    def test_detail_profile_same_context(self):
+        result = self.send(4, profile="detail", num_ctx=16384)
+        self.assertEqual(result.status_code, 200, result.json)
+        self.assertEqual(result.json["metrics"]["max_image_edge"], 1024)
+        self.assertEqual(result.json["metrics"]["effective_num_ctx"], 16384)
+
+    def test_uncertain_and_contradictory(self):
+        self.answer["person"] = "no"
+        result = self.send()
+        self.assertEqual(result.json["delivery_assessment"], "uncertain")
+        self.assertEqual(result.json["evidence"]["parcel_carried"], "uncertain")
+
+    def test_clothing_alone_not_likely(self):
+        self.answer.update(parcel_carried="no", delivery_clothing="yes")
+        self.assertEqual(self.send().json["delivery_assessment"], "uncertain")
+
+    def test_no_evidence(self):
+        self.answer.update(parcel_carried="no")
+        self.assertEqual(self.send().json["delivery_assessment"], "no_evidence")
+
+    def test_missing_and_invalid_fields_fail_closed(self):
+        self.answer.pop("parcel_placed")
+        self.assertEqual(self.send().status_code, 503)
+        self.answer["parcel_placed"] = True
+        self.assertEqual(self.send().status_code, 503)
+
+    def test_bounds_and_auth(self):
+        self.assertEqual(self.client.post("/describe/sequence", json={"frames": frames(12)}).status_code, 401)
+        for count, kw in [(4, {}), (12, {"profile": "detail"}),
+                          (12, {"num_ctx": 65536}), (12, {"source_url": "https://example.com"})]:
+            self.assertEqual(self.send(count, **kw).status_code, 400)
+        self.assertEqual(self.requests, [])
+
+    def test_capability(self):
+        result = self.client.get("/capabilities", headers=AUTH)
+        self.assertEqual(result.json["sequence_api"], 1)
+        self.assertIn("/describe/sequence", result.json["endpoints"])
 
 
 if __name__ == "__main__":

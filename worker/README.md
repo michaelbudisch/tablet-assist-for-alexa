@@ -1,6 +1,12 @@
-# Jarvis GPU Worker 2.1.1
+# Jarvis GPU Worker 2.2.0
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
+
+## 2.2.0 — Structured production Ring sequence
+
+New authenticated `POST /describe/sequence` on the existing Vision service. Standard: 12 chronological JPEGs (768 px max edge); detail: 4 selected higher-resolution JPEGs (1024 px max edge). Both use a bounded internal 16384-token context and the same vision gate. JSON includes a concise German description, tri-state evidence (yes/no/uncertain), delivery_assessment (likely/uncertain/no_evidence) and timing. A clothing hint alone is uncertain. Invalid or contradictory model output is rejected or downgraded. This is not proof of delivery. Existing /describe, /detect and /benchmark/sequence remain compatible.
+
+Preserve .env and model volumes. Rebuild only Vision: `docker compose --profile vision up -d --build --no-deps vision`. Verify capabilities and run `docker compose exec -T vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate`. Do not install the older 1.6.1 HA overlay on an already customized live backend; HA integration of the structured endpoint is a separate step after deployment. No separate container or model download is required if Qwen3-VL is already installed.
 
 ## 2.1.1 — Automatic Ring multi-frame benchmark (no separate container)
 

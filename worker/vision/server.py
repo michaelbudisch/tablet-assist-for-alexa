@@ -13,7 +13,7 @@ from flask import Flask, jsonify, request
 from PIL import Image, UnidentifiedImageError, ImageOps
 from detection import SCHEMA as DETECTION_SCHEMA, SYSTEM as DETECTION_SYSTEM, validate as validate_detection, labels as detection_labels
 from priority_gate import VisionGate
-from sequence_benchmark import register_benchmark, MAX_BENCH_BODY
+from sequence_benchmark import register_benchmark, register_sequence, MAX_BENCH_BODY
 
 MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct",
           "qwen3-vl:8b-instruct", "gemma3:4b")
@@ -145,9 +145,11 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
 
     @app.get("/capabilities")
     def capabilities():
-        return jsonify(worker_version="2.1.1", api_version=2, benchmark_api=1,
+        return jsonify(worker_version="2.2.0", api_version=2, benchmark_api=1, sequence_api=1,
                        endpoints=["/describe", "/detect", "/health", "/runtime", "/capabilities",
-                                  "/benchmark/sequence"],
+                                  "/benchmark/sequence", "/describe/sequence"],
+                       sequence_profiles={"standard": {"frames": 12, "max_image_edge": 768},
+                                          "detail": {"frames": 4, "max_image_edge": 1024}},
                        modes=tuple(PROMPTS), detection_api=1,
                        priority_queue={"scope": "vision-only", "priorities": ["interactive", "background"],
                                        "wait_ms_max": 20000, "capacity": 6},
@@ -241,6 +243,9 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
             lock.release()
     # Opt-in test path; no change to productive /describe or /detect semantics.
     register_benchmark(app, lock=lock, call=call, normalize_image=normalize_image,
+        default_model=default_model, keep_alive_options=KEEP_ALIVE,
+        context_options=CONTEXTS, model_unavailable=ModelUnavailable)
+    register_sequence(app, lock=lock, call=call, normalize_image=normalize_image,
         default_model=default_model, keep_alive_options=KEEP_ALIVE,
         context_options=CONTEXTS, model_unavailable=ModelUnavailable)
     return app

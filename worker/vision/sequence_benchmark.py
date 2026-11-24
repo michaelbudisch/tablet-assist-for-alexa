@@ -5,6 +5,7 @@ This endpoint is isolated from production /describe and /detect behavior.
 """
 import base64
 import io
+import json
 import math
 import time
 
@@ -30,19 +31,19 @@ SYSTEM = (
 )
 
 
-def _small_jpeg(encoded, normalizer):
+def _small_jpeg(encoded, normalizer, size=FRAME_SIZE):
     # The existing normalizer checks base64 validity, format, resolution, pixels
     # and removes EXIF. Downsample again to bound multimodal GPU memory use.
     normalized = normalizer(encoded)
     with Image.open(io.BytesIO(base64.b64decode(normalized))) as source:
         rgb = source.convert("RGB")
-        rgb.thumbnail((FRAME_SIZE, FRAME_SIZE))
+        rgb.thumbnail((size, size))
         buffer = io.BytesIO()
         rgb.save(buffer, "JPEG", quality=76, optimize=True)
     return base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
-def _frames(value, normalizer):
+def _frames(value, normalizer, size=FRAME_SIZE):
     if not isinstance(value, list) or len(value) not in FRAME_COUNTS:
         raise ValueError("frames must contain exactly 4, 8 or 12 images")
     output = []
@@ -57,7 +58,7 @@ def _frames(value, normalizer):
         if not 0 <= second <= 120 or second <= last_second:
             raise ValueError("timestamps must increase within 0..120 seconds")
         last_second = second
-        output.append((second, _small_jpeg(item["image"], normalizer)))
+        output.append((second, _small_jpeg(item["image"], normalizer, size)))
     return output
 
 
@@ -187,3 +188,124 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
             return jsonify(error="local vision model not installed"), 503
         except Exception:
             return jsonify(error="benchmark inference unavailable"), 503
+
+
+# Production contract kept separate from the legacy benchmark response.
+SEQUENCE_API = 1
+SEQUENCE_FIELDS = ("person", "vehicle", "parcel_carried", "parcel_placed",
+                   "delivery_vehicle", "delivery_clothing")
+STATES = ("yes", "no", "uncertain")
+SEQUENCE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "description": {"type": "string", "minLength": 1, "maxLength": 600},
+        **{key: {"type": "string", "enum": list(STATES)} for key in SEQUENCE_FIELDS},
+    },
+    "required": ["description", *SEQUENCE_FIELDS],
+    "additionalProperties": False,
+}
+SEQUENCE_SYSTEM = SYSTEM + (
+    " Keine Alters-, Geschlechts- oder Identitätszuordnung, keine privaten Daten. "
+    "Keine expliziten oder grafischen Beschreibungen. "
+    "Gib ausschließlich das vorgegebene JSON-Schema zurück. "
+    "yes bedeutet eindeutig sichtbar, no kein sichtbarer Hinweis, uncertain unklar. "
+    "Ein herumstehender Karton allein ist keine beobachtete Ablagehandlung. "
+    "Gelbe Kleidung oder ein gelbes Fahrzeug allein beweist keinen Zustelldienst."
+)
+
+
+def validate_sequence(raw):
+    """Reject partial/malformed model data; never infer missing fields as no."""
+    if not isinstance(raw, str) or len(raw) > 12000:
+        raise ValueError("invalid structured sequence")
+    value = json.loads(raw)
+    if not isinstance(value, dict) or set(value) != {"description", *SEQUENCE_FIELDS}:
+        raise ValueError("invalid structured sequence keys")
+    description = value["description"]
+    if not isinstance(description, str) or not description.strip() or len(description) > 600:
+        raise ValueError("invalid description")
+    if any(type(value[k]) is not str or value[k] not in STATES for k in SEQUENCE_FIELDS):
+        raise ValueError("invalid structured evidence")
+    evidence = {k: value[k] for k in SEQUENCE_FIELDS}
+    # Contradictions must not become confident positives.
+    for child, parent in (("parcel_carried", "person"), ("delivery_clothing", "person"),
+                          ("delivery_vehicle", "vehicle")):
+        if evidence[child] == "yes" and evidence[parent] != "yes":
+            evidence[child] = "uncertain"
+            evidence[parent] = "uncertain"
+    strong = ("parcel_carried", "parcel_placed", "delivery_vehicle")
+    assessment = ("likely" if any(evidence[k] == "yes" for k in strong)
+                  else "uncertain" if any(evidence[k] == "uncertain" for k in strong)
+                  or evidence["delivery_clothing"] != "no" else "no_evidence")
+    return " ".join(description.split()), evidence, assessment
+
+
+def register_sequence(app, *, lock, call, normalize_image, default_model,
+                      keep_alive_options, context_options, model_unavailable):
+    """Authenticated bounded production sequence; no URL input or retention."""
+    @app.post("/describe/sequence")
+    def describe_sequence():
+        request.max_content_length = MAX_BENCH_BODY
+        data = request.get_json(silent=True)
+        allowed = {"frames", "profile", "model", "keep_alive", "num_ctx", "priority", "wait_ms"}
+        if not isinstance(data, dict) or set(data) - allowed:
+            return jsonify(error="invalid sequence parameters"), 400
+        profile = data.get("profile", "standard")
+        model = data.get("model", default_model)
+        keep = data.get("keep_alive", 0)
+        context = data.get("num_ctx", 4096)
+        priority, wait = data.get("priority", "interactive"), data.get("wait_ms", 0)
+        if (profile not in ("standard", "detail")
+                or type(model) is not str or model not in BENCH_MODELS
+                or type(keep) is not int or keep not in keep_alive_options
+                or type(context) is not int or context not in (*context_options, 16384)
+                or priority not in ("interactive", "background")
+                or type(wait) is not int or not 0 <= wait <= 20000):
+            return jsonify(error="invalid sequence settings"), 400
+        count, size = (12, 768) if profile == "standard" else (4, 1024)
+        if not isinstance(data.get("frames"), list) or len(data["frames"]) != count:
+            return jsonify(error="wrong frame count for profile"), 400
+        started = time.perf_counter()
+        try:
+            frames = _frames(data["frames"], normalize_image, size)
+        except ValueError:
+            return jsonify(error="invalid sequence frames"), 400
+        prep = round((time.perf_counter() - started) * 1000, 1)
+        # Both production profiles share the same bounded context to avoid
+        # unnecessary runner reloads between standard and detail requests.
+        effective = 16384
+        if not lock.acquire(priority=priority, wait_ms=wait):
+            return jsonify(error="vision busy", **lock.snapshot()), 503
+        inference_started = time.perf_counter()
+        try:
+            messages = _messages(frames, joint=True)
+            messages[0]["content"] = SEQUENCE_SYSTEM
+            messages[1]["content"] += (
+                " Gib description als zusammenhängende Beschreibung in maximal drei kurzen Sätzen an. "
+                "Felder person und vehicle: sichtbar? parcel_carried: Paket tatsächlich getragen? "
+                "parcel_placed: Ablagehandlung eindeutig sichtbar? delivery_vehicle: deutlich als Lieferfahrzeug erkennbar? "
+                "delivery_clothing: deutlich erkennbare mögliche Zustellkleidung? "
+                "Bei widersprüchlichen Bildern oder nicht sichtbaren Handlungen uncertain wählen."
+            )
+            result = call("/api/chat", {
+                "model": model, "stream": False, "think": False, "keep_alive": keep,
+                "format": SEQUENCE_SCHEMA,
+                "options": {"num_ctx": effective, "num_predict": 480, "temperature": 0},
+                "messages": messages,
+            }, timeout=100)
+            description, evidence, assessment = validate_sequence(result.get("message", {}).get("content"))
+            return jsonify(sequence_api=SEQUENCE_API, profile=profile, model=model,
+                description=description, evidence=evidence, delivery_assessment=assessment,
+                frames=count, timestamps=[round(sec, 2) for sec, _ in frames],
+                metrics={"requested_num_ctx": context, "effective_num_ctx": effective,
+                         "max_image_edge": size, "preparation_ms": prep,
+                         "inference_ms": round((time.perf_counter()-inference_started)*1000, 1),
+                         "total_ms": round((time.perf_counter()-started)*1000, 1),
+                         "ollama": _ollama_metrics(result)},
+                limitation="sampled images; evidence can be wrong or incomplete; no identity recognition")
+        except model_unavailable:
+            return jsonify(error="local vision model not installed"), 503
+        except Exception:
+            return jsonify(error="structured sequence unavailable"), 503
+        finally:
+            lock.release()

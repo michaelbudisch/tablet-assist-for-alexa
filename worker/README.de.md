@@ -1,6 +1,12 @@
-# Jarvis GPU Worker 2.1.1
+# Jarvis GPU Worker 2.2.0
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+
+## 2.2.0 – Strukturierte produktive Ring-Bildfolge
+
+Neuer authentifizierter Endpunkt `POST /describe/sequence` im vorhandenen Vision-Dienst. Standard: zwölf chronologische JPEGs (maximal 768 px Kantenlänge); Detail: vier ausgewählte höher aufgelöste JPEGs (maximal 1024 px). Beide Profile nutzen intern 16384 Kontext-Tokens und dieselbe Vision-Warteschlange. JSON enthält eine kurze deutsche Szenenbeschreibung, dreistufige Merkmale (yes/no/uncertain), Lieferbewertung (likely/uncertain/no_evidence) und Laufzeiten. Kleidung allein bleibt unsicher. Ungültige oder widersprüchliche Modellausgaben werden abgelehnt oder herabgestuft. Kein Zustellnachweis. /describe, /detect und /benchmark/sequence bleiben kompatibel.
+
+Vorhandene .env und Modellvolumes beibehalten. Nur Vision neu bauen: `docker compose --profile vision up -d --build --no-deps vision`. Danach capabilities und `docker compose exec -T vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate` prüfen. Das ältere HA-Overlay 1.6.1 nicht über ein bereits individuell angepasstes Backend kopieren; die HA-Umstellung auf den strukturierten Endpunkt erfolgt separat nach Installation. Kein zusätzlicher Container und bei vorhandenem Qwen3-VL kein Modelldownload nötig.
 
 ## 2.1.1 – Automatischer Ring-A/B-Test (ohne zusätzlichen Container)
 

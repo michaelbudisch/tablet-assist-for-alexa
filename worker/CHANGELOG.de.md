@@ -1,6 +1,10 @@
 # GPU-Worker – Änderungsverlauf
 
  
+## 2.2.0
+
+- Produktiver strukturierter Bildfolgen-Endpunkt mit begrenztem 12-Bild-Standard und 4-Bild-Detailprofil, striktem Schema und vorsichtiger Lieferbewertung. Gemeinsamer 16384-Kontext, bisherige Endpunkte kompatibel. Mock-Vertragstests ergänzt; GPU-Qualität und Laufzeiten erfordern Praxistest.
+
 ## 2.1.1
 
 - Kontextüberlauf bei gemeinsamen Qwen3-VL-Benchmark-Anfragen behoben: begrenzter interner Mindestkontext 8192 Tokens für vier Frames und 16384 für acht oder zwölf. Einzelbild- und Produktiv-Anfragen bleiben unverändert. Angeforderter und tatsächlich verwendeter Kontext stehen in den Messdaten. Offline-Tests prüfen alle drei Größen; GPU-Speicher und Laufzeit müssen praktisch geprüft werden.

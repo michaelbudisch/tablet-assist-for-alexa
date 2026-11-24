@@ -1,6 +1,10 @@
 # GPU worker changelog
 
  
+## 2.2.0
+
+- Added production structured sequence API with bounded 12-frame standard and 4-frame detail profiles, strict schema and conservative delivery evidence. Shared 16384 context; existing routes remain compatible. Added mocked contract tests; actual GPU quality and timing require deployment.
+
 ## 2.1.1
 
 - Fix joint Qwen3-VL benchmark context overflow: use bounded internal context floors of 8192 tokens for four frames and 16384 for eight or twelve, leaving independent and production requests unchanged. Report requested and effective context in benchmark metrics. Offline tests verify all three sizes; real GPU memory and timing still require testing.
