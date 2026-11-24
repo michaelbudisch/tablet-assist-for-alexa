@@ -12,6 +12,7 @@ from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHand
 from flask import Flask, jsonify, request
 from PIL import Image, UnidentifiedImageError, ImageOps
 from detection import SCHEMA as DETECTION_SCHEMA, SYSTEM as DETECTION_SYSTEM, validate as validate_detection, labels as detection_labels
+from priority_gate import VisionGate
 
 MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct",
           "qwen3-vl:8b-instruct", "gemma3:4b")
@@ -107,7 +108,13 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
         raise RuntimeError("Unsupported VISION_MODEL")
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = MAX_BODY
-    lock = threading.Lock()
+    lock = VisionGate(max_waiters=6)
+
+    def scheduling(data):
+        priority, wait_ms = data.get('priority', 'interactive'), data.get('wait_ms', 0)
+        if priority not in ('interactive', 'background') or type(wait_ms) is not int or not 0 <= wait_ms <= 20000:
+            return None
+        return priority, wait_ms
 
     @app.before_request
     def authorize():
@@ -133,12 +140,21 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
             return jsonify(ready=False, model=default_model, error="ollama unavailable"), 503
         return jsonify(ready=default_model in installed, model=default_model,
                        supported_models=MODELS, installed_models=[m for m in MODELS if m in installed],
-                       busy=lock.locked())
+                       busy=lock.locked(), **lock.snapshot())
+
+    @app.get("/capabilities")
+    def capabilities():
+        return jsonify(worker_version="2.0.0", api_version=2,
+                       endpoints=["/describe", "/detect", "/health", "/runtime", "/capabilities"],
+                       modes=tuple(PROMPTS), detection_api=1,
+                       priority_queue={"scope": "vision-only", "priorities": ["interactive", "background"],
+                                       "wait_ms_max": 20000, "capacity": 6},
+                       max_image_bytes=MAX_BYTES, no_identity_recognition=True)
 
     @app.post("/describe")
     def describe():
         data = request.get_json(silent=True)
-        if not isinstance(data, dict) or set(data) - {"image", "mode", "model", "keep_alive", "num_ctx"}:
+        if not isinstance(data, dict) or set(data) - {"image", "mode", "model", "keep_alive", "num_ctx", "priority", "wait_ms"}:
             return jsonify(error="expected image, optional mode and model"), 400
         model = data.get("model", default_model)
         mode = data.get("mode", "scene")
@@ -149,8 +165,11 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
             return jsonify(error="unsupported local vision model"), 400
         if not isinstance(mode, str) or mode not in PROMPTS:
             return jsonify(error="unsupported description mode"), 400
-        if not lock.acquire(blocking=False):
-            return jsonify(error="vision busy"), 503
+        schedule = scheduling(data)
+        if schedule is None:
+            return jsonify(error="invalid priority or wait_ms"), 400
+        if not lock.acquire(priority=schedule[0], wait_ms=schedule[1]):
+            return jsonify(error="vision busy", **lock.snapshot()), 503
         try:
             try:
                 image = normalize_image(data.get("image"))
@@ -183,20 +202,23 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
                 vision_models=[m for m in MODELS if m in installed],
                 loaded=[{k: m.get(k) for k in ("name", "size", "size_vram", "context_length", "expires_at")}
                     for m in loaded if isinstance(m, dict) and m.get("name") in TEXT_MODELS],
-                busy=lock.locked())
+                busy=lock.locked(), **lock.snapshot())
         except Exception:
             return jsonify(error="ollama runtime unavailable"), 503
 
     @app.post("/detect")
     def detect():
         data = request.get_json(silent=True)
-        if not isinstance(data, dict) or set(data) - {"image", "model", "keep_alive", "num_ctx"}:
+        if not isinstance(data, dict) or set(data) - {"image", "model", "keep_alive", "num_ctx", "priority", "wait_ms"}:
             return jsonify(error="expected bounded image and model settings"), 400
         model, keep, context = data.get("model", default_model), data.get("keep_alive", 0), data.get("num_ctx", 4096)
         if not isinstance(model, str) or model not in MODELS or type(keep) is not int or keep not in KEEP_ALIVE or type(context) is not int or context not in CONTEXTS:
             return jsonify(error="unsupported model settings"), 400
-        if not lock.acquire(blocking=False):
-            return jsonify(error="vision busy"), 503
+        schedule = scheduling(data)
+        if schedule is None:
+            return jsonify(error="invalid priority or wait_ms"), 400
+        if not lock.acquire(priority=schedule[0], wait_ms=schedule[1]):
+            return jsonify(error="vision busy", **lock.snapshot()), 503
         try:
             try:
                 image = normalize_image(data.get("image"))
