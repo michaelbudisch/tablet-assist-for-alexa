@@ -46,6 +46,22 @@ class VisionTests(unittest.TestCase):
     def test_alternative(self):
         self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,200)
         self.assertEqual(self.calls[0][1]["model"], "gemma3:4b")
+    def test_capabilities_and_vision_queue(self):
+        response = self.client.get("/capabilities", headers=HEADERS)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["worker_version"], "2.0.0")
+        self.assertEqual(response.json["priority_queue"]["scope"], "vision-only")
+        result = self.post({"image": fixture(), "priority": "background", "wait_ms": 50})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(self.client.get("/health", headers=HEADERS).json["queue_depth"], 0)
+
+    def test_invalid_queue_controls(self):
+        for option in ({"priority": "admin"}, {"wait_ms": -1}, {"wait_ms": True},
+                       {"wait_ms": 999999}, {"wait_ms": "5"}):
+            with self.subTest(option=option):
+                self.assertEqual(self.post({"image": fixture(), **option}).status_code, 400)
+        self.assertEqual(self.calls, [])
+
     def test_residency_and_matching_context(self):
         self.assertEqual(self.post({"image":fixture(),"keep_alive":300,"num_ctx":2048}).status_code,200)
         self.assertEqual(self.calls[0][1]["keep_alive"],300)
