@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 2.0.0
+
+- Optionaler, authentifizierter Diagnose-Dienst `ops` für Whisper-Verbindung, TTS, Vision, Ollama und – sofern verfügbar – GPU-Werte; keine Speicherung privater Aufnahmen.
+- Vision-Schnittstellen `/describe` und `/detect` mit optionaler begrenzter Prioritätswarteschlange und `/capabilities`. Bisheriges sofortiges „busy“-Verhalten bleibt Standard; keine globale GPU-Steuerung.
+- Streaming-Qwen-TTS: Textbereinigung, optionales Aussprachewörterbuch, Satzaufteilung und kooperatives `/cancel`.
+- Lokales Whisper-WAV-Diagnosewerkzeug für Stille, Übersteuerung und Aufnahmezeit.
+- GitHub-CI, Offline-Tests, Docker-Compose-Prüfung und Release-ZIP-Erstellung ohne Zugangsdaten.
+- Bestehende APIs und Modellvolumes bleiben erhalten; Hardware-Praxistest nach Installation nötig.
+
 ## 1.9.0
 
 ### 1.9.0 — Schema-Erweiterung
