@@ -41,7 +41,7 @@ Für dieses App-Update muss das bereinigte HA-Dashboard nicht geändert werden. 
 
 ### Kamera und lokales Visionmodell
 
-Öffne **Kameraeinstellungen öffnen**, wähle Front-/Rückkamera und tippe auf **Kamera für HA starten**. Der ausdrücklich gestartete Kamera-Dienst sendet ungefähr alle zwei Sekunden ein JPEG und bleibt außerhalb der App aktiv. Stoppen kannst du ihn hier oder über seine eigene Benachrichtigung. Audio/Keepalive bleiben unabhängig; nach einem Neustart startet nichts automatisch.
+Öffne **Kameraeinstellungen öffnen**, wähle Front-/Rückkamera und tippe auf **Kamera für HA starten**. Der ausdrücklich gestartete Kamera-Dienst sendet JPEGs im lokal einstellbaren Intervall (1, 2, 3, 5 oder 10 Sekunden, Standard 2 Sekunden) und bleibt außerhalb der App aktiv. Änderungen greifen im nächsten Aufnahmezyklus; Aufnahme und Upload können die tatsächliche Rate begrenzen. Stoppen kannst du ihn hier oder über seine eigene Benachrichtigung. Audio/Keepalive bleiben unabhängig; nach einem Neustart startet nichts automatisch.
 
 Voraussetzung sind der passende Empfänger **Jarvis Tablet Audio 1.4.0** und der vorhandene lokale Vision-Worker. HA stellt Tablet-Kamera und optionalen Bildbewegungssensor bereit. Außen-/Haustürkamera werden in den Integrationsoptionen gewählt; Sichtfragen beantwortet der Jarvis-Router. Bilder liegen im Arbeitsspeicher und verfallen nach 15 Sekunden ohne Nachschub. Dies sind regelmäßig neue Einzelbilder, kein Video mit voller Bildrate und keine Personenerkennung. Siehe [Einrichtung und Sichtfragen](docs/camera-preparation.de.md).
 

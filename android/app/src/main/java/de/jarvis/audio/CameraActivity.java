@@ -71,6 +71,24 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
             controller.capture(rotation());
         });
         findViewById(R.id.camera_clear).setOnClickListener(v->clearSnapshot());
+        Spinner refreshRate=findViewById(R.id.camera_refresh_rate);
+        var prefs=getSharedPreferences(MainActivity.PREF,0);
+        int[] intervals=CameraRefresh.options();
+        ArrayList<String> intervalLabels=new ArrayList<>();
+        int savedInterval=CameraRefresh.normalize(prefs.getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT));
+        int selectedInterval=0;
+        for(int i=0;i<intervals.length;i++){
+            intervalLabels.add(getResources().getQuantityString(R.plurals.camera_refresh_interval,intervals[i],intervals[i]));
+            if(intervals[i]==savedInterval)selectedInterval=i;
+        }
+        refreshRate.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,intervalLabels));
+        refreshRate.setSelection(selectedInterval);
+        refreshRate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int position,long id){
+                prefs.edit().putInt(CameraRefresh.KEY,intervals[position]).apply();
+            }
+        });
         CheckBox motion=findViewById(R.id.camera_motion);
         motion.setChecked(getSharedPreferences(MainActivity.PREF,0).getBoolean("camera_motion",false));
         motion.setOnCheckedChangeListener((button,checked)->getSharedPreferences(MainActivity.PREF,0).edit().putBoolean("camera_motion",checked).apply());

@@ -25,8 +25,10 @@ public class CameraRelayService extends Service {
     private boolean motionEnabled;
     private int retries;
     private String lens;
+    private long captureStarted;
     private final Runnable capture=()->{
         if(active&&camera!=null){
+            captureStarted=SystemClock.elapsedRealtime();
             Display display=getSystemService(DisplayManager.class).getDisplay(Display.DEFAULT_DISPLAY);
             camera.capture(display==null?0:display.getRotation()*90);
         }
@@ -84,7 +86,15 @@ public class CameraRelayService extends Service {
                         outcome=message!=null&&message.matches("camera_[a-z_]+")?message:"camera_upload_error";
                     }
                     final String next=outcome;
-                    main.post(()->{if(active){status=next;main.postDelayed(capture,next.equals("camera_relay_active")?2000:5000);}});
+                    main.post(()->{
+                        if(active){
+                            status=next;
+                            int interval=getSharedPreferences(MainActivity.PREF,0)
+                                    .getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT);
+                            long elapsed=SystemClock.elapsedRealtime()-captureStarted;
+                            main.postDelayed(capture,CameraRefresh.nextDelay(interval,elapsed,next.equals("camera_relay_active")));
+                        }
+                    });
                 });
             }
             public void onError(){

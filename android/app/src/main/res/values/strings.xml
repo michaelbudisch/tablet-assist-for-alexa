@@ -132,7 +132,7 @@
     <string name="language_en">English</string>
     <string name="footer">Community project · Android 9+ · v%1$s</string>
     <string name="camera_relay_title">Camera for Home Assistant</string>
-    <string name="camera_relay_help">Send the selected camera to HA every two seconds using your saved HA login. This continues when you return to the dashboard or switch the screen off. Start explicitly and stop here or from the separate camera notification. Images are not recorded. Install the matching Jarvis Tablet Audio camera receiver in HA first.</string>
+    <string name="camera_relay_help">Send the selected camera to HA at the selected refresh interval using your saved HA login. This continues when you return to the dashboard or switch the screen off. Start explicitly and stop here or from the separate camera notification. Images are not recorded. Install the matching Jarvis Tablet Audio camera receiver in HA first.</string>
     <string name="camera_relay_start">Start camera for HA</string>
     <string name="camera_relay_stop">Stop HA camera</string>
     <string name="camera_local_title">Local camera test</string>
@@ -151,4 +151,10 @@
     <string name="camera_notification_text">Camera active · sending images to Home Assistant</string>
     <string name="room_audio_enabled">Room audio (experimental)</string>
     <string name="room_audio_help">Requires a dedicated Home Assistant user for this room. Enable only after provisioning the room in Home Assistant. Restart the player to apply.</string>
+    <string name="camera_refresh_label">Camera refresh interval</string>
+    <string name="camera_refresh_help">Stored on this tablet. Changes apply during the next capture cycle. Actual delivery may be slower depending on capture, upload and server load.</string>
+    <plurals name="camera_refresh_interval">
+        <item quantity="one">Every %d second</item>
+        <item quantity="other">Every %d seconds</item>
+    </plurals>
 </resources>

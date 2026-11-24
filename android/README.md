@@ -41,7 +41,7 @@ The cleaned-up HA dashboard does not need changes for this app update. An upstre
 
 ### Camera and local vision
 
-Open **Open camera settings**, choose front/rear camera and tap **Start camera for HA**. The explicitly started camera foreground service sends a bounded JPEG about every two seconds and continues outside the app. Stop it here or from its separate notification. Audio/keepalive remain independent; nothing starts automatically after reboot.
+Open **Open camera settings**, choose front/rear camera and tap **Start camera for HA**. The explicitly started camera foreground service sends bounded JPEGs at a locally configurable interval (1, 2, 3, 5 or 10 seconds, default 2 seconds) and continues outside the app. Changes apply in the next capture cycle; capture and upload may limit the actual rate. Stop it here or from its separate notification. Audio/keepalive remain independent; nothing starts automatically after reboot.
 
 Requires the matching **Jarvis Tablet Audio 1.4.0** receiver and existing local GPU Worker vision service. HA exposes the tablet camera and optional coarse image-motion sensor. Select outdoor/door cameras in integration options and ask explicit camera questions through the Jarvis router. Images stay in memory and expire after 15 seconds without delivery. This is periodically refreshed still imagery, not full-rate video or person detection. See [setup and camera questions](docs/camera-preparation.md).
 
