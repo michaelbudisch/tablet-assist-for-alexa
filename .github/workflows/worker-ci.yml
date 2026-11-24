@@ -33,7 +33,7 @@ jobs:
         run: python -m unittest -v test_server
       - name: Whisper WAV quality tests
         working-directory: worker/tools
-        run: python -m unittest -v test_check_audio
+        run: python -m unittest -v test_check_audio test_benchmark_ring_video
       - name: Release validation and package test
         working-directory: worker
         run: python -m unittest -v test_release
