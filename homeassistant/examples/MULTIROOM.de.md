@@ -76,3 +76,13 @@ Für einen Raum stattdessen `room: wohnzimmer`. Raumverwaltung bietet Durchsagen
 | Tablet umziehen | Kamera/Player stoppen, alte Zuordnung aufheben, neuen Raum/Konto konfigurieren, Bereich und Karten-Instance aktualisieren. |
 
 Vor Einsatz mehrerer Tablets getrennte Antworten, gleichzeitige Anfragen, Offline-/Beschäftigt-Verhalten ohne fremden Rückfall, Kameras/Stopp und Ruhezeiten prüfen. [Android-Einrichtung](../../android/README.de.md) · [Sicherheit](../../docs/security.md).
+
+## Personalisierte Begrüßung mit Büro-Kamera (Backend 1.7.1)
+
+Der bisherige `proactive`-Dienst wertete nur den alten Echo-Relay-Kamerastream aus. Ab Backend 1.7.1 akzeptiert die Administratoraktion `jarvis_tablet_audio.proactive` mit `action: check` optional `room: buero` und prüft dann frische Bilder der ausdrücklich aktivierten Multiroom-Kamera. Der ausgewertete Raum wird im Ereignis `jarvis_echo_relay_detection` als `room` zusammen mit der `camera_entity_id` übermittelt.
+
+Für bestehende Systeme die Dateien `relay_proactive.py` und `relay_camera.py` aus `homeassistant/custom_components/jarvis_tablet_audio/` in die entsprechende HA-Integration kopieren und die Integration neu laden oder HA neu starten. Der neue Dienstparameter ist **erst danach** verfügbar. Das Backend-Setting `greeting` bleibt aus, wenn bereits die HA-Raumautomation Audio ausgibt.
+
+Im technischen Auslöser `automation.jarvis_tablet_bewegung_mit_vision` den Bewegungstrigger auf `binary_sensor.jarvis_tablet_buero_bildbewegung` setzen und der Aktion `jarvis_tablet_audio.proactive` neben `action: check` den Wert `room: buero` geben. Dann die allgemeine `automation.jarvis_morgendliche_begrussung_buro_multiroom` deaktivieren und die vorbereitete ereignisbasierte `automation.jarvis_buro_personalisierte_begrussung_multiroom` aktivieren.
+
+Die Namen stammen aus `input_text.jarvis_name_mann`, `input_text.jarvis_name_frau` und `input_text.jarvis_name_kind`. Visuelle Kategorien sind unsichere Schätzungen und **keine verlässliche Identitätsfeststellung**. Nur bei eindeutiger Ein-Personen-Schätzung wird ein hinterlegter Name genutzt; andernfalls bleibt die Begrüßung neutral. Nicht zur Authentifizierung nutzen. Kamera nur mit informierter Zustimmung der Betroffenen aktivieren.
