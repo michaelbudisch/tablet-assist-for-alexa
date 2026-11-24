@@ -1,5 +1,12 @@
 # Changelog
 
+## Multiroom camera-aware vision — backend 1.7.1
+- The administrator proactive vision check can now select a consented room camera by `room`, instead of relying on the legacy global camera frames.
+- Room-scoped `jarvis_echo_relay_detection` events include the originating room; stale/replaced sessions are rejected and legacy single-device checks are unchanged.
+- German/English migration instructions for wiring the prepared office greeting and preventing duplicate announcements.
+- Requires updating the HA custom component and reloading the integration; no automatic installation is performed.
+
+
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](README.md)
 
 ## Multiroom — backend 1.7.0 / Android 0.6.0 / room cards 0.2.0 and 0.1.1
