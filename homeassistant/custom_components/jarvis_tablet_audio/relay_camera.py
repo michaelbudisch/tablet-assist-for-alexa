@@ -72,15 +72,15 @@ class RelayRuntime:
     def save_ring_storyboard(self, source, jpeg, count, results=None, *, analyzed=None, summary=None, analysis_mode=None):
         if source not in ("door", "outside") or not isinstance(jpeg, bytes) or len(jpeg) > MAX_IMAGE:
             raise ValueError("Invalid Ring storyboard")
-        camera = self.entry.options.get("vision_door_camera" if source == "door" else "vision_outside_camera", "")
-        state = self.hass.states.get(camera) if camera else None
+        sensor = "sensor.haustur_letzte_aufzeichnung" if source == "door" else "sensor.vorderseite_letzte_aufzeichnung"
+        state = self.hass.states.get(sensor)
         self.ring_storyboards[source] = {"image": jpeg, "frames": count,
                                          "frame_results": results or [],
                                          "frames_analyzed": analyzed if analyzed is not None else sum(bool(r.get("success")) for r in (results or [])),
                                          "summary": summary,
                                          "analysis_mode": analysis_mode,
                                          "saved_at": monotonic(),
-                                         "event_time": state.last_updated.isoformat() if state else None}
+                                         "event_time": state.state if state else None}
         self.notify()
 
     def is_owner(self, user):
@@ -294,6 +294,7 @@ async def async_setup(hass, entry):
     hass.services.async_register(DOMAIN, "proactive", proactive_service, schema=vol.Schema({
         vol.Optional("action", default="get"): vol.In(["get", "set", "check", "heartbeat", "claim", "ack"]),
         vol.Optional("settings"): dict, vol.Optional("revision"): str, vol.Optional("manual", default=False): bool,
+        vol.Optional("room", default=""): vol.Match(r"^[a-z0-9_]{0,64}$"),
         vol.Optional("client_id"): str, vol.Optional("busy", default=True): bool,
         vol.Optional("request_id"): str, vol.Optional("started", default=False): bool}), supports_response=SupportsResponse.ONLY)
 
