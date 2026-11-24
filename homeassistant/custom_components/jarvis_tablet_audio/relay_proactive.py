@@ -20,10 +20,13 @@ from .relay_vision import request, resolve_camera
 EVENT = "jarvis_echo_relay_proactive"
 DETECTION_EVENT = "jarvis_echo_relay_detection"
 DEFAULTS = {"enabled": False, "test_mode": True, "cooldown": 60, "start": "06:00", "end": "10:00",
-    "classes": ["person", "dog"], "greeting": True, "greeting_class": "adult", "name": "",
-    "offer_overview": True, "weather_entity": "", "script_entity": ""}
+    "classes": ["person", "dog"], "greeting": True, "greeting_class": "person",
+    "name_woman": "", "name_man": "", "name_child": "",
+    "offer_overview": True, "weather_entity": "", "script_entity": "", "profile": ""}
+PROFILES = {"michael": "Michael", "sarah": "Sarah", "leander": "Leander"}
 PROACTIVE_OPTIONS = frozenset(("proactive_settings",))
 CLASSES = ("person", "adult", "child", "man", "woman", "dog")
+NAME_KEYS = ("name_woman", "name_man", "name_child")
 DETECTION_KEYS = {"person_count", "dog_count", "age_groups", "uncertain"}
 
 
@@ -41,15 +44,38 @@ def validate_settings(values):
     classes = values["classes"]
     if not isinstance(classes, list) or not classes or len(classes) > len(CLASSES) or any(type(c) is not str or c not in CLASSES for c in classes) or len(set(classes)) != len(classes):
         raise ServiceValidationError("Select supported classes")
-    if values["greeting_class"] not in ("person", "adult", "child"):
+    if values["greeting_class"] not in ("person", "adult", "child", "man", "woman"):
         raise ServiceValidationError("Invalid greeting class")
-    name = values["name"]
-    if not isinstance(name, str) or len(name) > 40 or any(not (c.isalpha() or c in " '-") for c in name):
-        raise ServiceValidationError("Invalid fixed greeting name")
+    if not isinstance(values["profile"], str) or values["profile"] not in ("", *PROFILES):
+        raise ServiceValidationError("Select an explicitly configured profile")
+    for key in NAME_KEYS:
+        name = values[key]
+        if not isinstance(name, str) or len(name) > 40 or any(not (c.isalpha() or c in " '-") for c in name):
+            raise ServiceValidationError("Invalid greeting name")
     for key, domain in (("weather_entity", "weather"), ("script_entity", "script")):
         if not isinstance(values[key], str) or values[key] and not re.fullmatch(domain + r"\.[a-z0-9_]+", values[key]):
             raise ServiceValidationError("Invalid configured entity")
-    return {**values, "name": name.strip()}
+    return {**values, **{key: values[key].strip() for key in NAME_KEYS}}
+
+
+def greeting_names(settings, detection):
+    """Configured names for the detected categories; this is a rough category guess, not recognition."""
+    if detection.get("uncertain"):
+        return []
+    ages = set(detection.get("age_groups", []))
+    genders = [g for g in detection.get("genders", []) if g in ("woman", "man")]
+    child, adult = "child" in ages, "adult" in ages
+    names = []
+    # With a child and an adult both present the genders cannot be assigned per person; use them only when unambiguous.
+    if not child or adult and len(genders) == 1:
+        names += [settings["name_" + g] for g in ("woman", "man") if g in genders]
+    if child:
+        names.append(settings["name_child"])
+    unique = []
+    for name in names:
+        if name and name not in unique:
+            unique.append(name)
+    return unique
 
 
 def validate_detection(value):
@@ -90,7 +116,8 @@ class Proactive:
 
     @property
     def settings(self):
-        return {**DEFAULTS, **self.relay.entry.options.get("proactive_settings", {})}
+        saved = self.relay.entry.options.get("proactive_settings", {})
+        return {**DEFAULTS, **{key: value for key, value in saved.items() if key in DEFAULTS}}
 
     @property
     def revision(self):
@@ -126,7 +153,10 @@ class Proactive:
             if action == "set":
                 if data.get("revision") != self.revision:
                     raise ServiceValidationError("Settings changed; refresh")
-                values = validate_settings(data.get("settings"))
+                submitted = data.get("settings")
+                if isinstance(submitted, dict) and "profile" not in submitted:
+                    submitted = {**submitted, "profile": self.settings["profile"]}
+                values = validate_settings(submitted)
                 for key in ("weather_entity", "script_entity"):
                     if values[key] and self.hass.states.get(values[key]) is None:
                         raise ServiceValidationError("Configured entity not found")
@@ -137,7 +167,7 @@ class Proactive:
         if action == "check":
             if call.context.user_id:
                 await self.user(call.context, admin=True)
-            return await self.inspect(call.context, manual=data.get("manual", False))
+            return await self.inspect(call.context, manual=data.get("manual", False), room=data.get("room", ""))
         await self.user(call.context)
         client = data.get("client_id", "")
         if not isinstance(client, str) or not re.fullmatch(r"[a-zA-Z0-9_-]{8,80}", client):
@@ -180,10 +210,11 @@ class Proactive:
         self.greeted_date = dt_util.now().date().isoformat()
         await self.store.async_save({"greeted_date": self.greeted_date})
 
-    async def message(self, settings, context):
+    async def message(self, settings, context, detection):
         hour = dt_util.now().hour
         greeting = "Guten Morgen" if 5 <= hour < 11 else "Guten Tag" if 11 <= hour < 18 else "Guten Abend"
-        text = greeting + (", " + settings["name"] if settings["name"] else "") + "."
+        name = " und ".join(greeting_names(settings, detection))
+        text = greeting + (", " + name if name else "") + "."
         entity = settings["weather_entity"]
         if entity:
             try:
@@ -210,7 +241,19 @@ class Proactive:
             text += " Möchtest du deinen Tagesüberblick hören?"
         return text
 
-    async def inspect(self, context, manual=False):
+    async def inspect(self, context, manual=False, room=""):
+        # Explicit opt-in room selection is only exposed by the admin check action.
+        # Legacy callers still read their original single-device stream.
+        from .relay_room_camera import hub
+        room_hub = hub(self.hass) if room else None
+        if room:
+            if not room_hub or not room_hub.store.enabled(room):
+                return self.status("room_unavailable", room=room)
+            frames = room_hub.store.frames.get(room)
+            if frames is None:
+                return self.status("no_fresh_motion", room=room)
+        else:
+            frames = self.relay.frames
         settings = self.settings
         if not settings["enabled"]:
             return self.status("disabled")
@@ -228,7 +271,7 @@ class Proactive:
         cooldown = settings["cooldown"] if settings["test_mode"] else max(300, settings["cooldown"])
         if self.last_attempt is not None and monotonic() - self.last_attempt < cooldown:
             return self.status("cooldown")
-        if not self.relay.frames.fresh or not manual and self.relay.frames.motion is not True:
+        if not frames.fresh or not manual and frames.motion is not True:
             return self.status("no_fresh_motion")
         if settings["greeting"] and not settings["script_entity"] and not self.eligible_clients():
             return self.status("no_idle_dashboard")
@@ -245,13 +288,14 @@ class Proactive:
                 if model not in runtime.get("vision_models", []):
                     return self.status("worker_unavailable")
                 async with self.relay.vision_lock:
-                    frames = self.relay.frames
-                    if not frames.fresh:
+                    # Re-check the currently authorized room session under the vision lock.
+                    frames = room_hub.store.frames.get(room) if room else self.relay.frames
+                    if frames is None or not frames.fresh:
                         return self.status("no_fresh_motion")
                     received, session = frames.received, frames.session
                     result = await request(self.relay, "/detect", {"image": base64.b64encode(frames.image).decode("ascii"), "model": model,
                         "keep_alive": self.relay.entry.options.get("model_keep_alive", 0), "num_ctx": self.relay.entry.options.get("model_num_ctx", 4096)})
-                if revision != self.revision or frames.session != session or not frames.fresh or frames.clock() - received > 15:
+                if revision != self.revision or (room and not room_hub.store.enabled(room)) or frames.session != session or not frames.fresh or frames.clock() - received > 15:
                     return self.status("expired")
                 if result.get("detection_api") != 1:
                     return self.status("worker_update_required")
@@ -261,14 +305,17 @@ class Proactive:
                 matched = [value for value in labels if value in settings["classes"]]
                 if not matched:
                     return self.status("no_match", labels=labels)
-                entity = self.relay.camera_id()
-                detection = {"labels": labels, "camera_entity_id": entity, "detection": result["detection"], "test_mode": settings["test_mode"]}
+                entity = room_hub.entity_id(room, "camera") if room else self.relay.camera_id()
+                detection = {"labels": labels, "camera_entity_id": entity, "detection": result["detection"], "test_mode": settings["test_mode"],
+                    "configured_profile": settings["profile"], "profile_source": "manual" if settings["profile"] else "none"}
+                if room:
+                    detection["room"] = room
                 self.hass.bus.async_fire(DETECTION_EVENT, detection, context=context)
                 if settings["script_entity"]:
                     await self.hass.services.async_call("script", "turn_on", {"entity_id": settings["script_entity"], "variables": {"jarvis_detection": detection}}, blocking=True, context=context)
                     await self.mark_action()
                 if settings["greeting"] and settings["greeting_class"] in labels and self.eligible_clients():
-                    message = await self.message(settings, context)
+                    message = await self.message(settings, context, result["detection"])
                     if revision != self.revision or not self.eligible_clients():
                         return self.status("busy", labels=labels)
                     self.pending = {"id": uuid4().hex, "created": monotonic(), "revision": revision, "client": None,
