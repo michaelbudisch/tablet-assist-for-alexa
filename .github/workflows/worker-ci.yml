@@ -37,6 +37,15 @@ jobs:
       - name: Release validation and package test
         working-directory: worker
         run: python -m unittest -v test_release
+      - name: Build secret-safe release ZIP
+        run: python worker/check_release.py --package ./jarvis-gpu-worker-2.0.0.zip
+      - name: Upload release ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-gpu-worker-2.0.0
+          path: jarvis-gpu-worker-2.0.0.zip
+          if-no-files-found: error
+          retention-days: 30
       - name: Docker Compose configuration validation
         env:
           LAN_IP: 127.0.0.1
