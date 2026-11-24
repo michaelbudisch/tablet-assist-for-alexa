@@ -140,7 +140,7 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
             return jsonify(ready=False, model=default_model, error="ollama unavailable"), 503
         return jsonify(ready=default_model in installed, model=default_model,
                        supported_models=MODELS, installed_models=[m for m in MODELS if m in installed],
-                       busy=lock.locked(), **lock.snapshot())
+                       **lock.snapshot())
 
     @app.get("/capabilities")
     def capabilities():
@@ -202,7 +202,7 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
                 vision_models=[m for m in MODELS if m in installed],
                 loaded=[{k: m.get(k) for k in ("name", "size", "size_vram", "context_length", "expires_at")}
                     for m in loaded if isinstance(m, dict) and m.get("name") in TEXT_MODELS],
-                busy=lock.locked(), **lock.snapshot())
+                **lock.snapshot())
         except Exception:
             return jsonify(error="ollama runtime unavailable"), 503
 
