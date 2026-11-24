@@ -135,6 +135,12 @@ async def setup_room_audio(hass, entry):
                     transport.provision(room, principal)
                 except ValueError as error:
                     raise ServiceValidationError(str(error)) from None
+                if room in cameras.store.frames:
+                    cameras.store.frames[room].clear()
+                    cameras.store.frames.pop(room)
+                    cameras.store.principals.pop(room, None)
+                    cameras.store.intervals.pop(room, None)
+                    cameras.store.last_upload.pop(room, None)
                 transport.settings[room] = config
                 await persist()
                 return {"room": room, "configured": True}

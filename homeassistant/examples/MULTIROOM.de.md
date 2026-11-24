@@ -42,7 +42,7 @@ Alternativ `room: wohnzimmer` für einen Raum. Nur explizit ausgewählte Räume 
 
 ## Optionale Begrüßung
 
-`multiroom-greeting.example.yaml` ist ein standardmäßig deaktiviertes Beispiel für einen bestehenden lokalen Bewegungssensor. Raumname, Sensor, Zeiten und Text anpassen. Es gibt keine neuen Kameras, keine Identitätserkennung und keine raumübergreifende Personenverfolgung. Keine Innenraumkamera muss für Multiroom aktiviert werden. Die vorhandene Einzelgeräte-Kamera-Begrüßung wird nicht automatisch migriert. Die Beispiel-Begrüßung setzt ihren Tagesmarker nach Annahme des Audioauftrags; eine spätere Wiedergabe ist damit nicht garantiert. Automatische Durchsagen können ausfallen, wenn ein Dashboard gerade das Mikrofon nutzt (auch Wakeword-Betrieb).
+`multiroom-greeting.example.yaml` ist ein standardmäßig deaktiviertes Beispiel für einen bestehenden lokalen Bewegungssensor. Raumname, Sensor, Zeiten und Text anpassen. Es gibt keine Identitätserkennung und keine raumübergreifende Personenverfolgung. Keine Innenraumkamera muss für Multiroom aktiviert werden. Die vorhandene Einzelgeräte-Kamera-Begrüßung wird nicht automatisch migriert. Die Beispiel-Begrüßung setzt ihren Tagesmarker nach Annahme des Audioauftrags; eine spätere Wiedergabe ist damit nicht garantiert. Automatische Durchsagen können ausfallen, wenn ein Dashboard gerade das Mikrofon nutzt (auch Wakeword-Betrieb).
 
 ## Testmatrix vor Freigabe
 
@@ -55,3 +55,9 @@ Alternativ `room: wohnzimmer` für einen Raum. Nur explizit ausgewählte Räume 
 - Android-CI und echte HA-Integrationstests müssen erfolgreich sein; ein echter Test mit zwei Tablets/Echos bleibt erforderlich.
 
 Keine Änderung an der privaten Hauszentrale, am GPU-Worker oder an laufenden HA-Entitäten.
+
+## Kamera pro Raum (HA 1.7.0 / Android 0.6.0)
+
+In der Raumverwaltung nur für gemeinsam genutzte Räume mit Zustimmung aller Anwesenden die Kamerafreigabe setzen. Sie ist standardmäßig aus. Das Gerät erhält eigene Kamera- und Bildbewegungsentitäten; HA-Berechtigungen gelten wie bei anderen Kameraentitäten. Im Tablet Raum-Audio aktivieren und die Kamera anschließend ausdrücklich lokal starten. Aktualisierungsintervall 1/2/3/5/10 Sekunden. Der Feed besteht aus aktuellen JPEGs, nicht einem kontinuierlichen Videostream; maximal 15 Sekunden im RAM. Bildbewegung dient als optionaler Automationsauslöser; keine Identitäts- oder raumübergreifende Personenverfolgung. Die Sichtfrage zur Tablet-Kamera eines zugewiesenen Raumkontos nutzt dessen eigene Kamera, ohne Rückfall auf eine andere. Die bisherige Einzelkamera bleibt bestehen.
+
+Die Versionsnummer 0.6.0 steht auf der App-Startseite. Eine installierbare Release-APK erfordert die bisherige Signatur; die CI-Release-Konfiguration signiert nur mit bereitgestelltem bestehendem Schlüssel und vergleicht das Zertifikat.

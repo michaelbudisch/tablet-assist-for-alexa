@@ -116,6 +116,8 @@ async def run(hass):
         async with ClientSession() as client:
             from .room_audio import check_room_audio
             await check_room_audio(hass, client, base, admin, guest, guest_bearer, check)
+            from .room_camera import check_room_camera
+            await check_room_camera(hass, client, base, admin, guest, guest_bearer, jpeg, check)
             async with client.post(base + "/register", json={"device_id": device}) as response:
                 check(response.status == 401, "anonymous upload rejected")
             async with client.post(base + "/register", json={"device_id": device}, headers={"Authorization": "Bearer " + guest_bearer}) as response:

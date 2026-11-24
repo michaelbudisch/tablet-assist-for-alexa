@@ -90,6 +90,7 @@ public class MainActivity extends Activity {
         if (pendingToken instanceof String) tokenInput.setText((String) pendingToken);
         ((TextView) findViewById(R.id.token_note)).setText(prefs.contains("secret") ? R.string.token_saved : R.string.token_storage);
         ((TextView) findViewById(R.id.footer)).setText(getString(R.string.footer, BuildConfig.VERSION_NAME));
+        ((TextView) findViewById(R.id.app_version)).setText(getString(R.string.app_version,BuildConfig.VERSION_NAME,BuildConfig.VERSION_CODE));
 
         allowHttp.setOnCheckedChangeListener((button, checked) -> consentForAddress = checked ? normalizedInput() : "");
         urlInput.addTextChangedListener(new TextWatcher() {

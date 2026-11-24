@@ -32,8 +32,14 @@ response_variable: result
 
 Use `room` for one room or `rooms` for an explicit list. No private reply falls back to another room. Announcements respect quiet hours and reported busy state; intentional questions can still be answered. Queue acceptance is not playback confirmation.
 
-The disabled-by-default `multiroom-greeting.example.yaml` shows optional occupancy-triggered greeting using a local motion sensor, not a camera or identity tracking. Configure the room, sensor, times and text. Legacy single-device camera greetings are not migrated. The example records daily acceptance, not confirmed playback. Automatic announcements may be skipped while a dashboard microphone is active, including wakeword mode.
+The disabled-by-default `multiroom-greeting.example.yaml` shows optional occupancy-triggered greeting using a local motion sensor, without identity tracking. Configure the room, sensor, times and text. Legacy single-device camera greetings are not migrated. The example records daily acceptance, not confirmed playback. Automatic announcements may be skipped while a dashboard microphone is active, including wakeword mode.
 
 ## Validation required before release
 
 Test two separate tablets/Echos, simultaneous requests, room isolation, player reconnect, Bluetooth loss, quiet hours, busy state, area-specific actions, and the legacy single-room path. Verify Android and HA CI. No production deployment, private dashboard changes, or GPU worker changes are part of this branch.
+
+## Per-room camera (HA 1.7.0 / Android 0.6.0)
+
+Enable camera permission only for shared rooms with everyone's knowledge and consent; off by default. Each room has its own camera and motion entities, governed by HA entity permissions. Enable room audio in the app, then explicitly start the camera locally. Refresh intervals 1/2/3/5/10 seconds. Live feed is refreshed JPEGs, not continuous video; last image expires after 15 seconds in memory. Optional motion can trigger an automation, without identity or cross-room tracking. A tablet camera question from a provisioned room account uses its own camera, with no fallback to another room. Legacy single-device camera remains intact.
+
+App version 0.6.0 is visible on the home screen. Installable release requires the existing signing key; CI signing verifies certificate match.

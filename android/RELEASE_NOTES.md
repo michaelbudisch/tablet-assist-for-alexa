@@ -1,9 +1,5 @@
-# HA Jarvis Echo Relay 0.5.0 · Camera and vision preview
+# HA Jarvis Echo Relay 0.6.0
 
-**English** | [Deutsch](RELEASE_NOTES.de.md) · [Project overview](../README.md)
+Room-specific audio, camera JPEG feeds and optional local motion detection. Each shared room uses a dedicated non-admin Home Assistant account and explicit camera permission; camera transmission starts only on the tablet and has a separate visible stop control. Choose a 1, 2, 3, 5 or 10 second refresh interval. Version and build number appear on the home screen. Existing single-device mode remains available. Requires matching HA 1.7.0 for room cameras.
 
-Explicit-start camera foreground delivery pushes bounded, upright JPEGs to the authenticated HA receiver about every two seconds. A separate notification stops it; audio remains independent. Optional image movement, memory-only images, session invalidation and a 15-second freshness limit are included. The matching HA integration selects tablet/outdoor/door images and calls the existing local vision worker for explicit questions/actions.
-
-Install over the previous app to retain credentials. Application ID `de.jarvis.audio`; non-debuggable release signed with the same previous local test key. No private keys included. JVM, lint, native Android camera/background/HTTP/UI/audio and real-HA receiver/routing checks passed. Actual tablet battery/screen-off behavior still needs hardware validation. See the linked setup guide.
-
-[Camera setup](docs/camera-preparation.md)
+Release APK must be signed with the existing application signing key to update the installed 0.5.0. CI can build unsigned release output without secrets; that output cannot be installed. No new signing identity is generated. Hardware validation on two tablets remains required.
