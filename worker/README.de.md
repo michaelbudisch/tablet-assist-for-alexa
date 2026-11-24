@@ -1,6 +1,52 @@
-# Jarvis GPU Worker v1.9.0 – Optionales Visionmodell
+# Jarvis GPU Worker 2.0.0
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+
+## 2.0.0 – Abschluss und Betrieb
+
+**Diagnose:** Das optionale Profil `ops` stellt unter Port **10504** im
+privaten LAN die authentifizierten Endpunkte `GET /health`,
+`GET /status` und `GET /selftest` bereit. Start:
+`docker compose --profile ops up -d --build ops`.
+Der Header `X-API-Key` verwendet den bereits vorhandenen
+`JARVIS_TTS_TOKEN`. Die Prüfung zeigt Dienstverfügbarkeit und bei
+verfügbarem `nvidia-smi` GPU-Auslastung/Speicher. Sie führt **keine**
+automatischen KI-Anfragen aus. Nicht gestartete Compose-Profile erscheinen
+als nicht verfügbar.
+
+**Vision-Warteschlange:** `/describe` und `/detect` akzeptieren optional
+`priority: "interactive" | "background"` und `wait_ms: 0..20000`.
+Maximal sechs wartende Anfragen; ohne diese Felder bleibt das bisherige
+sofortige „busy“-Verhalten erhalten. Die Priorisierung gilt **nur innerhalb
+des Vision-Dienstes**, nicht global für Whisper, Ollama und TTS.
+`GET /capabilities` listet die Schnittstellen.
+
+**Sprachausgabe:** Bereinigung einfacher Textformatierungen über
+`STREAM_TEXT_CLEANUP=1` (Standard). Optionales Wörterbuch
+`STREAM_PRONUNCIATION` als JSON, z. B.
+`{"kWh":"Kilowattstunden"}`, sowie `STREAM_SPEECH_SPLIT=1` für die
+Satzaufteilung längerer Antworten. Authentifiziertes `POST /cancel`
+bricht Streaming kooperativ zwischen Audioblöcken ab; das Tablet muss
+laufendes Audio zusätzlich selbst stoppen. Die alten TTS-Endpunkte
+bleiben unverändert nutzbar.
+
+**Whisper-Werkzeug:** `python tools/check_audio.py aufnahme.wav` untersucht
+eine lokale 16-Bit-PCM-WAV-Datei auf Stille, Übersteuerung und zu kurze
+Aufnahmen. Es lädt oder speichert nichts. Die VAD- und End-of-Speech-
+Einstellungen bleiben bei Home Assistant bzw. dem Sprachclient.
+
+**Freigabeprüfung:** `python check_release.py` kontrolliert VERSION,
+Dokumentation und Docker-Tags. Mit
+`python check_release.py --package ../jarvis-gpu-worker-2.0.0.zip`
+entsteht ein Release-ZIP ohne `.env`, Schlüssel, Testaudio oder Cachedateien.
+Vorhandene `.env` und Modell-Volumes unbedingt behalten. Vor dem Betrieb
+Docker-Konfiguration prüfen und nur benötigte Container neu bauen.
+
+**Grenzen:** Eine zentrale GPU-Priorisierung über alle getrennten Container
+ist noch nicht umgesetzt. Die neuen Dienste brauchen weiterhin einen
+echten Praxistest auf dem GPU-Rechner.
+
+
 
 > **Schema-Update zu Worker 1.9.0:** Der lokale `/detect`-Endpunkt liefert zusätzlich `genders` mit den groben, unsicheren Erscheinungskategorien `man`, `woman`, `unknown`. Keine tatsächliche Geschlechts- oder Identitätsfeststellung. Vorhandene `.env` und Modellvolumes beibehalten, nur Vision neu bauen; HA-Backend gemeinsam aktualisieren. [HA-Automationen](../docs/ha-automations.md).
 
