@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — TAFA kiosk room audio compatibility
+- Reusable TAFA integration fix: assigned room players remain discoverable when an existing room user later receives admin privileges. Unassigned users retain their legacy audio route.
+- Standalone room card and Multiroom backend remain unchanged; dedicated non-admin room accounts remain the default.
+- German/English integration guidance and Node regression tests run via GitHub Actions; private kiosk source is not published.
+
 ## Unreleased — optional local HTTPS / split DNS
 - Added optional Debian/Proxmox LAN DNS setup for an existing NGINX/Certbot proxy without changing HA, vhosts, certificates or router ports.
 - German/English Android microphone, offline use, validation and rollback guides with input/syntax tests.

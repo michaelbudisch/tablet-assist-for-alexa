@@ -88,3 +88,21 @@ Für bestehende Systeme die Dateien `relay_proactive.py` und `relay_camera.py` a
 Im technischen Auslöser `automation.jarvis_tablet_bewegung_mit_vision` den Bewegungstrigger auf `binary_sensor.jarvis_tablet_buero_bildbewegung` setzen und der Aktion `jarvis_tablet_audio.proactive` neben `action: check` den Wert `room: buero` geben. Dann die allgemeine `automation.jarvis_morgendliche_begrussung_buro_multiroom` deaktivieren und die vorbereitete ereignisbasierte `automation.jarvis_buro_personalisierte_begrussung_multiroom` aktivieren.
 
 Die Namen stammen aus `input_text.jarvis_name_mann`, `input_text.jarvis_name_frau` und `input_text.jarvis_name_kind`. Visuelle Kategorien sind unsichere Schätzungen und **keine verlässliche Identitätsfeststellung**. Nur bei eindeutiger Ein-Personen-Schätzung wird ein hinterlegter Name genutzt; andernfalls bleibt die Begrüßung neutral. Nicht zur Authentifizierung nutzen. Kamera nur mit informierter Zustimmung der Betroffenen aktivieren.
+
+### TAFA-Kiosk: Raum-Audio auch bei später vergebenen Adminrechten
+
+Die **eigenständige Jarvis-Raumkarte** nutzt den Raum-Audiodienst bereits korrekt. Ein separat integriertes TAFA-Dashboard kann dagegen anhand von `is_admin` fälschlich auf den alten Audio-Helfer wechseln. Der Helfer bleibt dann möglicherweise auf `idle`, obwohl der **zugewiesene Raumplayer online und bereit** ist.
+
+Für eigene Kiosk-Integrationen gibt es die [wiederverwendbare Raum-Erkennung](../www/jarvis/tafa-room-routing-v0.1.0.mjs). Sie fragt den **angemeldeten** HA-Benutzer über `POST /api/jarvis_echo_relay/room_audio` (`action: status`) ab. Nur bei vorhandener Zuordnung wird der Raum-Ausgabeweg eingeschaltet; ohne Zuordnung bleibt der alte Audio-Pfad bestehen. Im Anschluss an die Erstellung der `Voice`-Instanz in `ensureVoice(card)`, **vor** der bisherigen `if(v.roomMode&&!v._roomAttached)`-Abfrage:
+
+```js
+const v = card._jarvisIntegratedVoice;
+if (!v.roomMode && !v._tafaRoomProbeStarted) {
+  import(new URL("/local/jarvis/tafa-room-routing-v0.1.0.mjs", location.origin).href)
+    .then(m => m.maybeEnableProvisionedRoomAudio(card, v, ensureVoice))
+    .catch(error => console.warn("TAFA room routing:", error));
+}
+// Bestehendes if(v.roomMode&&!v._roomAttached) unverändert lassen.
+```
+
+Dazu das Modul aus dem Git-Repository nach `/config/www/jarvis/` kopieren. Der private TAFA-Hauszentralen-Quellcode wird nicht öffentlich mitgeliefert; das Modul verändert deshalb ohne diese Einbindung kein bestehendes Dashboard. Für **neue Räume** weiterhin getrennte **Nicht-Admin-Benutzer** anlegen. Der funktionierende Raumplayer, seine Zuordnung und andere Räume werden nicht verändert. Tests: `node --test tests/test_tafa_room_routing.mjs`.

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unveröffentlicht — Raum-Audio-Zuordnung im TAFA-Kiosk
+- Wiederverwendbarer TAFA-Kompatibilitätsfix: Bei nachträglich vergebenen Adminrechten wird ein bereits zugewiesener Raumplayer weiterhin erkannt. Nicht zugewiesene Benutzer behalten den bisherigen Audio-Pfad.
+- Eigene Multiroom-Raumkarte und Backend bleiben unverändert; getrennte Nicht-Admin-Benutzer für neue Räume bleiben Standard.
+- DE/EN-Einbauanleitungen und Node-Regressionstests mit GitHub Actions; privater Kiosk-Quellcode wird nicht veröffentlicht.
+
 ## Unveröffentlicht — optionales lokales HTTPS / Split-DNS
 - Optionaler Debian-/Proxmox-Installer für lokalen DNS auf einem bereits vorhandenen NGINX-/Certbot-Proxy. Keine Änderungen an HA, NGINX-vHosts, Zertifikaten oder Router.
 - Deutsch/englische Anleitungen für Android-Mikrofon, Offlinebetrieb, Tests und Rückbau sowie Eingabe-/Syntaxtests.

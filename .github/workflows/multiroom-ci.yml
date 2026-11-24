@@ -1,9 +1,9 @@
 name: Multiroom routing tests
 on:
   push:
-    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/www/jarvis/jarvis-room-*.js', 'homeassistant/www/jarvis/jarvis-kiosk-room-audio-*.js', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
+    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/www/jarvis/jarvis-room-*.js', 'homeassistant/www/jarvis/jarvis-kiosk-room-audio-*.js', 'homeassistant/www/jarvis/tafa-room-routing-*.mjs', 'tests/test_tafa_room_routing.mjs', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
   pull_request:
-    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/www/jarvis/jarvis-room-*.js', 'homeassistant/www/jarvis/jarvis-kiosk-room-audio-*.js', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
+    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/www/jarvis/jarvis-room-*.js', 'homeassistant/www/jarvis/jarvis-kiosk-room-audio-*.js', 'homeassistant/www/jarvis/tafa-room-routing-*.mjs', 'tests/test_tafa_room_routing.mjs', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
 permissions:
   contents: read
 jobs:
@@ -20,3 +20,4 @@ jobs:
         with:
           node-version: 22
       - run: node --check homeassistant/www/jarvis/jarvis-room-assist-v0.1.1.js && node --check homeassistant/www/jarvis/jarvis-room-admin-v0.2.0.js && node --input-type=module --check < homeassistant/www/jarvis/jarvis-kiosk-room-audio-v0.1.0.js
+      - run: node --test tests/test_tafa_room_routing.mjs

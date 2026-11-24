@@ -88,3 +88,21 @@ On existing installations update `relay_proactive.py` and `relay_camera.py` from
 Configure `automation.jarvis_tablet_bewegung_mit_vision` to trigger on `binary_sensor.jarvis_tablet_buero_bildbewegung` and pass both `action: check` and `room: buero` to the `jarvis_tablet_audio.proactive` service. Then disable generic `automation.jarvis_morgendliche_begrussung_buro_multiroom` and enable prepared event-driven `automation.jarvis_buro_personalisierte_begrussung_multiroom`.
 
 Names are read from `input_text.jarvis_name_mann`, `input_text.jarvis_name_frau`, and `input_text.jarvis_name_kind`. Visual appearance categories are estimates, **not reliable person identification**. Only a clear single-person estimate includes a configured name; all other cases use a neutral greeting. Do not use them for authentication or sensitive decisions. Camera capture requires informed consent.
+
+### TAFA kiosk: room audio for an account later granted admin permissions
+
+The standalone Jarvis room card already uses the correct room transport. A separately integrated TAFA kiosk may incorrectly switch to the legacy audio helper based on `is_admin`. That helper can remain at `idle`, although the **assigned room player is online and ready**.
+
+Custom kiosks can use the [reusable room detection helper](../www/jarvis/tafa-room-routing-v0.1.0.mjs). It queries the **authenticated** HA user with `POST /api/jarvis_echo_relay/room_audio` (`action: status`). A room transport is selected only when a room assignment exists; otherwise the legacy audio route remains unchanged. After creating the `Voice` instance in `ensureVoice(card)`, **before** the existing `if(v.roomMode&&!v._roomAttached)` check:
+
+```js
+const v = card._jarvisIntegratedVoice;
+if (!v.roomMode && !v._tafaRoomProbeStarted) {
+  import(new URL("/local/jarvis/tafa-room-routing-v0.1.0.mjs", location.origin).href)
+    .then(m => m.maybeEnableProvisionedRoomAudio(card, v, ensureVoice))
+    .catch(error => console.warn("TAFA room routing:", error));
+}
+// Keep existing if(v.roomMode&&!v._roomAttached) logic unchanged.
+```
+
+Copy this module from the repository to `/config/www/jarvis/`. The private TAFA home dashboard source is not published; merely adding this module will not change a dashboard without integrating it. Continue provisioning **dedicated non-admin users** for new rooms. No room assignments, existing room playback, or other rooms are modified. Test: `node --test tests/test_tafa_room_routing.mjs`.

@@ -62,7 +62,7 @@ The app is more than an audio player: it can expose the front or rear camera of 
 
 ## Multiroom · backend 1.7.0
 
-[**Full Multiroom setup guide**](homeassistant/examples/MULTIROOM.md) · [Deutsch](homeassistant/examples/MULTIROOM.de.md)
+[**Full Multiroom setup guide including TAFA kiosk room-audio compatibility**](homeassistant/examples/MULTIROOM.md) · [Deutsch](homeassistant/examples/MULTIROOM.de.md)
 
 One Home Assistant for multiple tablets, each with a dedicated non-admin room account, independent Echo Relay audio, optional camera/motion entities and adjustable image refresh rate. Room management supports provisioning, quiet hours and targeted announcements. The room assistant requires the same account in the app and HA dashboard, and trusted HTTPS for microphone input. No legacy audio helpers are needed in room mode. One physical tablet and automated two-room checks passed; concurrent physical two-tablet and clean-install tests remain outstanding. The Marketplace base integration does not automatically install this separate backend.
 

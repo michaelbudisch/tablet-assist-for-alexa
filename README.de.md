@@ -60,7 +60,7 @@ Die App ist nicht nur ein Audioplayer: Sie kann ein Android-Smartphone oder Tabl
 
 ## Multiroom · Backend 1.7.0
 
-[**Vollständige Multiroom-Einrichtung**](homeassistant/examples/MULTIROOM.de.md) · [English](homeassistant/examples/MULTIROOM.md)
+[**Vollständige Multiroom-Einrichtung mit TAFA-Kiosk-Audiofix**](homeassistant/examples/MULTIROOM.de.md) · [English](homeassistant/examples/MULTIROOM.md)
 
 Ein Home Assistant für mehrere Tablets, je Raum eigenes Nicht-Admin-Konto, getrennte Echo-Relay-Ausgabe, optionale Kamera-/Bewegungsentitäten und einstellbare Bildrate. Raumverwaltung mit Zuordnung, Ruhezeiten und gezielten Durchsagen. Die Raumkarte benötigt dasselbe Konto in App und HA-Dashboard sowie vertrauenswürdiges HTTPS für das Mikrofon. Keine alten Audiohelfer im Raum-Modus nötig. Ein echtes Tablet und automatisierte Zwei-Raum-Tests bestanden; gleichzeitiger Hardwaretest mit zwei Tablets und Neuinstallation noch offen. Die Marketplace-Basisintegration installiert dieses separate Backend nicht automatisch.
 
