@@ -191,7 +191,7 @@
       const conn=this.h?.connection;
       if(!conn?.socket||conn.socket.readyState!==1)throw Error("Home Assistant nicht verbunden");
       s.socket=conn.socket;
-      const unsub=await conn.subscribeMessage(e=>{if(this.alive(s))this.event(s,e);},{type:"assist_pipeline/run",...opts},false);
+      const unsub=await conn.subscribeMessage(e=>{if(this.alive(s))this.event(s,e);},{type:"assist_pipeline/run",...opts,...(this._roomStatus?.device_id?{device_id:this._roomStatus.device_id}:{})},false);
       if(!this.alive(s)){try{await unsub();}catch{}return;}
       s.unsub=unsub;
     }
@@ -340,15 +340,17 @@
           else this.setOutput(value);
         });b.dataset.kind=kind;b.dataset.choice=value;row.append(b);
       }root.append(row);};
-      group("Assistent",[["dashboard","Dashboard Assist"],["native","Android-Assistent (Reserve)"]],"mode");
-      group("Audioausgabe",[["native_audio","Echo Relay · empfohlen"],["bluetooth","Tablet / Bluetooth"],...(this.cfg.alexa_script?[["alexa","Alexa direkt (Qwen / Piper)"]]:[])],"output");
+      group("Assistent",[["dashboard","Dashboard Assist"]],"mode");
+      group("Audioausgabe",[["native_audio","Echo Relay · empfohlen"]],"output");
       const confirm=element("div",null,"display:none;gap:8px;flex-wrap:wrap;align-items:center;");confirm.dataset.role="confirm";
       confirm.append(element("span",tr(this.h,"Alexa direkt nutzt einen zeitlich begrenzt öffentlichen Audio-Link. Nur für nicht vertrauliche Antworten."),"font-size:12px;width:100%;"),btn("approve","Alexa direkt aktivieren",()=>{this._jarvisMenu=null;this.setOutput("alexa",true);this.update();}),btn("cancel","Abbrechen",()=>{this._jarvisMenu=null;this.update();}));root.append(confirm);
       const row=element("div",null,"display:flex;gap:8px;flex-wrap:wrap;align-items:center;");
       row.append(btn("native","Android-Assistent öffnen",b=>{this.stop();native(b,this);}),btn("test","Einmal sprechen",b=>{if(this.busy)return;if(this.mode!=="dashboard")this.setMode("dashboard");this.tap(b);}),btn("replay","Antwort wiederholen",()=>{if(this.busy)return;if(this.output==="alexa"&&this.lastReply)this.playAlexa(this.lastReply,false);else if(this.output==="native_audio"&&this.lastAudio)this.playNativeAudio(this.lastAudio,false);else if(this.lastAudio)this.play(this.lastAudio,false);}),btn("tabletReplay","Tablet-Reserve",()=>{if(!this.busy&&this.lastAudio)this.play(this.lastAudio,false);}));
+      row.querySelector("[data-role=native]").hidden=true;row.querySelector("[data-role=tabletReplay]").hidden=true;
       root.append(row);
       const status=element("span","Bereit","font-size:13px;overflow-wrap:anywhere;");status.dataset.role="status";status.setAttribute("role","status");root.append(status);
-      const relay=element("span","","font-size:12px;opacity:.8;");relay.dataset.role="relay";root.append(relay);void import(new URL("/local/jarvis/jarvis-settings-v1.6.0.js",location.origin).href).then(m=>m.mountSettings(this,root)).catch(()=>{root.append(element("p",de(this.h)?"Einstellungen konnten nicht geladen werden. Dashboard neu laden.":"Settings could not load. Reload the dashboard."));});
+      const relay=element("span","","font-size:12px;opacity:.8;");relay.dataset.role="relay";root.append(relay);const captions=element("label",null,"display:flex;gap:8px;align-items:center;");const toggle=element("input");toggle.type="checkbox";toggle.checked=this.pref.captions;toggle.onchange=()=>this.setPref("captions",toggle.checked);captions.append(toggle,document.createTextNode(de(this.h)?"Untertitel":"Captions"));root.append(captions);
+      const follow=element("label",null,"display:flex;gap:8px;align-items:center;");const select=element("select");for(const [v,l] of [["auto",de(this.h)?"Automatisch":"Automatic"],["smart",de(this.h)?"Bei Rückfrage":"On follow-up"],["server",de(this.h)?"Nur Server":"Server only"]]){const option=element("option",l);option.value=v;select.append(option);}select.value=this.pref.followMode;select.onchange=()=>this.setPref("followMode",select.value);follow.append(document.createTextNode(de(this.h)?"Anschlussfragen":"Follow-up"),select);root.append(follow);
       return root;
     }
     loadPreferences(){
@@ -399,7 +401,7 @@
       q("native").disabled=running;q("test").disabled=running;
       q("replay").disabled=running||this.mode!=="dashboard"||!(this.output==="alexa"?this.lastReply:this.lastAudio);
       q("tabletReplay").disabled=running||this.mode!=="dashboard"||!this.lastAudio;
-      q("status").textContent=this.phase+(this.detail?" · "+this.detail:"");q("relay").textContent=tr(this.h,ready?"Echo Relay · verbunden":"Echo Relay · nicht bereit (App und Bluetooth prüfen)");
+      q("status").textContent=this.phase+(this.detail?" · "+this.detail:"");q("relay").textContent=(this._roomStatus?.room?this._roomStatus.room+" · ":"")+tr(this.h,ready?"Echo Relay · verbunden":"Echo Relay · nicht bereit (App und Bluetooth prüfen)");
       q("relay").style.color=ready?"var(--hz-active,var(--success-color,#167867))":"var(--hz-heat,var(--warning-color,#9a6700))";
     }
   }
