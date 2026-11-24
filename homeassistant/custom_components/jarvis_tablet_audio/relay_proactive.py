@@ -295,7 +295,7 @@ class Proactive:
                     received, session = frames.received, frames.session
                     result = await request(self.relay, "/detect", {"image": base64.b64encode(frames.image).decode("ascii"), "model": model,
                         "keep_alive": self.relay.entry.options.get("model_keep_alive", 0), "num_ctx": self.relay.entry.options.get("model_num_ctx", 4096)})
-                if revision != self.revision or (room and not room_hub.store.enabled(room)) or frames.session != session or not frames.fresh or frames.clock() - received > 15:
+                if revision != self.revision or (room and (not room_hub.store.enabled(room) or room_hub.store.frames.get(room) is not frames)) or frames.session != session or not frames.fresh or frames.clock() - received > 15:
                     return self.status("expired")
                 if result.get("detection_api") != 1:
                     return self.status("worker_update_required")
