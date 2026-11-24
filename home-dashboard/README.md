@@ -1,4 +1,4 @@
-# TAFA Home Dashboard · 0.2.0 Preview
+# TAFA Home Dashboard · 0.2.1 Preview
 
 **English** | [Deutsch](README.de.md) · [TAFA project](../README.md)
 
@@ -15,10 +15,18 @@ Optional, responsive, configurable Lovelace dashboard inspired by the original H
 - Heating, heat pump, fuel level, EV, appliance and battery readings; select the data from your own existing integrations.
 - Optional Echo Relay Assist card. It mounts only after the explicit **Load assistant** action on the assistant page; use one active Echo Relay controller per helper pair. This dashboard never automatically starts listening, services or cameras. Open a camera detail explicitly to request the selected live previews; use only cameras you are authorized to view.
 
+
+### Preview 0.2.1 changes
+
+- Frequent Home Assistant state changes are coalesced into a 250 ms update window. Pending updates are cancelled on card disconnection.
+- The synthetic suite now contains 38 checks, including update batching.
+- Optional, **not automatically enabled** integration helpers are under `homeassistant/www/jarvis/`: `tafa-performance-v1.0.0.js` (rendering/FPS), `jarvis-voice-telemetry-v1.0.0.js` (voice timings), `jarvis-settings-v1.6.4.js`, and `jarvis-kiosk-room-audio-v0.1.1.js`. They require a compatible existing Jarvis host and are not part of the standalone preview.
+- No recordings, transcripts, private entity mappings or API keys are distributed. Hardware-level microphone, Bluetooth Echo and performance validation still remain.
+
 ## Installation
 
 1. Download `www/tafa-home/dashboard.js` and `www/tafa-home/model.js` from this directory and copy both to `/config/www/tafa-home/`.
-2. In HA Settings → Dashboards → Resources, register `/local/tafa-home/dashboard.js?v=0.2.0` as a JavaScript module. Hard-refresh the browser. Do not overwrite your existing dashboard or load two versions of this card.
+2. In HA Settings → Dashboards → Resources, register `/local/tafa-home/dashboard.js?v=0.2.1` as a JavaScript module. Hard-refresh the browser. Do not overwrite your existing dashboard or load two versions of this card.
 3. Create a new storage dashboard called TAFA Home Dashboard with a panel view. Add a manual card:
    ```yaml
    type: custom:tafa-home-dashboard
