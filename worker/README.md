@@ -1,27 +1,23 @@
 # Jarvis GPU Worker 2.1.0
 
- 
-## 2.1.0 — Optional Ring multi-frame A/B benchmark
+**English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-This is **opt-in** and does not change the existing /describe, /detect, Home Assistant Ring automation, MP3 announcements or infoboxes. The separate localhost-only `vision-ab` container exposes authenticated `POST /benchmark/sequence` on port 10505 compares four **independent** image descriptions with 4, 8 or 12 **joint** images in one Ollama Qwen3-VL request. Each frame must have an increasing `second` timestamp and a base64 JPEG/PNG `image`. The endpoint returns model responses, preparation time, inference time and Ollama timings; it neither downloads Ring footage nor archives images. It does **not** accept MP4 directly.
+## 2.1.0 — Automatic Ring multi-frame benchmark (no separate container)
 
-On the GPU machine, after updating the worker source while preserving your existing .env and volumes:
+The existing GPU Vision service keeps private LAN port **10503**, now with authenticated `POST /benchmark/sequence`. Existing `/describe`, `/detect`, Ring notifications and tablet UI remain unchanged. Home Assistant downloads each Ring MP4 automatically as before; no manual MP4 export is required for automatic benchmarking.
+
+Update the worker files on the GPU computer while **preserving the existing .env and model volumes**; rebuild only the already-running Vision service:
 
 ```bash
-docker compose --profile benchmark up -d --build --no-deps vision-ab
+docker compose --profile vision up -d --build --no-deps vision
 docker compose exec vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate
 ```
 
-For an **explicitly exported, authorized local Ring MP4**, install FFmpeg/FFprobe on the computer running the benchmark and run:
+Then overlay the **five files** from the CI artifact `jarvis-ring-ab-backend-1.6.1` on the existing Home Assistant directory `/config/custom_components/jarvis_tablet_audio/` (do not remove any other integration files). Restart Home Assistant once to load the new backend. This backend overlay was prepared from the currently installed Ring MP4 implementation, not an older generic integration.
 
-```powershell
-python tools/benchmark_ring_video.py "C:\Videos\Ring-Test.mp4" --env-file .env --output ring-ab-results.json
-```
+Existing `describe_camera` calls with `mode: ring_video` automatically schedule an optional background A/B test **after** completing the production result, reusing the same already-downloaded Ring MP4 in memory. It compares 4 independent, then 4, 8, 12 jointly evaluated frames, sends no extra Echo notification, and persists a short status to `input_text.jarvis_ring_a_b_status`. Full in-memory results are available through the administrator-only `jarvis_tablet_audio.ring_benchmark_status` action. Home Assistant controls `input_boolean.jarvis_ring_a_b_test_aktiv`, caps testing at four attempts and spaces tests at least 20 minutes apart.
 
-By default the script targets `http://127.0.0.1:10505` on the GPU machine (not reachable from other LAN devices). Stop the test service afterwards with `docker compose --profile benchmark stop vision-ab`. Inference still shares Ollama/GPU resources with production, so benchmark during a quiet period. No video or image data are included in the local JSON results file, only model descriptions and timings. Do not send recordings or the worker token to public hosts. Inference for 12 frames may run out of context or GPU memory; a failed test leaves the production path unchanged. For a fair A/B test, use the **same** sample video, model and 4096-token context first; compare quality and timing. Because frames are sampled, this is *not* native MP4/video-token inference.
-
-
-**English** | [Deutsch](README.de.md) · [Project overview](../README.md)
+The worker never downloads Ring videos or sees signed Ring URLs. Only bounded JPEG frames are sent over the configured private connection; temporary MP4 decoding files are immediately removed. This is **joint time-ordered frame inference**, not direct native MP4 token inference. Actual RTX/GPU timing results require installation. The local FFmpeg MP4 CLI remains available for manual offline experiments but is not used in the automatic path.
 
 ## 2.0.0 — operations-ready update (compatible defaults)
 
