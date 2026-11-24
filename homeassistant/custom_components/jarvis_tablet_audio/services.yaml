@@ -102,3 +102,23 @@ proactive:
     started:
       selector:
         boolean:
+
+room_audio:
+  name: Room audio (experimental)
+  description: Administrator provisioning and targeted room announcements. A dedicated non-admin HA user is required per room.
+  fields:
+    action:
+      required: true
+      selector:
+        select:
+          options: [list, provision, revoke, announce]
+    room:
+      selector:
+        text:
+    user_id:
+      selector:
+        text:
+    message:
+      selector:
+        text:
+          multiline: true
