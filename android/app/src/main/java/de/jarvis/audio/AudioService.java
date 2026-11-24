@@ -23,6 +23,10 @@ public class AudioService extends Service {
     private Runnable streamWatchdog;
     volatile boolean active=false,busy=false; volatile String id="", cachedStatus="";
     String base,token,httpConsent,lastCommand=""; boolean baseline=false; long heartbeat=0;
+    private boolean roomMode=false;
+    private String roomSession="";
+    private volatile String roomTerminal="";
+    private long roomRetryAt=0;
     MediaPlayer player; File file; AudioManager am; AudioFocusRequest focus; boolean audible=false,seeked=false,preferredAccepted=false; int preferredId=-1,routeAttempts=0; long checkUntil=0,playUntil=0,routeRetryAt=0;
     @Override public IBinder onBind(Intent i){return null;}
     @Override public void onCreate() {
@@ -60,6 +64,7 @@ public class AudioService extends Service {
             httpConsent=prefs.getString(MainActivity.HTTP_CONSENT,"");
             base=HaAddress.validateStored(prefs.getString("base",""),httpConsent);
             token=MainActivity.decrypt(prefs.getString("secret",""));
+            roomMode=prefs.getBoolean("room_audio_enabled",false);
             active=true;ui="connecting";
             keepalive.setEnabled(prefs.getBoolean("keepalive_enabled",false));
             io.scheduleWithFixedDelay(this::poll,0,900,TimeUnit.MILLISECONDS);
@@ -68,13 +73,76 @@ public class AudioService extends Service {
     }
     private HttpURLConnection connection(String path,String method)throws Exception{String approved=HaAddress.validateStored(base,httpConsent);HttpURLConnection c=(HttpURLConnection)new URL(approved+path).openConnection();c.setConnectTimeout(5000);c.setReadTimeout(15000);c.setInstanceFollowRedirects(false);c.setRequestMethod(method);c.setRequestProperty("Authorization","Bearer "+token);return c;}
     private String readCommand()throws Exception{HttpURLConnection c=connection("/api/states/"+COMMAND,"GET");try{if(c.getResponseCode()!=200)throw new IOException("HA HTTP "+c.getResponseCode());try(InputStream in=c.getInputStream()){ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] buf=new byte[4096];int n;while((n=in.read(buf))!=-1){if(b.size()+n>32768)throw new IOException("HA response too large");b.write(buf,0,n);}return new JSONObject(new String(b.toByteArray(),StandardCharsets.UTF_8)).getString("state");}}finally{c.disconnect();}}
-    private void publish(String status)throws Exception{HttpURLConnection c=connection("/api/services/input_text/set_value","POST");try{c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");byte[] data=new JSONObject().put("entity_id",STATUS).put("value",status).toString().getBytes(StandardCharsets.UTF_8);try(OutputStream out=c.getOutputStream()){out.write(data);}if(c.getResponseCode()!=200)throw new IOException("HA status HTTP "+c.getResponseCode());}finally{c.disconnect();}}
+    private void publish(String status)throws Exception{if(roomMode){reportRoom(status);return;}HttpURLConnection c=connection("/api/services/input_text/set_value","POST");try{c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");byte[] data=new JSONObject().put("entity_id",STATUS).put("value",status).toString().getBytes(StandardCharsets.UTF_8);try(OutputStream out=c.getOutputStream()){out.write(data);}if(c.getResponseCode()!=200)throw new IOException("HA status HTTP "+c.getResponseCode());}finally{c.disconnect();}}
     private void state(String status){cachedStatus=status;ui=status; if(!io.isShutdown())io.execute(()->{if(active)try{publish(status);}catch(Exception ignored){}});}
     AudioDeviceInfo bluetooth(){for(AudioDeviceInfo d:am.getDevices(AudioManager.GET_DEVICES_OUTPUTS))if(d.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)return d;return null;}
-    private void poll(){if(!active)return;try{String cmd=readCommand();if(!baseline){lastCommand=cmd;baseline=true;}else if(!cmd.equals(lastCommand)){lastCommand=cmd;try{JSONObject j=new JSONObject(cmd);String next=j.optString("id"),path=j.optString("path");long age=System.currentTimeMillis()-j.optLong("ts",0);if(next.matches("[a-zA-Z0-9-]{1,40}")&&age>=-5000&&age<15000){if(j.optBoolean("stop")){if(next.equals(id))main.post(()->finish("cancelled"));}else if(!busy&&PATH.matcher(path).matches()){busy=true;id=next;state(id+"|buffering");main.post(()->startStreaming(next,path));}}}catch(Exception ignored){}}
+    private void poll(){if(!active)return;if(roomMode){pollRoom();return;}try{String cmd=readCommand();if(!baseline){lastCommand=cmd;baseline=true;}else if(!cmd.equals(lastCommand)){lastCommand=cmd;try{JSONObject j=new JSONObject(cmd);String next=j.optString("id"),path=j.optString("path");long age=System.currentTimeMillis()-j.optLong("ts",0);if(next.matches("[a-zA-Z0-9-]{1,40}")&&age>=-5000&&age<15000){if(j.optBoolean("stop")){if(next.equals(id))main.post(()->finish("cancelled"));}else if(!busy&&PATH.matcher(path).matches()){busy=true;id=next;state(id+"|buffering");main.post(()->startStreaming(next,path));}}}catch(Exception ignored){}}
         long now=System.currentTimeMillis();if(!busy&&now-heartbeat>5000){heartbeat=now;String status=bluetooth()!=null?"ready|"+now:"no_bluetooth|"+now;publish(status);ui=status;}else if(busy&&now-heartbeat>6000){heartbeat=now;if(!cachedStatus.isEmpty())publish(cachedStatus);}
         haConnected=true;
       }catch(Exception e){haConnected=false;if(!busy)ui=e.getMessage()!=null&&(e.getMessage().contains("401")||e.getMessage().contains("403"))?"credentials_error":"connection_error|"+e.getClass().getSimpleName();}}
+    private JSONObject roomApi(JSONObject body)throws Exception {
+        HttpURLConnection c=connection("/api/jarvis_echo_relay/room_audio","POST");
+        try{
+            c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");
+            byte[] bytes=body.toString().getBytes(StandardCharsets.UTF_8);
+            try(OutputStream out=c.getOutputStream()){out.write(bytes);}
+            int code=c.getResponseCode();
+            if(code!=200)throw new IOException("Room HTTP "+code);
+            try(InputStream in=c.getInputStream()){
+                ByteArrayOutputStream out=new ByteArrayOutputStream();
+                byte[] buffer=new byte[2048];int n;
+                while((n=in.read(buffer))!=-1){if(out.size()+n>32768)throw new IOException("Room response too large");out.write(buffer,0,n);}
+                return new JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8));
+            }
+        }finally{c.disconnect();}
+    }
+    private void reportRoom(String status)throws Exception{
+        if(roomSession.isEmpty())return;
+        String[] parts=status.split("\\|",3);
+        if(parts.length<2||!parts[0].matches("[a-f0-9]{32}"))return;
+        String stage=parts[1];
+        if(stage.startsWith("error"))stage="error";
+        if(!stage.matches("buffering|playing|done|cancelled|error"))return;
+        roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",parts[0]).put("stage",stage));
+        if(status.equals(roomTerminal))roomTerminal="";
+    }
+    private void pollRoom(){
+        try{
+            long now=System.currentTimeMillis();
+            if(roomSession.isEmpty()){
+                if(now<roomRetryAt)return;
+                JSONObject joined=roomApi(new JSONObject().put("action","connect"));
+                String candidate=joined.optString("session");
+                if(!candidate.matches("[a-f0-9]{64}"))throw new IOException("Invalid room session");
+                roomSession=candidate;
+            }
+            if(!roomTerminal.isEmpty())reportRoom(roomTerminal);
+            boolean ready=!busy&&bluetooth()!=null;
+            JSONObject job=roomApi(new JSONObject().put("action","poll").put("session",roomSession).put("ready",ready));
+            String next=job.optString("id"),path=job.optString("path");
+            if(next.matches("[a-f0-9]{32}")){
+                if(job.optBoolean("stop")){
+                    if(next.equals(id)&&busy)main.post(()->finish("cancelled"));
+                    else roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",next).put("stage","cancelled"));
+                }else if(ready&&PATH.matcher(path).matches()){
+                    busy=true;id=next;state(id+"|buffering");main.post(()->startStreaming(next,path));
+                }else if(!busy){
+                    roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",next).put("stage","error"));
+                }
+            }
+            if(!busy){ui=(bluetooth()!=null?"ready|":"no_bluetooth|")+now;}
+            else if(!cachedStatus.isEmpty()&&now-heartbeat>5000){heartbeat=now;reportRoom(cachedStatus);}
+            haConnected=true;
+        }catch(Exception e){
+            haConnected=false;
+            String msg=e.getMessage()==null?"":e.getMessage();
+            if(msg.contains("403")||msg.contains("409")){
+                roomSession="";roomTerminal="";roomRetryAt=System.currentTimeMillis()+3000;
+                if(busy)main.post(()->finish("error_room_session"));
+            }
+            if(!busy)ui=msg.contains("401")||msg.contains("403")?"credentials_error":"connection_error|"+e.getClass().getSimpleName();
+        }
+    }
     private boolean takeSpeechFocus() {
         if(focus!=null)am.abandonAudioFocusRequest(focus);
         String focusId=id;
@@ -188,6 +256,6 @@ public class AudioService extends Service {
             MediaPlayer waiting=player;main.postDelayed(()->{if(busy&&player==waiting&&!seeked)finish("error_seek");},2000);
         }catch(Exception e){finish("error_route");}
     }};
-    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();state(ended+"|"+result);}
-    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");io.shutdownNow();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
+    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();if(roomMode)roomTerminal=ended+"|"+result;state(ended+"|"+result);}
+    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");if(roomMode){try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();}else io.shutdownNow();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }

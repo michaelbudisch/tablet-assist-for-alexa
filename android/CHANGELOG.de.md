@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 0.6.0 · Räume und Kamera-Intervalle
+
+- Raumbezogene Audio-Helfer und Raumkamera-Übertragung mit freigegebenen Nicht-Admin-Konten; Einzelgeräte-Modus bleibt erhalten.
+- Wählbare Kamera-Intervalle 1/2/3/5/10 Sekunden, Versions-/Buildanzeige und aktualisierte DE/EN-Einrichtung.
+- Signierte Update-APK mit bisherigem Schlüssel. Raumfunktionen benötigen separat HA-Backend 1.7.0; Hardwareprüfung auf zwei Tablets bleibt ausstehend.
+
 ## 0.5.0 · HA-Kamera und lokale Vision
 
 - Bewusst gestartete Übertragung von Kamerabildern im Hintergrund mit eigener Stopp-Benachrichtigung, normalisierten JPEGs und authentifizierter Übertragung an denselben HA-Server.

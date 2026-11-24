@@ -25,8 +25,10 @@ public class CameraRelayService extends Service {
     private boolean motionEnabled;
     private int retries;
     private String lens;
+    private long captureStarted;
     private final Runnable capture=()->{
         if(active&&camera!=null){
+            captureStarted=SystemClock.elapsedRealtime();
             Display display=getSystemService(DisplayManager.class).getDisplay(Display.DEFAULT_DISPLAY);
             camera.capture(display==null?0:display.getRotation()*90);
         }
@@ -55,7 +57,7 @@ public class CameraRelayService extends Service {
             var prefs=getSharedPreferences(MainActivity.PREF,0);
             String device=prefs.getString("camera_device_id","");
             if(!device.matches("[a-f0-9]{32}")){device=UUID.randomUUID().toString().replace("-","");prefs.edit().putString("camera_device_id",device).apply();}
-            upload=new CameraUploadClient(prefs.getString("base",""),MainActivity.decrypt(prefs.getString("secret","")),prefs.getString(MainActivity.HTTP_CONSENT,""),device);
+            upload=new CameraUploadClient(prefs.getString("base",""),MainActivity.decrypt(prefs.getString("secret","")),prefs.getString(MainActivity.HTTP_CONSENT,""),device,prefs.getBoolean("room_audio_enabled",false));
             lens=prefs.getString("camera_lens_id","");
             if(lens.isEmpty())lens=CameraPreviewController.lenses(this).get(0).id;
             motionEnabled=prefs.getBoolean("camera_motion",false);
@@ -77,14 +79,23 @@ public class CameraRelayService extends Service {
                         CameraJpeg.Frame frame=CameraJpeg.prepare(snapshot.jpeg,motionEnabled);
                         Boolean changed=motionEnabled?motion.changed(frame.gray):null;
                         if(!active)return;
-                        upload.upload(frame,snapshot.capturedAt,changed);
+                        upload.upload(frame,snapshot.capturedAt,changed,getSharedPreferences(MainActivity.PREF,0).getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT));
                         if(active){sent++;lastSent=System.currentTimeMillis();}
                     }catch(Exception error){
                         String message=error.getMessage();
                         outcome=message!=null&&message.matches("camera_[a-z_]+")?message:"camera_upload_error";
                     }
                     final String next=outcome;
-                    main.post(()->{if(active){status=next;main.postDelayed(capture,next.equals("camera_relay_active")?2000:5000);}});
+                    main.post(()->{
+                        if(active){
+                            status=next;
+                            if(next.equals("camera_auth_error")||next.equals("camera_pairing_error")){stopSelf();return;}
+                            int interval=getSharedPreferences(MainActivity.PREF,0)
+                                    .getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT);
+                            long elapsed=SystemClock.elapsedRealtime()-captureStarted;
+                            main.postDelayed(capture,CameraRefresh.nextDelay(interval,elapsed,next.equals("camera_relay_active")));
+                        }
+                    });
                 });
             }
             public void onError(){
@@ -101,7 +112,7 @@ public class CameraRelayService extends Service {
         if(camera!=null){camera.close();camera=null;}
         if(upload!=null)upload.close();io.shutdownNow();motion.clear();
         if(wake!=null&&wake.isHeld())wake.release();
-        if(!status.equals("camera_error")&&!status.equals("camera_setup_required"))status="camera_relay_off";
+        if(!status.equals("camera_error")&&!status.equals("camera_setup_required")&&!status.equals("camera_auth_error")&&!status.equals("camera_pairing_error"))status="camera_relay_off";
         stopForeground(true);super.onDestroy();
     }
 }

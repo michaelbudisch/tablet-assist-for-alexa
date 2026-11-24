@@ -2,6 +2,12 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 0.6.0 · Rooms and camera intervals
+
+- Room-specific audio helpers and camera push using authorized non-admin accounts; existing single-device mode remains available.
+- Selectable 1/2/3/5/10-second camera intervals, visible version/build and updated DE/EN setup.
+- Signed update APK reuses the existing certificate. Room features separately require HA backend 1.7.0; physical two-tablet validation remains outstanding.
+
 ## 0.5.0 · HA camera and local vision
 - Add explicit-start background camera delivery with its own Stop notification, normalized JPEGs and authenticated same-origin HA push.
 - Add memory-only images, paired sessions/sequences, remote Stop, 15-second image expiry and optional coarse motion detection.

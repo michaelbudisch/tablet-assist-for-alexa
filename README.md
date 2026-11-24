@@ -26,7 +26,7 @@ TAFA combines local speech recognition, Home Assistant data, optional AI models 
 
 **Tested in the existing private home dashboard:** native Bluetooth playback, HA speech action, personalized greeting and automatic test-timer cancellation. The generic infobox is installed there; the Ring workflow and standalone updated card still need end-to-end testing.
 
-> **Developer preview:** base integration 0.3.1, backend 1.6.0, GPU Worker 1.9.0 (updated schema), APK 0.5.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
+> **Developer preview:** base integration 0.3.1, backend 1.6.2, GPU Worker 2.2.0 (updated schema), APK 0.6.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
 
 ## New: native HA automations
 
@@ -56,7 +56,7 @@ After setup, a dedicated **Tablet Assist** sidebar panel is registered automatic
 
 ## Native Android app: audio, camera and motion
 
-**[HA Jarvis Echo Relay 0.5.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/en/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
+**[HA Jarvis Echo Relay 0.6.0](android/README.md)** provides a German/English Android audio player with HA discovery, one-time token QR scanning, verified Bluetooth output and optional native silent keepalive. [Download the preview APK](android/downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). The standalone [Echo Relay Assist Lovelace card](docs/en/echo-relay-dashboard.md) connects the app to any HA dashboard. Set up the command/status helpers separately; the Marketplace integration does not configure them automatically.
 
 The app is more than an audio player: it can expose the front or rear camera of an Android smartphone or tablet to Home Assistant. With explicit permission, the app supplies periodically refreshed still images; HA exposes a camera entity and an optional image-motion sensor. The local vision worker supports authorized camera questions and HA automations. Camera capture is independent of audio playback, must be explicitly started and does not automatically resume after device reboot. Images are not archived. These are refreshed stills, not a full-rate live video stream. [Android camera details](android/README.md#camera-and-local-vision).
 

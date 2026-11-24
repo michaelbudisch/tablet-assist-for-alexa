@@ -8,17 +8,20 @@ import java.nio.charset.StandardCharsets;
 /** Same-origin authenticated push; no image listener/port on the tablet and no redirect forwarding. */
 final class CameraUploadClient implements AutoCloseable {
     static final String API="/api/jarvis_echo_relay";
-    private final String base,token,consent,device;
+    private final String base,token,consent,device,api;
     private volatile HttpURLConnection current;
     private volatile boolean closed;
     private volatile String session="";
     private long sequence;
     CameraUploadClient(String base,String token,String consent,String device)throws Exception{
-        this.base=HaAddress.validateStored(base,consent);this.token=token;this.consent=consent;this.device=device;
+        this(base,token,consent,device,false);
+    }
+    CameraUploadClient(String base,String token,String consent,String device,boolean room)throws Exception{
+        this.base=HaAddress.validateStored(base,consent);this.token=token;this.consent=consent;this.device=device;this.api=room?API+"/room_camera":API;
     }
     private HttpURLConnection connect(String path,String method)throws Exception{
         if(closed)throw new InterruptedIOException("cancelled");
-        HttpURLConnection connection=(HttpURLConnection)new URL(HaAddress.validateStored(base,consent)+API+path).openConnection();
+        HttpURLConnection connection=(HttpURLConnection)new URL(HaAddress.validateStored(base,consent)+api+path).openConnection();
         current=connection;connection.setConnectTimeout(5000);connection.setReadTimeout(8000);
         connection.setInstanceFollowRedirects(false);connection.setRequestMethod(method);
         connection.setRequestProperty("Authorization","Bearer "+token);
@@ -33,7 +36,8 @@ final class CameraUploadClient implements AutoCloseable {
         if(code==409)throw new IOException("camera_pairing_error");
         if(code<200||code>=300)throw new IOException("camera_upload_error");
     }
-    void upload(CameraJpeg.Frame frame,long capturedAt,Boolean motion)throws Exception{
+    void upload(CameraJpeg.Frame frame,long capturedAt,Boolean motion)throws Exception{upload(frame,capturedAt,motion,2);}
+    void upload(CameraJpeg.Frame frame,long capturedAt,Boolean motion,int interval)throws Exception{
         if(session.isEmpty()){
             HttpURLConnection connection=connect("/register","POST");
             try{
@@ -57,6 +61,7 @@ final class CameraUploadClient implements AutoCloseable {
             connection.setRequestProperty("X-Relay-Sequence",Long.toString(++sequence));
             connection.setRequestProperty("X-Relay-Captured-At",Long.toString(capturedAt));
             connection.setRequestProperty("X-Relay-Motion",motion==null?"off":motion?"1":"0");
+            connection.setRequestProperty("X-Relay-Interval",Integer.toString(CameraRefresh.normalize(interval)));
             connection.setFixedLengthStreamingMode(frame.jpeg.length);
             try(OutputStream output=connection.getOutputStream()){output.write(frame.jpeg);}
             int status=connection.getResponseCode();
@@ -73,7 +78,7 @@ final class CameraUploadClient implements AutoCloseable {
             if(oldSession.isEmpty())return;
             HttpURLConnection ending=null;
             try{
-                ending=(HttpURLConnection)new URL(base+API+"/frame").openConnection();
+                ending=(HttpURLConnection)new URL(base+api+"/frame").openConnection();
                 ending.setConnectTimeout(3000);ending.setReadTimeout(3000);ending.setInstanceFollowRedirects(false);ending.setRequestMethod("DELETE");
                 ending.setRequestProperty("Authorization","Bearer "+token);ending.setRequestProperty("X-Relay-Device",device);
                 ending.setRequestProperty("X-Relay-Session",oldSession);ending.getResponseCode();

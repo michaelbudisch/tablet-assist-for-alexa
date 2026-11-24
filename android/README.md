@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.5.0
+# HA Jarvis Echo Relay · Android 0.6.0
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -8,7 +8,7 @@ A native audio bridge from Home Assistant through an Android device to a Bluetoo
 
 ## Download and update
 
-[Download the ready-to-install preview APK](downloads/HA-Jarvis-Echo-Relay-0.5.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Download the ready-to-install preview APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 **Install over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; only the visible app name and icon change.
 
@@ -41,7 +41,7 @@ The cleaned-up HA dashboard does not need changes for this app update. An upstre
 
 ### Camera and local vision
 
-Open **Open camera settings**, choose front/rear camera and tap **Start camera for HA**. The explicitly started camera foreground service sends a bounded JPEG about every two seconds and continues outside the app. Stop it here or from its separate notification. Audio/keepalive remain independent; nothing starts automatically after reboot.
+Open **Open camera settings**, choose front/rear camera and tap **Start camera for HA**. The explicitly started camera foreground service sends bounded JPEGs at a locally configurable interval (1, 2, 3, 5 or 10 seconds, default 2 seconds) and continues outside the app. Changes apply in the next capture cycle; capture and upload may limit the actual rate. Stop it here or from its separate notification. Audio/keepalive remain independent; nothing starts automatically after reboot.
 
 Requires the matching **Jarvis Tablet Audio 1.4.0** receiver and existing local GPU Worker vision service. HA exposes the tablet camera and optional coarse image-motion sensor. Select outdoor/door cameras in integration options and ask explicit camera questions through the Jarvis router. Images stay in memory and expire after 15 seconds without delivery. This is periodically refreshed still imagery, not full-rate video or person detection. See [setup and camera questions](docs/camera-preparation.md).
 
@@ -81,3 +81,7 @@ JVM tests cover framing, fragmented/unknown-length WAV, bounded buffering, cache
 ## License
 
 Original code and vector icon: repository MIT license. ZXing Android Embedded, ZXing Core and AndroidX: Apache 2.0. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Independent community project, not an official Home Assistant or Amazon application.
+
+## Room-specific mode · 0.6.0
+
+Room audio and dedicated room cameras require **Jarvis Tablet Audio 1.7.0**. Existing single-device mode remains available. Use a separately authorized non-admin HA account and room assignment per tablet. Camera sharing starts explicitly on the tablet, with 1/2/3/5/10-second refresh choices. The matching HA extension must be installed separately; updating the APK alone does not enable room endpoints.

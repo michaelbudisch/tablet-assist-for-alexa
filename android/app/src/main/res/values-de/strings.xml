@@ -132,7 +132,7 @@
     <string name="language_en">English</string>
     <string name="footer">Community-Projekt · Android 9+ · v%1$s</string>
     <string name="camera_relay_title">Kamera für Home Assistant</string>
-    <string name="camera_relay_help">Übertrage die gewählte Kamera alle zwei Sekunden mit deiner gespeicherten HA-Anmeldung. Die Übertragung läuft auch im Dashboard und bei ausgeschaltetem Display. Starte ausdrücklich und stoppe hier oder über die eigene Kamera-Benachrichtigung. Bilder werden nicht aufgezeichnet. Der passende Kamera-Empfänger von Jarvis Tablet Audio muss zuvor in HA installiert sein.</string>
+    <string name="camera_relay_help">Übertrage die gewählte Kamera im gewählten Aktualisierungsintervall mit deiner gespeicherten HA-Anmeldung. Die Übertragung läuft auch im Dashboard und bei ausgeschaltetem Display. Starte ausdrücklich und stoppe hier oder über die eigene Kamera-Benachrichtigung. Bilder werden nicht aufgezeichnet. Der passende Kamera-Empfänger von Jarvis Tablet Audio muss zuvor in HA installiert sein.</string>
     <string name="camera_relay_start">Kamera für HA starten</string>
     <string name="camera_relay_stop">HA-Kamera stoppen</string>
     <string name="camera_local_title">Lokaler Kameratest</string>
@@ -149,4 +149,13 @@
     <string name="camera_image_error">Das Kamerabild konnte nicht vorbereitet werden. Stoppe und starte die HA-Kamera erneut.</string>
     <string name="camera_notification_channel">Kamera-Bildübertragung</string>
     <string name="camera_notification_text">Kamera aktiv · Bilder werden an Home Assistant übertragen</string>
+    <string name="room_audio_enabled">Raum-Audio (experimentell)</string>
+    <string name="room_audio_help">Benötigt einen eigenen Home-Assistant-Benutzer für diesen Raum. Erst nach der Raumzuweisung in Home Assistant aktivieren. Player zum Übernehmen neu starten.</string>
+    <string name="camera_refresh_label">Aktualisierungsintervall der Kamerabilder</string>
+    <string name="camera_refresh_help">Wird auf diesem Tablet gespeichert. Änderungen gelten ab dem nächsten Aufnahmezyklus. Aufnahme, Upload und Serverlast können die tatsächliche Bildrate verringern.</string>
+    <plurals name="camera_refresh_interval">
+        <item quantity="one">Alle %d Sekunde</item>
+        <item quantity="other">Alle %d Sekunden</item>
+    </plurals>
+    <string name="app_version">Version %1$s · Build %2$d</string>
 </resources>
