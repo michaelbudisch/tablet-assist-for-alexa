@@ -1,5 +1,14 @@
 # GPU-Worker – Änderungsverlauf
 
+ 
+## 2.1.0
+
+- Optionaler privater Endpunkt `/benchmark/sequence`: vier Bilder einzeln gegen 4, 8 oder 12 Bilder gemeinsam mit Qwen3-VL analysieren; bestehende Einzelbild-Endpunkte und Ring-Automationen bleiben unverändert.
+- Lokaler MP4-Testläufer mit FFmpeg, identischen Referenzbildern, Zeitmessung und optionalem JSON-Ergebnisbericht ohne gespeicherte Videos, Bilder oder Zugangsdaten.
+- Authentifizierung, strikte Grenzen für Frames, Zeitstempel, Modelle und Kontext sowie gemeinsame Vision-Warteschlange; keine Internet-Video-URLs oder direkten MP4-Uploads.
+- Offline-Tests, Docker-Build und Dokumentation ergänzt; echte GPU-Laufzeiten erfordern einen Test auf dem installierten Rechner mit erlaubter lokaler Aufnahme.
+
+
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 ## 2.0.0
