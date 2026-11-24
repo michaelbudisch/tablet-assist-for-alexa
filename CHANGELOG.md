@@ -2,6 +2,13 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](README.md)
 
+## Multiroom — backend 1.7.0 / Android 0.6.0 / room cards 0.2.0 and 0.1.1
+
+- Separate authenticated room audio and optional JPEG camera/motion entities; explicit consent, memory-only images, no identity tracking.
+- Room provisioning, quiet hours, targeted announcements, area-aware Assist and better status errors; generic kiosk audio adapter, private dashboard excluded.
+- Published signed Android 0.6.0 APK unchanged. DE/EN setup guides include HTTPS and matching room account.
+- One real tablet and automated two-room checks passed; concurrent physical two-tablet and fresh-install validation outstanding.
+
 ## Native HA automation preview — optional card 1.3.0
 
 - Structured detection schema supports coarse apparent presentation labels, with unknown and invalid-result guards.

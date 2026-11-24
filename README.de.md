@@ -26,7 +26,7 @@ TAFA verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Modell
 
 **In der bestehenden privaten Hauszentrale getestet:** native Bluetooth-Sprachausgabe, HA-Sprechaktion, personalisierte Begrüßung und Testtimer. Die universelle Infobox ist dort eingerichtet; Ring-Ablauf und öffentliche neue Karte benötigen noch einen vollständigen End-to-End-Test.
 
-> **Entwicklungsvorschau:** Basisintegration 0.3.1, Backend 1.6.2, GPU Worker 2.2.0 (aktualisiertes Schema), APK 0.6.0. Optionale Karte 1.3.0 und Automationsvorlagen sind noch kein vollständig geprüfter Neuinstallations-Release. Keine GPU für die CPU-Basis erforderlich.
+> **Entwicklungsvorschau:** Basisintegration 0.3.1, Backend 1.7.0, GPU Worker 2.2.0 (aktualisiertes Schema), APK 0.6.0. Optionale Karte 1.3.0 und Automationsvorlagen sind noch kein vollständig geprüfter Neuinstallations-Release. Keine GPU für die CPU-Basis erforderlich.
 
 ## Neu: Native HA-Automationen
 
@@ -58,6 +58,12 @@ Die native Assist-Integration bündelt STT, TTS und Gesprächsrouter ohne manuel
 
 Die App ist nicht nur ein Audioplayer: Sie kann ein Android-Smartphone oder Tablet als zusätzliche Kamera für Home Assistant bereitstellen. Die vorhandene Front- oder Rückkamera liefert nach ausdrücklicher Freigabe regelmäßig aktualisierte Einzelbilder. HA erhält eine Kamera-Entität und optional einen Bildbewegungssensor. Der lokale Vision-Worker kann für freigegebene Sichtfragen und HA-Automationen eingesetzt werden. Die Kamera-Funktion ist unabhängig von der Audiowiedergabe und muss bewusst gestartet werden; sie startet nicht automatisch nach einem Geräte-Neustart. Die Bilder werden nicht archiviert. Es handelt sich um Einzelbilder, nicht um einen vollwertigen Video-Livestream. [Details zur Android-App](android/README.de.md#kamera-und-lokales-visionmodell).
 
+## Multiroom · Backend 1.7.0
+
+[**Vollständige Multiroom-Einrichtung**](homeassistant/examples/MULTIROOM.de.md) · [English](homeassistant/examples/MULTIROOM.md)
+
+Ein Home Assistant für mehrere Tablets, je Raum eigenes Nicht-Admin-Konto, getrennte Echo-Relay-Ausgabe, optionale Kamera-/Bewegungsentitäten und einstellbare Bildrate. Raumverwaltung mit Zuordnung, Ruhezeiten und gezielten Durchsagen. Die Raumkarte benötigt dasselbe Konto in App und HA-Dashboard sowie vertrauenswürdiges HTTPS für das Mikrofon. Keine alten Audiohelfer im Raum-Modus nötig. Ein echtes Tablet und automatisierte Zwei-Raum-Tests bestanden; gleichzeitiger Hardwaretest mit zwei Tablets und Neuinstallation noch offen. Die Marketplace-Basisintegration installiert dieses separate Backend nicht automatisch.
+
 ## Installation
 
 ```bash
@@ -70,6 +76,7 @@ cd tablet-assist-for-alexa
 | [CPU-Sprachserver / Proxmox](docs/proxmox.md) | Lokale Sprachdienste |
 | [Marketplace und Konfiguration](docs/marketplace.md) | HA-Integration und Einrichtung |
 | [Android-Tablet / Bluetooth](docs/home-assistant.md) | Manuelle Altinstallation |
+| [Multiroom-Einrichtung](homeassistant/examples/MULTIROOM.de.md) | Raumkonten, Audio, Kamera, HTTPS und Fehlerbehebung |
 | [Echo Relay Dashboard](docs/echo-relay-dashboard.md) | Lovelace-Installation |
 | [HA-Automationen](docs/ha-automations.md) | Familienfelder und universelle Sprachausgabe |
 | [Optionaler GPU-Rechner](docs/worker.md) | Windows/Linux, STT, TTS und lokale KI |

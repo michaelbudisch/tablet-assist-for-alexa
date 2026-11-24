@@ -26,7 +26,7 @@ TAFA combines local speech recognition, Home Assistant data, optional AI models 
 
 **Tested in the existing private home dashboard:** native Bluetooth playback, HA speech action, personalized greeting and automatic test-timer cancellation. The generic infobox is installed there; the Ring workflow and standalone updated card still need end-to-end testing.
 
-> **Developer preview:** base integration 0.3.1, backend 1.6.2, GPU Worker 2.2.0 (updated schema), APK 0.6.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
+> **Developer preview:** base integration 0.3.1, backend 1.7.0, GPU Worker 2.2.0 (updated schema), APK 0.6.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
 
 ## New: native HA automations
 
@@ -60,6 +60,12 @@ After setup, a dedicated **Tablet Assist** sidebar panel is registered automatic
 
 The app is more than an audio player: it can expose the front or rear camera of an Android smartphone or tablet to Home Assistant. With explicit permission, the app supplies periodically refreshed still images; HA exposes a camera entity and an optional image-motion sensor. The local vision worker supports authorized camera questions and HA automations. Camera capture is independent of audio playback, must be explicitly started and does not automatically resume after device reboot. Images are not archived. These are refreshed stills, not a full-rate live video stream. [Android camera details](android/README.md#camera-and-local-vision).
 
+## Multiroom · backend 1.7.0
+
+[**Full Multiroom setup guide**](homeassistant/examples/MULTIROOM.md) · [Deutsch](homeassistant/examples/MULTIROOM.de.md)
+
+One Home Assistant for multiple tablets, each with a dedicated non-admin room account, independent Echo Relay audio, optional camera/motion entities and adjustable image refresh rate. Room management supports provisioning, quiet hours and targeted announcements. The room assistant requires the same account in the app and HA dashboard, and trusted HTTPS for microphone input. No legacy audio helpers are needed in room mode. One physical tablet and automated two-room checks passed; concurrent physical two-tablet and clean-install tests remain outstanding. The Marketplace base integration does not automatically install this separate backend.
+
 ## Installation guides
 
 ```bash
@@ -72,6 +78,7 @@ cd tablet-assist-for-alexa
 | [CPU speech server / Proxmox](docs/en/proxmox.md) | Local CPU speech services |
 | [Marketplace and configuration](docs/en/marketplace.md) | HA integration and setup |
 | [Android tablet / Bluetooth](docs/en/home-assistant.md) | Manual legacy setup |
+| [Multiroom setup](homeassistant/examples/MULTIROOM.md) | Room accounts, audio, camera, HTTPS and troubleshooting |
 | [Echo Relay dashboard](docs/en/echo-relay-dashboard.md) | Lovelace installation |
 | [HA automations](docs/en/ha-automations.md) | Family settings and reusable speech |
 | [Optional GPU computer](docs/en/worker.md) | Windows/Linux, STT, TTS, local AI |

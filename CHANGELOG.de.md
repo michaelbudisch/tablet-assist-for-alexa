@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](README.de.md)
 
+## Multiroom — Backend 1.7.0 / Android 0.6.0 / Raumkarten 0.2.0 und 0.1.1
+
+- Getrenntes authentifiziertes Raum-Audio und optionale JPEG-Kamera-/Bewegungsentitäten; ausdrückliche Freigabe, RAM-Bilder, keine Identitätsverfolgung.
+- Raumzuordnung, Ruhezeiten, gezielte Durchsagen, Bereichskontext und bessere Statusfehler; generischer Kiosk-Audioadapter, privates Dashboard ausgeschlossen.
+- Veröffentlichte signierte Android-APK 0.6.0 unverändert. DE/EN-Anleitungen mit HTTPS und gleichem Raumkonto.
+- Ein echtes Tablet und automatisierte Zwei-Raum-Tests bestanden; gleichzeitiger Hardwaretest und Neuinstallation offen.
+
 ## Native HA-Automationen — optionale Karte 1.3.0
 
 - Erweitertes Vision-Schema mit grob geschätzten Erscheinungskategorien; unklare und ungültige Ergebnisse werden abgefangen.

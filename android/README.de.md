@@ -23,6 +23,10 @@ Die Vorschau verwendet denselben lokalen Android-Testsignaturschlüssel wie die 
 
 Die Oberfläche folgt zunächst der Gerätesprache und lässt sich oben zwischen **Deutsch** und **English** umschalten. Nicht gespeicherte Token bleiben bei diesem Sprachwechsel ausschließlich im Arbeitsspeicher; sie werden nicht im Android-Instanzzustand abgelegt.
 
+### Multiroom
+
+[Vollständige Raum-Einrichtung](../homeassistant/examples/MULTIROOM.de.md). Benötigt Backend 1.7.0, eigenes Nicht-Admin-Konto je Raum, Raum-Assistent-Karte und **Raum-Audio (experimentell)** vor Neustart des Players. App und Dashboard müssen dasselbe Konto verwenden. Das Dashboard-Mikrofon braucht vertrauenswürdiges HTTPS, auch bei lokaler App-Verbindung. Raum-Audio nutzt keine globalen Alt-Helfer. Kamera standardmäßig aus; nur mit Zustimmung in gemeinsam genutzten Räumen freigeben und lokal starten. Die alte Admin-Token-Meldung kann auf fehlende Freigabe hinweisen; keinen Admin-Token verwenden.
+
 ### Lokales HTTP
 
 HTTPS prüft weiterhin das Serverzertifikat. HTTP muss für die konkrete lokale IP-Adresse samt Port ausdrücklich freigegeben werden. Dann werden Token und Audio im lokalen Netzwerk unverschlüsselt übertragen. Ein Adresswechsel setzt die Freigabe zurück. Öffentliches HTTP und HTTP über DNS-Namen sind nicht erlaubt; für lokale IP-Adressen die Netzwerksuche verwenden. Weiterleitungen werden nicht automatisch verfolgt.
@@ -35,15 +39,15 @@ Der Zielpuffer für Start und Nachpuffern beträgt **600 ms Audio**. Die PCM-War
 
 Für die Dateireserve wird die empfangene Antwort gleichzeitig im privaten App-Cache gespeichert, begrenzt auf 24 MiB. Nicht unterstützte Formate/Decoder können **dieselbe Antwort** nach vollständigem Empfang als Datei nutzen – ausschließlich bevor Sprachdaten ausgegeben wurden. Die Reserve löst keinen zweiten TTS-Auftrag aus. Nach begonnener Wiedergabe führt ein Streamfehler zum Abbruch statt zur Wiederholung der Antwort. Cachedateien werden nach Ende, Stopp oder Fehler entfernt. Ein Auftrag ist auf zwei Minuten begrenzt.
 
-Die Diagnose zeigt den Modus (`mp3`, `wav_pcm`, `file_fallback`), Zeiten bis zum ersten Netzwerkbyte, ersten dekodierten PCM und ersten übergebenen PCM sowie Empfangsmenge und Nachpufferungen. Die Übergabezeit enthält nicht die physische Wiedergabelatenz des Echo. Statushelfer und Befehlsvertrag bleiben kompatibel.
+Die Diagnose zeigt den Modus (`mp3`, `wav_pcm`, `file_fallback`), Zeiten bis zum ersten Netzwerkbyte, ersten dekodierten PCM und ersten übergebenen PCM sowie Empfangsmenge und Nachpufferungen. Die Übergabezeit enthält nicht die physische Wiedergabelatenz des Echo. Der Einzelgeräte-Helfervertrag bleibt kompatibel; Multiroom nutzt eine authentifizierte Raum-API.
 
-Für dieses App-Update muss das bereinigte HA-Dashboard nicht geändert werden. Ein vorgelagerter Server/Proxy, der die ganze Antwort puffert, kann das erste Byte weiterhin verzögern; die Erzeugung des Antworttexts liegt außerhalb des Audioplayers. Die tatsächliche Bluetooth-Geschwindigkeit muss auf dem Zieltablet geprüft werden.
+Das bisherige Dashboard bleibt im Einzelgeräte-Modus kompatibel; Multiroom benötigt eine Raumkarte bzw. einen kompatiblen Raum-Controller. Ein vorgelagerter Server/Proxy, der die ganze Antwort puffert, kann das erste Byte weiterhin verzögern; die Erzeugung des Antworttexts liegt außerhalb des Audioplayers. Die tatsächliche Bluetooth-Geschwindigkeit muss auf dem Zieltablet geprüft werden.
 
 ### Kamera und lokales Visionmodell
 
 Öffne **Kameraeinstellungen öffnen**, wähle Front-/Rückkamera und tippe auf **Kamera für HA starten**. Der ausdrücklich gestartete Kamera-Dienst sendet JPEGs im lokal einstellbaren Intervall (1, 2, 3, 5 oder 10 Sekunden, Standard 2 Sekunden) und bleibt außerhalb der App aktiv. Änderungen greifen im nächsten Aufnahmezyklus; Aufnahme und Upload können die tatsächliche Rate begrenzen. Stoppen kannst du ihn hier oder über seine eigene Benachrichtigung. Audio/Keepalive bleiben unabhängig; nach einem Neustart startet nichts automatisch.
 
-Voraussetzung sind der passende Empfänger **Jarvis Tablet Audio 1.4.0** und der vorhandene lokale Vision-Worker. HA stellt Tablet-Kamera und optionalen Bildbewegungssensor bereit. Außen-/Haustürkamera werden in den Integrationsoptionen gewählt; Sichtfragen beantwortet der Jarvis-Router. Bilder liegen im Arbeitsspeicher und verfallen nach 15 Sekunden ohne Nachschub. Dies sind regelmäßig neue Einzelbilder, kein Video mit voller Bildrate und keine Personenerkennung. Siehe [Einrichtung und Sichtfragen](docs/camera-preparation.de.md).
+Voraussetzung ist **Jarvis Tablet Audio 1.7.0** für Multiroom (Einzelkamera ab 1.4.0) und der vorhandene lokale Vision-Worker. HA stellt Tablet-Kamera und optionalen Bildbewegungssensor bereit. Außen-/Haustürkamera werden in den Integrationsoptionen gewählt; Sichtfragen beantwortet der Jarvis-Router. Bilder liegen im Arbeitsspeicher und verfallen nach 15 Sekunden ohne Nachschub. Dies sind regelmäßig neue Einzelbilder, kein Video mit voller Bildrate und keine Personenerkennung. Siehe [Einrichtung und Sichtfragen](docs/camera-preparation.de.md).
 
 ### Bluetooth wach halten
 

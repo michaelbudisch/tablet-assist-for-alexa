@@ -1,5 +1,7 @@
 # Echo Relay Assist dashboard (v1.2.0)
 
+> **Multiroom from Android 0.6.0 / HA 1.7.0:** [New room setup](../../homeassistant/examples/MULTIROOM.md). The following guide is for legacy single-device mode with global helpers.
+
 **English** | [Deutsch](../echo-relay-dashboard.md) · [Project overview](../../README.md)
 
 > **Optional current preview:** [Native HA automations and family settings](ha-automations.md). This page describes the original card 1.2.0 and its settings. Optional card 1.3.0 uses family helpers and the reusable speech action instead.

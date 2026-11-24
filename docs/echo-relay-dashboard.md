@@ -1,5 +1,7 @@
 # Echo Relay Assist – Lovelace-Karte (v1.2.0)
 
+> **Multiroom ab Android 0.6.0 / HA 1.7.0:** [Neue Raum-Einrichtung](../homeassistant/examples/MULTIROOM.de.md). Die folgende Anleitung gilt für den bisherigen Einzelgeräte-Modus mit globalen Helfern.
+
 [English](en/echo-relay-dashboard.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 > **Aktueller optionaler Vorschaupfad:** [Native HA-Automationen und Familienfelder](ha-automations.md). Diese Seite beschreibt die ursprüngliche Karte 1.2.0 und ihre Einstellungen. Die optionale Karte 1.3.0 verwendet stattdessen Familienhelfer und die universelle Sprechaktion.

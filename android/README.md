@@ -23,6 +23,10 @@ The published, non-debuggable release APK uses the same local Android test signi
 
 The interface initially follows the device language. Use **Deutsch / English** at the top to switch it. Unsaved tokens survive a language switch in memory only, never in Android saved instance state.
 
+### Multiroom
+
+[Complete room setup](../homeassistant/examples/MULTIROOM.md). Requires backend 1.7.0, a dedicated non-admin user per room, the room assistant card and **Room audio (experimental)** enabled before restarting the player. Use the same account in both app and dashboard. The dashboard microphone needs trusted HTTPS even if the app connects locally. Room audio does not use the legacy global helpers. Camera permission is off by default; enable only in consenting shared rooms and start locally. The old admin-token error may mean room camera permission is missing; do not use an admin token.
+
 ### Local HTTP
 
 HTTPS certificate validation remains enabled. HTTP requires explicit consent for the exact local IP address and port. Tokens and audio then travel unencrypted on the LAN. Editing the address resets consent. Public HTTP and HTTP DNS names are rejected; use discovery for a numeric LAN address. Redirects are never followed automatically.
@@ -35,15 +39,15 @@ The startup and rebuffer target is **600 ms of audio**, with a bounded **two-sec
 
 The response is also spooled to app-private cache, capped at 24 MiB, for the file reserve. Unsupported formats/decoders can use that **same response** as a completed file only before any speech has been submitted. No second TTS request is made for fallback. If a stream fails after playback begins, it stops with an error instead of replaying the answer. Cached audio is deleted after completion, cancellation or failure. Requests are limited to two minutes.
 
-Diagnostics show the mode (`mp3`, `wav_pcm`, `file_fallback`), first network byte, first decoded PCM and first PCM submission times, received bytes and rebuffer count. Submission time does not include the Echo’s physical playback latency. HA status helper values and the command contract are unchanged.
+Diagnostics show the mode (`mp3`, `wav_pcm`, `file_fallback`), first network byte, first decoded PCM and first PCM submission times, received bytes and rebuffer count. Submission time does not include the Echo’s physical playback latency. The single-device helper contract is unchanged; Multiroom uses an authenticated room API.
 
-The cleaned-up HA dashboard does not need changes for this app update. An upstream server/proxy that buffers the whole response can still delay the first byte, and answer-text generation is outside the audio player’s control. Device-specific Bluetooth performance still requires testing on the target tablet.
+The existing dashboard remains compatible in legacy single-device mode. Multiroom requires a room-aware card/controller. An upstream server/proxy that buffers the whole response can still delay the first byte, and answer-text generation is outside the audio player’s control. Device-specific Bluetooth performance still requires testing on the target tablet.
 
 ### Camera and local vision
 
 Open **Open camera settings**, choose front/rear camera and tap **Start camera for HA**. The explicitly started camera foreground service sends bounded JPEGs at a locally configurable interval (1, 2, 3, 5 or 10 seconds, default 2 seconds) and continues outside the app. Changes apply in the next capture cycle; capture and upload may limit the actual rate. Stop it here or from its separate notification. Audio/keepalive remain independent; nothing starts automatically after reboot.
 
-Requires the matching **Jarvis Tablet Audio 1.4.0** receiver and existing local GPU Worker vision service. HA exposes the tablet camera and optional coarse image-motion sensor. Select outdoor/door cameras in integration options and ask explicit camera questions through the Jarvis router. Images stay in memory and expire after 15 seconds without delivery. This is periodically refreshed still imagery, not full-rate video or person detection. See [setup and camera questions](docs/camera-preparation.md).
+Requires **Jarvis Tablet Audio 1.7.0** in Multiroom (legacy camera receiver 1.4.0 or newer) and existing local GPU Worker vision service. HA exposes the tablet camera and optional coarse image-motion sensor. Select outdoor/door cameras in integration options and ask explicit camera questions through the Jarvis router. Images stay in memory and expire after 15 seconds without delivery. This is periodically refreshed still imagery, not full-rate video or person detection. See [setup and camera questions](docs/camera-preparation.md).
 
 ### Native Bluetooth keepalive
 
