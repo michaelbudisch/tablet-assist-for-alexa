@@ -49,7 +49,7 @@ class VisionTests(unittest.TestCase):
     def test_capabilities_and_vision_queue(self):
         response = self.client.get("/capabilities", headers=HEADERS)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["worker_version"], "2.0.0")
+        self.assertEqual(response.json["worker_version"], "2.1.0")
         self.assertEqual(response.json["priority_queue"]["scope"], "vision-only")
         result = self.post({"image": fixture(), "priority": "background", "wait_ms": 50})
         self.assertEqual(result.status_code, 200)
