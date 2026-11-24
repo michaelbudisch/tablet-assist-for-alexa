@@ -204,7 +204,11 @@ def _person_focus_region(frame):
         # On the outside camera the far end of the driveway is at the right.
         # This ROI is a secondary check, never a substitute for the full frame.
         roi = picture.crop((round(w * 0.52), round(h * 0.07), w, round(h * 0.95)))
-        roi.thumbnail((960, 960))
+        # Upscale the distant right-edge subject for the vision worker; a
+        # thumbnail call would leave the cropped person tiny.
+        target_w = 960
+        target_h = min(1280, round(roi.height * target_w / roi.width))
+        roi = roi.resize((target_w, target_h), Image.Resampling.LANCZOS)
         result = io.BytesIO()
         roi.save(result, "JPEG", quality=88)
         return result.getvalue()
