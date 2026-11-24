@@ -134,3 +134,7 @@ room_audio:
     device_id:
       selector:
         device:
+    camera_enabled:
+      description: Permit locally started camera transmission in a consented shared room. Off by default.
+      selector:
+        boolean:

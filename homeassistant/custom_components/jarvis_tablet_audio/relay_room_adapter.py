@@ -92,6 +92,8 @@ async def setup_room_audio(hass, entry):
             continue
     transport.settings = {r: v for r, v in (saved or {}).get("settings", {}).items() if r in transport.rooms and isinstance(v, dict)}
     data[KEY] = transport
+    from .relay_room_camera import setup_room_cameras
+    cameras = await setup_room_cameras(hass, entry, transport)
     if not data.get("room_audio_view_registered"):
         hass.http.register_view(RoomAudioView())
         data["room_audio_view_registered"] = True
@@ -99,6 +101,7 @@ async def setup_room_audio(hass, entry):
 
     async def persist():
         await store.async_save({"rooms": transport.rooms.copy(), "settings": transport.settings.copy()})
+        cameras.sync()
 
     def room_settings(values):
         start, end = values.get("quiet_start", ""), values.get("quiet_end", "")
@@ -107,7 +110,7 @@ async def setup_room_audio(hass, entry):
             raise ServiceValidationError("Specify both quiet times as HH:MM, or leave both empty")
         if device and not dr.async_get(hass).async_get(device):
             raise ServiceValidationError("Unknown Home Assistant device ID")
-        return {"quiet_start": start, "quiet_end": end, "device_id": device}
+        return {"quiet_start": start, "quiet_end": end, "device_id": device, "camera_enabled": values.get("camera_enabled", False)}
 
     async def service(call):
         action = call.data["action"]
@@ -119,7 +122,7 @@ async def setup_room_audio(hass, entry):
         room = call.data.get("room")
         async with lock:
             if action == "list":
-                return {"rooms": [{"room": r, "user_id": p, **transport.status(p), **transport.settings.get(r,{})} for r,p in transport.rooms.items()]}
+                return {"rooms": [{"room": r, "user_id": p, **transport.status(p), **transport.settings.get(r,{}), "camera_entity_id": cameras.entity_id(r,"camera"), "motion_entity_id": cameras.entity_id(r,"motion"), "camera_online": cameras.store.fresh(r)} for r,p in transport.rooms.items()]}
             if action == "users":
                 return {"users": [{"id": u.id, "name": u.name} for u in await hass.auth.async_get_users() if u.is_active and not u.is_admin and not u.system_generated]}
             if action == "provision":
@@ -138,7 +141,7 @@ async def setup_room_audio(hass, entry):
             if action == "configure":
                 if room not in transport.rooms:
                     raise ServiceValidationError("Unknown room")
-                transport.settings[room] = room_settings(call.data)
+                transport.settings[room] = room_settings({**transport.settings.get(room, {}), **call.data})
                 await persist()
                 return {"room": room, "configured": True}
             if action == "revoke":
@@ -182,10 +185,13 @@ async def setup_room_audio(hass, entry):
         vol.Optional("quiet_start"): vol.All(str,vol.Length(max=5)),
         vol.Optional("quiet_end"): vol.All(str,vol.Length(max=5)),
         vol.Optional("device_id"): vol.All(str,vol.Length(max=64)),
+        vol.Optional("camera_enabled"): bool,
     }), supports_response=SupportsResponse.ONLY)
 
 
 def unload_room_audio(hass):
+    from .relay_room_camera import unload_room_cameras
+    unload_room_cameras(hass)
     hass.data.get(DOMAIN, {}).pop(KEY, None)
     if hass.services.has_service(DOMAIN, SERVICE):
         hass.services.async_remove(DOMAIN, SERVICE)
