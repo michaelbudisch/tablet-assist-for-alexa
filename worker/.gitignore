@@ -1,3 +1,13 @@
 .env
+.env.*
+!.env.example
 *.wav
+*.pcm
+*.zip
+*.key
+*.pem
 __pycache__/
+.pytest_cache/
+.mypy_cache/
+.venv/
+*.pyc
