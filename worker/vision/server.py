@@ -1,4 +1,4 @@
-"""Read-only, explicitly requested still-image descriptions using local Ollama."""
+"""Authenticated local image descriptions and explicitly requested frame benchmarks."""
 import base64
 import binascii
 import hmac
@@ -13,6 +13,7 @@ from flask import Flask, jsonify, request
 from PIL import Image, UnidentifiedImageError, ImageOps
 from detection import SCHEMA as DETECTION_SCHEMA, SYSTEM as DETECTION_SYSTEM, validate as validate_detection, labels as detection_labels
 from priority_gate import VisionGate
+from sequence_benchmark import register_benchmark, MAX_BENCH_BODY
 
 MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct",
           "qwen3-vl:8b-instruct", "gemma3:4b")
@@ -144,8 +145,9 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
 
     @app.get("/capabilities")
     def capabilities():
-        return jsonify(worker_version="2.0.0", api_version=2,
-                       endpoints=["/describe", "/detect", "/health", "/runtime", "/capabilities"],
+        return jsonify(worker_version="2.1.0", api_version=2, benchmark_api=1,
+                       endpoints=["/describe", "/detect", "/health", "/runtime", "/capabilities",
+                                  "/benchmark/sequence"],
                        modes=tuple(PROMPTS), detection_api=1,
                        priority_queue={"scope": "vision-only", "priorities": ["interactive", "background"],
                                        "wait_ms_max": 20000, "capacity": 6},
@@ -237,6 +239,10 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
                 return jsonify(error="invalid or unavailable detection; no action"), 503
         finally:
             lock.release()
+    # Opt-in test path; no change to productive /describe or /detect semantics.
+    register_benchmark(app, lock=lock, call=call, normalize_image=normalize_image,
+        default_model=default_model, keep_alive_options=KEEP_ALIVE,
+        context_options=CONTEXTS, model_unavailable=ModelUnavailable)
     return app
 
 if __name__ == "__main__":
@@ -244,4 +250,4 @@ if __name__ == "__main__":
     app = create_app(os.environ.get("JARVIS_TTS_TOKEN", ""),
                      os.environ.get("VISION_MODEL", DEFAULT_MODEL))
     serve(app, host="0.0.0.0", port=10503, threads=4,
-          max_request_body_size=MAX_BODY, channel_timeout=125)
+          max_request_body_size=MAX_BENCH_BODY, channel_timeout=125)
