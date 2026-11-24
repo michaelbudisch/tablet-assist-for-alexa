@@ -90,6 +90,10 @@ proactive:
       description: Check a fresh image without requiring the current motion flag. All opt-in and cooldown guards remain active.
       selector:
         boolean:
+    room:
+      description: Optional opt-in Multiroom camera slug for administrator check, e.g. buero. Omitting it retains the legacy tablet camera.
+      selector:
+        text:
     client_id:
       selector:
         text:
