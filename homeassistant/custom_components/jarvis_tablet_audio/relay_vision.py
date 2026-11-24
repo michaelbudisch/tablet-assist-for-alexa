@@ -229,16 +229,40 @@ async def describe(relay, source, mode, context):
                     pass
                 if not description:
                     description = "Szenenbeschreibung nicht verfügbar"
-                status = "Person erkannt" if confirmed else (
-                    "Person möglicherweise sichtbar" if possible
-                    else "Keine Person eindeutig erkannt")
+                # The dedicated detector can return an uncertain count even
+                # when the separate scene description explicitly sees someone.
+                # Keep the evidence source visible; never count negated phrases.
+                described_person = False
+                described_uncertain = False
+                word = r"\\b(?:person(?:en)?|mann|frau|mensch(?:en)?|passant(?:in|en)?|zusteller(?:in)?|postbot(?:e|in))\\b"
+                for sentence in re.split(r"[.!?]+", description.casefold()):
+                    if not re.search(word, sentence):
+                        continue
+                    if (re.search(r"\\b(?:kein(?:e|en|er|es)?|niemand|ohne)\\b.{0,55}" + word, sentence)
+                            or re.search(word + r".{0,45}\\b(?:nicht|unsichtbar|unerkennbar)\\b", sentence)):
+                        continue
+                    if re.search(r"\\b(?:vielleicht|möglicherweise|eventuell|könnte|koennte|ähnlich|vermutlich)\\b", sentence):
+                        described_uncertain = True
+                    else:
+                        described_person = True
+                if described_person and not confirmed:
+                    confirmed = True
+                    detected_with = "scene_description"
+                elif described_uncertain and not confirmed:
+                    possible = True
+                status = ("Person laut KI-Szenenbeschreibung sichtbar"
+                          if confirmed and detected_with == "scene_description"
+                          else "Person erkannt" if confirmed
+                          else "Person möglicherweise sichtbar" if possible
+                          else "Keine Person eindeutig erkannt")
                 reports.append({
                     "frame": index, "second": round(second, 1),
                     "description": description,
                     "person_detected": confirmed,
                     "person_possible": possible and not confirmed,
-                    "person_count": counted if confirmed else 0,
+                    "person_count": counted if detected_with != "scene_description" and confirmed else None,
                     "person_status": status,
+                    "detection_source": detected_with or ("uncertain" if possible else "none"),
                     "focus_checked": checked,
                     "success": success or confirmed or possible,
                 })
