@@ -250,8 +250,36 @@ async def describe(relay, source, mode, context):
                     detected_with = "scene_description"
                 elif described_uncertain and not confirmed:
                     possible = True
+                if source == "outside" and not confirmed:
+                    # A focused scene description can spot a small distant
+                    # person that the structured count misses in this camera.
+                    try:
+                        focus_image = await ring_person_focus(relay.hass, frame)
+                        focus_result = await request(relay, "/describe", {
+                            "image": base64.b64encode(focus_image).decode("ascii"),
+                            "mode": "scene", **model_options,
+                        })
+                        focus_text = focus_result.get("description", "")
+                        if isinstance(focus_text, str):
+                            for sentence in re.split(r"[.!?]+", focus_text.casefold()):
+                                if not re.search(word, sentence):
+                                    continue
+                                if (re.search(r"\b(?:kein(?:e|en|er|es)?|niemand|ohne)\b.{0,55}" + word, sentence)
+                                        or re.search(word + r".{0,45}\b(?:nicht|unsichtbar|unerkennbar)\b", sentence)):
+                                    continue
+                                if re.search(r"\b(?:vielleicht|möglicherweise|eventuell|könnte|koennte|ähnlich|vermutlich)\b", sentence):
+                                    possible = True
+                                else:
+                                    confirmed = True
+                                    detected_with = "focus_description"
+                                    break
+                            if confirmed:
+                                description = (description[:200] + " | Rechts vergrößert: " + focus_text[:220])[:350]
+                    except (ServiceValidationError, ValueError):
+                        pass
                 status = ("Person laut KI-Szenenbeschreibung sichtbar"
                           if confirmed and detected_with == "scene_description"
+                          else "Person im rechten Bildbereich beschrieben" if confirmed and detected_with == "focus_description"
                           else "Person erkannt" if confirmed
                           else "Person möglicherweise sichtbar" if possible
                           else "Keine Person eindeutig erkannt")
