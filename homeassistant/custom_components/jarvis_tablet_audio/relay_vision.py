@@ -234,14 +234,14 @@ async def describe(relay, source, mode, context):
                 # Keep the evidence source visible; never count negated phrases.
                 described_person = False
                 described_uncertain = False
-                word = r"\\b(?:person(?:en)?|mann|frau|mensch(?:en)?|passant(?:in|en)?|zusteller(?:in)?|postbot(?:e|in))\\b"
+                word = r"\b(?:person(?:en)?|mann|frau|mensch(?:en)?|passant(?:in|en)?|zusteller(?:in)?|postbot(?:e|in))\b"
                 for sentence in re.split(r"[.!?]+", description.casefold()):
                     if not re.search(word, sentence):
                         continue
-                    if (re.search(r"\\b(?:kein(?:e|en|er|es)?|niemand|ohne)\\b.{0,55}" + word, sentence)
-                            or re.search(word + r".{0,45}\\b(?:nicht|unsichtbar|unerkennbar)\\b", sentence)):
+                    if (re.search(r"\b(?:kein(?:e|en|er|es)?|niemand|ohne)\b.{0,55}" + word, sentence)
+                            or re.search(word + r".{0,45}\b(?:nicht|unsichtbar|unerkennbar)\b", sentence)):
                         continue
-                    if re.search(r"\\b(?:vielleicht|möglicherweise|eventuell|könnte|koennte|ähnlich|vermutlich)\\b", sentence):
+                    if re.search(r"\b(?:vielleicht|möglicherweise|eventuell|könnte|koennte|ähnlich|vermutlich)\b", sentence):
                         described_uncertain = True
                     else:
                         described_person = True
