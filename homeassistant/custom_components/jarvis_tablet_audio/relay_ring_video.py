@@ -22,6 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 MAX_VIDEO_BYTES = 20 * 1024 * 1024
 MAX_FRAMES = 4
 FRAME_SIZE = (640, 360)
+INFERENCE_SIZE = (960, 540)
 MAX_OUTPUT_BYTES = 3 * 1024 * 1024
 
 
@@ -147,7 +148,7 @@ async def _decode(hass, video):
             proc = await asyncio.create_subprocess_exec(
                 binary, "-hide_banner", "-loglevel", "error", "-nostdin",
                 "-ss", str(position), "-i", video_path, "-frames:v", "1",
-                "-vf", "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
+                "-vf", "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2",
                 "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1",
                 stdin=asyncio.subprocess.DEVNULL,
                 stdout=asyncio.subprocess.PIPE,
@@ -173,7 +174,7 @@ def _contact_sheet(samples):
     frames = []
     for chunk, position in samples[:MAX_FRAMES]:
         with Image.open(io.BytesIO(chunk)) as source:
-            if source.width * source.height > 640 * 480:
+            if source.width * source.height > 1280 * 720:
                 raise ValueError("Frame too large")
             frame = ImageOps.exif_transpose(source).convert("RGB")
             frame.thumbnail(FRAME_SIZE)
@@ -191,6 +192,26 @@ def _contact_sheet(samples):
     if target.tell() > 2 * 1024 * 1024:
         raise ValueError("Contact sheet too large")
     return target.getvalue(), len(frames)
+
+def _person_focus_region(frame):
+    """Magnify the right-side driveway area; used only after full-frame detection misses."""
+    with Image.open(io.BytesIO(frame)) as picture:
+        picture.load()
+        picture = picture.convert("RGB")
+        w, h = picture.size
+        if w > 1280 or h > 720:
+            raise ValueError("Invalid frame resolution")
+        # On the outside camera the far end of the driveway is at the right.
+        # This ROI is a secondary check, never a substitute for the full frame.
+        roi = picture.crop((round(w * 0.52), round(h * 0.07), w, round(h * 0.95)))
+        roi.thumbnail((960, 960))
+        result = io.BytesIO()
+        roi.save(result, "JPEG", quality=88)
+        return result.getvalue()
+
+
+async def ring_person_focus(hass, frame):
+    return await hass.async_add_executor_job(_person_focus_region, frame)
 
 
 async def ring_frames(hass, camera_entity):
