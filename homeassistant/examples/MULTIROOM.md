@@ -76,3 +76,13 @@ Use `room: living_room` instead for one room. The admin card also sends to selec
 | Move tablet | Stop camera/player, revoke old mapping, configure new room and account, update Area and card instance. |
 
 Before relying on multiple tablets, test independent responses, concurrent requests, offline/busy without cross-room fallback, each camera/stop control and quiet hours. [Android setup](../../android/README.md) · [Security](../../docs/en/security.md).
+
+## Personalized office greeting (backend 1.7.1)
+
+The legacy `proactive` action only inspected the old single-device camera. Backend 1.7.1 adds an optional `room: buero` argument to administrator `jarvis_tablet_audio.proactive` calls with `action: check`, using fresh opted-in room-camera frames. The emitted `jarvis_echo_relay_detection` event includes `room` and `camera_entity_id`.
+
+On existing installations update `relay_proactive.py` and `relay_camera.py` from `homeassistant/custom_components/jarvis_tablet_audio/` in the HA custom integration directory, then reload the integration or restart HA. The room parameter is **not available until the updated backend is installed**. Leave backend `greeting` disabled when an HA room automation handles announcements.
+
+Configure `automation.jarvis_tablet_bewegung_mit_vision` to trigger on `binary_sensor.jarvis_tablet_buero_bildbewegung` and pass both `action: check` and `room: buero` to the `jarvis_tablet_audio.proactive` service. Then disable generic `automation.jarvis_morgendliche_begrussung_buro_multiroom` and enable prepared event-driven `automation.jarvis_buro_personalisierte_begrussung_multiroom`.
+
+Names are read from `input_text.jarvis_name_mann`, `input_text.jarvis_name_frau`, and `input_text.jarvis_name_kind`. Visual appearance categories are estimates, **not reliable person identification**. Only a clear single-person estimate includes a configured name; all other cases use a neutral greeting. Do not use them for authentication or sensitive decisions. Camera capture requires informed consent.
