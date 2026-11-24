@@ -2,6 +2,15 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 2.0.0
+
+- Added optional authenticated `ops` status/selftest service for Whisper TCP, TTS, Vision, Ollama, and GPU metrics when available; no stored private audio/video.
+- Vision `/describe` and `/detect` support opt-in bounded priority queuing and `/capabilities`, retaining legacy immediate-busy defaults. Queue scope is vision only.
+- Streaming Qwen TTS has deterministic text normalization, optional pronunciation mappings and sentence segmentation, plus cooperative `/cancel`.
+- Local Whisper WAV silence/clipping/length diagnostics; no transcription data retention.
+- GitHub CI, offline tests, Docker Compose validation and a secret-safe release ZIP builder.
+- Preserved existing Ollama, TTS/Whisper and Home Assistant API behavior by default. Hardware-level smoke testing remains a deployment step.
+
 ## 1.9.0
 
 ### 1.9.0 — schema update
