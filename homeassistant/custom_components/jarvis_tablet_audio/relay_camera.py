@@ -69,15 +69,18 @@ class RelayRuntime:
         item = self.ring_storyboards.get(source)
         return item if item and monotonic() - item["saved_at"] < 3600 else None
 
-    def save_ring_storyboard(self, source, jpeg, count, results=None):
+    def save_ring_storyboard(self, source, jpeg, count, results=None, *, analyzed=None, summary=None, analysis_mode=None):
         if source not in ("door", "outside") or not isinstance(jpeg, bytes) or len(jpeg) > MAX_IMAGE:
             raise ValueError("Invalid Ring storyboard")
-        sensor = "sensor.haustur_letzte_aufzeichnung" if source == "door" else "sensor.vorderseite_letzte_aufzeichnung"
-        state = self.hass.states.get(sensor)
+        camera = self.entry.options.get("vision_door_camera" if source == "door" else "vision_outside_camera", "")
+        state = self.hass.states.get(camera) if camera else None
         self.ring_storyboards[source] = {"image": jpeg, "frames": count,
                                          "frame_results": results or [],
+                                         "frames_analyzed": analyzed if analyzed is not None else sum(bool(r.get("success")) for r in (results or [])),
+                                         "summary": summary,
+                                         "analysis_mode": analysis_mode,
                                          "saved_at": monotonic(),
-                                         "event_time": state.state if state else None}
+                                         "event_time": state.last_updated.isoformat() if state else None}
         self.notify()
 
     def is_owner(self, user):
@@ -261,6 +264,19 @@ async def async_setup(hass, entry):
 
     hass.services.async_register(DOMAIN, "ring_benchmark_status", ring_ab_status_service,
         schema=vol.Schema({}), supports_response=SupportsResponse.ONLY)
+
+    async def ring_ab_probe_service(call):
+        current = runtime(hass)
+        if current is None:
+            raise ServiceValidationError("Ring benchmark unavailable")
+        user = await hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
+        if call.context.user_id and (user is None or not user.is_admin):
+            raise Unauthorized()
+        from .relay_ring_benchmark import probe
+        return await probe(current)
+
+    hass.services.async_register(DOMAIN, "ring_benchmark_probe", ring_ab_probe_service,
+        schema=vol.Schema({}), supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "camera_pipeline_check", pipeline_service,
         schema=vol.Schema({vol.Required("text"): vol.All(str, vol.Length(min=1, max=500)),
             vol.Optional("pipeline_id"): str}), supports_response=SupportsResponse.ONLY)
@@ -287,7 +303,7 @@ def async_unload(hass):
         current.frames.clear()
         current.notify()
     hass.data.get(DOMAIN, {}).pop("relay_camera", None)
-    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "ring_benchmark_status", "unpair_camera", "proactive"):
+    for service in ("describe_camera", "camera_vision_status", "camera_pipeline_check", "model_settings", "ring_benchmark_status", "ring_benchmark_probe", "unpair_camera", "proactive"):
         hass.services.async_remove(DOMAIN, service)
 
 async def answer(hass, text, context):

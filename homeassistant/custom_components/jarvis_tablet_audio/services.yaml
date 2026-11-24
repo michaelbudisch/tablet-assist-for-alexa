@@ -1,6 +1,6 @@
 describe_camera:
   name: Describe camera
-  description: Describe one fresh image with the local vision worker. Cameras are selected in integration options.
+  description: Describe a camera image or (ring_video) a structured twelve-frame sequence sampled from an authorized Ring MP4 recording, with bounded detail and fallback modes. Cameras are selected in integration options.
   fields:
     source:
       default: outside
@@ -11,10 +11,16 @@ describe_camera:
       default: scene
       selector:
         select:
-          options: [scene, objects, object_in_hand]
+          options: [scene, objects, object_in_hand, ring_video]
 camera_vision_status:
   name: Vision status
   description: Check local vision readiness without sending an image.
+ring_benchmark_status:
+  name: Ring A/B benchmark status
+  description: Read optional legacy benchmark status and timing results. Production analysis does not schedule benchmarks.
+ring_benchmark_probe:
+  name: Ring A/B synthetic probe
+  description: Administrator diagnostic using four synthetic JPEGs, without camera access or test count changes.
 camera_pipeline_check:
   name: Check camera question pipeline
   description: Administrator diagnostic. Run a camera question through the configured Jarvis Assist intent pipeline, without TTS or playback. Returns speech, local-routing status and run ID.

@@ -25,7 +25,7 @@ async def check_proactive(hass, relay, jpeg, device, nonce, admin, guest, worker
         check(True,'proactive settings require administrator')
     else:raise AssertionError('Guest can edit proactive settings')
     check((await call({'action':'check'}))['status']=='disabled','proactive defaults off')
-    for values in ({**DEFAULTS,'name':'<script>'},{**DEFAULTS,'classes':['man']},{**DEFAULTS,'cooldown':True},{**DEFAULTS,'script_entity':'light.fixture'}):
+    for values in ({**DEFAULTS,'name':'<script>'},{**DEFAULTS,'classes':['unsupported_class']},{**DEFAULTS,'cooldown':True},{**DEFAULTS,'script_entity':'light.fixture'}):
         try:validate_settings(values)
         except ServiceValidationError:pass
         else:raise AssertionError('Invalid proactive settings accepted')

@@ -55,8 +55,8 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root = Path('homeassistant/custom_components/jarvis_tablet_audio')
-          entries = ['relay_vision.py', 'relay_ring_video.py', 'relay_ring_benchmark.py', 'relay_camera.py', 'manifest.json']
-          with ZipFile('jarvis-ring-ab-backend-1.6.1.zip', 'w', ZIP_DEFLATED) as z:
+          entries = ['relay_vision.py', 'relay_ring_video.py', 'relay_ring_benchmark.py', 'relay_camera.py', 'camera.py', 'services.yaml', 'manifest.json']
+          with ZipFile('jarvis-ring-backend-1.6.2.zip', 'w', ZIP_DEFLATED) as z:
               for name in entries:
                   p = root / name
                   if not p.is_file():
@@ -66,8 +66,8 @@ jobs:
       - name: Upload HA Ring backend overlay
         uses: actions/upload-artifact@v4
         with:
-          name: jarvis-ring-ab-backend-1.6.1
-          path: jarvis-ring-ab-backend-1.6.1.zip
+          name: jarvis-ring-backend-1.6.2
+          path: jarvis-ring-backend-1.6.2.zip
           if-no-files-found: error
           retention-days: 30
       - name: Docker Compose configuration validation

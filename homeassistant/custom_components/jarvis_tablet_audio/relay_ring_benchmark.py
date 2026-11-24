@@ -6,6 +6,8 @@ local vision worker. No extra container, public upload or announcements.
 """
 import asyncio
 import base64
+import io
+import logging
 from datetime import datetime, timezone
 from time import monotonic
 
@@ -14,8 +16,9 @@ from homeassistant.exceptions import ServiceValidationError
 ACTIVE = "input_boolean.jarvis_ring_a_b_test_aktiv"
 COUNTER = "input_number.jarvis_ring_a_b_testlaufe"
 STATUS = "input_text.jarvis_ring_a_b_status"
+_LOGGER = logging.getLogger(__name__)
 MAX_RUNS = 4
-COOLDOWN_SECONDS = 20 * 60
+COOLDOWN_SECONDS = 20 * 60  # Reserved for explicitly enabled diagnostics
 SAMPLES_FOUR = (1, 4, 7, 10)
 SAMPLES_EIGHT = (0, 1, 3, 4, 6, 7, 9, 10)
 
@@ -129,12 +132,14 @@ async def _run(relay, *, source, entity, video, production_ms):
                         str(x)[:450] for x in descriptions if isinstance(x, str)
                     ][:4],
                 })
-            except (ServiceValidationError, asyncio.TimeoutError):
+            except (ServiceValidationError, asyncio.TimeoutError) as error:
+                detail = _safe_error(error)
+                _LOGGER.warning("Ring A/B %s (%s frames): %s", mode, len(indices), detail)
                 report["tests"].append({
                     "name": label, "mode": mode,
                     "frames": len(indices), "ok": False,
                     "wall_ms": round((monotonic() - started) * 1000, 1),
-                    "error": "Vision worker unavailable or busy",
+                    "error": detail,
                 })
                 # One failed mode means skip remaining modes rather than
                 # repeatedly hammering a busy production GPU.
@@ -183,6 +188,9 @@ async def _run(relay, *, source, entity, video, production_ms):
             f"{production_ms / 1000:.1f}s; {speeds or 'kein gültiger Lauf'}"
             + (f"; {new_count}/{MAX_RUNS}" if new_count is not None else "")
         )
+        failed = next((row for row in report["tests"] if not row.get("ok")), None)
+        if failed:
+            summary += f"; {failed['name']}: {failed['error']}"
         await _set_status(relay, summary)
         relay.hass.bus.async_fire("jarvis_ring_ab_result", {
             "camera_source": source, "status": report["status"],
@@ -191,6 +199,56 @@ async def _run(relay, *, source, entity, video, production_ms):
                 "wall_ms": row["wall_ms"],
             } for row in lines],
         })
+
+
+def _safe_error(error):
+    message = str(error)
+    if message.startswith(("Benchmark HTTP ", "Benchmark transport/response: ")):
+        return message[:180]
+    if message in ("Invalid benchmark result", "Vision reply too large", "Worker token is missing"):
+        return message
+    return type(error).__name__
+
+
+def _probe_frames():
+    """Synthetic JPEGs with the same dimensions as the Ring benchmark."""
+    from PIL import Image, ImageDraw
+    frames = []
+    for i, color in enumerate(("red", "green", "blue", "yellow")):
+        picture = Image.new("RGB", (768, 432), "white")
+        draw = ImageDraw.Draw(picture)
+        draw.rectangle((80 + i * 40, 100, 320 + i * 40, 330), fill=color)
+        draw.text((20, 20), str(i + 1), fill="black")
+        output = io.BytesIO()
+        picture.save(output, "JPEG", quality=85)
+        frames.append({"second": float(i), "image": base64.b64encode(output.getvalue()).decode("ascii")})
+    return frames
+
+
+async def probe(relay):
+    """One bounded synthetic multi-image request; no Ring access or test count."""
+    from .relay_vision import request
+    if getattr(relay, "ring_ab_running", False) or relay.vision_lock.locked():
+        return {"ok": False, "error": "Vision busy; probe skipped"}
+    options = relay.entry.options
+    frames = await relay.hass.async_add_executor_job(_probe_frames)
+    started = monotonic()
+    try:
+        result = await request(relay, "/benchmark/sequence", {
+            "frames": frames, "mode": "joint",
+            "model": options.get("vision_model", "qwen3-vl:4b-instruct"),
+            "keep_alive": options.get("model_keep_alive", 300),
+            "num_ctx": options.get("model_num_ctx", 4096),
+            "priority": "background", "wait_ms": 0,
+        }, timeout=170)
+        valid = result.get("mode") == "joint" and result.get("frames") == 4
+        return {"ok": valid, "wall_ms": round((monotonic()-started)*1000, 1),
+                "error": None if valid else "Invalid benchmark result"}
+    except (ServiceValidationError, asyncio.TimeoutError) as error:
+        detail = _safe_error(error)
+        _LOGGER.warning("Ring A/B synthetic probe: %s", detail)
+        return {"ok": False, "error": detail,
+                "wall_ms": round((monotonic()-started)*1000, 1)}
 
 
 def status(relay):

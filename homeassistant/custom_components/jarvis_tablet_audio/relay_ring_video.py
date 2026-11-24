@@ -171,28 +171,31 @@ async def _decode(hass, video, *, fractions=None, resolution=INFERENCE_SIZE, max
 
 
 def _contact_sheet(samples):
-    """Re-encode only bounded images into a timestamped 2x2 storyboard."""
-    frames = []
-    for chunk, position in samples[:MAX_FRAMES]:
+    """Create a timestamped debug storyboard for four or twelve sampled frames."""
+    selected = samples[:12]
+    cols = 4 if len(selected) > 4 else 2
+    tile_w = 1280 // cols
+    tile_h = tile_w * 9 // 16
+    rows = (len(selected) + cols - 1) // cols
+    if not rows:
+        raise ValueError("No decodable frames")
+    canvas = Image.new("RGB", (1280, rows * (tile_h + 20)), (16, 24, 34))
+    draw = ImageDraw.Draw(canvas)
+    for i, (chunk, position) in enumerate(selected):
         with Image.open(io.BytesIO(chunk)) as source:
             if source.width * source.height > 1280 * 720:
                 raise ValueError("Frame too large")
             frame = ImageOps.exif_transpose(source).convert("RGB")
-            frame.thumbnail(FRAME_SIZE)
-            frames.append((frame.copy(), position))
-    if not frames:
-        raise ValueError("No decodable frames")
-    canvas = Image.new("RGB", (1280, 760), (16, 24, 34))
-    draw = ImageDraw.Draw(canvas)
-    for i, (frame, position) in enumerate(frames):
-        x, y = (i % 2) * 640, (i // 2) * 380
-        canvas.paste(frame, (x, y + 20))
-        draw.text((x + 10, y + 4), f"Ring video: +{position:.1f}s", fill=(255, 255, 255))
+            frame.thumbnail((tile_w, tile_h))
+            x, y = (i % cols) * tile_w, (i // cols) * (tile_h + 20)
+            canvas.paste(frame, (x, y + 20))
+            draw.text((x + 8, y + 4), f"+{position:.1f}s", fill=(255, 255, 255))
     target = io.BytesIO()
     canvas.save(target, "JPEG", quality=80, optimize=True)
     if target.tell() > 2 * 1024 * 1024:
         raise ValueError("Contact sheet too large")
-    return target.getvalue(), len(frames)
+    return target.getvalue(), len(selected)
+
 
 def _person_focus_region(frame):
     """Magnify the right-side driveway area; used only after full-frame detection misses."""
@@ -219,27 +222,44 @@ async def ring_person_focus(hass, frame):
     return await hass.async_add_executor_job(_person_focus_region, frame)
 
 
-async def ring_frames(hass, camera_entity, *, include_video=False):
-    """Return at most four separate (JPEG, seconds) frames from the Ring MP4."""
+async def ring_recording(hass, camera_entity):
+    """Download one approved Ring recording for joint inference and fallback."""
     state = hass.states.get(camera_entity)
     url = state.attributes.get("video_url") if state is not None else None
     if not _ring_download_url(url):
         raise ServiceValidationError("No approved Ring MP4 URL on this camera")
-    video = await _download(hass, url)
-    frames = await _decode(hass, video)
+    return await _download(hass, url)
+
+
+async def ring_fallback_frames(hass, video):
+    """Four original high-resolution samples from the same downloaded clip."""
+    return await _decode(hass, video)
+
+
+async def ring_frames(hass, camera_entity, *, include_video=False):
+    """Compatibility: four separate samples from one approved Ring recording."""
+    video = await ring_recording(hass, camera_entity)
+    frames = await ring_fallback_frames(hass, video)
     return (frames, video) if include_video else frames
 
 
-async def ring_benchmark_frames(hass, video):
-    """Sample twelve timestamps from an already downloaded Ring clip.
-
-    Four timestamp positions equal the productive 0.10/0.35/0.60/0.85
-    baseline. Benchmark decoding runs only after productive inference.
-    """
+async def ring_sequence_frames(hass, video):
+    """Sample twelve chronological timestamps for joint inference."""
     fractions = (0.04, 0.10, 0.18, 0.26, 0.35, 0.44,
                  0.52, 0.60, 0.69, 0.77, 0.85, 0.95)
     return await _decode(hass, video, fractions=fractions,
                          resolution=(768, 432), max_output=7 * 1024 * 1024)
+
+
+async def ring_detail_frames(hass, video):
+    """Four higher-resolution samples for an uncertain structured result."""
+    return await _decode(hass, video, fractions=(0.10, 0.35, 0.60, 0.85),
+                         resolution=(1024, 576), max_output=5 * 1024 * 1024)
+
+
+async def ring_benchmark_frames(hass, video):
+    """Compatibility alias for the optional diagnostic benchmark."""
+    return await ring_sequence_frames(hass, video)
 
 
 async def ring_storyboard(hass, camera_entity):
@@ -248,7 +268,7 @@ async def ring_storyboard(hass, camera_entity):
 
 
 async def ring_contact_sheet(hass, frames):
-    """Generate a debug-only 2x2 image; inference uses original frames separately."""
+    """Generate a debug-only storyboard; never used as a model input."""
     try:
         return await hass.async_add_executor_job(_contact_sheet, frames)
     except (ValueError, OSError, Image.DecompressionBombError) as exc:

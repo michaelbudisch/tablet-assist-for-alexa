@@ -8,24 +8,9 @@ New authenticated `POST /describe/sequence` on the existing Vision service. Stan
 
 Preserve .env and model volumes. Rebuild only Vision: `docker compose --profile vision up -d --build --no-deps vision`. Verify capabilities and run `docker compose exec -T vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate`. Do not install the older 1.6.1 HA overlay on an already customized live backend; HA integration of the structured endpoint is a separate step after deployment. No separate container or model download is required if Qwen3-VL is already installed.
 
-## 2.1.1 — Automatic Ring multi-frame benchmark (no separate container)
+### Home Assistant (backend 1.6.2)
 
-For this patch, update the worker only if backend 1.6.1 is already installed. Joint benchmarks automatically use at least 8192 context tokens for four frames and 16384 for eight/twelve; the independent baseline and production contexts are unchanged. Context changes can reload Ollama's runner and increase GPU memory use; measured latency includes that cost.
-
-The existing GPU Vision service keeps private LAN port **10503**, now with authenticated `POST /benchmark/sequence`. Existing `/describe`, `/detect`, Ring notifications and tablet UI remain unchanged. Home Assistant downloads each Ring MP4 automatically as before; no manual MP4 export is required for automatic benchmarking.
-
-Update the worker files on the GPU computer while **preserving the existing .env and model volumes**; rebuild only the already-running Vision service:
-
-```bash
-docker compose --profile vision up -d --build --no-deps vision
-docker compose exec vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate
-```
-
-Then overlay the **five files** from the CI artifact `jarvis-ring-ab-backend-1.6.1` on the existing Home Assistant directory `/config/custom_components/jarvis_tablet_audio/` (do not remove any other integration files). Restart Home Assistant once to load the new backend. This backend overlay was prepared from the currently installed Ring MP4 implementation, not an older generic integration.
-
-Existing `describe_camera` calls with `mode: ring_video` automatically schedule an optional background A/B test **after** completing the production result, reusing the same already-downloaded Ring MP4 in memory. It compares 4 independent, then 4, 8, 12 jointly evaluated frames, sends no extra Echo notification, and persists a short status to `input_text.jarvis_ring_a_b_status`. Full in-memory results are available through the administrator-only `jarvis_tablet_audio.ring_benchmark_status` action. Home Assistant controls `input_boolean.jarvis_ring_a_b_test_aktiv`, caps testing at four attempts and spaces tests at least 20 minutes apart.
-
-The worker never downloads Ring videos or sees signed Ring URLs. Only bounded JPEG frames are sent over the configured private connection; temporary MP4 decoding files are immediately removed. This is **joint time-ordered frame inference**, not direct native MP4 token inference. Actual RTX/GPU timing results require installation. The local FFmpeg MP4 CLI remains available for manual offline experiments but is not used in the automatic path.
+Structured Ring analysis is included in the current integration. Install the complete integration or the CI overlay `jarvis-ring-backend-1.6.2` on a compatible 1.6.x installation. Tablet single-image analysis is unchanged. `describe_camera` with `mode: ring_video` uses twelve frames, with four high-resolution detail frames for uncertain delivery evidence and compatibility fallbacks. Production no longer schedules A/B tests. See [Ring delivery hints](../homeassistant/examples/RING.md) for an example configuration.
 
 ## 2.0.0 — operations-ready update (compatible defaults)
 

@@ -8,26 +8,9 @@ Neuer authentifizierter Endpunkt `POST /describe/sequence` im vorhandenen Vision
 
 Vorhandene .env und Modellvolumes beibehalten. Nur Vision neu bauen: `docker compose --profile vision up -d --build --no-deps vision`. Danach capabilities und `docker compose exec -T vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate` prüfen. Das ältere HA-Overlay 1.6.1 nicht über ein bereits individuell angepasstes Backend kopieren; die HA-Umstellung auf den strukturierten Endpunkt erfolgt separat nach Installation. Kein zusätzlicher Container und bei vorhandenem Qwen3-VL kein Modelldownload nötig.
 
-## 2.1.1 – Automatischer Ring-A/B-Test (ohne zusätzlichen Container)
+### Home Assistant (Backend 1.6.2)
 
-Für diesen Patch reicht bei bereits installiertem Backend 1.6.1 das Worker-Update. Gemeinsame Benchmarks verwenden automatisch mindestens 8192 Kontext-Tokens für vier Frames und 16384 für acht/zwölf. Einzelbild-Baseline und Produktiv-Kontext bleiben unverändert. Kontextwechsel können Ollamas Runner neu laden und mehr GPU-Speicher benötigen; diese Kosten fließen in die Laufzeitmessung ein.
-
-**Der bestehende GPU-Vision-Container bleibt erhalten.** Der neue authentifizierte Endpunkt `POST /benchmark/sequence` läuft auf dem bisherigen privaten **Port 10503**. Der produktive Ring-Ablauf mit vier Einzelbildern und bisherigen Meldungen bleibt bestehen. Der zusätzliche Test nutzt dieselbe von Home Assistant bereits automatisch heruntergeladene Ring-MP4, nicht eine manuell exportierte Videodatei.
-
-Nach dem Entpacken von **jarvis-gpu-worker-2.1.1** auf dem GPU-Rechner die vorhandene `.env` und Modellvolumes beibehalten. Im bestehenden Worker-Verzeichnis nur den vorhandenen Vision-Dienst neu bauen:
-
-```bash
-docker compose --profile vision up -d --build --no-deps vision
-docker compose exec vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate
-```
-
-Danach die fünf Dateien aus dem CI-Artefakt **jarvis-ring-ab-backend-1.6.1** in die *bestehende* HA-Installation unter `/config/custom_components/jarvis_tablet_audio/` übernehmen. Nichts anderes in dem Ordner löschen. Home Assistant muss einmal neu gestartet werden, damit das Backend die neue Analyse aktiviert. Der installierte Backend-Stand vor dem Update enthält bereits den Ring-MP4-Abruf; das Overlay basiert ausdrücklich auf diesem aktuellen Quellstand.
-
-Der vorhandene Ablauf `jarvis_tablet_audio.describe_camera` mit `mode: ring_video` löst nach der produktiven Analyse automatisch eine begrenzte A/B-Messung aus, wenn `input_boolean.jarvis_ring_a_b_test_aktiv` eingeschaltet ist. Der Test vergleicht **4 Bilder einzeln**, **4/8/12 Bilder gemeinsam** bei gleicher Aufnahme, protokolliert Inferenz- und Gesamtdauer und stellt die Daten über `jarvis_tablet_audio.ring_benchmark_status` bereit. Eine Kurzfassung erscheint in `input_text.jarvis_ring_a_b_status`. Maximal vier Versuche, mindestens 20 Minuten Abstand; danach schaltet sich der Test aus. Keine zusätzlichen Echo-Ansagen oder Ring-Benachrichtigungen.
-
-Aufnahmen bleiben kurzzeitig im Speicher, temporäre MP4-Dateien zum Dekodieren werden gelöscht. Der Vision-Worker erhält ausschließlich ausgewählte, verkleinerte Frames über das lokale Netz, niemals den signierten Ring-Link. Es handelt sich um **zeitlich geordnete Bildfolgen**, nicht direkte MP4-Video-Tokenverarbeitung. Bei zu großem Kontextbedarf, belegtem Worker oder GPU-Problemen bleibt die bisherige Ring-Erkennung unverändert. Das getestete Zielmodell ist Qwen3-VL 4B Instruct.
-
-Optional bleibt der **manuelle** Testläufer für bereits vorhandene lokale MP4-Dateien verfügbar: `python tools/benchmark_ring_video.py ...` (Standardziel Port 10503). Für die automatische Ring-Auswertung ist er **nicht nötig**.
+Die strukturierte Ring-Auswertung ist im aktuellen Integrationsstand enthalten. Übernimm die Integration als Ganzes bzw. das CI-Overlay `jarvis-ring-backend-1.6.2` für kompatible 1.6.x-Installationen. Die normale Tablet-Einzelbildanalyse bleibt unverändert. `describe_camera` mit `mode: ring_video` verwendet zwölf Bilder; bei unsicherem Lieferhinweis vier höher aufgelöste Bilder, bei Fehlern die bisherigen Rückfallwege. Automatische A/B-Tests laufen nicht mehr im Produktionspfad. Beispielkonfiguration und Einrichtung: [Ring-Lieferhinweise](../homeassistant/examples/RING.de.md).
 
 ## 2.0.0 – Abschluss und Betrieb
 

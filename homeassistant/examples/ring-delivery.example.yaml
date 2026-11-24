@@ -1,0 +1,502 @@
+# EXAMPLE ONLY — configure notification target and audio URL before enabling.
+# JSON is valid YAML; no credentials, camera IDs or private dashboard configuration.
+{
+  "input_text": {
+    "jarvis_ring_letzte_durchsage": {
+      "name": "Jarvis Ring last announcement",
+      "max": 255
+    },
+    "ring_ki_erkennungsverlauf": {
+      "name": "Jarvis Ring legacy log",
+      "max": 255
+    }
+  },
+  "template": [
+    {
+      "triggers": [
+        {
+          "trigger": "event",
+          "event_type": "jarvis_ring_analysis_journal"
+        }
+      ],
+      "sensor": [
+        {
+          "name": "Jarvis Ring KI Journal",
+          "unique_id": "jarvis_ring_ki_journal",
+          "state": "{{ trigger.event.data.request_id }}",
+          "attributes": {
+            "entry": "{{ trigger.event.data }}"
+          }
+        }
+      ]
+    }
+  ],
+  "script": {
+    "ring_ki_bildanalyse_seriell": {
+      "alias": "Ring KI · Bildanalyse seriell",
+      "description": "Serielle Ring-Warteschlange: zwölf Bilder mit strukturierter Lieferbewertung, bei Unsicherheit vier höher aufgelöste Bilder; kompatible Rückfallwege. Infobox erhält Szenentext und getrennte strukturierte Daten.",
+      "mode": "queued",
+      "max": 20,
+      "max_exceeded": "warning",
+      "fields": {
+        "camera_source": {
+          "description": "door oder outside",
+          "example": "door"
+        },
+        "ring_request_id": {
+          "description": "Ereignis-Identifikation"
+        },
+        "event_time": {
+          "description": "ISO-Zeitpunkt des Ring-Ereignisses"
+        },
+        "recording_entity": {
+          "description": "Ring-Sensor letzte Aufzeichnung"
+        }
+      },
+      "sequence": [
+        {
+          "variables": {
+            "vision_result": {},
+            "vision_status": {}
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ as_timestamp(event_time,0)<=0 or as_timestamp(states(recording_entity),0)<=0 or (as_timestamp(states(recording_entity),0)-as_timestamp(event_time,0))|abs>3 }}"
+            }
+          ],
+          "then": [
+            {
+              "event": "jarvis_infobox_update",
+              "event_data": {
+                "request_id": "{{ ring_request_id }}",
+                "camera_source": "{{ camera_source }}",
+                "message": "Die Ring-Aufzeichnung wurde inzwischen ersetzt oder gehört nicht eindeutig zum aktuellen Ereignis."
+              }
+            },
+            {
+              "stop": "Aufzeichnung passt nicht zum Ereignis"
+            }
+          ]
+        },
+        {
+          "repeat": {
+            "count": 6,
+            "sequence": [
+              {
+                "if": [
+                  {
+                    "condition": "template",
+                    "value_template": "{{ vision_result is not mapping or not (vision_result.get('description','') | string | trim) }}"
+                  }
+                ],
+                "then": [
+                  {
+                    "action": "jarvis_tablet_audio.camera_vision_status",
+                    "response_variable": "vision_status",
+                    "continue_on_error": true
+                  },
+                  {
+                    "if": [
+                      {
+                        "condition": "template",
+                        "value_template": "{{ vision_status is mapping and vision_status.get('ready',false) and not vision_status.get('busy',true) }}"
+                      }
+                    ],
+                    "then": [
+                      {
+                        "action": "jarvis_tablet_audio.describe_camera",
+                        "data": {
+                          "source": "{{ camera_source }}",
+                          "mode": "ring_video"
+                        },
+                        "response_variable": "vision_result",
+                        "continue_on_error": true
+                      },
+                      {
+                        "if": [
+                          {
+                            "condition": "template",
+                            "value_template": "{{ vision_result is not mapping or not (vision_result.get('description','') | string | trim) }}"
+                          }
+                        ],
+                        "then": [
+                          {
+                            "action": "jarvis_tablet_audio.describe_camera",
+                            "data": {
+                              "source": "{{ camera_source }}",
+                              "mode": "scene"
+                            },
+                            "response_variable": "vision_result",
+                            "continue_on_error": true
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "condition": "template",
+                        "value_template": "{{ vision_result is not mapping or not (vision_result.get('description','') | string | trim) }}"
+                      }
+                    ],
+                    "then": [
+                      {
+                        "delay": {
+                          "seconds": 3
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "event": "jarvis_infobox_update",
+          "event_data": {
+            "request_id": "{{ ring_request_id }}",
+            "camera_source": "{{ camera_source }}",
+            "message": "{{ (vision_result.get('description','')|string|trim) if vision_result is mapping and (vision_result.get('description','')|string|trim) else 'Eine aktuelle KI-Beschreibung ist auch nach mehreren Versuchen nicht verfügbar.' }}",
+            "sequence_api": "{{ vision_result.get('sequence_api',0) if vision_result is mapping else 0 }}",
+            "delivery_assessment": "{{ vision_result.get('delivery_assessment','') if vision_result is mapping else '' }}",
+            "analysis_mode": "{{ vision_result.get('analysis_mode','single_image') if vision_result is mapping else 'unavailable' }}",
+            "detail_status": "{{ vision_result.get('detail_status','') if vision_result is mapping else '' }}",
+            "evidence": "{{ vision_result.get('evidence',{}) if vision_result is mapping else {} }}",
+            "analysis_ms": "{{ vision_result.get('metrics',{}).get('total_ms',0) if vision_result is mapping and vision_result.get('metrics',{}) is mapping else 0 }}",
+            "recording_time": "{{ event_time }}"
+          }
+        }
+      ]
+    }
+  },
+  "automation": [
+    {
+      "alias": "Ring · Post erkannt – Durchsage an alle Echos",
+      "description": "Strukturierte oder kompatible Lieferhinweise beider Ring-Kameras, situationsabhängige Ansage 06–22 Uhr. Nur wahrscheinliche kameraübergreifende Doppelmeldungen innerhalb 45 Sekunden werden einmal unterdrückt (kein Identitätsvergleich, keine pauschale Sperre). Ablagehinweis separat. Volltext-Journal mit Ausgabestatus; Echo-Wiedergabe nicht bestätigt.",
+      "triggers": [
+        {
+          "trigger": "event",
+          "event_type": "jarvis_infobox_update"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "template",
+          "value_template": "{{ trigger.event.data.camera_source | default('') in ['door','outside'] and (trigger.event.data.request_id|default('',true)|string|length > 0) and not (trigger.event.data.request_id|string).startswith('manueller-post-test-') and not (trigger.event.data.request_id|string).startswith('ki-verlauf-test-') }}"
+        }
+      ],
+      "actions": [
+        {
+          "variables": {
+            "post_match": "{% set txt = (trigger.event.data.message | default('', true) | string | lower) %}\n{% set source = (trigger.event.data.camera_source | default('', true) | string | lower) %}\n{% set person = '\\\\b(?:person|mann|frau|mensch|jemand|zusteller(?:in)?|postbote|postbotin|paketbote|paketbotin|lieferant(?:in)?|bote|botin)\\\\b' %}\n{% set post = '\\\\b(?:post|dhl|postauto|postwagen|postfahrzeug|postbote|postbotin|briefträger(?:in)?|paketbote|paketbotin|deutsche\\\\s+post)\\\\b' %}\n{% set vehicle = '\\\\bgelb(?:e|er|es|en|em)?\\\\s+(?:auto|fahrzeug|wagen|transporter|lieferwagen)\\\\b' %}\n{% set yellow = '(?:\\\\bgelb(?:e|er|es|en|em)?\\\\s+(?:jacke|mantel|weste|kleidung|uniform|oberteil|shirt|t-shirt|pullover|warnweste|arbeitskleidung)\\\\b|\\\\b(?:jacke|weste|uniform|mantel|shirt|kleidung|oberteil)\\\\s+in\\\\s+gelb\\\\b|\\\\bgelb\\\\s+gekleidet(?:e|er|en)?\\\\b|\\\\bperson\\\\s+in\\\\s+gelb\\\\b)' %}\n{% set parcel = '(?:\\\\b(?:mit|hält|haelt|trägt|traegt|bringt|transportiert|übergibt|hat|liefert|schleppt)\\\\b[^.!?]{0,60}\\\\b(?:paket|karton|päckchen|paeckchen|sendung)\\\\b|\\\\b(?:paket|karton|päckchen|paeckchen|sendung)\\\\b[^.!?]{0,45}\\\\b(?:hand|händen|haenden|trägt|hält|bei\\\\s+sich|unter\\\\s+dem\\\\s+arm)\\\\b)' %}\n{% set negative = '(?:\\\\b(?:kein(?:e|en|er|es)?|nicht|ohne)\\\\b[^.!?]{0,55}\\\\b(?:post(?:auto|wagen|fahrzeug|bote|botin)?|dhl|gelb(?:e|er|es|en|em)?|paket|karton|päckchen|paeckchen|sendung|zusteller(?:in)?)\\\\b|\\\\b(?:post(?:auto|wagen|fahrzeug|bote|botin)?|dhl|gelb(?:e|er|es|en|em)?|paket|karton|päckchen|paeckchen|zusteller)\\\\b[^.!?]{0,35}\\\\bnicht\\\\b)' %}\n{% set match = namespace(found=false) %}\n{% for sentence in (txt | regex_findall('[^.!?]+')) %}\n  {% set candidate = (sentence | regex_search(post)) or (sentence | regex_search(vehicle)) or (source in ['door', 'outside'] and (sentence | regex_search(person)) and ((sentence | regex_search(yellow)) or (sentence | regex_search(parcel)))) %}\n  {% if candidate and not (sentence | regex_search(negative)) %}{% set match.found = true %}{% endif %}\n{% endfor %}\n{{ (trigger.event.data.request_id | default('', true) | string | length > 0) and not (trigger.event.data.request_id | default('', true) | string).startswith('manueller-post-test-') and source in ['door','outside'] and ((trigger.event.data.delivery_assessment | default('') == 'likely') if (trigger.event.data.sequence_api | default(0) | int(0) == 1) else match.found) }}",
+            "src": "{{ trigger.event.data.camera_source }}",
+            "rid": "{{ trigger.event.data.request_id|string }}",
+            "msg": "{{ trigger.event.data.message|default('',true)|string|trim }}",
+            "ev": "{{ trigger.event.data.evidence|default({}) }}",
+            "prev": "{{ states('input_text.jarvis_ring_letzte_durchsage')|from_json({}) }}",
+            "rec_ts": "{{ as_timestamp(trigger.event.data.recording_time|default(none),0)|int(0) }}",
+            "quiet": "{{ now().hour < 6 or now().hour >= 22 }}"
+          }
+        },
+        {
+          "variables": {
+            "kind": "{% if ev is mapping and ev.get('parcel_placed')=='yes' and src=='door' %}placed{% elif ev is mapping and ev.get('parcel_carried')=='yes' %}carried{% elif ev is mapping and ev.get('delivery_vehicle')=='yes' %}vehicle{% else %}general{% endif %}",
+            "result_kind": "{% set t=msg|lower %}{{ 'KEIN BILD' if (not t or 'nicht verfügbar' in t or 'keine aktuelle ki-beschreibung' in t or 'nicht eindeutig zum aktuellen ereignis' in t) else ('TEXTTREFFER' if post_match|bool(false) else ('UNSICHER' if trigger.event.data.delivery_assessment|default('')=='uncertain' else 'KEIN TREFFER')) }}"
+          }
+        },
+        {
+          "variables": {
+            "duplicate": "{% set p=prev if prev is mapping else {} %}{{ p.get('id')==rid or (rec_ts|int(0)>0 and p.get('t',0)|int(0)>0 and (rec_ts|int(0)-p.get('t',0)|int(0))|abs<=45 and p.get('src') in ['door','outside'] and p.get('src')!=src and not p.get('paired',false) and kind!='placed' and p.get('kind')!='placed') }}",
+            "announcement": "{{ {'placed':'An der Haustür wurde möglicherweise ein Paket abgestellt.','vehicle':'Ein mögliches Lieferfahrzeug ist zu sehen.','carried':'Es sieht so aus, als würdet ihr eine Lieferung bekommen.','general':'Es sieht so aus, als würdet ihr eine Lieferung bekommen.'}.get(kind) }}"
+          }
+        },
+        {
+          "choose": [
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ not post_match|bool(false) }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "event": "jarvis_ring_analysis_journal",
+                  "event_data": {
+                    "request_id": "{{ rid }}",
+                    "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                    "kind": "{{ result_kind|trim }}",
+                    "description": "{{ msg }}",
+                    "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                    "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                    "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                    "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                    "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                    "announcement_status": "{{ 'unsicher' if result_kind|trim=='UNSICHER' else 'kein_treffer' }}",
+                    "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ quiet|bool(false) }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "event": "jarvis_ring_analysis_journal",
+                  "event_data": {
+                    "request_id": "{{ rid }}",
+                    "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                    "kind": "{{ result_kind|trim }}",
+                    "description": "{{ msg }}",
+                    "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                    "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                    "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                    "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                    "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                    "announcement_status": "nachtruhe",
+                    "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ duplicate|bool(false) }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "event": "jarvis_ring_analysis_journal",
+                  "event_data": {
+                    "request_id": "{{ rid }}",
+                    "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                    "kind": "{{ result_kind|trim }}",
+                    "description": "{{ msg }}",
+                    "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                    "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                    "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                    "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                    "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                    "announcement_status": "doppelt",
+                    "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+                  }
+                },
+                {
+                  "if": [
+                    {
+                      "condition": "template",
+                      "value_template": "{{ prev is mapping and prev.get('id')!=rid }}"
+                    }
+                  ],
+                  "then": [
+                    {
+                      "action": "input_text.set_value",
+                      "target": {
+                        "entity_id": "input_text.jarvis_ring_letzte_durchsage"
+                      },
+                      "data": {
+                        "value": "{{ dict(prev,paired=true)|to_json }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "default": [
+            {
+              "event": "jarvis_ring_analysis_journal",
+              "event_data": {
+                "request_id": "{{ rid }}",
+                "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                "kind": "{{ result_kind|trim }}",
+                "description": "{{ msg }}",
+                "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                "announcement_status": "vorbereitung",
+                "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+              }
+            },
+            {
+              "action": "rest_command.piper_generate",
+              "data": {
+                "text": "{{ announcement }}"
+              },
+              "response_variable": "piper_result",
+              "continue_on_error": true
+            },
+            {
+              "if": [
+                {
+                  "condition": "template",
+                  "value_template": "{% set r = piper_result | default({}) %}{% set c = r.get('content', {}) if r is mapping else {} %}{{ r is mapping and r.get('status') == 200 and c is mapping and c.get('success') == true and (c.get('path','') | regex_match('^/[a-f0-9]{32}\\\\.mp3$')) }}"
+                }
+              ],
+              "then": [
+                {
+                  "if": [
+                    {
+                      "condition": "time",
+                      "after": "06:00:00",
+                      "before": "22:00:00"
+                    }
+                  ],
+                  "then": [
+                    {
+                      "action": "notify.send_message",
+                      "target": {
+                        "entity_id": [
+                          "notify.example_speaker"
+                        ]
+                      },
+                      "data": {
+                        "message": "<audio src=\"https://YOUR-AUDIO-HOST.example{{ piper_result.content.path }}\"/>"
+                      },
+                      "continue_on_error": false,
+                      "enabled": true
+                    },
+                    {
+                      "action": "input_text.set_value",
+                      "target": {
+                        "entity_id": "input_text.jarvis_ring_letzte_durchsage"
+                      },
+                      "data": {
+                        "value": "{{ dict(id=rid,src=src,t=rec_ts|int(0),kind=kind,paired=false)|to_json }}"
+                      }
+                    },
+                    {
+                      "event": "jarvis_ring_analysis_journal",
+                      "event_data": {
+                        "request_id": "{{ rid }}",
+                        "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                        "kind": "{{ result_kind|trim }}",
+                        "description": "{{ msg }}",
+                        "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                        "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                        "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                        "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                        "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                        "announcement_status": "uebermittelt",
+                        "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+                      }
+                    }
+                  ],
+                  "else": [
+                    {
+                      "event": "jarvis_ring_analysis_journal",
+                      "event_data": {
+                        "request_id": "{{ rid }}",
+                        "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                        "kind": "{{ result_kind|trim }}",
+                        "description": "{{ msg }}",
+                        "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                        "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                        "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                        "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                        "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                        "announcement_status": "nachtruhe",
+                        "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "event": "jarvis_ring_analysis_journal",
+                  "event_data": {
+                    "request_id": "{{ rid }}",
+                    "camera": "{{ 'Haustür' if src=='door' else 'Vorderseite' }}",
+                    "kind": "{{ result_kind|trim }}",
+                    "description": "{{ msg }}",
+                    "recording_time": "{{ trigger.event.data.recording_time|default('') }}",
+                    "analysis_mode": "{{ trigger.event.data.analysis_mode|default('') }}",
+                    "detail_status": "{{ trigger.event.data.detail_status|default('') }}",
+                    "analysis_ms": "{{ trigger.event.data.analysis_ms|default(0)|float(0) }}",
+                    "delivery_assessment": "{{ trigger.event.data.delivery_assessment|default('') }}",
+                    "announcement_status": "audiofehler",
+                    "analysis_event_time": "{{ trigger.event.time_fired.isoformat() }}"
+                  }
+                },
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "title": "Jarvis · Post-Erkennung",
+                    "message": "Post erkannt, aber die lokale Piper-MP3 konnte nicht erzeugt werden. Keine Alexa-Sprachausgabe ausgelöst."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "mode": "queued",
+      "max_exceeded": "silent",
+      "trace": {
+        "stored_traces": 15
+      },
+      "max": 20,
+      "id": "jarvis_ring_delivery_example"
+    },
+    {
+      "alias": "Ring · KI Erkennungsverlauf protokollieren",
+      "description": "Protokolliert echte Ring-KI-Szenenbeschreibungen (zwölf Bilder gemeinsam, kompakter Fallback), Kamera und Trefferstatus unabhängig von Echo-Ausgabe und Nachtruhe. Nutzt bis zu 255 Zeichen ohne abrupten Wortabbruch; alte Einträge bleiben erhalten. Gleiche Post-Regeln für Haustür und Vorderseite. Strukturierte Lieferbewertung bevorzugt; Textregeln nur bei kompatiblem Rückfall oder älteren Ereignissen.",
+      "triggers": [
+        {
+          "trigger": "event",
+          "event_type": "jarvis_infobox_update"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "template",
+          "value_template": "{{ trigger.event.data.camera_source | default('') in ['door','outside'] and (trigger.event.data.request_id | default('',true) | string | length > 0) and not (trigger.event.data.request_id | string).startswith('manueller-post-test-') }}"
+        }
+      ],
+      "actions": [
+        {
+          "variables": {
+            "post_match": "{% set txt = (trigger.event.data.message | default('', true) | string | lower) %}\n{% set source = (trigger.event.data.camera_source | default('', true) | string | lower) %}\n{% set person = '\\\\b(?:person|mann|frau|mensch|jemand|zusteller(?:in)?|postbote|postbotin|paketbote|paketbotin|lieferant(?:in)?|bote|botin)\\\\b' %}\n{% set post = '\\\\b(?:post|dhl|postauto|postwagen|postfahrzeug|postbote|postbotin|briefträger(?:in)?|paketbote|paketbotin|deutsche\\\\s+post)\\\\b' %}\n{% set vehicle = '\\\\bgelb(?:e|er|es|en|em)?\\\\s+(?:auto|fahrzeug|wagen|transporter|lieferwagen)\\\\b' %}\n{% set yellow = '(?:\\\\bgelb(?:e|er|es|en|em)?\\\\s+(?:jacke|mantel|weste|kleidung|uniform|oberteil|shirt|t-shirt|pullover|warnweste|arbeitskleidung)\\\\b|\\\\b(?:jacke|weste|uniform|mantel|shirt|kleidung|oberteil)\\\\s+in\\\\s+gelb\\\\b|\\\\bgelb\\\\s+gekleidet(?:e|er|en)?\\\\b|\\\\bperson\\\\s+in\\\\s+gelb\\\\b)' %}\n{% set parcel = '(?:\\\\b(?:mit|hält|haelt|trägt|traegt|bringt|transportiert|übergibt|hat|liefert|schleppt)\\\\b[^.!?]{0,60}\\\\b(?:paket|karton|päckchen|paeckchen|sendung)\\\\b|\\\\b(?:paket|karton|päckchen|paeckchen|sendung)\\\\b[^.!?]{0,45}\\\\b(?:hand|händen|haenden|trägt|hält|bei\\\\s+sich|unter\\\\s+dem\\\\s+arm)\\\\b)' %}\n{% set negative = '(?:\\\\b(?:kein(?:e|en|er|es)?|nicht|ohne)\\\\b[^.!?]{0,55}\\\\b(?:post(?:auto|wagen|fahrzeug|bote|botin)?|dhl|gelb(?:e|er|es|en|em)?|paket|karton|päckchen|paeckchen|sendung|zusteller(?:in)?)\\\\b|\\\\b(?:post(?:auto|wagen|fahrzeug|bote|botin)?|dhl|gelb(?:e|er|es|en|em)?|paket|karton|päckchen|paeckchen|zusteller)\\\\b[^.!?]{0,35}\\\\bnicht\\\\b)' %}\n{% set match = namespace(found=false) %}\n{% for sentence in (txt | regex_findall('[^.!?]+')) %}\n  {% set candidate = (sentence | regex_search(post)) or (sentence | regex_search(vehicle)) or (source in ['door', 'outside'] and (sentence | regex_search(person)) and ((sentence | regex_search(yellow)) or (sentence | regex_search(parcel)))) %}\n  {% if candidate and not (sentence | regex_search(negative)) %}{% set match.found = true %}{% endif %}\n{% endfor %}\n{{ (trigger.event.data.request_id | default('', true) | string | length > 0) and not (trigger.event.data.request_id | default('', true) | string).startswith('manueller-post-test-') and source in ['door','outside'] and ((trigger.event.data.delivery_assessment | default('') == 'likely') if (trigger.event.data.sequence_api | default(0) | int(0) == 1) else match.found) }}",
+            "camera_src": "{{ trigger.event.data.camera_source | default('',true) }}",
+            "description_text": "{{ trigger.event.data.message | default('',true) | string | replace('|','/') | replace('\\n',' ') | trim }}"
+          }
+        },
+        {
+          "variables": {
+            "result_kind": "{% set t=description_text|lower %}{% set is_test=(trigger.event.data.request_id|default('',true)|string).startswith('ki-verlauf-test-') %}{{ 'SYSTEMTEST' if is_test else ('KEIN BILD' if (not t or 'nicht bereit' in t or 'nicht verfügbar' in t or 'keine aktuelle ki-beschreibung' in t or 'keine ki-beschreibung' in t) else ('TEXTTREFFER' if post_match|bool(false) else ('UNSICHER' if trigger.event.data.sequence_api|default(0)|int(0)==1 and trigger.event.data.delivery_assessment|default('')=='uncertain' else 'KEIN TREFFER'))) }}"
+          }
+        },
+        {
+          "action": "input_text.set_value",
+          "target": {
+            "entity_id": "input_text.ring_ki_erkennungsverlauf"
+          },
+          "data": {
+            "value": "{% set prefix = now().strftime('%Y-%m-%d %H:%M:%S') ~ '|' ~ ('Haustür' if camera_src=='door' else 'Vorderseite') ~ '|' ~ (result_kind|trim) ~ '|' %}{% set msg = description_text | trim %}{% set room = 255 - (prefix|length) %}{% if msg|length > room %}{% set cut = msg[:room-1] %}{% set last = cut.rsplit(' ', 1)[0] if ' ' in cut else cut %}{{ prefix ~ last ~ '…' }}{% else %}{{ prefix ~ msg }}{% endif %}"
+          }
+        }
+      ],
+      "mode": "queued",
+      "max": 20,
+      "trace": {
+        "stored_traces": 15
+      },
+      "id": "jarvis_ring_legacy_log_example"
+    }
+  ]
+}
