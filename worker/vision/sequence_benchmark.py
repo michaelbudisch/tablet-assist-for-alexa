@@ -121,7 +121,7 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
                 or priority not in ("interactive", "background")
                 or type(wait_ms) is not int or not 0 <= wait_ms <= 20000):
             return jsonify(error="invalid benchmark settings"), 400
-        if mode == "independent" and len(data.get("frames", [])) != 4:
+        if mode == "independent" and (not isinstance(data.get("frames"), list) or len(data["frames"]) != 4):
             return jsonify(error="independent baseline requires four frames"), 400
 
         started = time.perf_counter()
