@@ -69,6 +69,7 @@ async def _run(relay, *, source, entity, video, production_ms):
     from .relay_ring_video import ring_benchmark_frames
     from .relay_vision import request
 
+    benchmark_started = monotonic()
     report = {
         "source": source, "camera": entity,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -80,6 +81,7 @@ async def _run(relay, *, source, entity, video, production_ms):
         # In-memory video is held only until extra frames are extracted.
         await _set_status(relay, f"Ring A/B {source}: entnehme 12 Frames aus vorhandener Aufnahme")
         samples = await ring_benchmark_frames(relay.hass, video)
+        report["extraction_ms"] = round((monotonic() - benchmark_started) * 1000, 1)
         del video
         if len(samples) != 12:
             raise ServiceValidationError("Ring benchmark did not extract 12 frames")
@@ -149,6 +151,7 @@ async def _run(relay, *, source, entity, video, production_ms):
     finally:
         relay.ring_ab_running = False
         report["finished_at"] = datetime.now(timezone.utc).isoformat()
+        report["total_ms"] = round((monotonic() - benchmark_started) * 1000, 1)
         history = getattr(relay, "ring_ab_reports", None)
         if history is None:
             history = relay.ring_ab_reports = []
