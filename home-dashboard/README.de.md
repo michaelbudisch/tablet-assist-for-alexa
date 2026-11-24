@@ -1,4 +1,4 @@
-# TAFA Home Dashboard · Vorschau 0.2.0
+# TAFA Home Dashboard · Vorschau 0.2.1
 
 [English](README.md) | **Deutsch** · [TAFA-Projekt](../README.de.md)
 
@@ -15,10 +15,18 @@ Optionale, responsive und konfigurierbare Lovelace-Hauszentrale auf Basis des bi
 - Heizung, Wärmepumpe, Tankfüllstand, Wallbox, Haushaltsgeräte und Speicher über vorhandene HA-Datenquellen.
 - Optional integrierte Echo-Relay-Assist-Karte. Sie wird erst nach bewusstem Betätigen von **Assistent laden** auf der Sprachseite eingebunden. Pro Helferpaar nur einen aktiven Echo-Relay-Controller verwenden. Keine automatische Mikrofonaufnahme, Aktion oder Kameraaktivierung auf der Startseite. Kameravorschauen erst bewusst in der Detailansicht öffnen; ausschließlich berechtigte Kameras verwenden.
 
+
+### Neuerungen der Vorschau 0.2.1
+
+- Schnell eintreffende Home-Assistant-Zustandsänderungen werden im öffentlichen Dashboard in einem 250-ms-Fenster gebündelt. Ausstehende Updates werden beim Verlassen der Karte abgebrochen.
+- Die zugehörigen synthetischen Tests enthalten jetzt 38 Prüfungen, darunter die Aktualisierungsbündelung.
+- Optionale, **nicht automatisch aktivierte** Hilfsmodule liegen unter `homeassistant/www/jarvis/`: `tafa-performance-v1.0.0.js` (Dashboard-Laufzeit/FPS), `jarvis-voice-telemetry-v1.0.0.js` (Sprachlatenzen), `jarvis-settings-v1.6.4.js` und `jarvis-kiosk-room-audio-v0.1.1.js`. Diese Module brauchen einen passenden eigenen Jarvis-Host und gehören nicht automatisch zur portablen Vorschau.
+- Keine Sprachaufnahmen, Gesprächsinhalte, privaten Entitätszuordnungen oder API-Schlüssel werden ausgeliefert. Echtbetrieb und Bluetooth-Echo-Ausgabe müssen auf dem jeweiligen Tablet noch geprüft werden.
+
 ## Installation
 
 1. Die Dateien `www/tafa-home/dashboard.js` und `www/tafa-home/model.js` aus diesem Verzeichnis nach `/config/www/tafa-home/` kopieren.
-2. In HA unter Einstellungen → Dashboards → Ressourcen `/local/tafa-home/dashboard.js?v=0.2.0` als JavaScript-Modul registrieren. Browser vollständig neu laden. Bestehendes Dashboard nicht überschreiben und nicht zwei Versionen der Karte parallel registrieren.
+2. In HA unter Einstellungen → Dashboards → Ressourcen `/local/tafa-home/dashboard.js?v=0.2.1` als JavaScript-Modul registrieren. Browser vollständig neu laden. Bestehendes Dashboard nicht überschreiben und nicht zwei Versionen der Karte parallel registrieren.
 3. Ein separates Dashboard namens TAFA Home Dashboard mit Panel-Ansicht anlegen und eine manuelle Karte hinzufügen:
    ```yaml
    type: custom:tafa-home-dashboard
