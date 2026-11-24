@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
         public void run() { refreshStatus(); handler.postDelayed(this, 1000); }
     };
     private EditText urlInput, tokenInput;
-    private CheckBox allowHttp;
+    private CheckBox allowHttp, roomAudio;
     private String consentForAddress = "";
     private TextView setupMessage, searchMessage;
     private Button searchButton;
@@ -79,6 +79,8 @@ public class MainActivity extends Activity {
         urlInput = findViewById(R.id.server_address);
         tokenInput = findViewById(R.id.token);
         allowHttp = findViewById(R.id.allow_http);
+        roomAudio = findViewById(R.id.room_audio_enabled);
+        roomAudio.setChecked(prefs.getBoolean("room_audio_enabled",false));
         setupMessage = findViewById(R.id.setup_message);
         searchButton = findViewById(R.id.search);
         searchMessage = findViewById(R.id.search_message);
@@ -124,7 +126,8 @@ public class MainActivity extends Activity {
                     stopService(new Intent(this, AudioService.class));
                     stopService(new Intent(this, CameraRelayService.class));
                     stopDiscovery();
-                    prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).apply();
+                    prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).remove("room_audio_enabled").apply();
+                    roomAudio.setChecked(false);
                     tokenInput.setText(""); urlInput.setText("");
                     searchResults.removeAllViews(); searchMessage.setText("");
                     setupMessage.setText(R.string.credentials_removed);
@@ -198,7 +201,7 @@ public class MainActivity extends Activity {
             if (token.isEmpty() && !prefs.contains("secret")) throw new IllegalArgumentException("token_required");
             if (token.isEmpty() && !base.equals(HaAddress.normalize(prefs.getString("base", ""))))
                 throw new IllegalArgumentException("token_server_changed");
-            var edit = prefs.edit().putString("base", base);
+            var edit = prefs.edit().putString("base", base).putBoolean("room_audio_enabled",roomAudio.isChecked());
             if(CameraRelayService.running&&(!base.equals(prefs.getString("base",""))||!token.isEmpty()))
                 stopService(new Intent(this,CameraRelayService.class));
             if (HaAddress.isHttp(base)) edit.putString(HTTP_CONSENT, base); else edit.remove(HTTP_CONSENT);

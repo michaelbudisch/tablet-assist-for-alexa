@@ -149,4 +149,6 @@
     <string name="camera_image_error">Das Kamerabild konnte nicht vorbereitet werden. Stoppe und starte die HA-Kamera erneut.</string>
     <string name="camera_notification_channel">Kamera-Bildübertragung</string>
     <string name="camera_notification_text">Kamera aktiv · Bilder werden an Home Assistant übertragen</string>
+    <string name="room_audio_enabled">Raum-Audio (experimentell)</string>
+    <string name="room_audio_help">Benötigt einen eigenen Home-Assistant-Benutzer für diesen Raum. Erst nach der Raumzuweisung in Home Assistant aktivieren. Player zum Übernehmen neu starten.</string>
 </resources>

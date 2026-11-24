@@ -149,4 +149,6 @@
     <string name="camera_image_error">Camera image could not be prepared. Stop and restart the HA camera.</string>
     <string name="camera_notification_channel">Camera image delivery</string>
     <string name="camera_notification_text">Camera active · sending images to Home Assistant</string>
+    <string name="room_audio_enabled">Room audio (experimental)</string>
+    <string name="room_audio_help">Requires a dedicated Home Assistant user for this room. Enable only after provisioning the room in Home Assistant. Restart the player to apply.</string>
 </resources>

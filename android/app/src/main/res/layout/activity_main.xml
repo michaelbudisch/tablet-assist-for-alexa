@@ -44,6 +44,8 @@
 <Button android:id="@+id/scan_token" style="@style/Primary" android:text="@string/scan_token"/>
 <EditText android:id="@+id/token" style="@style/Input" android:hint="@string/token_hint" android:inputType="textPassword" android:saveEnabled="false" android:importantForAutofill="no"/>
 <TextView android:id="@+id/token_note" style="@style/Body" android:text="@string/token_storage" android:textSize="12sp"/>
+<CheckBox android:id="@+id/room_audio_enabled" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/room_audio_enabled"/>
+<TextView style="@style/Body" android:text="@string/room_audio_help" android:textSize="12sp"/>
 </LinearLayout>
 </LinearLayout>
 <LinearLayout android:id="@+id/player_column" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">

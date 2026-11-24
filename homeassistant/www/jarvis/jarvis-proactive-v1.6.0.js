@@ -113,6 +113,7 @@ export function connectProactive(v){
 }
 
 export function mountProactiveSettings(v,root){
+ if(v.cfg?.room_audio){root.append(node('p',t(v,'Raum-Audio: Begrüßungen können über ausdrücklich konfigurierte Anwesenheitssensoren ausgelöst werden. Die bisherige zentrale Kamera-Begrüßung ist hier nicht aktiv.','Room audio: greetings can use explicitly configured occupancy sensors. The legacy central camera greeting is not active here.'),'jvs-muted'));return;}
  connectProactive(v);
  const section=node('div',null,'jvs-section');
  section.append(node('h3',t(v,'Familienmitglieder','Family members')),node('p',t(v,'Lege die Namen für die Begrüßung fest. Zeitfenster und weitere Regeln werden in Home Assistant verwaltet.','Set the names used for greetings. Time windows and other rules are managed in Home Assistant.'),'jvs-muted'));
