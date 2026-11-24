@@ -1,5 +1,11 @@
 # Changelog
 
+## Unveröffentlicht — optionales lokales HTTPS / Split-DNS
+- Optionaler Debian-/Proxmox-Installer für lokalen DNS auf einem bereits vorhandenen NGINX-/Certbot-Proxy. Keine Änderungen an HA, NGINX-vHosts, Zertifikaten oder Router.
+- Deutsch/englische Anleitungen für Android-Mikrofon, Offlinebetrieb, Tests und Rückbau sowie Eingabe-/Syntaxtests.
+- Keine neue Produkt- oder APK-Version; `VERSION` bleibt auf dem letzten veröffentlichten Stand.
+
+
 ## Raumbezogene Multiroom-Kameraerkennung — Backend 1.7.1
 - Der administrative Vision-Check kann über `room` gezielt die freigegebene Raumkamera statt des alten globalen Kamerastreams verwenden.
 - Raumbezogene Ereignisse `jarvis_echo_relay_detection` enthalten die Raumkennung; veraltete oder ersetzte Kamerasitzungen werden verworfen.

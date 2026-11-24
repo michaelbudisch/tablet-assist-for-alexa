@@ -27,6 +27,8 @@ Install the [signed 0.6.0 APK](../../android/downloads/HA-Jarvis-Echo-Relay-0.6.
 
 App and dashboard must use the **same room account**. Prefer trusted HTTPS. The app may use a numeric local HTTP address with explicit consent (credentials and media travel unencrypted); the browser/WebView microphone still needs trusted HTTPS and microphone permission. Local HTTP does not work for dashboard microphone capture. No router changes are required if existing HTTPS works. Never place tokens in Git or dashboard YAML.
 
+**Optional offline setup:** [Local HTTPS / split DNS](../../docs/en/local-https.md) uses an existing NGINX/Certbot proxy and the same trusted hostname inside the LAN. No second HA proxy is needed; local HTTP cannot supply a trusted WebView microphone origin.
+
 ## 4. Create a room assistant dashboard
 
 Create a normal dashboard (not admin-only) and add a manual card:

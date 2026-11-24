@@ -4,6 +4,8 @@
 
 **Nur für die optionale Alexa-MP3-Ausgabe notwendig.** Native Assist-Antworten über die Bluetooth-Verbindung Tablet → Echo benötigen keine öffentliche Audio-URL. Der Proxy stellt keine Sprachgenerierungs-API bereit.
 
+Für einen bereits vorhandenen NGINX-/Certbot-Proxy mit Home-Assistant-Weiterleitung gibt es zusätzlich die Anleitung [lokales HTTPS / Split-DNS für das Tablet-Mikrofon](local-https.md). Damit wird kein vorhandener vHost geändert.
+
 ## Voraussetzungen
 
 Ein neuer Debian-CT auf Proxmox, eine freie CT-ID, der bestehende CPU-Sprachserver mit internem Port 8080, ein eigener öffentlicher DNS-Name und ein gültiges öffentlich vertrauenswürdiges TLS-Zertifikat. Für Let's Encrypt HTTP-01 müssen öffentliche DNS-Auflösung und TCP 80 funktionieren, für Alexa TCP 443. Bei CGNAT, DS-Lite oder einem vorhandenen Reverse Proxy die tatsächliche Netzarchitektur prüfen; keine konkurrierenden Portweiterleitungen. Intern ausschließlich dem Proxy den benötigten Zugriff auf Port 8080 erlauben; HA und die übrigen Sprach-/GPU-Dienste bleiben im vertrauenswürdigen LAN. DNS und Router werden nicht automatisiert verändert.

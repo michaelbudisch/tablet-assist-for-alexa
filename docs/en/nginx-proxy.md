@@ -4,6 +4,8 @@
 
 **Only required for optional Alexa MP3 playback.** Native Assist responses played through a tablet-to-Echo Bluetooth connection do not require a public audio URL. Never publish the speech generation API.
 
+For an existing NGINX/Certbot proxy that already serves Home Assistant, see the separate [local HTTPS / split DNS tablet microphone guide](local-https.md). No existing virtual host is modified.
+
 ## Requirements
 
 A new Debian CT on Proxmox, an unused CT ID, the CPU speech server with internal port 8080, a public DNS hostname and a publicly trusted TLS certificate. Let's Encrypt HTTP-01 requires public DNS resolution and TCP 80; Alexa needs TCP 443. For CGNAT, DS-Lite or an existing reverse proxy, check the actual network architecture before proceeding. Do not create conflicting port forwards. Internally, allow only the proxy's required access to port 8080. HA and other speech/GPU services stay on the trusted LAN. The scripts do not change DNS or router settings.

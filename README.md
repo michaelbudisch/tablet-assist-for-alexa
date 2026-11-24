@@ -66,6 +66,10 @@ The app is more than an audio player: it can expose the front or rear camera of 
 
 One Home Assistant for multiple tablets, each with a dedicated non-admin room account, independent Echo Relay audio, optional camera/motion entities and adjustable image refresh rate. Room management supports provisioning, quiet hours and targeted announcements. The room assistant requires the same account in the app and HA dashboard, and trusted HTTPS for microphone input. No legacy audio helpers are needed in room mode. One physical tablet and automated two-room checks passed; concurrent physical two-tablet and clean-install tests remain outstanding. The Marketplace base integration does not automatically install this separate backend.
 
+## Local HTTPS for the tablet microphone
+
+With an existing NGINX/Certbot proxy, [optional split DNS](docs/en/local-https.md) lets the tablet reach HA through the **same trusted HTTPS hostname** directly over the LAN, even when the WAN is offline. No second proxy, router-port changes or hardcoded IP in the TAFA dashboard. Existing public sites are not automatically secured by split DNS.
+
 ## Installation guides
 
 ```bash
@@ -83,6 +87,7 @@ cd tablet-assist-for-alexa
 | [HA automations](docs/en/ha-automations.md) | Family settings and reusable speech |
 | [Optional GPU computer](docs/en/worker.md) | Windows/Linux, STT, TTS, local AI |
 | [Optional Nginx proxy](docs/en/nginx-proxy.md) | DuckDNS and Certbot |
+| [Local HTTPS / split DNS](docs/en/local-https.md) | Existing NGINX, trusted tablet microphone and LAN access without WAN |
 | [Local data sources](docs/en/data-sources.md) | Voice commands and supported entities |
 | [Security / privacy](docs/en/security.md) | Network and privacy boundaries |
 | [Tests and release checklist](docs/en/release.md) | Validation status |

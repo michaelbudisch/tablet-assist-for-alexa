@@ -27,6 +27,8 @@ Ein Home Assistant, mehrere Tablets und Bluetooth-Lautsprecher mit getrennten Au
 
 App und Dashboard müssen **denselben Raumbenutzer** nutzen. Vertrauenswürdiges HTTPS bevorzugen. Die App kann nach ausdrücklicher Freigabe eine numerische lokale HTTP-Adresse nutzen (Token/Medien im LAN unverschlüsselt); das Browser-/WebView-Mikrofon benötigt dennoch vertrauenswürdiges HTTPS und Mikrofonberechtigung. Lokales HTTP funktioniert für Dashboard-Mikrofon nicht. Wenn bestehendes HTTPS funktioniert, sind keine Routeränderungen nötig. Keine Token in Git oder Dashboard-YAML.
 
+**Optional für Offline-Nutzung:** [Lokales HTTPS / Split-DNS](../../docs/local-https.md) nutzt einen vorhandenen NGINX-/Certbot-Proxy und denselben sicheren Domainnamen im Heimnetz. Kein zweiter HA-Proxy nötig; lokales HTTP reicht für das Browser-/WebView-Mikrofon nicht.
+
 ## 4. Raum-Assistent im Dashboard
 
 Normales, nicht auf Administratoren beschränktes Dashboard erstellen, manuelle Karte hinzufügen:

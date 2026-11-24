@@ -64,6 +64,10 @@ Die App ist nicht nur ein Audioplayer: Sie kann ein Android-Smartphone oder Tabl
 
 Ein Home Assistant für mehrere Tablets, je Raum eigenes Nicht-Admin-Konto, getrennte Echo-Relay-Ausgabe, optionale Kamera-/Bewegungsentitäten und einstellbare Bildrate. Raumverwaltung mit Zuordnung, Ruhezeiten und gezielten Durchsagen. Die Raumkarte benötigt dasselbe Konto in App und HA-Dashboard sowie vertrauenswürdiges HTTPS für das Mikrofon. Keine alten Audiohelfer im Raum-Modus nötig. Ein echtes Tablet und automatisierte Zwei-Raum-Tests bestanden; gleichzeitiger Hardwaretest mit zwei Tablets und Neuinstallation noch offen. Die Marketplace-Basisintegration installiert dieses separate Backend nicht automatisch.
 
+## Lokales HTTPS für das Tablet-Mikrofon
+
+Mit einem vorhandenen NGINX-/Certbot-Proxy ermöglicht [optionales Split-DNS](docs/local-https.md) den direkten LAN-Zugriff über **denselben gültigen HTTPS-Hostnamen**, auch ohne Internet. Kein zweiter Proxy, keine neuen Router-Ports und keine festen privaten IPs im TAFA-Dashboard. Bestehende öffentliche Seiten werden dadurch nicht automatisch gesperrt.
+
 ## Installation
 
 ```bash
@@ -81,6 +85,7 @@ cd tablet-assist-for-alexa
 | [HA-Automationen](docs/ha-automations.md) | Familienfelder und universelle Sprachausgabe |
 | [Optionaler GPU-Rechner](docs/worker.md) | Windows/Linux, STT, TTS und lokale KI |
 | [Optionaler Nginx-Proxy](docs/nginx-proxy.md) | DuckDNS und Certbot |
+| [Lokales HTTPS / Split-DNS](docs/local-https.md) | Vorhandener NGINX, Tablet-Mikrofon und lokale Verbindung ohne Internet |
 | [Lokale Datenquellen](docs/data-sources.md) | Sprachbefehle und unterstützte Entitäten |
 | [Sicherheit und Datenschutz](docs/security.md) | Netzwerk- und Datenschutzgrenzen |
 | [Tests und Release-Checkliste](docs/release.md) | Prüfstatus |

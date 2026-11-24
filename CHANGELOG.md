@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — optional local HTTPS / split DNS
+- Added optional Debian/Proxmox LAN DNS setup for an existing NGINX/Certbot proxy without changing HA, vhosts, certificates or router ports.
+- German/English Android microphone, offline use, validation and rollback guides with input/syntax tests.
+- No new product or APK release; `VERSION` remains at the last released version.
+
+
 ## Multiroom camera-aware vision — backend 1.7.1
 - The administrator proactive vision check can now select a consented room camera by `room`, instead of relying on the legacy global camera frames.
 - Room-scoped `jarvis_echo_relay_detection` events include the originating room; stale/replaced sessions are rejected and legacy single-device checks are unchanged.
