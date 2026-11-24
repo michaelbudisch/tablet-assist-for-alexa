@@ -24,7 +24,7 @@ jobs:
         run: python -m compileall -q worker/vision worker/qwen-stream worker/ops worker/tools worker/check_release.py
       - name: Vision API and queue tests
         working-directory: worker/vision
-        run: python -m unittest -v test_server test_priority_gate
+        run: python -m unittest -v test_server test_sequence_benchmark test_priority_gate
       - name: TTS text tests
         working-directory: worker/qwen-stream
         run: python -m unittest -v test_text_processing
@@ -37,13 +37,16 @@ jobs:
       - name: Release validation and package test
         working-directory: worker
         run: python -m unittest -v test_release
+      - name: Resolve worker version
+        id: worker_version
+        run: echo "version=$(cat worker/VERSION)" >> "$GITHUB_OUTPUT"
       - name: Build secret-safe release ZIP
-        run: python worker/check_release.py --package ./jarvis-gpu-worker-2.0.0.zip
+        run: python worker/check_release.py --package "./jarvis-gpu-worker-${{ steps.worker_version.outputs.version }}.zip"
       - name: Upload release ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: jarvis-gpu-worker-2.0.0
-          path: jarvis-gpu-worker-2.0.0.zip
+          name: jarvis-gpu-worker-${{ steps.worker_version.outputs.version }}
+          path: jarvis-gpu-worker-${{ steps.worker_version.outputs.version }}.zip
           if-no-files-found: error
           retention-days: 30
       - name: Docker Compose configuration validation
