@@ -99,7 +99,7 @@ class RoomAudioAdminView(HomeAssistantView):
             raise web.HTTPBadRequest()
         try:
             body = await request.json()
-            if not isinstance(body, dict) or body.get("action") not in ("list", "pair"):
+            if not isinstance(body, dict) or body.get("action") not in ("list", "pair", "camera"):
                 raise ValueError("Invalid action")
             data = hass.data.get(DOMAIN, {})
             transport = data.get(KEY)
@@ -108,13 +108,15 @@ class RoomAudioAdminView(HomeAssistantView):
                 raise web.HTTPServiceUnavailable()
             if body["action"] == "list":
                 people = [
-                    {"id": u.id, "name": u.name}
+                    {"id": u.id, "name": u.name or u.id}
                     for u in await hass.auth.async_get_users()
                     if u.is_active and not u.is_admin and not u.system_generated
                 ]
                 paired = [
                     {"room": room, "user_id": principal,
                      "wake_device_id": transport.settings.get(room, {}).get("wake_device_id", ""),
+                     "camera_enabled": transport.settings.get(room, {}).get("camera_enabled", False) is True,
+                     "camera_online": bool(data.get("room_cameras") and data["room_cameras"].store.fresh(room)),
                      **transport.status(principal)}
                     for room, principal in transport.rooms.items()
                 ]
@@ -127,6 +129,33 @@ class RoomAudioAdminView(HomeAssistantView):
                     "rooms": paired,
                     "devices": devices,
                 }, headers={"Cache-Control": "no-store"})
+
+            if body["action"] == "camera":
+                room, wake_id, enabled = body.get("room"), body.get("device_id"), body.get("enabled")
+                if (not isinstance(room, str) or room not in transport.rooms
+                        or not isinstance(wake_id, str) or not re.fullmatch(r"[a-f0-9]{32}", wake_id)
+                        or type(enabled) is not bool):
+                    raise ValueError("Invalid camera room or permission")
+                principal = transport.rooms[room]
+                owner = controller.devices.get(wake_id, {}).get("user_id")
+                if owner != principal:
+                    raise ValueError("Device must belong to the selected room user")
+                associated = transport.settings.get(room, {}).get("wake_device_id", "")
+                # Older, valid assignments had no wake-device binding.
+                if associated and associated != wake_id:
+                    raise ValueError("Camera permission belongs to another tablet")
+                if not associated and sum(
+                        d.get("user_id") == principal for d in controller.devices.values()
+                ) != 1:
+                    raise ValueError("Pair this tablet with its audio room first")
+                transport.settings[room] = {
+                    **transport.settings.get(room, {}),
+                    "wake_device_id": wake_id,
+                    "camera_enabled": enabled,
+                }
+                await data["room_audio_save"]()
+                return web.json_response({"room": room, "camera_enabled": enabled},
+                                         headers={"Cache-Control": "no-store"})
 
             room = body.get("room")
             principal = body.get("user_id")
