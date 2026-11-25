@@ -87,14 +87,14 @@ def autoconfigure(address):
     while True:
         try:
             speech=speech_status()
-            if not speech.get("piper_ready"):
-                if speech.get("piper_phase")=="error":
-                    save_state("waiting_for_speech",speech.get("piper_error","Piper failed")[:150])
-                else:
-                    save_state("waiting_for_speech","Piper model "+str(speech.get("piper_phase","loading")))
+            if not (speech.get("piper_ready") and speech.get("whisper_ready")):
+                failed = "piper" if not speech.get("piper_ready") else "whisper"
+                phase=str(speech.get(failed+"_phase","initializing"))
+                error=speech.get(failed+"_error","") if phase=="error" else ""
+                save_state("waiting_for_speech",(failed+" "+(str(error) if error else phase))[:150])
                 time.sleep(20)
                 continue
-            if speech.get("piper_ready"):
+            if speech.get("piper_ready") and speech.get("whisper_ready"):
                 outcome=configure(address)
                 save_state(outcome)
                 if outcome in ("configured","already_configured"):
