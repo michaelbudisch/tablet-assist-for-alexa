@@ -7,8 +7,9 @@ umask 077
   echo "Debian systemd CT required"; exit 1;
 }
 if command -v pveversion >/dev/null; then echo "Refusing to run on PVE host"; exit 1; fi
-[[ $# -eq 1 ]] || { echo "Usage: install-combined-ct.sh [PUBLIC_AUDIO_HOST]"; exit 2; }
+[[ $# -eq 2 ]] || { echo "Usage: install-combined-ct.sh [PUBLIC_AUDIO_HOST] [GPU_BASE]"; exit 2; }
 HOST="$1"
+GPU_BASE="$2"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 [[ -f "$HERE/install-speechserver.sh" && -f "$HERE/install-nginx-proxy.sh" && -f "$HERE/combined-console.sh" ]] || {
   echo "Complete TAFA installer archive required"; exit 1;
@@ -23,6 +24,22 @@ if systemctl list-unit-files nginx.service --no-legend 2>/dev/null | grep -q '^n
 fi
 
 bash "$HERE/install-speechserver.sh"
+# Connect the MP3 Qwen route only when the user explicitly supplied a LAN worker.
+if [[ -n "$GPU_BASE" ]]; then
+  python3 - "$GPU_BASE" <<'PY'
+import ipaddress,sys
+from urllib.parse import urlsplit
+u=urlsplit(sys.argv[1])
+assert u.scheme=="http" and u.hostname and u.port and not any((u.username,u.password,u.path,u.query,u.fragment))
+try:
+  ip=ipaddress.ip_address(u.hostname)
+  assert ip.version==4 and ip.is_private and not ip.is_loopback
+except ValueError:
+  assert u.hostname.endswith(".local") and len(u.hostname)<254
+PY
+  sed -i "s|^JARVIS_GPU_BASE=.*$|JARVIS_GPU_BASE=$GPU_BASE|" /etc/jarvis-local.env
+  systemctl restart jarvis-mp3.service
+fi
 
 # The MP3 file server must not be exposed on the LAN on a combined CT.
 # The audio Nginx proxy connects to loopback:8080 only.
@@ -46,7 +63,14 @@ if [[ -n "$HOST" ]]; then
   bash "$HERE/install-nginx-proxy.sh" prepare "$HOST" 127.0.0.1
 else
   echo "Kein öffentlicher Hostname angegeben: Nginx installiert, HTTPS bleibt deaktiviert."
+  # Fresh CT: remove Debian's default welcome site; no accidental HTTP content.
+  if [[ -L /etc/nginx/sites-enabled/default &&
+        $(readlink /etc/nginx/sites-enabled/default) == /etc/nginx/sites-available/default ]]; then
+    rm /etc/nginx/sites-enabled/default
+  fi
+  nginx -t
   systemctl enable --now nginx
+  systemctl reload nginx
 fi
 install -d -m 0755 /etc/profile.d
 cat > /etc/profile.d/tafa-status.sh <<'EOF'
