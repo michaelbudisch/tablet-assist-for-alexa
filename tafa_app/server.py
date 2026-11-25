@@ -101,10 +101,25 @@ def autoconfigure(address, mode="local"):
                     # HA entries. Do not require Devices & services options.
                     sync_app_configuration(address, setup_settings())
                     pipeline = ensure_pipeline()
-                    save_state("external_ready",
-                               "App settings synchronized; " + pipeline +
-                               ". Wyoming integration is a native HA prerequisite.")
-                    return
+                    if pipeline in ("pipeline_created", "pipeline_exists"):
+                        save_state("external_ready",
+                                   "App settings synchronized; " + pipeline +
+                                   ". TAFA Lokal Assist pipeline available.")
+                        LOG.info("TAFA external speech / Assist pipeline ready: %s", pipeline)
+                        return
+                    if pipeline == "waiting_for_entities":
+                        save_state("waiting_for_entities",
+                                   "External Proxmox: add Wyoming STT in Home Assistant, "
+                                   "select its entity in TAFA App Configuration "
+                                   "(cpu_stt), and restart HA if integration was just installed.")
+                    elif pipeline == "pipeline_needs_review":
+                        save_state("pipeline_needs_review",
+                                   "Existing TAFA Lokal pipeline has missing Assist stages; "
+                                   "open HA Settings -> Voice assistants and complete it.")
+                    else:
+                        save_state("waiting_for_pipeline", "Assist pipeline status: " + pipeline)
+                    time.sleep(20)
+                    continue
                 save_state(outcome)
                 time.sleep(20)
                 continue
