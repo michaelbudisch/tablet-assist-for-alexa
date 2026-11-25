@@ -4,6 +4,9 @@
 const STRINGS={
   de:{
     title:"Multiroom-Audio", wake:"Rufwortgerät registriert",
+    camera:"Kamerazugriff für diesen Raum erlauben",cameraLive:"Kamera sendet gerade Bilder",cameraOff:"Kamera aus oder nicht aktiv",
+    cameraHint:"Aus Datenschutzgründen zunächst deaktiviert. Die Freigabe allein schaltet keine Kamera ein: Der Stream muss auf dem Tablet ausdrücklich gestartet werden. Beim Ausschalten werden gespeicherte Momentaufnahmen verworfen.",
+    cameraSaved:"Kameraberechtigung gespeichert. Auf dem Tablet Multiroom-Audio aktiviert lassen und die Kameraübertragung ausdrücklich starten.",cameraFailed:"Kamerafreigabe konnte nicht gespeichert werden.",
     ready:"Audio verbunden und bereit",online:"Audio verbunden · Wiedergabe noch nicht bereit",
     offline:"Audio-Raum zugeordnet · Player offline",missing:"Audio-Raum noch nicht zugeordnet",
     user:"HA-Benutzer (ohne Administratorrechte)",room:"Audio-Raumkennung",
@@ -22,6 +25,9 @@ const STRINGS={
   },
   en:{
     title:"Multiroom audio",wake:"Wake device registered",
+    camera:"Allow camera access for this room",cameraLive:"Camera is currently sending frames",cameraOff:"Camera off or not streaming",
+    cameraHint:"Off by default for privacy. Enabling access never starts the camera by itself: explicitly start streaming on the tablet. Turning access off clears any stored frames.",
+    cameraSaved:"Camera permission saved. Keep Multiroom audio enabled and explicitly start camera sharing on the tablet.",cameraFailed:"Could not save camera permission.",
     ready:"Audio connected and ready",online:"Audio connected · Playback not ready",
     offline:"Audio room assigned · Player offline",missing:"Audio room not assigned yet",
     user:"HA user (non-admin)",room:"Audio room identifier",
@@ -75,6 +81,35 @@ export function renderAudioPairing({container,hass,device,audio,language,onChang
     (ownerId&&ownerDevices.length===1?rooms.find(x=>x.user_id===ownerId&&!x.wake_device_id):undefined);
   paragraph(!current?t.missing:current.online?(current.ready?t.ready:t.online):t.offline);
   paragraph(t.hint);
+  if(current){
+    const cameraBox=el("div");
+    cameraBox.style.cssText="display:grid;gap:8px;border-top:1px solid var(--divider-color);padding-top:12px";
+    const cameraLabel=el("label");
+    cameraLabel.style.cssText="display:flex;align-items:center;gap:8px";
+    const cameraToggle=el("input");
+    cameraToggle.type="checkbox";cameraToggle.checked=current.camera_enabled===true;
+    cameraLabel.append(cameraToggle,document.createTextNode(t.camera));
+    cameraBox.append(cameraLabel);
+    const cameraState=el("p",current.camera_online?t.cameraLive:t.cameraOff);
+    cameraBox.append(cameraState);
+    cameraBox.append(el("p",t.cameraHint));
+    const cameraFeedback=el("p");
+    cameraFeedback.setAttribute("role","status");cameraBox.append(cameraFeedback);
+    cameraToggle.onchange=async()=>{
+      cameraToggle.disabled=true;cameraFeedback.textContent="";
+      try{
+        await hass.callApi("POST","jarvis_tablet_audio/room_admin",{
+          action:"camera",room:current.room,device_id:deviceId,enabled:cameraToggle.checked
+        });
+        cameraFeedback.textContent=t.cameraSaved;
+        if(typeof onChanged==="function")await onChanged();
+      }catch{
+        cameraToggle.checked=!cameraToggle.checked;
+        cameraFeedback.textContent=t.cameraFailed;
+      }finally{cameraToggle.disabled=false;}
+    };
+    wrap.append(cameraBox);
+  }
   const users=Array.isArray(audio.users)?audio.users:[];
   if(!users.length){
     paragraph(t.noUsers);container.append(wrap);return;
