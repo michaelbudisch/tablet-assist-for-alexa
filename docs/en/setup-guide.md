@@ -30,6 +30,21 @@ Under **Apps → TAFA → Configuration**, set **Automatic**, streaming URL `htt
 
 Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has a LAN-only MP3 generator on `5001` and temporary audio files on `8080`. Follow the [Nginx HTTPS proxy guide](nginx-proxy.md) for a valid public HTTPS hostname. In **Apps → TAFA → Configuration**, set MP3 generator address, public HTTPS origin and room/notify mapping. Never open internal speech/GPU ports publicly; never expose internal generator ports.
 
+### Alexa Devices: use **Speak**, not **Announce**, for Qwen MP3 playback
+
+**Observed with the Home Assistant Alexa Devices integration:** Selecting **Announce** (`notify.…_durchsagen`) produced the Alexa chime without playing the generated MP3. Selecting **Speak** (`notify.…_sprechen`) played the Qwen MP3 successfully. TAFA delivers an `<audio src="https://…/file.mp3"/>` tag through the configured Notify entity. Plain text may still work with Announce, so a successful text announcement does not prove MP3 support.
+
+1. In **Settings → Devices & services → Entities**, confirm the exact entity ID for **“[Echo name] – Speak”**.
+2. In **Settings → Apps → TAFA → Configuration → Alexa rooms (JSON)** enter the Speak entity, for example:
+
+   ```json
+   {"Büro":{"notify":"notify.buro_dot_sprechen"}}
+   ```
+
+3. Save the App options, restart TAFA, then retry the announcement in **TAFA → Alexa announcements**. Reload the HA integration if necessary.
+
+If you **hear a chime but no voice**, check the Notify entity first; next verify that the temporary MP3 is available through the configured public HTTPS URL. The Speak entity may omit the Alexa announcement chime; you can optionally enable TAFA's own MP3 chime. Other Alexa integrations may behave differently.
+
 ## Where to configure
 
 **First:** Open **Settings → Apps → TAFA → Configuration** and configure Proxmox/Piper, GPU/Qwen, Alexa MP3, automatic Piper fallback, voice and sound profile. Restart the App. Live **Connection diagnostics** and safe TAFA-only CPU model cleanup are in **Apps → TAFA → Web UI**. Existing App-managed integration settings are synchronized from App Configuration on restart.
