@@ -89,7 +89,6 @@ services:
     networks: [llm-private]
   ollama-gateway:
     image: nginx:alpine
-    environment:
     ports:
       - "${LAN_IP}:11434:8080"
     volumes:
