@@ -38,6 +38,7 @@ async def async_setup(hass: HomeAssistant, config):
     await hass.http.async_register_static_paths([
         StaticPathConfig("/tablet_assist_for_alexa/keepalive.js", str(Path(__file__).parent / "frontend" / "keepalive.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/assist.js", str(Path(__file__).parent / "frontend" / "assist.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/room_assist_test.js", str(Path(__file__).parent / "frontend" / "room_assist_test.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/device_audio.js", str(Path(__file__).parent / "frontend" / "device_audio.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/panel.js", str(Path(__file__).parent / "frontend" / "panel.js"), False),
     ])
@@ -99,7 +100,7 @@ async def async_setup_entry(hass, entry):
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
         sidebar_title="TAFA", sidebar_icon="mdi:microphone-message",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.5",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.6",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()
