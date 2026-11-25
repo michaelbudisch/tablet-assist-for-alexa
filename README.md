@@ -77,3 +77,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **Tablet Multiroom (new):** Admins can now pair registered tablets directly in **TAFA → Devices**, choosing an existing non-admin HA user and audio room, with live connection status. No Developer tools/YAML. The Android 1.0.0 app is unchanged. [Guided setup](docs/en/setup-guide.md).
 
 **New: integrated voice test.** Under **TAFA → Devices → Voice test**, speak through the browser microphone and listen to the Qwen/Piper response on the paired tablet. Requires trusted HTTPS and a full Assist pipeline; Android app unchanged. [Instructions](docs/en/setup-guide.md).
+
+**New in App 0.3.15 / integration 0.4.7:** **TAFA → Devices → Voice test** includes audio-only Qwen/Piper to Android playback verification that works on local HTTP. The full microphone test still requires HTTPS. [Guide](docs/en/setup-guide.md).
