@@ -194,7 +194,7 @@ if [[ "$PUBLIC_MODE" == shared ]]; then
   PROXY_SETUP="/opt/tafa-audio-setup-$CTID"
   pct exec "$PROXY_CT" -- test ! -e "$PROXY_SETUP" || die "Das Verzeichnis $PROXY_SETUP ist belegt."
   pct exec "$PROXY_CT" -- mkdir -m 0700 "$PROXY_SETUP"
-  for filename in install-nginx-proxy.sh render-nginx-proxy.py check-proxy-host.py; do
+  for filename in install-nginx-proxy.sh render-nginx-proxy.py check-proxy-host.py install-duckdns-updater.sh duckdns-update.py; do
     pct push "$PROXY_CT" "$SOURCE/proxmox/$filename" "$PROXY_SETUP/$filename"
   done
   # Existing sites are never edited. Prepare only a new hostname and ACME webroot.
@@ -204,6 +204,11 @@ if [[ "$PUBLIC_MODE" == shared ]]; then
   printf '  pct enter %s\n' "$PROXY_CT"
   printf '  certbot certonly --webroot -w /var/lib/tablet-assist-acme --cert-name %s -d %s\n' "$PUBLIC_HOST" "$PUBLIC_HOST"
   printf '  bash %s/install-nginx-proxy.sh enable %s %s --shared\n' "$PROXY_SETUP" "$PUBLIC_HOST" "$NEW_CT_IP"
+  if [[ "$PUBLIC_HOST" == *.duckdns.org ]]; then
+    printf '\nOPTIONAL: Neue DuckDNS-Domain automatisch aktuell halten (nur einmal im CT %s):\n' "$PROXY_CT"
+    printf '  bash %s/install-duckdns-updater.sh %s\n' "$PROXY_SETUP" "$PUBLIC_HOST"
+    printf 'Den DuckDNS-Account-Token dort verdeckt eingeben, niemals im Chat oder in Git.\n'
+  fi
 elif [[ "$PUBLIC_MODE" == none ]]; then
   pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "" "$GPU_BASE"
 else
