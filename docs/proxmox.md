@@ -4,6 +4,8 @@
 
 Voraussetzungen: aktuelles Proxmox VE oder Debian 12/13 mit systemd; für die CPU-Basis zunächst 4 vCPU, 4 GiB RAM und 20 GiB Speicher als Startgröße (abhängig vom Modell). Unterstützte Architektur und Python-Version der Abhängigkeiten prüfen. Eine NVIDIA-GPU ist nicht notwendig. Download der Modelle benötigt Internet; Laufzeit kann anschließend lokal bleiben.
 
+**Bestehender Proxmox-Sprachserver:** Um ausschließlich den bisherigen tokenpflichtigen MP3-Generator zu aktualisieren, die aktuellen Repository-Dateien im dedizierten Debian-Gast bereitstellen und dort `sudo bash proxmox/update-mp3-generator.sh` ausführen. Das Skript sichert die vorhandene `api.py`, startet nur `jarvis-mp3.service` neu und stellt bei Fehlern die Vorgängerversion wieder her. Piper, Whisper, Audiodateien und HTTPS-Proxy bleiben unverändert. Passend dazu TAFA-Integration 0.4.3 verwenden. **Nicht auf dem Proxmox-Host ausführen.** Port 5001 niemals ins Internet weiterleiten.
+
 ## Neue VM/CT
 
 In Proxmox eine Debian-Vorlage in der Oberfläche herunterladen. Repository auspacken/klonen. Auf dem Proxmox-Host als Administrator:

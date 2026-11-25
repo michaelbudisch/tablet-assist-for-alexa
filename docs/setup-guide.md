@@ -4,6 +4,8 @@
 
 Die TAFA-Home-Assistant-App enthält ein **lokales CPU-Standardsystem** mit Piper und Faster-Whisper. Für eine normale erste Einrichtung musst du **keinen** Proxmox-Sprachserver, GPU-Rechner oder HTTPS-Proxy installieren. Es gibt drei voneinander unabhängige Entscheidungen:
 
+**Bestehender Proxmox-Sprachserver:** Um ausschließlich den bisherigen tokenpflichtigen MP3-Generator zu aktualisieren, die aktuellen Repository-Dateien im dedizierten Debian-Gast bereitstellen und dort `sudo bash proxmox/update-mp3-generator.sh` ausführen. Das Skript sichert die vorhandene `api.py`, startet nur `jarvis-mp3.service` neu und stellt bei Fehlern die Vorgängerversion wieder her. Piper, Whisper, Audiodateien und HTTPS-Proxy bleiben unverändert. Passend dazu TAFA-Integration 0.4.3 verwenden. **Nicht auf dem Proxmox-Host ausführen.** Port 5001 niemals ins Internet weiterleiten.
+
 ## 1. Wo sollen Piper und Whisper laufen?
 
 | Variante | Ergebnis | Konfiguration |

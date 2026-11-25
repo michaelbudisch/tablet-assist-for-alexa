@@ -4,6 +4,8 @@
 
 Requirements: current Proxmox VE or Debian 12/13 with systemd. Start with 4 vCPUs, 4 GiB RAM and 20 GiB disk, depending on model size. Check the architecture and Python requirements of dependencies. No NVIDIA GPU is required. Downloading models requires Internet access; inference can run locally afterwards.
 
+**Existing speech server:** To update only the MP3 generator from an older token-based version, use the source checkout inside the dedicated Debian guest and run `sudo bash proxmox/update-mp3-generator.sh`. It backs up the existing `api.py` and restarts only `jarvis-mp3.service`, rolling back if health checks fail. This does not replace Piper, Whisper, data or your proxy. Update the matching TAFA integration to 0.4.3. Never run this script on the Proxmox host. No public forwarding for port 5001.
+
 ## New VM/container
 
 Download a Debian template in Proxmox and clone or extract this repository. On the Proxmox host as administrator:
