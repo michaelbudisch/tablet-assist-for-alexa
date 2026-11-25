@@ -214,7 +214,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         releaseRecognizer();
         status="detected: "+hit;
         sendWakeEvent(hit);
-        main.postDelayed(rearm,HOLD_MS);
+        main.postDelayed(rearm,holdSeconds*1000L);
     }
 
     @Override public void onPartialResult(String text){candidate(text,"partial");}
