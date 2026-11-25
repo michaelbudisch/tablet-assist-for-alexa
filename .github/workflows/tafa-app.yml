@@ -25,6 +25,8 @@ jobs:
           python-version: '3.12'
       - name: Compile source
         run: python -m compileall -q tafa_app custom_components/tablet_assist_for_alexa
+      - name: JavaScript syntax check
+        run: node --input-type=module --check < custom_components/tablet_assist_for_alexa/frontend/panel.js
       - name: Unified backend release guard
         run: python scripts/test_unified_layout.py
       - name: Safe installer and CPU API tests
