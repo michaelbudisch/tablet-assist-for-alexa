@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.7.0 (experimentell)
+# HA Jarvis Echo Relay · Android 0.7.1 (experimentell)
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -21,6 +21,18 @@ In der Echo-Relay-App unter **Native Rufworterkennung** das optionale deutsche S
 Die App erkennt die Rufwörter lokal und sendet nur das erkannte Rufwort über die hinterlegte Home-Assistant-Verbindung als `jarvis_android_wakeword`-Ereignis. Sie gibt das Mikrofon anschließend frei und pausiert 50 Sekunden. Das HA-Dashboard empfängt das Ereignis und startet seine vorhandene Whisper-STT-Aufnahme. Für die ersten Tests das Dashboard geöffnet lassen und dessen eigene Rufworterkennung ausschalten; direkt angehängte Wörter können vor der Übernahme durch das Browsermikrofon verloren gehen. Bei geschlossenem Dashboard ist ein vollständig freihändiger Betrieb noch nicht gewährleistet. **Alexa** kann zugleich einen echten Echo aktivieren.
 
 Das ist ein experimenteller Quellcode-Zweig, noch keine signierte 0.7.0-Update-APK. Die **Debug-APK aus GitHub Actions** verwendet die separate App-ID `de.jarvis.audio.wakepilot` und heißt **Jarvis Wake Pilot**. Sie kann neben der vorhandenen signierten Echo-Relay-App installiert werden, besitzt aber eigene Einstellungen und benötigt eine eigene HA-Verbindung. **In der Test-App HA-Adresse/Token eintragen und nur „Native Erkennung starten“ antippen**; dabei wird die Verbindung verschlüsselt gespeichert. Nicht zusätzlich den Audio-Player der Test-App starten, sonst laufen zwei Echo-Relay-Player parallel. Erkennungsqualität, Latenz und Mikrofon-Koexistenz müssen auf dem Tablet geprüft werden.
+
+### Rufwort- und Mikrofoneinstellungen (0.7.1)
+
+Alle Regler sind in der Pilot-App und über die Home-Assistant-Helfer erreichbar. Im TAFA-Dashboard kann das Mikrofon oben rechts zur Steuerung der **nativen App** umgeschaltet werden; der Knopf schaltet dann die native Erkennung **stumm/frei**. Stumm bedeutet, dass Android `AudioRecord` freigibt – es wird nicht nur das Ereignis unterdrückt.
+
+- `input_boolean.jarvis_native_wake_stumm`: Ein = Mikrofon stumm / aus
+- `input_select.jarvis_native_wake_rufwort`: Hey Jarvis / Jarvis / Alexa / Alle drei
+- `input_number.jarvis_native_wake_erkennungsstrenge`: 1 bis 3 aufeinanderfolgende bestätigende Vosk-Teilergebnisse
+- `input_number.jarvis_native_wake_sperrzeit`: 3 bis 30 s
+- `input_number.jarvis_native_wake_aufnahmeubergabe`: 10 bis 90 s Pause für das Whisper-Mikrofon nach dem Rufwort
+
+Die Einstellungen werden mit Home Assistant abgeglichen; das Stummschalten wirkt normalerweise binnen drei Sekunden. Bei Verbindungsverlust zum HA-Einstellungsdienst wird das Mikrofon sicherheitshalber freigegeben. Es gibt derzeit keinen zuverlässigen echten Mikrofon-Lautstärkeschwellwert (dB) in dieser Vosk-Anbindung. Nach Installation dieser neuen Debug-Version können aufgrund unterschiedlicher Debug-Signaturen gegebenenfalls Deinstallation, Neuanmeldung und Modell-Download nötig werden.
 
 ## Einrichten
 
