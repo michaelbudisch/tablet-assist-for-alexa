@@ -12,4 +12,4 @@ All App-managed HA integration settings are now maintained in **Apps → TAFA �
 
 **App 0.3.15:** **TAFA → Devices → Voice test → Test speech output** now works from private HTTP with the selected Qwen/Piper TTS engine and confirmed Android room playback. Browser microphone questions still need HTTPS.
 
-**New in 0.3.16:** External Proxmox mode now checks the complete Home Assistant Assist pipeline before reporting ready. When Wyoming STT is missing, configure it in HA and set `cpu_stt` in TAFA App options; the App retries automatically. See [native Android setup](../docs/en/setup-guide.md).
+**New in 0.3.16:** External Proxmox mode now checks the complete Home Assistant Assist pipeline before reporting ready. When Wyoming STT is missing, configure it in HA. A single Wyoming STT provider is chosen automatically; with multiple providers, set `cpu_stt` in TAFA App options. The App retries automatically. See [native Android setup](../docs/en/setup-guide.md).
