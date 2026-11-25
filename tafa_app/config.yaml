@@ -1,14 +1,15 @@
 name: TAFA
 slug: tafa
-version: "0.2.0"
+version: "0.3.0"
 description: Unified voice assistant backend and setup control center
 url: https://github.com/michaelbudisch/tablet-assist-for-alexa/tree/main/tafa_app
 arch:
   - amd64
   - aarch64
 homeassistant: "2026.11.0"
+homeassistant_api: true
 startup: application
-boot: manual
+boot: auto
 stage: experimental
 init: true
 ingress: true
