@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA-App 0.3.11 — Zentrale Einrichtung und Verbindungsstatus
+- App-Konfiguration auf Deutsch/Englisch: Proxmox, GPU/Qwen, Fallback, Stimme, Klangprofil und Alexa-MP3.
+- Control Center prüft Qwen, Piper-Reserve und MP3-Generator ohne Testdurchsage.
+- TAFA-eigene Piper-/Whisper-Modelle nach Wechsel auf externe Sprache und Neustart gezielt löschbar; andere Installationen bleiben unberührt.
+- Bei erster HA-Einrichtung werden die neuen App-Werte übernommen; bestehende HA-Einträge werden nicht ungefragt geändert.
+
+
 ## TAFA-App 0.3.10 / Integration 0.4.3 — externer Proxmox-Sprachserver
 - Neuer optionaler Modus `speech_mode=external` in den App-Einstellungen: keine doppelten Piper-/Whisper-Prozesse oder Modell-Downloads in der HA-App.
 - `local` bleibt Standard; Wyoming-STT und Assist-Pipeline im externen Modus bewusst in Home Assistant zuordnen.
