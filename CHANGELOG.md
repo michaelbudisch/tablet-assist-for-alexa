@@ -6,6 +6,8 @@
 # Changelog
 
 ## Unreleased — guided combined Proxmox CT installer
+- Proxmox CT creation now uses native interactive `pct create --password` in the guided combined and separate-CT installers. The root password is entered privately during installation, never passed in the script's command arguments.
+
 - New optional `proxmox/quick-install.sh` script creates a single new unprivileged Debian CT after confirming free CT ID, storage, network, resources, optional GPU worker and Alexa hostname.
 - Piper, Wyoming Whisper, MP3 generator and Nginx share the new guest. Temporary audio port 8080 binds to loopback only; generator port 5001 must remain private LAN only.
 - Persistent console status via `tafa-info`, guided HTTPS via `tafa-setup` and periodic login banner.
