@@ -149,7 +149,8 @@ public class MainActivity extends Activity {
 
     private static final int WAKE_MICROPHONE_PERMISSION = 120;
     private static final String[] WAKE_KEYS={"hey_jarvis","jarvis","alexa","all"};
-    private Spinner wakeChoice;
+    private Spinner wakeChoice,wakeSlot;
+    private EditText wakeRoomName;
     private Button wakeInstall;
     private TextView wakeStatus;
     private boolean wakeDownloading=false;
@@ -220,6 +221,34 @@ public class MainActivity extends Activity {
 
     private void initializeNativeWake(){
         var preferences=getSharedPreferences(PREF,0);
+        wakeSlot=findViewById(R.id.wake_slot);
+        ArrayAdapter<CharSequence> slots=ArrayAdapter.createFromResource(this,
+            R.array.wake_slots,android.R.layout.simple_spinner_dropdown_item);
+        wakeSlot.setAdapter(slots);
+        wakeSlot.setSelection(WakeDeviceIdentity.slot(this)-1);
+        wakeSlot.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override public void onNothingSelected(AdapterView<?> parent){}
+            @Override public void onItemSelected(AdapterView<?> parent,View view,int position,long id){
+                int next=position+1;
+                if(next==WakeDeviceIdentity.slot(MainActivity.this))return;
+                preferences.edit().putInt("wake_slot",next).apply();
+                if(WakeWordService.running){
+                    stopService(new Intent(MainActivity.this,WakeWordService.class));
+                    wakeStatus.setText(R.string.wake_slot_in_use);
+                }
+            }
+        });
+        wakeRoomName=findViewById(R.id.wake_room_name);
+        wakeRoomName.setText(preferences.getString("wake_room_name",""));
+        wakeRoomName.addTextChangedListener(new TextWatcher(){
+            @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            @Override public void onTextChanged(CharSequence s,int start,int before,int count){}
+            @Override public void afterTextChanged(Editable e){
+                preferences.edit().putString("wake_room_name",e.toString().trim()).apply();
+            }
+        });
+        ((TextView)findViewById(R.id.wake_device_id)).setText(
+            getString(R.string.wake_device_id,WakeDeviceIdentity.get(this).substring(0,12)));
         wakeChoice=findViewById(R.id.wake_choice);
         wakeInstall=findViewById(R.id.wake_model_install);
         wakeStatus=findViewById(R.id.wake_status);
