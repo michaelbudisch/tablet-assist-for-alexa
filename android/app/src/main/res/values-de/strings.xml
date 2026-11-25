@@ -173,4 +173,12 @@
     <string name="wake_download_failed">Modell-Download fehlgeschlagen: %1$s</string>
     <string name="wake_running">Mikrofon aktiv · Rufworterkennung</string>
     <string-array name="wake_choices"><item>Hey Jarvis</item><item>Jarvis</item><item>Alexa</item><item>Alle drei</item></string-array>
+    <string name="wake_strict_label">Erkennungsstrenge · 1 von 3</string>
+    <string name="wake_strict_help">Anzahl der bestätigten Erkennungsergebnisse, KEIN Lautstärke- oder Dezibel-Schwellwert. 1 = empfindlicher, 3 = weniger Fehlalarme, aber eventuell übersehene Rufwörter.</string>
+    <string name="wake_cooldown_label">Auslösesperre · 12 Sekunden</string>
+    <string name="wake_hold_label">Mikrofon-Übergabe · 50 Sekunden</string>
+    <string name="wake_mute_button">Natives Mikrofon stumm schalten</string>
+    <string name="wake_unmute_button">Natives Mikrofon wieder freigeben</string>
+    <string name="wake_remote_help">Die Einstellungen werden mit Home Assistant synchronisiert. Stumm gibt das Android-Mikrofon wirklich frei, der Dienst bleibt aktiv. Änderungen im TAFA-Dashboard gelten normalerweise innerhalb von drei Sekunden.</string>
+    <string name="wake_save_error">Wakeword-Einstellung konnte nicht an Home Assistant gesendet werden: %1$s</string>
 </resources>
