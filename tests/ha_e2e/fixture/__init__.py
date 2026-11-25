@@ -91,6 +91,8 @@ async def phase_one(hass):
         hass.states.async_set("weather.ci_weather","cloudy",{"temperature":7,"temperature_unit":"°C"})
         before=hass.data[DOMAIN][entry.entry_id]
         flow=await hass.config_entries.options.async_init(entry.entry_id)
+        check(flow["type"]=="menu","categorized TAFA options menu")
+        flow=await hass.config_entries.options.async_configure(flow["flow_id"],{"next_step_id":"sources"})
         check(flow["type"]=="form","data-source options form")
         result=await hass.config_entries.options.async_configure(flow["flow_id"],{
             "vorlauf":"sensor.ci_flow","ruecklauf":"sensor.ci_return","weather":"weather.ci_weather","shopping":todo_id,

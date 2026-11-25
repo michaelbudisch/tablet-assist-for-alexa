@@ -163,6 +163,31 @@ def display(message="",lang="de"):
       "New components are staged at app startup. Home Assistant needs one restart afterwards.")
     install=t("Backend erneut prüfen","Check backend installation")
     retry=t("Sprachmodelle erneut laden","Retry speech models")
+    guide = f"""
+<section><h2>{t("Einrichtung in drei Schritten", "Setup in three steps")}</h2>
+<p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
+<div class="tiles">
+<div class="tile"><strong>1 · {t("Sprachserver", "Speech server")}</strong>
+<p><b>{t("A: Alles in TAFA (Standard)", "A: Everything in TAFA (default)")}</b></p>
+<p>{t("Piper und Whisper laufen lokal in dieser App. Keine weitere VM nötig.", "Piper and Whisper run locally in this App. No extra VM needed.")}</p>
+<p><b>{t("B: Proxmox-Sprachserver", "B: Proxmox speech server")}</b></p>
+<p>{t("Debian-CT: Piper Port 5000, Wyoming-Whisper 10300. Den Server anschließend in TAFA unter Optionen → Sprachserver & GPU eintragen.", "Debian container: Piper port 5000, Wyoming Whisper 10300. Configure them under TAFA Options → Speech servers & GPU.")}</p>
+<a href="{REPO}/blob/main/docs/{'en/' if en else ''}proxmox.md" target="_blank" rel="noopener">{t("Proxmox-Anleitung", "Proxmox guide")}</a>
+</div>
+<div class="tile"><strong>2 · {t("GPU-Hauptrechner (optional)", "GPU computer (optional)")}</strong>
+<p>{t("Qwen-Streaming auf Port 10502. Auf dem GPU-PC erstellt das Setup-Skript einen API-Schlüssel in der privaten .env. Beides unter Optionen → Sprachserver & GPU hinterlegen.", "Qwen streaming uses port 10502. The setup script creates a private API key in the GPU PC's .env. Enter both in Options → Speech servers & GPU.")}</p>
+<p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
+<a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
+</div>
+<div class="tile"><strong>3 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
+<p>{t("Nur für Alexa-MP3-Durchsagen: Generator 5001, temporäre Dateien 8080 und gesonderter öffentlicher HTTPS-Proxy. Bei Bluetooth-Ausgabe an den Echo nicht nötig.", "Only for Alexa MP3 announcements: generator 5001, temporary files 8080, and a separate public HTTPS proxy. Not needed for Echo Bluetooth output.")}</p>
+<p>{t("Einstellungen unter Optionen → Alexa-Durchsagen & HTTPS.", "Configure under Options → Alexa announcements & HTTPS.")}</p>
+<a href="{REPO}/blob/main/docs/{'en/' if en else ''}nginx-proxy.md" target="_blank" rel="noopener">{t("HTTPS-Anleitung", "HTTPS guide")}</a>
+</div>
+</div>
+<p><a href="/config/integrations/integration/tablet_assist_for_alexa" target="_top">{t("TAFA-Integration öffnen → Optionen", "Open TAFA integration → Options")}</a></p>
+</section>
+"""
     return f"""<!doctype html>
 <html lang="{lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -182,7 +207,7 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <body>
 <div class="top"><div><h1>TAFA Control Center</h1><small>{t("Lokaler Sprachassistent","Local voice assistant")} · {APP_VERSION} · Beta</small></div>
 <nav><a href="?lang=de">Deutsch</a><a href="?lang=en">English</a></nav></div>
-<div class="tiles">{panels}</div>
+<div class="tiles">{panels}</div>{guide}
 <section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
 <form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
 <button type="submit" name="action" value="backend">{install}</button>
