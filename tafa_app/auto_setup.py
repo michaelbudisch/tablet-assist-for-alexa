@@ -25,8 +25,8 @@ def call(path,data=None,method="POST"):
 def configure(piper_base, preferences=None):
     """Create HA's TAFA entry using the App Configuration as the first-run source.
 
-    Does not modify existing Config Entries; those remain user-owned and may
-    be updated through Home Assistant's supported Options Flow.
+    Existing entries are preserved here. The App subsequently synchronizes
+    only its own integration via the authenticated WebSocket command.
     """
     flow=call("config/config_entries/flow",{"handler":"tablet_assist_for_alexa"})
     if flow.get("type")=="abort":
@@ -41,7 +41,8 @@ def configure(piper_base, preferences=None):
     if preferences:
         allowed={"hardware_profile", "live_profile", "voice_variant",
                  "mp3_base", "public_audio_base", "mp3_profile",
-                 "gpu_base", "chime"}
+                 "gpu_base", "chime", "cpu_stt", "gpu_stt",
+                 "gpu_stt_host", "llm_agent", "conversation_mode", "rooms_json"}
         fields.update({key:value for key,value in preferences.items() if key in allowed})
     try:
         done=call("config/config_entries/flow/"+fid,fields)
@@ -49,11 +50,42 @@ def configure(piper_base, preferences=None):
             return "configured"
         if done.get("type")=="abort" and done.get("reason")=="already_configured":
             return "already_configured"
-        save_state("needs_attention","HA rejected automatic config; configure TAFA in Devices & services")
+        save_state("needs_attention","Home Assistant integration not yet ready; restart HA after the App update")
         return "needs_attention"
     finally:
         try: call("config/config_entries/flow/"+fid,None,"DELETE")
         except (urllib.error.URLError,RuntimeError,ValueError): pass
+
+
+def sync_app_configuration(piper_base, preferences):
+    """Apply App Configuration to a NEW OR EXISTING App-managed HA entry.
+
+    Supervisor's own token is required internally to authenticate to HA Core;
+    no user-supplied API token or public endpoint is involved.
+    """
+    if not TOKEN:
+        raise RuntimeError("Supervisor API access unavailable")
+    from websockets.sync.client import connect
+    with connect("ws://supervisor/core/websocket", open_timeout=6, close_timeout=2) as ws:
+        reply = json.loads(ws.recv(timeout=8))
+        if reply.get("type") == "auth_required":
+            ws.send(json.dumps({"type": "auth", "access_token": TOKEN}))
+            reply = json.loads(ws.recv(timeout=8))
+        if reply.get("type") != "auth_ok":
+            raise RuntimeError("Home Assistant WebSocket authentication failed")
+        ws.send(json.dumps({
+            "id": 1,
+            "type": "tablet_assist_for_alexa/sync_app_configuration",
+            "settings": {"piper_base": piper_base, **preferences},
+        }))
+        while True:
+            reply = json.loads(ws.recv(timeout=10))
+            if reply.get("id") != 1:
+                continue
+            if not reply.get("success"):
+                reason = reply.get("error", {}).get("code", "not_ready")
+                raise RuntimeError("TAFA integration sync failed: " + str(reason))
+            return "changed" if reply.get("result", {}).get("changed") else "unchanged"
 
 
 def ensure_pipeline():
