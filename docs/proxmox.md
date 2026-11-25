@@ -31,6 +31,14 @@ Falls die Proxmox-Konsole einen Root-Login verlangt und noch kein Passwort exist
 
 **Alexa-HTTPS:** Ein öffentlicher DNS-Hostname und gezielte Erreichbarkeit auf TCP 80/443 müssen bewusst eingerichtet werden. Anschließend `tafa-setup` *im neuen Container* starten. Es aktiviert ausschließlich einen restriktiven MP3-Dateizugriff per HTTPS. **Niemals** die internen Ports 5000/5001/8080/10300 ins Internet weiterleiten. Falls bereits ein zentraler Proxy deine Ports 80/443 verwendet, diesen erst bewusst umstellen oder den bestehenden Proxy weiterverwenden; es ist keine automatische Übernahme vorgesehen.
 
+## Vorhandener zentraler Nginx-Proxy (Home Assistant / MCP / Alexa)
+
+Wenn derselbe Nginx-CT bereits Home Assistant, ShapeAnywhere-MCP und die oeffentliche Alexa-Audio-Adresse bedient, **diesen CT behalten**. Die Neuinstallation mit Nginx im Sprachserver-CT ist fuer frische Umgebungen gedacht. Sie aendert bestehende CTs, DNS, Zertifikate und Routerweiterleitungen nicht.
+
+**Wichtig:** Beim neuen Kombi-CT ist die MP3-Dateiausgabe ausschliesslich an `127.0.0.1:8080` gebunden. Ein anderer Proxy-CT kann diesen Loopback-Port **nicht** erreichen. Fuer eine bestehende Multi-Site-Installation deshalb den separaten Sprachserver-CT nutzen oder den vorhandenen Sprachserver aktualisieren. Eine spaetere Backend-Migration benoetigt eine gezielt LAN-erreichbare MP3-Ausgabe und passende Firewallregeln.
+
+Zum vorsichtigen Aufraeumen gibt es das **nur lesende** Skript `proxmox/audit-shared-proxy.sh`. Es listet aktive Nginx-Seiten, Domains, Proxy-Ziele sowie Zertifikatsablaufdaten auf, ohne Einstellungen zu veraendern. Erst nach dem Pruefen alter Sites etwas entfernen.
+
 ## Neuer separater Sprachserver-CT (Alternative)
 
 In Proxmox eine Debian-Vorlage in der Oberfläche herunterladen. Repository auspacken/klonen. Auf dem Proxmox-Host als Administrator:
