@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and use the existing **TAFA Device Bridge 1.0.0** on your Android device. The native Android application is **not modified** by this project update.
+**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and keep using the signed **TAFA Device Bridge 1.0.0** until the separate **Android 1.0.1** optional native-capture update is signed with the original key.
 
 **English** | [Deutsch](README.de.md)
 
@@ -79,3 +79,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **New: integrated voice test.** Under **TAFA → Devices → Voice test**, speak through the browser microphone and listen to the Qwen/Piper response on the paired tablet. Requires trusted HTTPS and a full Assist pipeline; Android app unchanged. [Instructions](docs/en/setup-guide.md).
 
 **New in App 0.3.15 / integration 0.4.7:** **TAFA → Devices → Voice test** includes audio-only Qwen/Piper to Android playback verification that works on local HTTP. The full microphone test still requires HTTPS. [Guide](docs/en/setup-guide.md).
+
+**New in TAFA 0.3.16 / integration 0.4.8:** External Proxmox setup confirms a complete Assist pipeline before reporting ready. The Devices page guides the optional native Android 1.0.1 mic mode. [Instructions](docs/en/setup-guide.md).
