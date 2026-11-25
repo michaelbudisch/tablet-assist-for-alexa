@@ -68,4 +68,4 @@ Firewall-Regeln administrativ so setzen, dass lediglich die benötigten HA- und 
 
 ## Optionaler HTTPS-Proxy
 
-Für Alexa-Durchsagen einen getrennten Nginx-Proxy-CT gemäß [Anleitung](nginx-proxy.md) einrichten. Für reines Tablet/Echo-Bluetooth nicht benötigt.
+**Beim neuen Ein-CT-Installer ist Nginx schon integriert.** Im neuen Container `tafa-setup` verwenden, sobald der DNS-Name und der bewusste HTTPS-Zugriff vorbereitet sind. Die getrennte Proxy-CT-Installation gemäß [Anleitung](nginx-proxy.md) bleibt als Alternative für vorhandene Umgebungen erhalten. Für reines Tablet/Echo-Bluetooth ist kein öffentlicher Audio-Proxy nötig.
