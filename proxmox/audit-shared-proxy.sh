@@ -25,10 +25,11 @@ for site in /etc/nginx/sites-enabled/*; do
         sub(/[;#].*$/, ""); gsub(/^[[:space:]]+/, "");
         if (match($0, /https?:\/\//)) {
           v=substr($0,RSTART);
-          sub(/[?#].*$/, "", v);
-          sub(/^https?:\/\/[^@/]*@/, "https://[redacted]@", v);
-          sub(/\/.*$/, "", v);
-          print "    proxy_pass " v
+          scheme=substr(v,1,index(v,"://")+2);
+          sub(/^https?:\/\//, "", v);
+          sub(/[\/?#].*$/, "", v);
+          sub(/^[^@]*@/, "[redacted]@", v);
+          print "    proxy_pass " scheme v
         } else print "    proxy_pass [dynamic/variable]"
       }
     ' "$target"
