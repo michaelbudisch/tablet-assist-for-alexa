@@ -43,7 +43,8 @@ def configure(piper_base, preferences=None):
                  "mp3_base", "public_audio_base", "mp3_profile",
                  "gpu_base", "chime", "cpu_stt", "gpu_stt",
                  "gpu_stt_host", "llm_agent", "conversation_mode", "rooms_json"}
-        fields.update({key:value for key,value in preferences.items() if key in allowed})
+        fields.update({key:value for key,value in preferences.items() if key in allowed
+                       and (value or key not in {"cpu_stt", "gpu_stt", "llm_agent"})})
     try:
         done=call("config/config_entries/flow/"+fid,fields)
         if done.get("type")=="create_entry":
