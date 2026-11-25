@@ -71,6 +71,12 @@ The browser requires **trusted HTTPS** (or localhost) for microphone access. A l
 
 This microphone flow runs in the **Home Assistant browser/dashboard**. Android **Device Bridge 1.0.0** still sends wake-word events only and does not record the subsequent question in the background.
 
+### New native Android voice capture (Device Bridge 1.0.1)
+
+For **Hey Jarvis → spoken question → Whisper → Qwen/Piper → Bluetooth**, Android needs a complete Home Assistant Assist pipeline, **TAFA Lokal**, with the TAFA speech router (Whisper/STT), conversation router and TAFA stream (TTS). The TAFA App creates it automatically as soon as all three HA entities exist, **including with an external Proxmox speech server**. Until then, the App displays **waiting_for_entities** rather than incorrectly reporting **external_ready**. In external mode, register the speech server's Wyoming STT integration in Home Assistant and select its STT entity under **Settings → Apps → TAFA → Configuration → cpu_stt**.
+
+Under **TAFA → Devices → Voice test** the UI reports whether a complete Assist pipeline is configured. This confirms configuration, **not** live Whisper availability. On Android 1.0.1, explicitly enable the optional mode under **Wakeword → Native voice conversation**. The existing paired room and non-admin HA account token remain in use. Native capture needs no browser microphone or browser HTTPS. Local HTTP transport remains unencrypted. The Android 1.0.1 APK still requires the original signing key.
+
 ## Where to configure
 
 **First:** Open **Settings → Apps → TAFA → Configuration** and configure Proxmox/Piper, GPU/Qwen, Alexa MP3, automatic Piper fallback, voice and sound profile. Restart the App. Live **Connection diagnostics** and safe TAFA-only CPU model cleanup are in **Apps → TAFA → Web UI**. Existing App-managed integration settings are synchronized from App Configuration on restart.
