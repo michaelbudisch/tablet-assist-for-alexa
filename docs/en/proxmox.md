@@ -64,6 +64,18 @@ The local configuration remains in `/etc/jarvis-local.env` (root only). The curr
 
 Configure firewall rules to allow only the required HA and proxy hosts. No automatic router configuration. The GPU address initially remains empty; see [GPU worker](worker.md).
 
+## Recover an incomplete CT after `runuser ... Permission denied`
+
+An earlier installer used `umask 077` while creating the Python virtual environment, preventing the `jarvis-local` service account from opening installed packages. Fresh installations now use `umask 022` **only around non-secret venv/pip installation**.
+
+If a brand-new CT already exists and failed **specifically at `runuser: failed to execute .../venv/bin/python: Permission denied` immediately after pip installation**, execute this in the **Proxmox host shell**:
+
+```bash
+curl -fsSLo /root/tafa-resume.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/resume-install.sh && bash /root/tafa-resume.sh
+```
+
+The recovery wizard checks that the interrupted CT has the expected partial install and no existing runtime configuration, asks for its ID, fresh registered audio hostname, optional GPU URL and the existing proxy CT, then requires the explicit `FORTSETZEN` confirmation. It fixes only the Python venv file permissions and completes the existing install without recreating or destroying a CT. It prepares a **new** HTTPS site on the existing proxy, leaving current websites untouched, and prints the subsequent certificate commands.
+
 ## Fresh installation behind an existing central Nginx proxy
 
 A new DuckDNS domain can be registered in the [DuckDNS dashboard](https://www.duckdns.org); the published update endpoint maintains existing domains and does not register names. Use a separate new name, leaving the existing domain and router forwarding intact.
