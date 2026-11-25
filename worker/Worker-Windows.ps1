@@ -105,12 +105,12 @@ try {
     'Prepare' { Write-Host 'Konfiguration erstellt; optional 01-Installieren.bat starten.' }
     'Install' {
       Check-Docker
-      Compose @('--profile','stream','config','--quiet')
-      Compose @('--profile','stream','up','-d','--build','whisper','qwen-stream')
+      Compose -Arguments @('--profile','stream','config','--quiet')
+      Compose -Arguments @('--profile','stream','up','-d','--build','whisper','qwen-stream')
     }
     'Start' {
       Check-Docker
-      Compose @('--profile','stream','up','-d','whisper','qwen-stream')
+      Compose -Arguments @('--profile','stream','up','-d','whisper','qwen-stream')
     }
     'Restart' {
       Check-Docker
@@ -120,7 +120,7 @@ try {
       if($services.Count -gt 0){
         Compose (@('--profile','*','restart') + $services)
       }else{
-        Compose @('--profile','stream','up','-d','whisper','qwen-stream')
+        Compose -Arguments @('--profile','stream','up','-d','whisper','qwen-stream')
       }
     }
     'Info' { Write-Host 'Aktualisiere Verbindungsdaten.' }
