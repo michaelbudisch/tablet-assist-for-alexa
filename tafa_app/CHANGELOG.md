@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.10 — Existing Proxmox speech-server mode
+- New App Configuration fields: `speech_mode=external` and `external_piper_base=http://PRIVATE-IP:5000`.
+- In external mode, bundled Piper/Faster-Whisper processes and model downloads are skipped entirely; local is the unchanged default.
+- Auto-configure the TAFA HA integration only after private Piper /health is ready. Require explicit Wyoming STT configuration in HA (port 10300) before creating an Assist pipeline; no silent STT endpoint substitution.
+- Ingress displays external-mode readiness and no longer offers a retry for disabled local models; Windows GPU Worker and public MP3 HTTPS proxy remain separate.
+- Added tests for private endpoints, invalid addresses, no local model startup and external onboarding.
+
 ## 0.3.9 — No additional service tokens on private LAN
 - Removed GPU and MP3 generator API-token fields from the new Home Assistant integration.
 - Supports token-free GPU Worker 2.2.1 and token-free LAN MP3 generator.
