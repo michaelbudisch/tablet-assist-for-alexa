@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.0** auf dem Android-Gerät weiterverwenden. Die native Tablet-App wird **nicht verändert**.
+**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.0** zunächst weiterverwenden. Die optionale native Spracheingabe kommt mit der separat signierten Android-App **1.0.1**.
 
 [English](README.md) | **Deutsch**
 
@@ -79,3 +79,5 @@ Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergelad
 **Neu: Sprachtest ohne YAML.** Unter **TAFA → Geräte → Sprachtest** lässt sich eine Frage über das Browser-Mikrofon stellen und die Qwen/Piper-Antwort auf dem verbundenen Tablet hören. Benötigt HTTPS und die vollständige TAFA Lokal-Pipeline. Die Android-App bleibt unverändert. [Anleitung](docs/setup-guide.md).
 
 **Neu in App 0.3.15 / Integration 0.4.7:** Unter **TAFA → Geräte → Sprachtest** kannst du die Sprachausgabe auf dem verbundenen Tablet auch ohne HTTPS testen. Der separate Mikrofontest benötigt weiterhin HTTPS. [Anleitung](docs/setup-guide.md).
+
+**Neu in TAFA 0.3.16 / Integration 0.4.8:** Externe Proxmox-Installationen prüfen die vollständige Assist-Pipeline, bevor die Einrichtung als bereit gilt. Unter **TAFA → Geräte** werden die Voraussetzungen für die native Android-Sprachaufnahme erklärt. [Anleitung](docs/setup-guide.md).
