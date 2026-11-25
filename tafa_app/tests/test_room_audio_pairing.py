@@ -205,6 +205,43 @@ class PairingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(hass.controller.devices[ID]["user_id"], "tablet2")
         self.assertEqual(hass.wake_saves, 1)
 
+    async def test_camera_is_opt_in_and_never_starts_by_default(self):
+        hass = FakeHass()
+        first = await self.call(hass, {"action": "list"})
+        self.assertFalse(first["rooms"][0]["camera_enabled"])
+        self.assertFalse(first["rooms"][0]["camera_online"])
+
+        session = hass.transport.sessions["jarvis_tablet"]
+        allowed = await self.call(hass, {"action": "camera", "room": "jarvis_tablet",
+                                         "device_id": ID, "enabled": True})
+        self.assertTrue(allowed["camera_enabled"])
+        self.assertIs(hass.transport.sessions["jarvis_tablet"], session)
+        self.assertTrue(hass.transport.settings["jarvis_tablet"]["camera_enabled"])
+        self.assertEqual(hass.saves, 1)
+
+        disabled = await self.call(hass, {"action": "camera", "room": "jarvis_tablet",
+                                         "device_id": ID, "enabled": False})
+        self.assertFalse(disabled["camera_enabled"])
+        self.assertFalse(hass.transport.settings["jarvis_tablet"]["camera_enabled"])
+
+    async def test_camera_permissions_require_admin_valid_room_and_boolean(self):
+        for changes in (
+            {"enabled": "true"}, {"enabled": 1}, {"device_id": "b" * 32},
+            {"room": "unknown"},
+        ):
+            hass = FakeHass()
+            payload = {"action": "camera", "room": "jarvis_tablet",
+                       "device_id": ID, "enabled": True}
+            payload.update(changes)
+            with self.subTest(changes=changes):
+                response = await self.call(hass, payload)
+                self.assertEqual(response["status"], 400)
+                self.assertEqual(hass.saves, 0)
+        with self.assertRaises(Forbidden):
+            await self.call(FakeHass(), {"action": "camera", "room": "jarvis_tablet",
+                                        "device_id": ID, "enabled": True}, admin=False)
+
+
     async def test_reassignment_needs_explicit_replace(self):
         hass = FakeHass()
         hass.transport.rooms["jarvis_tablet"] = "tablet2"
