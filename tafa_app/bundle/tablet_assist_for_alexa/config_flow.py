@@ -152,6 +152,8 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._form("user", user_input)
 
     async def async_step_reconfigure(self, user_input=None):
+        if self._get_reconfigure_entry().options.get("tafa_app_managed"):
+            return self.async_abort(reason="app_configuration_only")
         return await self._form("reconfigure", user_input, self._get_reconfigure_entry())
 
 class TabletAssistSourcesFlow(config_entries.OptionsFlow):
@@ -170,8 +172,11 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_init(self, user_input=None):
-        # Returning visitors choose a focused section instead of seeing 25+ entities.
-        if user_input is not None:
+        if self.config_entry.options.get("tafa_app_managed"):
+            return self.async_abort(reason="app_configuration_only")
+        # Marketplace-only users retain their choices. A blank dict must NOT
+        # unexpectedly open Data sources instead of the section menu.
+        if user_input:
             return await self.async_step_sources(user_input)
         return self.async_show_menu(
             step_id="init", menu_options=["hardware", "announcements", "sources"]
