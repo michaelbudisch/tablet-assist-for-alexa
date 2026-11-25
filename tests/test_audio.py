@@ -10,7 +10,6 @@ except ImportError:
         def get(self,*a,**k): return lambda fn:fn
         post=get
     sys.modules['flask']=types.SimpleNamespace(Flask=Flask,request=None,jsonify=None)
-os.environ['PIPER_API_TOKEN']='test-only-'+'0'*32
 sys.path.insert(0,str(root/'speechserver'))
 import api
 class Audio(unittest.TestCase):
