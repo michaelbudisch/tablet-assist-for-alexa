@@ -9,7 +9,7 @@
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.12**, integrated HA component **0.4.4**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.13**, integrated HA component **0.4.5**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
@@ -73,3 +73,5 @@ Marketplace installs the **same unified TAFA integration 0.4.3**, including the 
 ## License
 
 Original project code: [MIT](LICENSE). External libraries, downloaded voice and ASR models are subject to their respective licenses (including Piper licensing). This independent project is not affiliated with Amazon or the Home Assistant project.
+
+**Tablet Multiroom (new):** Admins can now pair registered tablets directly in **TAFA → Devices**, choosing an existing non-admin HA user and audio room, with live connection status. No Developer tools/YAML. The Android 1.0.0 app is unchanged. [Guided setup](docs/en/setup-guide.md).
