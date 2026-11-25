@@ -61,6 +61,7 @@ show_status() {
   printf '\n============================================================\n'
   printf ' TAFA | Speech services and Alexa MP3 delivery\n'
   printf '============================================================\n'
+  printf ' Hostname    : %s\n' "$(hostname -s)"
   printf ' LAN IPv4    : %s\n' "$IP"
   printf ' Piper TTS   : http://%s:5000 | %s\n' "$IP" "$(svc jarvis-piper)"
   printf ' Alexa MP3   : http://%s:5001 | %s\n' "$IP" "$(svc jarvis-mp3)"
@@ -114,6 +115,7 @@ refresh_banner() {
   tls_status
   BANNER="$(cat <<EOF
 TAFA - Proxmox speech services
+Hostname: $(hostname -s)
 IP: $IP
 Piper http://$IP:5000 | MP3 http://$IP:5001 | Wyoming $IP:10300
 Nginx: $HTTPS
