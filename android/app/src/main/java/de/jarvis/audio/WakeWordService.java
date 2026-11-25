@@ -38,7 +38,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     private final WakeTriggerGate triggerGate=new WakeTriggerGate();
     private ScheduledExecutorService settingsExecutor;
     private long lastFullSync=0;
-    private int activeSettingsSlot=0;
+    private volatile boolean registered=false;
     private Model model;
     private Recognizer recognizer;
     private SpeechService speech;
@@ -119,12 +119,11 @@ public final class WakeWordService extends Service implements RecognitionListene
         settingsExecutor.scheduleWithFixedDelay(()->{
             if(!enabled)return;
             try{
-                int currentSlot=WakeDeviceIdentity.slot(this);
-                boolean full=currentSlot!=activeSettingsSlot||SystemClock.elapsedRealtime()-lastFullSync>=12000;
+                if(!registered){WakePilotSettings.register(this);registered=true;}
+                boolean full=SystemClock.elapsedRealtime()-lastFullSync>=12000;
                 if(full){
                     WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
                     lastFullSync=SystemClock.elapsedRealtime();
-                    activeSettingsSlot=currentSlot;
                     main.post(()->{
                         if(!enabled)return;
                         wordChoice=settings.word;
@@ -240,37 +239,13 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     private void sendWakeEvent(String word){
         new Thread(()->{
-            HttpURLConnection conn=null;
             try{
-                var prefs=getSharedPreferences(MainActivity.PREF,0);
-                String base=HaAddress.validateStored(
-                    prefs.getString("base",""),prefs.getString(MainActivity.HTTP_CONSENT,""));
-                String token=MainActivity.decrypt(prefs.getString("secret",""));
-                URL url=new URL(base+"/api/events/jarvis_android_wakeword");
-                conn=(HttpURLConnection)url.openConnection();
-                conn.setInstanceFollowRedirects(false);
-                conn.setRequestMethod("POST");
-                conn.setConnectTimeout(6000);
-                conn.setReadTimeout(8000);
-                conn.setRequestProperty("Authorization","Bearer "+token);
-                conn.setRequestProperty("Content-Type","application/json");
-                conn.setDoOutput(true);
-                byte[] body=new JSONObject().put("source","android_echo_relay")
-                    .put("version",2)
-                    .put("device_id",WakeDeviceIdentity.get(this))
-                    .put("slot",WakeDeviceIdentity.slot(this))
-                    .put("room",WakeDeviceIdentity.room(this))
-                    .put("wakeword",word).put("timestamp_ms",System.currentTimeMillis())
-                    .toString().getBytes(StandardCharsets.UTF_8);
-                conn.setFixedLengthStreamingMode(body.length);
-                try(java.io.OutputStream out=conn.getOutputStream()){out.write(body);}
-                int statusCode=conn.getResponseCode();
-                if(statusCode<200||statusCode>=300)throw new java.io.IOException("HA HTTP "+statusCode);
-                status="sent: "+word;
+                boolean routed=WakePilotSettings.sendWake(this,word);
+                status=routed?"sent: "+word:"wake_suppressed: "+word;
             }catch(Exception e){
-                Log.w(TAG,"HA wake event failed",e);
+                Log.w(TAG,"HA multiroom wake routing failed",e);
                 status="delivery_error: "+e.getClass().getSimpleName();
-            }finally{if(conn!=null)conn.disconnect();}
+            }
         },"JarvisWakeEvent").start();
     }
 
