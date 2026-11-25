@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.1** auf dem Android-Gerät weiterverwenden. Die separat veröffentlichte Android-App 1.0.1 enthält die optionale native Spracheingabe.
+**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.1** auf dem Android-Gerät weiterverwenden. Die native Tablet-App wird **nicht verändert**.
 
 [English](README.md) | **Deutsch**
 
@@ -9,7 +9,7 @@
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.16**, zusammengeführte HA-Integration **0.4.8**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.14**, zusammengeführte HA-Integration **0.4.6**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
@@ -74,10 +74,10 @@ Marketplace installiert dieselbe **zusammengeführte TAFA-Integration 0.4.3**, e
 
 Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergeladene Sprach-/STT-Modelle unterliegen ihren jeweiligen Lizenzen (einschließlich Piper). Unabhängiges Community-Projekt ohne Verbindung zu Amazon oder Home Assistant.
 
-**Tablet-Multiroom (neu):** Unter **TAFA → Geräte** kann ein Administrator jetzt den registrierten Tablet-Geräten einen bestehenden, nicht-administrativen HA-Benutzer und Audio-Raum zuordnen und den Verbindungsstatus sehen. Keine YAML-Aktionen erforderlich; Android 1.0.1 unterstützt eine zuschaltbare native Sprachaufnahme. [Schrittfolge](docs/setup-guide.md).
+**Tablet-Multiroom (neu):** Unter **TAFA → Geräte** kann ein Administrator jetzt den registrierten Tablet-Geräten einen bestehenden, nicht-administrativen HA-Benutzer und Audio-Raum zuordnen und den Verbindungsstatus sehen. Keine YAML-Aktionen erforderlich; die bestehende Android-App 1.0.0 bleibt unverändert. [Schrittfolge](docs/setup-guide.md).
 
 **Neu: Sprachtest ohne YAML.** Unter **TAFA → Geräte → Sprachtest** lässt sich eine Frage über das Browser-Mikrofon stellen und die Qwen/Piper-Antwort auf dem verbundenen Tablet hören. Benötigt HTTPS und die vollständige TAFA Lokal-Pipeline. Die Android-App bleibt unverändert. [Anleitung](docs/setup-guide.md).
 
 **Neu in App 0.3.15 / Integration 0.4.7:** Unter **TAFA → Geräte → Sprachtest** kannst du die Sprachausgabe auf dem verbundenen Tablet auch ohne HTTPS testen. Der separate Mikrofontest benötigt weiterhin HTTPS. [Anleitung](docs/setup-guide.md).
 
-**Neu in TAFA 0.3.16 / Integration 0.4.8:** Bei externen Proxmox-Sprachservern meldet TAFA die Sprachpipeline erst nach Prüfung der Wyoming-STT-Anbindung und aller Assist-Komponenten als bereit. Eine einzelne Wyoming-STT-Entität wird automatisch gewählt, bei mehreren `cpu_stt` in der TAFA-App auswählen. Unter **TAFA → Geräte** stehen die Voraussetzungen für die native Android-1.0.1-Sprachaufnahme. [Anleitung](docs/setup-guide.md).
+**Neu in TAFA 0.3.16 / Integration 0.4.8:** Bei externen Proxmox-Sprachservern prüft TAFA die Wyoming-STT-Anbindung und die vollständige Assist-Pipeline, bevor die Einrichtung als bereit gilt. Eine einzelne Wyoming-STT-Entität wird automatisch gewählt, bei mehreren `cpu_stt` konfigurieren. Die optionale native Android-1.0.1-Sprachaufnahme wird unter **TAFA → Geräte** erklärt. [Einrichtung](docs/setup-guide.md).
