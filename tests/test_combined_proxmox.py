@@ -202,6 +202,25 @@ class CombinedCTTests(unittest.TestCase):
         self.assertNotIn('pct stop', RESUME_INSTALL)
         self.assertNotIn('qm destroy', RESUME_INSTALL)
 
+    def test_resume_created_but_empty_ct_without_recreating_it(self):
+        # User may close a browser-backed PVE shell between pct start and
+        # the guest installer execution; the CT is usable but TAFA absent.
+        self.assertIn('STAGE=empty', RESUME_INSTALL)
+        self.assertIn('STAGE=venv', RESUME_INSTALL)
+        self.assertIn('[[ "$STAGE" == empty ]]', RESUME_INSTALL)
+        self.assertIn('pct exec "$CTID" -- test ! -e /opt/jarvis-local', RESUME_INSTALL)
+        self.assertIn('pct exec "$CTID" -- test ! -e /etc/jarvis-local.env', RESUME_INSTALL)
+        self.assertIn("grep -qx 'unprivileged: 1'", RESUME_INSTALL)
+        self.assertIn("grep -qx 'ostype: debian'", RESUME_INSTALL)
+        self.assertIn('flock -n 9', RESUME_INSTALL)
+        self.assertIn('pct push "$CTID" "$WORK/guest-installer.tar.gz"', RESUME_INSTALL)
+        self.assertIn('tar -xzf /tmp/tafa-guest-installer.tar.gz', RESUME_INSTALL)
+        self.assertIn('"$HOST" "$GPU" shared "$PROXY_IP" "$PROXY_CT" "$CTID"', RESUME_INSTALL)
+        self.assertIn('--resume "$HOST" "$GPU" shared', RESUME_INSTALL)
+        self.assertNotIn('pct create', RESUME_INSTALL)
+        self.assertNotIn('pct destroy', RESUME_INSTALL)
+        self.assertNotIn('pct stop', RESUME_INSTALL)
+
     def test_scripts_parse_and_status_works_without_root(self):
         for path in ("quick-install.sh", "install-combined-ct.sh", "combined-console.sh", "install-duckdns-updater.sh", "resume-install.sh", "install-speechserver.sh"):
             with self.subTest(path=path):
