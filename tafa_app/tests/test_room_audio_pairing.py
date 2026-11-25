@@ -84,13 +84,18 @@ class FakeAuth:
 
 
 class FakeHass:
+    async def save_wake(self):
+        self.wake_saves += 1
+
     def __init__(self):
         self.auth = FakeAuth([User("admin", admin=True), User("tablet1"),
                               User("tablet2")])
         self.transport = FakeTransport()
         self.controller = types.SimpleNamespace(
-            devices={ID: {"user_id": "tablet1", "room": "Jarvis Tablet"}})
+            devices={ID: {"user_id": "tablet1", "room": "Jarvis Tablet"}},
+            lock=asyncio.Lock(), save=self.save_wake)
         self.saves = 0
+        self.wake_saves = 0
 
         async def persist():
             self.saves += 1
@@ -182,6 +187,23 @@ class PairingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(hass.transport.provision_calls,
                          [("jarvis_tablet", "tablet1")])
         self.assertEqual(hass.transport.settings["jarvis_tablet"]["wake_device_id"], ID)
+
+
+    async def test_transfer_device_requires_explicit_admin_approval(self):
+        hass = FakeHass()
+        params = {"action": "pair", "device_id": ID, "room": "other",
+                  "user_id": "tablet2"}
+        first = await self.call(hass, params)
+        self.assertEqual(first["status"], 400)
+        self.assertEqual(hass.controller.devices[ID]["user_id"], "tablet1")
+        # User tablet2 cannot simultaneously take over an existing room;
+        # use an empty setup for this approved cross-account transfer.
+        hass.transport.rooms = {}
+        hass.transport.settings = {}
+        accepted = await self.call(hass, {**params, "transfer_device": True})
+        self.assertTrue(accepted["paired"])
+        self.assertEqual(hass.controller.devices[ID]["user_id"], "tablet2")
+        self.assertEqual(hass.wake_saves, 1)
 
     async def test_reassignment_needs_explicit_replace(self):
         hass = FakeHass()
