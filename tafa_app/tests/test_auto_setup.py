@@ -95,9 +95,20 @@ class Tests(unittest.TestCase):
         self.assertNotIn("api_key",message["settings"])
 
     def test_existing_pipeline_preserved(self):
-        result,sent=self.invoke({"pipelines":[{"name":"TAFA Lokal","id":"existing"}]})
+        result,sent=self.invoke({"pipelines":[{"name":"TAFA Lokal","id":"existing",
+                                                "stt_engine":"stt.existing",
+                                                "tts_engine":"tts.existing",
+                                                "conversation_engine":"conversation.existing"}]})
         self.assertEqual(result,"pipeline_exists")
         self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create" for msg in sent))
+    def test_existing_incomplete_pipeline_is_not_reported_ready_or_overwritten(self):
+        result, sent = self.invoke({"pipelines":[{"name":"TAFA Lokal", "id":"existing",
+                                                  "stt_engine":"stt.configured",
+                                                  "tts_engine":None,
+                                                  "conversation_engine":"conversation.configured"}]})
+        self.assertEqual(result,"pipeline_needs_review")
+        self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create" for msg in sent))
+
     def test_wait_for_registered_entities(self):
         result,sent=self.invoke({"entities":False})
         self.assertEqual(result,"waiting_for_entities")
