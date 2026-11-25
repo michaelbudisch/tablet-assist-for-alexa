@@ -1,6 +1,6 @@
 name: TAFA
 slug: tafa
-version: "0.3.11"
+version: "0.3.12"
 description: Unified voice assistant backend and setup control center
 url: https://github.com/michaelbudisch/tablet-assist-for-alexa/tree/main/tafa_app
 arch:
@@ -33,6 +33,16 @@ options:
   public_audio_base: ""
   mp3_profile: natural
   chime: false
+  cpu_stt: ""
+  gpu_stt: ""
+  gpu_stt_host: ""
+  llm_agent: ""
+  conversation_mode: intelligent
+  rooms_json: "{}"
+  sources_json: "{}"
+  learning_enabled: false
+  reminders_enabled: false
+  reminder_room: ""
 schema:
   speech_mode: list(local|external)
   external_piper_base: str
@@ -44,3 +54,13 @@ schema:
   public_audio_base: str
   mp3_profile: list(natural|studio|announcement)
   chime: bool
+  cpu_stt: str
+  gpu_stt: str
+  gpu_stt_host: str
+  llm_agent: str
+  conversation_mode: list(manual|intelligent|automatic)
+  rooms_json: str
+  sources_json: str
+  learning_enabled: bool
+  reminders_enabled: bool
+  reminder_room: str
