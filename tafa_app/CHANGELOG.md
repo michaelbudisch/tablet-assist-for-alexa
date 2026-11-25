@@ -1,5 +1,9 @@
 # TAFA App changelog
 
+## Unreleased — Alexa Devices MP3 onboarding clarification
+- The DE/EN description for **Alexa rooms (JSON)** explicitly recommends the **Speak** Notify entity (`notify.…_sprechen`) for Qwen MP3 playback with Alexa Devices. The **Announce** entity can play a chime without the MP3.
+- Add tested example mappings and chime-without-voice troubleshooting to both setup guides and App documentation. No runtime behavior, API or existing room mappings are changed.
+
 ## 0.3.12 — Single-source App configuration
 - Consolidate CPU Wyoming STT, GPU, LLM, Alexa mapping, data sources, reminders and audio preferences under **Apps → TAFA → Configuration**.
 - Apply App settings automatically to existing App-owned HA integrations via authenticated Supervisor-to-HA WebSocket; no customer API tokens.
