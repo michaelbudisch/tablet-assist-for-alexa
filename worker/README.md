@@ -12,7 +12,7 @@ Run **00-Konfiguration.bat** to create `.env` with LAN address and model default
 
 ## 2.2.1 — Structured production Ring sequence
 
-New authenticated `POST /describe/sequence` on the existing Vision service. Standard: 12 chronological JPEGs (768 px max edge); detail: 4 selected higher-resolution JPEGs (1024 px max edge). Both use a bounded internal 16384-token context and the same vision gate. JSON includes a concise German description, tri-state evidence (yes/no/uncertain), delivery_assessment (likely/uncertain/no_evidence) and timing. A clothing hint alone is uncertain. Invalid or contradictory model output is rejected or downgraded. This is not proof of delivery. Existing /describe, /detect and /benchmark/sequence remain compatible.
+New private-LAN `POST /describe/sequence` on the existing Vision service. Standard: 12 chronological JPEGs (768 px max edge); detail: 4 selected higher-resolution JPEGs (1024 px max edge). Both use a bounded internal 16384-token context and the same vision gate. JSON includes a concise German description, tri-state evidence (yes/no/uncertain), delivery_assessment (likely/uncertain/no_evidence) and timing. A clothing hint alone is uncertain. Invalid or contradictory model output is rejected or downgraded. This is not proof of delivery. Existing /describe, /detect and /benchmark/sequence remain compatible.
 
 Preserve .env and model volumes. Rebuild only Vision: `docker compose --profile vision up -d --build --no-deps vision`. Verify capabilities and run `docker compose exec -T vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate`. Do not install the older 1.6.1 HA overlay on an already customized live backend; HA integration of the structured endpoint is a separate step after deployment. No separate container or model download is required if Qwen3-VL is already installed.
 
@@ -24,8 +24,7 @@ Structured Ring analysis is included in the current integration. Install the com
 
 The worker now has an optional **read-only diagnostics profile** at private-LAN
 port **10504**. Start it with `docker compose --profile ops up -d --build ops`;
-query authenticated `GET /health`, `GET /status` or `GET /selftest` using
-`X-API-Key: <existing JARVIS_TTS_TOKEN>`. The endpoint checks whether configured
+query private-LAN `GET /health`, `GET /status` or `GET /selftest` without a key. The endpoint checks whether configured
 services are reachable and reports GPU statistics only when `nvidia-smi` is
 available in the container. It **does not** run speech recognition, synthesis,
 or inference in the background. Inactive Compose profiles show as unavailable.
@@ -40,7 +39,7 @@ advertises the available interface.
 **Streaming TTS:** deterministic text cleanup is enabled by default
 (`STREAM_TEXT_CLEANUP=1`); optional `STREAM_PRONUNCIATION` JSON dictionary,
 e.g. `{"kWh":"Kilowattstunden"}`, and opt-in
-`STREAM_SPEECH_SPLIT=1` for long replies. Authenticated `POST /cancel`
+`STREAM_SPEECH_SPLIT=1` for long replies. Private-LAN `POST /cancel`
 requests cooperative interruption between synthesized audio chunks; clients
 must stop playback locally too. Existing `/stream` and `/synthesize`
 requests remain supported.
@@ -74,7 +73,7 @@ Optional GPU acceleration for TAFA. For complete installation instructions, supp
 
 ## New installation
 
-Install Docker and NVIDIA GPU support. On Windows use Docker Desktop with WSL2; on Linux use Docker Engine, Compose and NVIDIA Container Toolkit. Run Setup.ps1 or setup-linux.sh in this directory. Preserve an existing .env file. Keep tokens and LAN addresses private. Models and images download on first build/start; allow sufficient SSD and GPU memory.
+Install Docker and NVIDIA GPU support. On Windows use Docker Desktop with WSL2; on Linux use Docker Engine, Compose and NVIDIA Container Toolkit. Run Setup.ps1 or setup-linux.sh in this directory. Preserve an existing .env file. Keep private LAN addresses and configuration safe. Models and images download on first build/start; allow sufficient SSD and GPU memory.
 
 ```bash
 docker compose config --quiet
@@ -98,11 +97,11 @@ docker compose exec vision python -m unittest -v test_server
 
 Test a non-private image you may use with `.\Test-Vision.ps1 -ImagePath C:\Bilder\test.png`. Pull alternatives locally, set VISION_MODEL in .env and recreate only vision. Ollama limits loaded models to one; vision unloads after inference. Check actual shared VRAM and model-switch latency.
 
-Authenticated GET `/health`, POST `/describe` on private LAN port 10503 with existing X-API-Key. JSON `{"image":"<raw base64 JPEG/PNG>","mode":"scene"}`, modes scene, objects, object_in_hand; optional model from the four tags. Max 2 MiB/12 MP, resized to 1280 px, image metadata removed. Response description, model, mode, limitation. No URL/stream fetching, arbitrary prompts, device tools, identity recognition, face matching or persistent image storage. Generic descriptions of visible people, clothes and carried objects are supported. Restrict firewall to HA, no public forwarding; HTTP is unencrypted. HA camera selection and Android camera delivery are available through the Echo Relay integration. Descriptions may be inaccurate. Stop only vision to disable without changing speech or volumes.
+GET `/health` and POST `/describe` on private LAN port 10503 without an API key. JSON `{"image":"<raw base64 JPEG/PNG>","mode":"scene"}`, modes scene, objects, object_in_hand; optional model from the four tags. Max 2 MiB/12 MP, resized to 1280 px, image metadata removed. Response description, model, mode, limitation. No URL/stream fetching, arbitrary prompts, device tools, identity recognition, face matching or persistent image storage. Generic descriptions of visible people, clothes and carried objects are supported. Restrict firewall to HA, no public forwarding; HTTP is unencrypted. HA camera selection and Android camera delivery are available through the Echo Relay integration. Descriptions may be inaccurate. Stop only vision to disable without changing speech or volumes.
 
 ## Voice variants (1.5.0)
 
-Keep the configured STREAM_VOICE_STYLE and existing fixed voice in .env. In fixed voice mode, one synthetic reference per variant is stored in qwen-data. Requests select an already prepared variant 1–9 via the authenticated voice_variant field. If the requested variant is missing, the existing default is used and reported in response headers. No remote voice uploads or model reloads are needed. Identical HA responses may be cached.
+Keep the configured STREAM_VOICE_STYLE and existing fixed voice in .env. In fixed voice mode, one synthetic reference per variant is stored in qwen-data. Requests select an already prepared variant 1–9 via the validated voice_variant field. If the requested variant is missing, the existing default is used and reported in response headers. No remote voice uploads or model reloads are needed. Identical HA responses may be cached.
 
 Prepare additional variants locally:
 
@@ -134,7 +133,7 @@ docker compose exec ollama ollama ps
 nvidia-smi
 ```
 
-Ollama and speech models share GPU memory. Use the authenticated gateway on private port 11434, the existing worker token and the HA Ollama integration. Limit access to HA. Pull models locally through Docker; no model-management endpoints are exposed. Start with short responses, context 4096, history 6, model unload-on-idle and no extra AI tools; test before selecting the LLM as a conversation agent. Stop the two llm services to revert without deleting volumes. Local intents can work when the GPU host is offline.
+Ollama and speech models share GPU memory. Use the LAN-only gateway on port 11434 and the HA Ollama integration. Restrict firewall access to HA. Limit access to HA. Pull models locally through Docker; no model-management endpoints are exposed. Start with short responses, context 4096, history 6, model unload-on-idle and no extra AI tools; test before selecting the LLM as a conversation agent. Stop the two llm services to revert without deleting volumes. Local intents can work when the GPU host is offline.
 
 ## Earlier modes and compatibility
 
@@ -151,4 +150,4 @@ Use Test-Stream.ps1 for latency, Test-Voice.ps1 to listen to locally generated a
 
 With Jarvis Tablet Audio 1.5.0, the dashboard's **AI models and performance** panel selects installed text and vision models and a matching context (2048/4096/8192 tokens) and residency (0/60/120/300/600 seconds). Selecting `qwen3-vl:4b-instruct` for both avoids alternating model weights; verify real VRAM peaks alongside Whisper and TTS. Ollama still permits one loaded model and one parallel request. No automatic downloads, new service, public Ollama endpoint or volume changes are added. Legacy vision callers retain immediate unload by default.
 
-The authenticated `GET /runtime` reports only allowlisted installed/loaded models. `POST /describe` additionally accepts bounded `keep_alive` and `num_ctx` and reports inference timing metrics. The HA integration supplies saved parameters; its existing Ollama conversation agent receives matching settings through native config-subentry persistence, preserving prompts, tools and history. Browser clients never receive the worker key. Camera-display commands still bypass both inference models. Settings changes apply on the next request; the first request after idle/restart may load the model.
+The LAN-only `GET /runtime` reports only allowlisted installed/loaded models. `POST /describe` additionally accepts bounded `keep_alive` and `num_ctx` and reports inference timing metrics. The HA integration supplies saved parameters; its existing Ollama conversation agent receives matching settings through native config-subentry persistence, preserving prompts, tools and history. Restrict unauthenticated worker HTTP endpoints to trusted HA addresses with the host firewall. Camera-display commands still bypass both inference models. Settings changes apply on the next request; the first request after idle/restart may load the model.

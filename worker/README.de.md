@@ -12,7 +12,7 @@ Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erste
 
 ## 2.2.1 – Strukturierte produktive Ring-Bildfolge
 
-Neuer authentifizierter Endpunkt `POST /describe/sequence` im vorhandenen Vision-Dienst. Standard: zwölf chronologische JPEGs (maximal 768 px Kantenlänge); Detail: vier ausgewählte höher aufgelöste JPEGs (maximal 1024 px). Beide Profile nutzen intern 16384 Kontext-Tokens und dieselbe Vision-Warteschlange. JSON enthält eine kurze deutsche Szenenbeschreibung, dreistufige Merkmale (yes/no/uncertain), Lieferbewertung (likely/uncertain/no_evidence) und Laufzeiten. Kleidung allein bleibt unsicher. Ungültige oder widersprüchliche Modellausgaben werden abgelehnt oder herabgestuft. Kein Zustellnachweis. /describe, /detect und /benchmark/sequence bleiben kompatibel.
+Neuer LAN-Endpunkt `POST /describe/sequence` im vorhandenen Vision-Dienst. Standard: zwölf chronologische JPEGs (maximal 768 px Kantenlänge); Detail: vier ausgewählte höher aufgelöste JPEGs (maximal 1024 px). Beide Profile nutzen intern 16384 Kontext-Tokens und dieselbe Vision-Warteschlange. JSON enthält eine kurze deutsche Szenenbeschreibung, dreistufige Merkmale (yes/no/uncertain), Lieferbewertung (likely/uncertain/no_evidence) und Laufzeiten. Kleidung allein bleibt unsicher. Ungültige oder widersprüchliche Modellausgaben werden abgelehnt oder herabgestuft. Kein Zustellnachweis. /describe, /detect und /benchmark/sequence bleiben kompatibel.
 
 Vorhandene .env und Modellvolumes beibehalten. Nur Vision neu bauen: `docker compose --profile vision up -d --build --no-deps vision`. Danach capabilities und `docker compose exec -T vision python -m unittest -v test_server test_sequence_benchmark test_priority_gate` prüfen. Das ältere HA-Overlay 1.6.1 nicht über ein bereits individuell angepasstes Backend kopieren; die HA-Umstellung auf den strukturierten Endpunkt erfolgt separat nach Installation. Kein zusätzlicher Container und bei vorhandenem Qwen3-VL kein Modelldownload nötig.
 
@@ -23,11 +23,10 @@ Die strukturierte Ring-Auswertung ist im aktuellen Integrationsstand enthalten. 
 ## 2.0.0 – Abschluss und Betrieb
 
 **Diagnose:** Das optionale Profil `ops` stellt unter Port **10504** im
-privaten LAN die authentifizierten Endpunkte `GET /health`,
+privaten LAN die LAN-Endpunkte `GET /health`,
 `GET /status` und `GET /selftest` bereit. Start:
 `docker compose --profile ops up -d --build ops`.
-Der Header `X-API-Key` verwendet den bereits vorhandenen
-`JARVIS_TTS_TOKEN`. Die Prüfung zeigt Dienstverfügbarkeit und bei
+Die Prüfung zeigt Dienstverfügbarkeit und bei
 verfügbarem `nvidia-smi` GPU-Auslastung/Speicher. Sie führt **keine**
 automatischen KI-Anfragen aus. Nicht gestartete Compose-Profile erscheinen
 als nicht verfügbar.
@@ -43,7 +42,7 @@ des Vision-Dienstes**, nicht global für Whisper, Ollama und TTS.
 `STREAM_TEXT_CLEANUP=1` (Standard). Optionales Wörterbuch
 `STREAM_PRONUNCIATION` als JSON, z. B.
 `{"kWh":"Kilowattstunden"}`, sowie `STREAM_SPEECH_SPLIT=1` für die
-Satzaufteilung längerer Antworten. Authentifiziertes `POST /cancel`
+Satzaufteilung längerer Antworten. `POST /cancel` (nur LAN)
 bricht Streaming kooperativ zwischen Audioblöcken ab; das Tablet muss
 laufendes Audio zusätzlich selbst stoppen. Die alten TTS-Endpunkte
 bleiben unverändert nutzbar.
@@ -81,7 +80,7 @@ docker compose exec vision python -m unittest -v test_server
 
 Test mit einem eigenen unkritischen JPEG/PNG: `.\Test-Vision.ps1 -ImagePath C:\Bilder\test.png`. Anderes Modell lokal pullen, `VISION_MODEL` in .env setzen und `docker compose --profile vision up -d --no-deps vision` ausführen. Textmodell bleibt erhalten, Ollama lädt maximal ein Modell gleichzeitig, Vision fordert keep_alive 0 an. Modellwechsel können Zeit kosten; VRAM mit `nvidia-smi` prüfen.
 
-API: GET `/health` und POST `/describe` auf Privat-LAN-Port 10503, Header `X-API-Key` mit bestehendem Worker-Token. JSON `{"image":"<base64 JPEG/PNG>","mode":"scene"}`; Modi scene, objects, object_in_hand; optional model aus obiger Liste. Maximal 2 MiB/12 MP, intern auf 1280 px verkleinert, Metadaten entfernt. Antwort description, model, mode, limitation. Keine URL-/Stream-Aufnahme, freie Prompts oder Gerätebefehle, allgemeine Beschreibungen sichtbarer Personen, Kleidung und Gegenstände, keine Namenszuordnung oder Gesichtserkennung oder persistente Bilder. Nur Bilder, deren Verwendung erlaubt ist. Firewall auf HA beschränken; HTTP unverschlüsselt; keine Router-Portfreigabe. HA-Kameraauswahl und Android-Kameraübertragung sind über die Echo-Relay-Integration verfügbar. Beschreibungen können falsch sein. Mit `docker compose --profile vision stop vision` deaktivieren, keine Volumes löschen.
+API: GET `/health` und POST `/describe` auf Privat-LAN-Port 10503, JSON `{"image":"<base64 JPEG/PNG>","mode":"scene"}`; Modi scene, objects, object_in_hand; optional model aus obiger Liste. Maximal 2 MiB/12 MP, intern auf 1280 px verkleinert, Metadaten entfernt. Antwort description, model, mode, limitation. Keine URL-/Stream-Aufnahme, freie Prompts oder Gerätebefehle, allgemeine Beschreibungen sichtbarer Personen, Kleidung und Gegenstände, keine Namenszuordnung oder Gesichtserkennung oder persistente Bilder. Nur Bilder, deren Verwendung erlaubt ist. Firewall auf HA beschränken; HTTP unverschlüsselt; keine Router-Portfreigabe. HA-Kameraauswahl und Android-Kameraübertragung sind über die Echo-Relay-Integration verfügbar. Beschreibungen können falsch sein. Mit `docker compose --profile vision stop vision` deaktivieren, keine Volumes löschen.
 
 ---
 
@@ -104,7 +103,7 @@ docker compose --profile stream run --rm --no-deps qwen-stream python /app/prepa
 docker compose --profile stream up -d --no-deps qwen-stream
 ```
 
-Bei Fehlern den Streaming-Container mit dem letzten Befehl wieder starten. Keine Volumes löschen. Die Vorbereitung arbeitet lokal mit synthetischen Stimmen; keine fremden Sprachaufnahmen. Das Update braucht keine neue Portfreigabe. API-Key nicht teilen. GPU-Laufzeit und Stimmenwechsel am Zielgerät testen.
+Bei Fehlern den Streaming-Container mit dem letzten Befehl wieder starten. Keine Volumes löschen. Die Vorbereitung arbeitet lokal mit synthetischen Stimmen; keine fremden Sprachaufnahmen. Das Update braucht keine neue Portfreigabe. GPU-Laufzeit und Stimmenwechsel am Zielgerät testen.
 
 
 ---
@@ -141,9 +140,9 @@ docker compose exec ollama ollama ps
 nvidia-smi
 ```
 
-Die Modelle bleiben im benannten Volume. Nicht `down -v` verwenden. Der Auth-Gateway lauscht auf `${LAN_IP}:11434`; Ollama selbst ist nicht veröffentlicht. Der Gateway verlangt `Authorization: Bearer <vorhandener JARVIS_TTS_TOKEN>`; er lässt nur Inferenz- und Abfrage-Endpunkte zu. Modell-Downloads nur über `docker compose exec ollama ollama pull ...`. Den vorhandenen Token ausschließlich in der HA-Integrationsmaske eintragen, nicht in einen Chat, Screenshot oder öffentliche Logs. HTTP ist nicht verschlüsselt: nur vertrauenswürdiges LAN, Windows-Firewall auf Home-Assistant-Host beschränken, keine Router-Portfreigabe. Kein Cloud-Modell. Ollama und Nginx werden über ihre offiziellen Tags bezogen; Updates bewusst testen.
+Die Modelle bleiben im benannten Volume. Nicht `down -v` verwenden. Der LAN-Gateway lauscht auf `${LAN_IP}:11434`; Ollama selbst ist nicht veröffentlicht. Der Gateway benötigt keinen zusätzlichen Token; er lässt nur Inferenz- und Abfrage-Endpunkte zu. Zugriff per Firewall auf HA begrenzen. Modell-Downloads nur über `docker compose exec ollama ollama pull ...`. HTTP ist nicht verschlüsselt: nur vertrauenswürdiges LAN, Windows-Firewall auf Home-Assistant-Host beschränken, keine Router-Portfreigabe. Kein Cloud-Modell. Ollama und Nginx werden über ihre offiziellen Tags bezogen; Updates bewusst testen.
 
-Home Assistant: Ollama-Integration mit URL `http://<LAN_IP>:11434` hinzufügen. API-Key = bestehender Worker-Token. Gesprächsagent „Jarvis KI“, Modell `qwen3:4b-instruct`, Kontext 4096, Max history 6, Keep alive 0, Denken aus. AI tools zunächst keine. Anleitung: präzise, kurze deutsche Antworten, keine behaupteten Aktionen oder erfundenen Hausdaten. Im Assist-Assistenten bevorzugt lokale Befehle verarbeiten; erst nach Test auf KI-Agent umstellen. Ohne PC bleiben native lokale HA-Intents sinnvoll, freie Wissensfragen sind dann nicht verfügbar. HA-Integration und Gateway sind noch nicht praktisch gemeinsam geprüft.
+Home Assistant: Ollama-Integration mit URL `http://<LAN_IP>:11434` hinzufügen. Gesprächsagent „Jarvis KI“, Modell `qwen3:4b-instruct`, Kontext 4096, Max history 6, Keep alive 0, Denken aus. AI tools zunächst keine. Anleitung: präzise, kurze deutsche Antworten, keine behaupteten Aktionen oder erfundenen Hausdaten. Im Assist-Assistenten bevorzugt lokale Befehle verarbeiten; erst nach Test auf KI-Agent umstellen. Ohne PC bleiben native lokale HA-Intents sinnvoll, freie Wissensfragen sind dann nicht verfügbar. HA-Integration und Gateway sind noch nicht praktisch gemeinsam geprüft.
 
 Bei Speicherproblemen `docker compose --profile llm stop ollama-gateway ollama`. Whisper und TTS bleiben an. Teste ggf. einen kleineren LLM-Tag oder TTS fast/styled statt design. Keine Datenvolumes löschen. HA-Standardagent bleibt jederzeit als Rückfall nutzbar.
 
@@ -175,7 +174,7 @@ Nur `compose.yaml` im vorhandenen Ordner ersetzen. Die vorhandene `.env` nicht �
 6. Stoppen: `docker compose --profile tts down` (ohne `-v`, damit Modelle erhalten bleiben). Erneuter Start: `docker compose up -d whisper` bzw. `docker compose --profile tts up -d qwen`. 
 
 ## Proxmox-TTS-Router (vorbereitet, noch nicht einschalten)
-`proxmox/tts_router.py` ist ein eigenständiger Piper-kompatibler WAV-Proxy auf 127.0.0.1:5002. Im Modus `auto` versucht er Qwen über die private Windows-IP und den Token aus `.env`, bei Nichterreichbarkeit oder Fehler Piper auf 127.0.0.1:5000. Die Tokenübertragung geschieht nur im vertrauenswürdigen LAN (HTTP ohne TLS); keine öffentliche Freigabe. Er schreibt keine Audiodateien. Die bestehende Piper-API übernimmt weiterhin die MP3-Erzeugung und begrenzte Bereitstellung. Nur nichtvertrauliche Ansagen über Alexa nutzen.
+`proxmox/tts_router.py` ist ein eigenständiger Piper-kompatibler WAV-Proxy auf 127.0.0.1:5002. Im Modus `auto` versucht er Qwen über die private Windows-IP bei Nichterreichbarkeit oder Fehler Piper auf 127.0.0.1:5000. keine öffentliche Freigabe. Er schreibt keine Audiodateien. Die bestehende Piper-API übernimmt weiterhin die MP3-Erzeugung und begrenzte Bereitstellung. Nur nichtvertrauliche Ansagen über Alexa nutzen.
 
 **Nicht den existierenden Piper-Dienst oder seine Ports umstellen.** Vor Einbau muss die tatsächliche URL-Konfiguration in `/opt/piper/api.py` geprüft werden. Bitte nur die betreffenden Zeilen (ohne Zugangsdaten) teilen: `grep -nE '127\.0\.0\.1:5000|localhost:5000|/synthesize|PIPER_URL' /opt/piper/api.py`. Erst danach richten wir den Proxy-Dienst mit eingeschränktem Benutzer, Konfigurationsdatei und Modus `piper` ein, testen ihn, und ändern genau die Piper-API-Zieladresse. Rückfall auf Piper lässt sich durch Modus `piper` bzw. Zurücksetzen der Zieladresse erzwingen. Kein HA-Neustart erforderlich, solange nur dieses Backend geändert wird.
 
@@ -191,7 +190,7 @@ docker compose --profile stream up -d --build qwen-stream
 docker compose logs -f qwen-stream
 ```
 
-Port 10502 nur vom vertrauenswürdigen lokalen Home Assistant erreichbar machen; kein Internet-Portforwarding. Der bestehende zufällige API-Key wird weiter genutzt; nie in Chat oder Logs senden. `Test-Stream.ps1` misst Zeit bis HTTP-Antwort/erste Bytes; Container-Log misst erste generierte PCM-Daten. Erster Durchlauf kann CUDA-Graph-Capture enthalten. Danach erneut testen. Rückkehr: `docker compose stop qwen-stream; docker compose --profile tts up -d qwen`. Die GPU- und Docker-Laufzeit sind auf Zielhardware noch nicht getestet. Die native Android-Wiedergabe muss separat geprüft werden.
+Port 10502 nur vom vertrauenswürdigen lokalen Home Assistant erreichbar machen; kein Internet-Portforwarding. `Test-Stream.ps1` misst Zeit bis HTTP-Antwort/erste Bytes; Container-Log misst erste generierte PCM-Daten. Erster Durchlauf kann CUDA-Graph-Capture enthalten. Danach erneut testen. Rückkehr: `docker compose stop qwen-stream; docker compose --profile tts up -d qwen`. Die GPU- und Docker-Laufzeit sind auf Zielhardware noch nicht getestet. Die native Android-Wiedergabe muss separat geprüft werden.
 
 ## v1.1.1: Kompatibilitätsfix
 
@@ -212,4 +211,4 @@ Referenz: https://github.com/andimarafioti/faster-qwen3-tts/blob/main/README.md
 
 Mit Jarvis Tablet Audio 1.5.0 lassen sich unter **KI & Leistung** installierte Text- und Bildmodelle, Kontext (2048/4096/8192 Tokens) und Warmhaltezeit (0/60/120/300/600 Sekunden) zentral wählen. Für gemeinsamen Betrieb beide Modelle auf `qwen3-vl:4b-instruct` setzen; getrennt Qwen3 4B Instruct als Textmodell und Qwen3-VL 4B Instruct als Bildmodell wählen. Ollama lädt höchstens ein Modell und verarbeitet eine Anfrage gleichzeitig. GPU-Speicherbedarf gemeinsam mit STT und TTS prüfen. Keine automatischen Downloads oder zusätzlichen Dienste. Ältere Vision-Aufrufe entladen standardmäßig sofort.
 
-Der authentifizierte Aufruf `GET /runtime` meldet ausschließlich unterstützte installierte und geladene Modelle. `POST /describe` erlaubt begrenzte Werte für `keep_alive` und `num_ctx` und liefert Zeitmessungen. HA übergibt gespeicherte Einstellungen und aktualisiert den bestehenden Ollama-Gesprächsagenten, ohne Prompts, Werkzeuge oder Verlauf zu verändern. Browser erhalten keinen Worker-Schlüssel. Reine Kameraanzeigen umgehen beide Modelle. Änderungen gelten ab der nächsten Anfrage; die erste Anfrage nach Leerlauf kann länger dauern. Bestehende `.env` und Volumes erhalten; beim Update nur Vision neu bauen. Kein APK-Update erforderlich.
+Der LAN-Aufruf `GET /runtime` meldet ausschließlich unterstützte installierte und geladene Modelle. `POST /describe` erlaubt begrenzte Werte für `keep_alive` und `num_ctx` und liefert Zeitmessungen. HA übergibt gespeicherte Einstellungen und aktualisiert den bestehenden Ollama-Gesprächsagenten, ohne Prompts, Werkzeuge oder Verlauf zu verändern. Reine Kameraanzeigen umgehen beide Modelle. Änderungen gelten ab der nächsten Anfrage; die erste Anfrage nach Leerlauf kann länger dauern. Bestehende `.env` und Volumes erhalten; beim Update nur Vision neu bauen. Kein APK-Update erforderlich.

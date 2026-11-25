@@ -28,7 +28,7 @@ curl -fsS http://127.0.0.1:5001/health
 journalctl -u jarvis-whisper -n 50 --no-pager
 ```
 
-The local configuration is in `/etc/jarvis-local.env` (root only). Enter the generated `PIPER_API_TOKEN` in the Marketplace integration's MP3 API key field, or as `piper_api_token` in `secrets.yaml` for the manual legacy setup. Never post it in Git or chat. Use the CPU host address and port 10300 when setting up Wyoming in HA.
+The local configuration remains in `/etc/jarvis-local.env` (root only). The current MP3 generator needs **no additional API token**. Enter `http://SERVER:5001` and the public HTTPS audio origin in TAFA Options. Keep generator port 5001 restricted to your trusted private LAN. Use CPU host port 10300 for Wyoming STT.
 
 | Port | Service | Access |
 |---|---|---|
