@@ -1,10 +1,10 @@
-# Optional AI computer — GPU worker 2.2.1
+# Optional AI computer — GPU worker 2.2.2
 
 **English** | [Deutsch](../worker.md) · [Project overview](../../README.md)
 
 > **Worker 1.9.0 schema update:** The local `/detect` response adds `genders` with coarse, fallible apparent presentation categories `man`, `woman`, `unknown`. This is not actual gender or identity recognition. Keep existing `.env` and model volumes; rebuild vision and update the HA backend together. [HA automations](ha-automations.md).
 
-The repository includes Jarvis GPU Worker 2.2.1, with token-free LAN APIs and an easier Windows setup. Models are not bundled; build and first startup download them separately. Windows requires Docker Desktop with WSL2 and NVIDIA drivers. Linux requires Docker Engine/Compose and NVIDIA Container Toolkit. Allow enough SSD space for models. Only trusted private-network access; never expose service ports publicly. Real GPU inference and Linux setup have not been tested end-to-end.
+The repository includes Jarvis GPU Worker 2.2.2, with token-free LAN APIs and an easier Windows setup. Models are not bundled; build and first startup download them separately. Windows requires Docker Desktop with WSL2 and NVIDIA drivers. Linux requires Docker Engine/Compose and NVIDIA Container Toolkit. Allow enough SSD space for models. Only trusted private-network access; never expose service ports publicly. Real GPU inference and Linux setup have not been tested end-to-end.
 
 ## 1. Configuration
 
