@@ -26,6 +26,7 @@ jobs:
       - run: python tests/test_install.py
       - run: python tests/test_marketplace.py
       - run: python tests/test_proxy.py
+      - run: python tests/test_combined_proxmox.py
       - run: python tests/test_proxy_host.py
       - run: python tests/test_standalone.py
       - run: python tests/test_local_intents.py
