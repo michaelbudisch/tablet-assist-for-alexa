@@ -68,10 +68,10 @@ async def run(hass):
     worker = web.Application()
     worker_state = {"busy":False,"uncertain":False,"offline":False}
     async def health(request):
-        check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "worker authentication")
+        check("X-API-Key" not in request.headers, "token-free LAN worker health")
         return web.json_response({"ready": True, "model": "synthetic-ci", "busy": False})
     async def describe(request):
-        check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "vision authenticated")
+        check("X-API-Key" not in request.headers, "token-free LAN worker vision")
         data = await request.json()
         check(set(data) == {"image", "mode", "model", "keep_alive", "num_ctx"}, "no arbitrary prompt or URL forwarded")
         vision_payloads.append(data)
@@ -83,18 +83,18 @@ async def run(hass):
     async def model_runtime(request):
         if worker_state["offline"]:
             return web.json_response({"error":"offline"},status=503)
-        check(request.headers.get("X-API-Key") == "test-worker-token-" * 3, "model runtime authentication")
+        check("X-API-Key" not in request.headers, "token-free LAN worker runtime")
         return web.json_response({"settings_api":1,"detection_api":1,"text_models":["qwen3:4b-instruct","qwen3-vl:4b-instruct"],
             "vision_models":["qwen3-vl:4b-instruct"],"loaded":[],"busy":worker_state["busy"]})
     worker.router.add_get("/runtime", model_runtime)
     async def detect(request):
-        check(request.headers.get("X-API-Key") == "test-worker-token-" * 3,"detection authenticated")
+        check("X-API-Key" not in request.headers,"token-free LAN worker detection")
         return web.json_response({"detection_api":1,"detection":{"person_count":1,"dog_count":0,"age_groups":["adult"],"uncertain":worker_state["uncertain"]}})
     worker.router.add_post("/detect", detect)
     runner = web.AppRunner(worker); await runner.setup(); await web.TCPSite(runner, "127.0.0.1", 15003).start()
     try:
         flow = await hass.config_entries.flow.async_init("jarvis_tablet_audio", context={"source": "user"})
-        created = await hass.config_entries.flow.async_configure(flow["flow_id"], {"qwen_token": "test-worker-token-" * 3})
+        created = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
         check(created["type"] == "create_entry", "Jarvis config entry created")
         entry = created["result"]
         await wait_for(lambda: runtime(hass) is not None and runtime(hass).camera_id())
@@ -152,7 +152,7 @@ async def run(hass):
             async with client.post(base + "/frame", headers=headers, data=jpeg) as response:
                 check(response.status == 204, "paired tablet reconnects after reload")
             status = await hass.services.async_call("jarvis_tablet_audio", "camera_vision_status", {}, blocking=True, return_response=True, context=Context(user_id=admin.id))
-            check(status["ready"] is True, "health uses existing worker token")
+            check(status["ready"] is True, "health uses configured local worker")
             async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}) as response:
                 check(response.status == 401, "preview resolution requires authentication")
             async with client.post(base + "/resolve_camera", json={"text": "Wer ist an der Haustür?"}, headers=auth) as response:

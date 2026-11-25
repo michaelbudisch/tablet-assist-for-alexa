@@ -143,6 +143,7 @@ public class MainActivity extends Activity {
             if (AudioService.running) startService(new Intent(this, AudioService.class).setAction("update_keepalive"));
         });
         initializeNativeWake();
+        initializeNativeAssistControls();
         languageButton(R.id.language_de, "de");
         languageButton(R.id.language_en, "en");
         didAutoSearch = state != null && state.getBoolean("did_auto_search", false);
@@ -247,6 +248,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.wake_start).setEnabled(!WakeWordService.running && !wakeDownloading);
         findViewById(R.id.wake_stop).setEnabled(WakeWordService.running);
         findViewById(R.id.wake_mute_toggle).setEnabled(WakeWordService.running);
+        refreshNativeAssistStatus();
     }
 
     private static final int WAKE_MICROPHONE_PERMISSION = 120;
@@ -398,6 +400,93 @@ public class MainActivity extends Activity {
             stopService(new Intent(this,WakeWordService.class));
             wakeStatus.setText("");
         });
+    }
+
+    private void initializeNativeAssistControls(){
+        var preferences=getSharedPreferences(PREF,0);
+        CheckBox enabled=findViewById(R.id.native_assist_enabled);
+        CheckBox followups=findViewById(R.id.native_followup_enabled);
+        SeekBar pause=findViewById(R.id.native_pause_slider);
+        TextView pauseLabel=findViewById(R.id.native_pause_label);
+        Button test=findViewById(R.id.native_assist_test);
+        enabled.setChecked(preferences.getBoolean("native_assist_enabled",false));
+        followups.setChecked(preferences.getBoolean("native_followup_enabled",false));
+        followups.setEnabled(enabled.isChecked());
+        int value=Math.max(900,Math.min(3200,preferences.getInt("native_pause_ms",1700)));
+        pause.setProgress((value-900)/100);
+        pauseLabel.setText(getString(R.string.native_pause_label,value));
+        enabled.setOnCheckedChangeListener((button,isChecked)->{
+            if(isChecked&&!roomAudio.isChecked()){
+                button.setChecked(false);
+                Toast.makeText(this,R.string.native_assist_requirements,Toast.LENGTH_LONG).show();
+                return;
+            }
+            preferences.edit().putBoolean("native_assist_enabled",isChecked).apply();
+            followups.setEnabled(isChecked);
+            if(WakeWordService.running)startService(
+                new Intent(this,WakeWordService.class).setAction(WakeWordService.NATIVE_SETTINGS));
+            refreshNativeAssistStatus();
+        });
+        followups.setOnCheckedChangeListener((button,isChecked)->
+            preferences.edit().putBoolean("native_followup_enabled",isChecked).apply());
+        pause.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            @Override public void onProgressChanged(SeekBar bar,int progress,boolean fromUser){
+                int ms=900+100*progress;
+                pauseLabel.setText(getString(R.string.native_pause_label,ms));
+                if(fromUser)preferences.edit().putInt("native_pause_ms",ms).apply();
+            }
+            @Override public void onStartTrackingTouch(SeekBar bar){}
+            @Override public void onStopTrackingTouch(SeekBar bar){}
+        });
+        test.setOnClickListener(v->{
+            if(!WakeWordService.running||
+                    !preferences.getBoolean("native_assist_enabled",false)||
+                    !AudioService.running){
+                Toast.makeText(this,R.string.native_assist_requirements,Toast.LENGTH_LONG).show();
+                return;
+            }
+            startService(new Intent(this,WakeWordService.class).setAction(WakeWordService.NATIVE_TEST));
+        });
+        refreshNativeAssistStatus();
+    }
+
+    private void refreshNativeAssistStatus(){
+        TextView current=findViewById(R.id.native_assist_status);
+        if(current==null)return;
+        String stage=WakeWordService.status;
+        if(!getSharedPreferences(PREF,0).getBoolean("native_assist_enabled",false)){
+            current.setText(R.string.native_assist_inactive);
+        }else if(stage.startsWith("native_error:")){
+            current.setText(getString(R.string.native_state_error)+": "+stage.substring(13));
+        }else if(stage.startsWith("native_")){
+            int label;
+            switch(stage){
+                case "native_connecting": case "native_connected":
+                    label=R.string.native_state_connecting;break;
+                case "native_followup":label=R.string.native_state_followup;break;
+                case "native_authenticating":label=R.string.native_state_authenticating;break;
+                case "native_waiting_for_stt":case "native_starting_microphone":
+                    label=R.string.native_state_waiting;break;
+                case "native_listening":label=R.string.native_state_listening;break;
+                case "native_transcribing":label=R.string.native_state_transcribing;break;
+                case "native_thinking":case "native_processing":
+                    label=R.string.native_state_thinking;break;
+                case "native_generating_voice":label=R.string.native_state_voice;break;
+                case "native_sending_audio":case "native_waiting_for_playback":
+                    label=R.string.native_state_playback;break;
+                case "native_buffering":label=R.string.native_state_buffering;break;
+                case "native_playing":label=R.string.native_state_playing;break;
+                case "native_answer_completed":label=R.string.native_state_done;break;
+                case "native_no_speech":case "native_no_reply":
+                    label=R.string.native_state_no_reply;break;
+                default:label=R.string.native_state_waiting;break;
+            }
+            current.setText(label);
+        }else current.setText(stage.startsWith("listening:")?
+            getString(R.string.native_state_ready):stage);
+        Button test=findViewById(R.id.native_assist_test);
+        if(test!=null)test.setEnabled(WakeWordService.running&&AudioService.running
+            &&getSharedPreferences(PREF,0).getBoolean("native_assist_enabled",false));
     }
 
     private boolean saveConnectionForWake(){

@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.0.0
+# TAFA Device Bridge · Android 1.0.1 source preview
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -8,9 +8,9 @@ The Android companion for TAFA: Home Assistant audio through Bluetooth, optional
 
 ## Download and update
 
-Signed build: **TAFA-Device-Bridge-1.0.0.apk**, with accompanying SHA256SUMS. Install over the existing signed **HA Jarvis Echo Relay** app.
+Existing signed stable build: **TAFA-Device-Bridge-1.0.0.apk**. **Android 1.0.1 is not yet published as a signed installer; do not attempt to install an unsigned CI build over your existing app.**
 
-The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Version code increases to **13**. Do not uninstall before updating. The Home Assistant backend continues using its existing Echo Relay / Jarvis Tablet Audio identifiers.
+The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Android 1.0.1 will use version code **14** after signing. Do not uninstall before updating. The Home Assistant backend continues using its existing Echo Relay / Jarvis Tablet Audio identifiers.
 
 ## Find your settings
 
@@ -40,6 +40,19 @@ The dynamic API from 0.9.0 is preserved: each installation has a persistent rand
 Fine-tuning controls confirmations (1–3), cooldown (3–30 s) and microphone handoff (10–90 s). Settings and mute synchronize per device with HA; lost HA settings connectivity releases the recorder. No dB threshold is provided.
 
 Keep the compatible dashboard open for Whisper STT and turn off its competing wakeword detector. Words immediately after the wakeword can be lost during handoff. Alexa may also trigger a physical Echo. Fully hands-free operation with a closed dashboard is not guaranteed.
+
+## Experimental native spoken questions (1.0.1, opt-in)
+
+The existing **wakeword-only mode remains the default**. If you want to try native voice conversations:
+
+1. Under **Connect**, enable Multiroom audio and connect the existing non-admin tablet user. Start the audio player. Under **TAFA → Devices** in Home Assistant, assign this tablet to the same user's audio room, and confirm a successful **Test speech output**.
+2. Under **Wakeword**, install the offline Vosk model and start native wakeword detection (microphone permission required).
+3. Enable **After wakeword, listen for a full question** in the new **Native voice conversation** section. Optionally enable up to two follow-up questions and adjust the end-of-speech pause (900–3200 ms; default 1700 ms).
+4. Tap **Test native question without wakeword** to test microphone → Assist → reply, then try **Hey Jarvis** followed by a short pause and a spoken question. Playback continues through the existing Android/Bluetooth player. The app chooses an available complete **TAFA Lokal** Assist pipeline, or another configured STT+TTS pipeline.
+
+Audio is sent as 16 kHz PCM over the authenticated Home Assistant WebSocket **only for the question after a detected wakeword/manual test**. The microphone is released before the answer plays; no recording is saved by the app. An explicitly enabled follow-up window may reopen the mic after playback (at most twice), and times out on silence. Remote mute and Stop close active streaming. On the original disabled setting, only the matched wakeword event is forwarded, exactly as before. A compatible browser dashboard is **not needed** for the native mode. Local HTTP still exposes voice and credentials on your LAN; choose trusted HTTPS when possible.
+
+**Release status:** This feature is source/CI validation only until a signed Android 1.0.1 APK is built with the **original signing key** and tested on hardware. Android 1.0.1 keeps application ID \`de.jarvis.audio\` and increases versionCode to 14. An unsigned release or GitHub CI debug APK **cannot be installed over the currently signed app**. Do not uninstall your current app or replace its stored token to test this feature. Use \`build.ps1 -Configuration Release -Check\` and privately sign using \`sign-release.ps1\` with the original keystore before distribution.
 
 ## Camera and Bluetooth keepalive
 
