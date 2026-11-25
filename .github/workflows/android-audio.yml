@@ -32,7 +32,7 @@ jobs:
         run: sha256sum --check SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: HA-Jarvis-Echo-Relay-ci-debug
+          name: TAFA-Device-Bridge-ci-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
   camera-receiver:
     runs-on: ubuntu-latest
@@ -62,7 +62,7 @@ jobs:
             exit 0
           fi
           gh release create "$tag" --target "$GITHUB_SHA" \
-            --title "HA Jarvis Echo Relay $(cat android/VERSION)" \
+            --title "TAFA Device Bridge $(cat android/VERSION)" \
             --notes-file android/RELEASE_NOTES.md \
-            "android/downloads/HA-Jarvis-Echo-Relay-$version.apk" android/downloads/SHA256SUMS \
+            "android/downloads/TAFA-Device-Bridge-$version.apk" android/downloads/SHA256SUMS \
             android/licenses/APACHE-2.0.txt android/THIRD_PARTY_NOTICES.md

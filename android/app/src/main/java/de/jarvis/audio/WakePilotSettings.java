@@ -7,15 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-/** HA helpers are the shared settings for the Wake Pilot and the TAFA dashboard.
- * All HTTPS/explicitly-approved local-HTTP calls are authenticated. No audio data is exchanged.
- */
+/** Authenticated device settings, dynamically stored in the HA integration. */
 final class WakePilotSettings {
-    static final String MUTE="input_boolean.jarvis_native_wake_stumm";
-    static final String WORD="input_select.jarvis_native_wake_rufwort";
-    static final String STRICT="input_number.jarvis_native_wake_erkennungsstrenge";
-    static final String COOLDOWN="input_number.jarvis_native_wake_sperrzeit";
-    static final String HOLD="input_number.jarvis_native_wake_aufnahmeubergabe";
+    static final String ENDPOINT="/api/jarvis_tablet_audio/wake_devices";
     static final String[] CHOICES={"hey_jarvis","jarvis","alexa","all"};
     static final String[] DISPLAY={"Hey Jarvis","Jarvis","Alexa","Alle drei"};
     private WakePilotSettings(){}
@@ -23,9 +17,11 @@ final class WakePilotSettings {
     static final class Snapshot {
         final boolean muted;
         final String word;
+        final String room;
         final int strictness,cooldownSeconds,holdSeconds;
-        Snapshot(boolean muted,String word,int strictness,int cooldownSeconds,int holdSeconds){
-            this.muted=muted;this.word=word;this.strictness=strictness;
+        Snapshot(boolean muted,String word,String room,int strictness,int cooldownSeconds,int holdSeconds){
+            this.muted=muted;this.word=word;this.room=room;
+            this.strictness=strictness;
             this.cooldownSeconds=cooldownSeconds;this.holdSeconds=holdSeconds;
         }
     }
@@ -38,87 +34,91 @@ final class WakePilotSettings {
         for(int i=0;i<CHOICES.length;i++)if(CHOICES[i].equals(key))return DISPLAY[i];
         return DISPLAY[0];
     }
-    static int clamp(int value,int lo,int hi){return Math.max(lo,Math.min(hi,value));}
+    static int clamp(int v,int lo,int hi){return Math.max(lo,Math.min(hi,v));}
 
-    private static String apiBase(Context ctx){
+    private static JSONObject request(Context ctx,JSONObject body) throws Exception {
         SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
-        return HaAddress.validateStored(prefs.getString("base",""),
+        String base=HaAddress.validateStored(prefs.getString("base",""),
             prefs.getString(MainActivity.HTTP_CONSENT,""));
-    }
-    private static String token(Context ctx) throws Exception {
-        SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
         String secret=prefs.getString("secret","");
         if(secret.isEmpty())throw new IllegalStateException("Home Assistant token not configured");
-        return MainActivity.decrypt(secret);
-    }
-
-    private static JSONObject request(Context ctx,String path,JSONObject body) throws Exception {
+        String token=MainActivity.decrypt(secret);
         HttpURLConnection conn=null;
         try{
-            conn=(HttpURLConnection)new URL(apiBase(ctx)+path).openConnection();
+            conn=(HttpURLConnection)new URL(base+ENDPOINT).openConnection();
             conn.setInstanceFollowRedirects(false);
-            conn.setConnectTimeout(2000);
-            conn.setReadTimeout(2500);
-            conn.setRequestProperty("Authorization","Bearer "+token(ctx));
+            conn.setConnectTimeout(2500);
+            conn.setReadTimeout(3200);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization","Bearer "+token);
+            conn.setRequestProperty("Content-Type","application/json");
             conn.setRequestProperty("Accept","application/json");
-            if(body!=null){
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type","application/json");
-                conn.setDoOutput(true);
-                byte[] data=body.toString().getBytes(StandardCharsets.UTF_8);
-                conn.setFixedLengthStreamingMode(data.length);
-                try(java.io.OutputStream out=conn.getOutputStream()){out.write(data);}
-            }
+            conn.setDoOutput(true);
+            byte[] data=body.toString().getBytes(StandardCharsets.UTF_8);
+            conn.setFixedLengthStreamingMode(data.length);
+            try(java.io.OutputStream out=conn.getOutputStream()){out.write(data);}
             int code=conn.getResponseCode();
-            if(code<200||code>=300)throw new java.io.IOException("HA HTTP "+code);
-            if(body!=null)return new JSONObject();
+            if(code<200||code>=300)throw new java.io.IOException("Wake devices HTTP "+code);
             try(java.io.InputStream stream=conn.getInputStream()){
-                java.io.ByteArrayOutputStream buffer=new java.io.ByteArrayOutputStream();
-                byte[] chunk=new byte[4096];int n;int total=0;
-                while((n=stream.read(chunk))!=-1){
-                    total+=n;if(total>1024*1024)throw new java.io.IOException("HA settings response too large");
-                    buffer.write(chunk,0,n);
+                java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();
+                byte[] buf=new byte[4096];int n,total=0;
+                while((n=stream.read(buf))!=-1){
+                    total+=n;if(total>1024*1024)throw new java.io.IOException("Wake settings too large");
+                    out.write(buf,0,n);
                 }
-                return new JSONObject(new String(buffer.toByteArray(),StandardCharsets.UTF_8));
+                return new JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8));
             }
         }finally{if(conn!=null)conn.disconnect();}
     }
 
-    private static String state(Context ctx,String entityId) throws Exception {
-        return request(ctx,"/api/states/"+entityId,null).getString("state");
+    private static JSONObject body(Context ctx,String action) throws Exception {
+        return new JSONObject().put("action",action)
+            .put("device_id",WakeDeviceIdentity.get(ctx));
     }
 
-    static boolean readMute(Context ctx) throws Exception {
-        return "on".equals(state(ctx,MUTE));
+    static void register(Context ctx) throws Exception {
+        request(ctx,body(ctx,"register").put("room",WakeDeviceIdentity.room(ctx)));
     }
 
     static Snapshot readFull(Context ctx) throws Exception {
-        boolean muted=readMute(ctx);
-        String word=choiceFor(state(ctx,WORD));
-        int strict=clamp((int)Math.round(Double.parseDouble(state(ctx,STRICT))),1,3);
-        int cooldown=clamp((int)Math.round(Double.parseDouble(state(ctx,COOLDOWN))),3,30);
-        int hold=clamp((int)Math.round(Double.parseDouble(state(ctx,HOLD))),10,90);
-        SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
-        prefs.edit().putBoolean("wake_muted",muted).putString("wake_choice",word)
-            .putInt("wake_strict",strict).putInt("wake_cooldown",cooldown)
-            .putInt("wake_hold",hold).apply();
-        return new Snapshot(muted,word,strict,cooldown,hold);
+        JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
+        Snapshot s=new Snapshot(
+            dev.getBoolean("muted"),choiceFor(dev.getString("word")),
+            dev.optString("room","Jarvis Tablet"),
+            clamp(dev.getInt("strict"),1,3),
+            clamp(dev.getInt("cooldown"),3,30),
+            clamp(dev.getInt("hold"),10,90)
+        );
+        ctx.getSharedPreferences(MainActivity.PREF,0).edit()
+            .putBoolean("wake_muted",s.muted).putString("wake_choice",s.word)
+            .putInt("wake_strict",s.strictness).putInt("wake_cooldown",s.cooldownSeconds)
+            .putInt("wake_hold",s.holdSeconds).apply();
+        return s;
     }
 
+    static boolean readMute(Context ctx) throws Exception {
+        return request(ctx,body(ctx,"get")).getJSONObject("device").getBoolean("muted");
+    }
+
+    /** User edits apply only to this installation. */
     static void write(Context ctx,String key,Object value) throws Exception {
-        final String domain,service,entity;
-        JSONObject body=new JSONObject();
-        if("muted".equals(key)){
-            domain="input_boolean";service=Boolean.TRUE.equals(value)?"turn_on":"turn_off";entity=MUTE;
-        }else if("word".equals(key)){
-            domain="input_select";service="select_option";entity=WORD;
-            body.put("option",displayFor((String)value));
-        }else if("strict".equals(key)||"cooldown".equals(key)||"hold".equals(key)){
-            domain="input_number";service="set_value";
-            entity="strict".equals(key)?STRICT:"cooldown".equals(key)?COOLDOWN:HOLD;
-            body.put("value",((Number)value).intValue());
+        register(ctx);
+        JSONObject setting=new JSONObject();
+        if("muted".equals(key)&&value instanceof Boolean){
+            setting.put("muted",value);
+        }else if("word".equals(key)&&value instanceof String){
+            setting.put("word",displayFor((String)value));
+        }else if(("strict".equals(key)||"cooldown".equals(key)||"hold".equals(key))&&value instanceof Number){
+            setting.put(key,((Number)value).intValue());
+        }else if("room".equals(key)&&value instanceof String){
+            setting.put("room",value);
         }else throw new IllegalArgumentException("Unknown Wake Pilot setting");
-        body.put("entity_id",entity);
-        request(ctx,"/api/services/"+domain+"/"+service,body);
+        request(ctx,body(ctx,"configure").put("settings",setting));
+    }
+
+    static boolean sendWake(Context ctx,String word) throws Exception {
+        JSONObject response=request(ctx,body(ctx,"wake")
+            .put("wakeword",word).put("timestamp_ms",System.currentTimeMillis()));
+        return response.optBoolean("accepted",false);
     }
 }

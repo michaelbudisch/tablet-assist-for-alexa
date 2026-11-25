@@ -81,7 +81,7 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
             intervalLabels.add(getResources().getQuantityString(R.plurals.camera_refresh_interval,intervals[i],intervals[i]));
             if(intervals[i]==savedInterval)selectedInterval=i;
         }
-        refreshRate.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,intervalLabels));
+        refreshRate.setAdapter(BridgeChoices.create(this,intervalLabels));
         refreshRate.setSelection(selectedInterval);
         refreshRate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             public void onNothingSelected(AdapterView<?> parent){}
@@ -106,7 +106,7 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
                 labels.add(getString(label)+" · "+(i+1));
                 if(lens.id.equals(saved))selected=i;
             }
-            lenses.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
+            lenses.setAdapter(BridgeChoices.create(this,labels));
             lenses.setSelection(selected);
             lenses.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
                 public void onNothingSelected(AdapterView<?> parent){}

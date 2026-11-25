@@ -1,34 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
-<LinearLayout android:id="@+id/camera_page" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-<Button android:id="@+id/camera_back" style="@style/Action" android:text="@string/camera_back"/>
-<LinearLayout style="@style/Card" android:layout_marginTop="16dp">
-<TextView style="@style/Eyebrow" android:text="@string/camera_optional"/>
-<TextView style="@style/Heading" android:text="@string/camera_title"/>
-<TextView style="@style/Body" android:text="@string/camera_local_help"/>
-<TextView style="@style/Body" android:text="@string/camera_select" android:labelFor="@+id/camera_lens"/>
-<Spinner android:id="@id/camera_lens" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown"/>
-<TextView style="@style/Heading" android:text="@string/camera_relay_title"/>
-<TextView style="@style/Body" android:text="@string/camera_relay_help"/>
-<TextView style="@style/Body" android:text="@string/camera_refresh_label" android:labelFor="@+id/camera_refresh_rate"/>
-<Spinner android:id="@id/camera_refresh_rate" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown"/>
-<TextView style="@style/Body" android:text="@string/camera_refresh_help" android:textSize="12sp"/>
-<CheckBox android:id="@+id/camera_motion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/camera_motion_option" android:textColor="@color/ink"/>
-<TextView android:id="@+id/camera_relay_status" style="@style/Body" android:text="@string/camera_relay_off" android:accessibilityLiveRegion="polite"/>
-<Button android:id="@+id/camera_relay_start" style="@style/Primary" android:text="@string/camera_relay_start"/>
-<Button android:id="@+id/camera_relay_stop" style="@style/Action" android:text="@string/camera_relay_stop" android:enabled="false"/>
-<TextView style="@style/Heading" android:text="@string/camera_local_title"/>
-<TextView android:id="@+id/camera_status" style="@style/Body" android:text="@string/camera_off" android:textColor="@color/accent" android:accessibilityLiveRegion="polite"/>
-<FrameLayout android:layout_width="match_parent" android:layout_height="260dp" android:layout_marginTop="12dp" android:background="@color/page">
-<TextureView android:id="@+id/camera_preview" android:layout_width="match_parent" android:layout_height="match_parent" android:contentDescription="@string/camera_preview_label"/>
-<TextView android:id="@+id/camera_preview_cover" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="@string/camera_off" android:textColor="@color/muted" android:background="@color/page"/>
-</FrameLayout>
-<Button android:id="@+id/camera_start" style="@style/Primary" android:text="@string/camera_start"/>
-<Button android:id="@+id/camera_stop" style="@style/Action" android:text="@string/camera_stop" android:enabled="false"/>
-<Button android:id="@+id/camera_capture" style="@style/Action" android:text="@string/camera_capture" android:enabled="false"/>
-<TextView android:id="@+id/camera_snapshot_status" style="@style/Body" android:text="@string/camera_no_snapshot" android:accessibilityLiveRegion="polite"/>
-<ImageView android:id="@+id/camera_snapshot" android:layout_width="match_parent" android:layout_height="220dp" android:layout_marginTop="12dp" android:scaleType="fitCenter" android:contentDescription="@string/camera_snapshot_label" android:visibility="gone"/>
-<Button android:id="@+id/camera_clear" style="@style/Action" android:text="@string/camera_clear" android:enabled="false"/>
-<TextView style="@style/Body" android:text="@string/camera_future_help" android:textSize="12sp"/>
-</LinearLayout>
-</LinearLayout>
+    <LinearLayout android:id="@+id/camera_page" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+        <Button android:id="@+id/camera_back" style="@style/Action" android:text="@string/camera_back" />
+        <LinearLayout style="@style/Card">
+            <TextView style="@style/Eyebrow" android:text="@string/camera_optional" />
+            <TextView style="@style/Heading" android:text="@string/camera_title" />
+            <TextView style="@style/Body" android:text="@string/camera_local_help" />
+            <TextView style="@style/Body" android:text="@string/camera_select" android:labelFor="@+id/camera_lens" />
+            <Spinner android:id="@id/camera_lens" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown" style="@style/Choice" />
+        </LinearLayout>
+        <LinearLayout style="@style/Card">
+            <TextView style="@style/Heading" android:text="@string/camera_relay_title" />
+            <TextView style="@style/Body" android:text="@string/camera_relay_help" />
+            <TextView style="@style/Body" android:text="@string/camera_refresh_label" android:labelFor="@+id/camera_refresh_rate" />
+            <Spinner android:id="@id/camera_refresh_rate" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown" style="@style/Choice" />
+            <TextView style="@style/Body" android:text="@string/camera_refresh_help" android:textSize="12sp" />
+            <CheckBox android:id="@+id/camera_motion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/camera_motion_option" android:textColor="@color/ink" />
+            <TextView android:id="@+id/camera_relay_status" style="@style/Body" android:text="@string/camera_relay_off" android:accessibilityLiveRegion="polite" />
+            <Button android:id="@+id/camera_relay_start" style="@style/Primary" android:text="@string/camera_relay_start" />
+            <Button android:id="@+id/camera_relay_stop" style="@style/Action" android:text="@string/camera_relay_stop" android:enabled="false" />
+        </LinearLayout>
+        <LinearLayout style="@style/Card">
+            <TextView style="@style/Heading" android:text="@string/camera_local_title" />
+            <TextView android:id="@+id/camera_status" style="@style/Body" android:text="@string/camera_off" android:textColor="@color/accent" android:accessibilityLiveRegion="polite" />
+            <FrameLayout android:layout_width="match_parent" android:layout_height="260dp" android:layout_marginTop="12dp" android:background="@color/page">
+                <TextureView android:id="@+id/camera_preview" android:layout_width="match_parent" android:layout_height="match_parent" android:contentDescription="@string/camera_preview_label" />
+                <TextView android:id="@+id/camera_preview_cover" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="@string/camera_off" android:textColor="@color/muted" android:background="@color/page" />
+            </FrameLayout>
+            <Button android:id="@+id/camera_start" style="@style/Primary" android:text="@string/camera_start" />
+            <Button android:id="@+id/camera_stop" style="@style/Action" android:text="@string/camera_stop" android:enabled="false" />
+            <Button android:id="@+id/camera_capture" style="@style/Action" android:text="@string/camera_capture" android:enabled="false" />
+            <TextView android:id="@+id/camera_snapshot_status" style="@style/Body" android:text="@string/camera_no_snapshot" android:accessibilityLiveRegion="polite" />
+            <ImageView android:id="@+id/camera_snapshot" android:layout_width="match_parent" android:layout_height="220dp" android:layout_marginTop="12dp" android:scaleType="fitCenter" android:contentDescription="@string/camera_snapshot_label" android:visibility="gone" />
+            <Button android:id="@+id/camera_clear" style="@style/Action" android:text="@string/camera_clear" android:enabled="false" />
+            <TextView style="@style/Body" android:text="@string/camera_future_help" android:textSize="12sp" />
+        </LinearLayout>
+        <TextView style="@style/Body" android:text="@string/camera_privacy_note" android:textSize="12sp" />
+    </LinearLayout>
 </ScrollView>

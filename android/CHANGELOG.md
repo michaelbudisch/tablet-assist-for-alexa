@@ -2,6 +2,33 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 1.0.0 · TAFA Device Bridge
+
+- New name and approved cyan/mint identity with adaptive app icons.
+- Status, Connect, Wakeword and Help; grouped camera and expandable advanced settings.
+- Themed dropdowns, localized guidance and state-preserving language changes.
+- Original app ID and signing certificate; version code 13. Dynamic multiroom from 0.9.0 retained.
+
+## 0.9.0 · Unlimited dynamic multiroom devices
+
+- Keep the **HA Jarvis Echo Relay** name, package ID `de.jarvis.audio` and version series `0.7.1 → 0.8.0 → 0.9.0`. An updateable release APK must use the exact 0.7.1 certificate.
+
+- No numbered tablet slots. Each Android installation enrolls with a persistent random ID; Home Assistant creates device records and all five settings dynamically.
+- TAFA device manager can list, choose, pair, rename, mute and remove devices without manual helper creation.
+- Authenticated HA API handles wake events and accepts only the earliest arriving device within a three-second arbitration window.
+- Settings are isolated by device ID. Legacy 0.8.0 fixed-slot helpers and routing are no longer used.
+- Existing Echo Relay/Room Audio output is unchanged. Real multi-device hardware testing is still required.
+
+## 0.8.0 · Multiroom native wakeword detection
+
+- Each Android tablet gets a persistent random installation ID, its own selectable device slot (1–4) and a user-editable room label.
+- Four independent Home Assistant profiles provide mute, phrase, strictness, cooldown and microphone handoff. Each slot is claimed by one installation; conflicting devices fail closed.
+- TAFA: select the matching device slot under **Voice & Audio**, click **Pair this tablet**, then say its wakeword. Only the exact paired installation can trigger this dashboard.
+- A central HA router accepts only the first wakeword arriving within a 3-second arbitration window, suppressing duplicate responses; this is not sound-distance estimation.
+- Top-right microphone mute and app settings are now device-specific. On lost HA connectivity or slot conflicts, the Wake Pilot releases its microphone.
+- Existing Echo Relay playback is untouched; room-specific output still requires the existing per-room HA user/Room Audio setup for additional tablets.
+- Old shared 0.7.1 helpers remain for legacy clients, but 0.8.0 no longer reads them.
+
 ## 0.7.1 · Remote controls for native wakeword
 
 - TAFA/HA: mute with `input_boolean.jarvis_native_wake_stumm` and optionally with the top-right dashboard microphone icon. Muting releases the Android recorder.

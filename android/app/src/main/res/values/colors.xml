@@ -1,7 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-<color name="page">#0B1220</color><color name="surface">#141F30</color>
-<color name="surface_high">#1D2B40</color><color name="line">#304158</color>
-<color name="ink">#F2F6FC</color><color name="muted">#AFBED2</color>
-<color name="accent">#65E2CD</color><color name="accent_ink">#08392F</color>
-<color name="warn">#FFD28A</color><color name="danger">#FFB9C6</color>
+    <color name="page">#0B1220</color>
+    <color name="surface">#111D2E</color>
+    <color name="surface_high">#19283C</color>
+    <color name="line">#293A50</color>
+    <color name="ink">#F2F6FC</color>
+    <color name="muted">#AABBD0</color>
+    <color name="accent">#1AD6F5</color>
+    <color name="secondary">#65E2CD</color>
+    <color name="accent_ink">#062C38</color>
+    <color name="warn">#FFD28A</color>
+    <color name="danger">#FFB9C6</color>
 </resources>
