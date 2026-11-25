@@ -1,5 +1,5 @@
-# HA Jarvis Echo Relay 0.6.0
+# HA Jarvis Echo Relay 0.7.0 · experimental
 
-Room-specific audio, camera JPEG feeds and optional local motion detection. Each shared room uses a dedicated non-admin Home Assistant account and explicit camera permission; camera transmission starts only on the tablet and has a separate visible stop control. Choose a 1, 2, 3, 5 or 10 second refresh interval. Version and build number appear on the home screen. Existing single-device mode remains available. Requires matching HA 1.7.0 for room cameras.
+This branch adds opt-in German Vosk wakeword detection with four selectable modes: Hey Jarvis, Jarvis, Alexa or all three. The app requests microphone permission only when starting the detector, installs the ~45 MB offline model only on explicit user action, and forwards recognized wakewords (no audio) to Home Assistant. A matching dashboard listener launches the existing STT pipeline. A foreground notification provides a Stop control.
 
-The [published signed update APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk) reuses the existing signing key. Install over the prior version. [Complete Multiroom setup](../homeassistant/examples/MULTIROOM.md). Physical two-tablet validation remains outstanding.
+**Test branch, not a published signed APK.** Model loading, recognition quality, background operation, audio handoff and device compatibility still require real Android testing. The already published 0.6.0 update remains the stable downloadable APK.
