@@ -1,18 +1,14 @@
-# Optionaler KI-Zusatzrechner – GPU Worker 2.2.0
+# Optionaler KI-Zusatzrechner – GPU Worker 2.2.1
 
 [English](en/worker.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 > **Schema-Update zu Worker 1.9.0:** Der lokale `/detect`-Endpunkt liefert zusätzlich `genders` mit den groben, unsicheren Erscheinungskategorien `man`, `woman`, `unknown`. Keine tatsächliche Geschlechts- oder Identitätsfeststellung. Vorhandene `.env` und Modellvolumes beibehalten, nur Vision neu bauen; HA-Backend gemeinsam aktualisieren. [HA-Automationen](ha-automations.md).
 
-Enthalten ist der bereitgestellte Jarvis GPU Worker 1.9.0. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
+Enthalten ist der Jarvis GPU Worker 2.2.1 mit tokenfreier LAN-Kommunikation und vereinfachter Windows-Einrichtung. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
 
 ## 1. Konfiguration
 
-Windows PowerShell aus dem Ordner `worker/`:
-
-```powershell
-.\Setup.ps1
-```
+Unter Windows im Ordner `worker/` per Doppelklick **00-Konfiguration.bat** und danach **01-Installieren.bat** ausführen. **02-Starten.bat** startet die Standarddienste, **03-Neustarten.bat** die laufenden Container neu und **04-Verbindungsdaten.bat** erzeugt eine lokale TXT-Datei mit LAN-IP und Ports. Alternativ bleibt `Setup.ps1` als kompatibler PowerShell-Einstieg erhalten.
 
 Linux aus `worker/`:
 
@@ -20,7 +16,7 @@ Linux aus `worker/`:
 bash setup-linux.sh
 ```
 
-Die Skripte erzeugen eine lokale `.env` nur mit LAN-IP und Modelloptionen, **ohne API-Token**. Bestehende Dateien werden nicht überschrieben. Firewall: den Wyoming-Port 10300 auf HA, TTS-Port 10502 auf HA und den CPU-Sprachserver begrenzen; bei Ollama Port 11434 auf HA beschränken.
+Die Einrichtungswege erzeugen eine lokale `.env` nur mit LAN-IP und Modelloptionen, **ohne API-Token**. Bestehende Dateien werden nicht überschrieben. Firewall: den Wyoming-Port 10300 auf HA, TTS-Port 10502 auf HA und den CPU-Sprachserver begrenzen; bei Ollama Port 11434 auf HA beschränken.
 
 ## 2. Dienste starten
 
@@ -41,7 +37,7 @@ docker compose --profile llm up -d ollama ollama-gateway
 docker compose exec ollama ollama pull qwen3:4b-instruct
 ```
 
-Ollama verwendet dieselbe GPU. Bei knappem VRAM die Dienste einzeln testen. Die geschützte Ollama-Schnittstelle kann über die HA-Ollama-Integration eingebunden werden; Schlüssel nur im HA-Dialog eingeben. Modelle können sich gegenseitig Speicher entziehen. Kein GPU-Rechner nötig für die CPU-Basis.
+Ollama verwendet dieselbe GPU. Bei knappem VRAM die Dienste einzeln testen. Das tokenfreie Ollama-LAN-Gateway kann über die HA-Ollama-Integration eingebunden werden. Keine zusätzlichen TAFA-API-Schlüssel eingeben; den Gateway-Port ausschließlich für HA freigeben. Modelle können sich gegenseitig Speicher entziehen. Kein GPU-Rechner nötig für die CPU-Basis.
 
 ## Optional: Vision
 
@@ -63,6 +59,6 @@ Windows: `Test-Stream.ps1`, `Test-Voice.ps1` aus dem Worker-Verzeichnis. Linux: 
 
 ## Jarvis-Modelleinstellungen (1.8.0)
 
-Mit Jarvis Tablet Audio 1.5.0 lassen sich unter **KI & Leistung** installierte Text- und Bildmodelle, Kontext (2048/4096/8192 Tokens) und Warmhaltezeit (0/60/120/300/600 Sekunden) zentral wählen. Für gemeinsamen Betrieb beide Modelle auf `qwen3-vl:4b-instruct` setzen; getrennt Qwen3 4B Instruct als Textmodell und Qwen3-VL 4B Instruct als Bildmodell wählen. Ollama lädt höchstens ein Modell und verarbeitet eine Anfrage gleichzeitig. GPU-Speicherbedarf gemeinsam mit STT und TTS prüfen. Keine automatischen Downloads oder zusätzlichen Dienste. Ältere Vision-Aufrufe entladen standardmäßig sofort.
+Mit der TAFA-HA-Integration 0.4.3 lassen sich unter **KI & Leistung** installierte Text- und Bildmodelle, Kontext (2048/4096/8192 Tokens) und Warmhaltezeit (0/60/120/300/600 Sekunden) zentral wählen. Für gemeinsamen Betrieb beide Modelle auf `qwen3-vl:4b-instruct` setzen; getrennt Qwen3 4B Instruct als Textmodell und Qwen3-VL 4B Instruct als Bildmodell wählen. Ollama lädt höchstens ein Modell und verarbeitet eine Anfrage gleichzeitig. GPU-Speicherbedarf gemeinsam mit STT und TTS prüfen. Keine automatischen Downloads oder zusätzlichen Dienste. Ältere Vision-Aufrufe entladen standardmäßig sofort.
 
-Der authentifizierte Aufruf `GET /runtime` meldet ausschließlich unterstützte installierte und geladene Modelle. `POST /describe` erlaubt begrenzte Werte für `keep_alive` und `num_ctx` und liefert Zeitmessungen. HA übergibt gespeicherte Einstellungen und aktualisiert den bestehenden Ollama-Gesprächsagenten, ohne Prompts, Werkzeuge oder Verlauf zu verändern. Browser erhalten keinen Worker-Schlüssel. Reine Kameraanzeigen umgehen beide Modelle. Änderungen gelten ab der nächsten Anfrage; die erste Anfrage nach Leerlauf kann länger dauern. Bestehende `.env` und Volumes erhalten; beim Update nur Vision neu bauen. Kein APK-Update erforderlich.
+Der auf das vertrauenswürdige LAN zu beschränkende Aufruf `GET /runtime` meldet ausschließlich unterstützte installierte und geladene Modelle. `POST /describe` erlaubt begrenzte Werte für `keep_alive` und `num_ctx` und liefert Zeitmessungen. HA übergibt gespeicherte Einstellungen und aktualisiert den bestehenden Ollama-Gesprächsagenten, ohne Prompts, Werkzeuge oder Verlauf zu verändern. Browser erhalten keinen Worker-Schlüssel. Reine Kameraanzeigen umgehen beide Modelle. Änderungen gelten ab der nächsten Anfrage; die erste Anfrage nach Leerlauf kann länger dauern. Bestehende `.env` und Volumes erhalten; beim Update nur Vision neu bauen. Kein APK-Update erforderlich.
