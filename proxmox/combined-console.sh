@@ -144,7 +144,7 @@ prepare_host() {
   fi
 }
 enable_https() {
-  [[ "$EUID" == 0 && -t 0 ]] || { echo "Root in interrunninger CT-Konsole erforderlich."; return 1; }
+  [[ "$EUID" == 0 && -t 0 ]] || { echo "Run as root in an interactive CT console."; return 1; }
   get_host
   if [[ "$MODE" == shared ]]; then
     get_ip
@@ -186,7 +186,7 @@ enable_https() {
   echo "HTTPS is enabled. Configure Alexa audio URL in TAFA as https://$HOST."
 }
 run_wizard() {
-  [[ "$EUID" == 0 && -t 0 ]] || { echo "Als root interrunning im CT ausfuehren."; exit 1; }
+  [[ "$EUID" == 0 && -t 0 ]] || { echo "Run interactively as root inside the CT."; exit 1; }
   while true; do
     printf '\nTAFA setup (speech services)\n'
     printf '  1) Show service status and Home Assistant endpoints\n'
