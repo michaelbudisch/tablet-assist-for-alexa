@@ -30,6 +30,7 @@ from model_store import inventory as local_model_inventory, remove_local_models
 from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
+from control_center_view import render_dashboard
 from speech_source import load_options
 
 LOG=logging.getLogger("tafa.app")
@@ -39,7 +40,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.21"
+APP_VERSION="0.3.22"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -197,7 +198,7 @@ def startup():
         LOG.error("Automatic HA setup unavailable: %s",type(exc).__name__)
         save_state("needs_attention",str(exc)[:150])
 
-def display(message="",lang="de"):
+def display(message="",lang="de",default_tab="overview"):
     en=lang=="en"
     t=lambda de,eng:eng if en else de
     state=status(CONFIG)
@@ -276,7 +277,7 @@ def display(message="",lang="de"):
     has_cache=cache["piper_bytes"] > 0 or cache["whisper_bytes"] > 0
     remove_button=(
         f'<form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}">'
-        f'<input type="hidden" name="lang" value="{lang}">'
+        f'<input type="hidden" name="lang" value="{lang}"><input type="hidden" name="tab" value="maintenance">'
         f'<label>{t("Zur Bestätigung ENTFERNEN eingeben","Type ENTFERNEN to confirm")}'
         f'<input name="confirmation" type="text" maxlength="10" required pattern="ENTFERNEN" autocomplete="off"></label>'
         f'<button type="submit" name="action" value="cleanup">{t("TAFA-Sprachmodelle löschen","Delete TAFA speech models")}</button>'
@@ -314,89 +315,14 @@ def display(message="",lang="de"):
     checks=assess_endpoints({**load_options(),**preferences},mode,runtime,links,wyoming_entries)
     latest=recent_stt_backend(TOKEN) if TOKEN else None
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
-    guide = f"""
-<section><h2>{t("Einrichtung in vier Schritten", "Setup in four steps")}</h2>
-<p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
-<div class="tiles">
-<div class="tile"><strong>1 · {t("Sprachserver", "Speech server")}</strong>
-<p><b>{t("A: Alles in TAFA (Standard)", "A: Everything in TAFA (default)")}</b></p>
-<p>{t("Piper und Whisper laufen in TAFA, wenn unter Einstellungen der lokale Sprachserver gewählt ist. Keine weitere VM nötig.", "Piper and Whisper run inside TAFA when local speech is selected above. No additional VM required.")}</p>
-<p><b>{t("B: Proxmox-Sprachserver", "B: Proxmox speech server")}</b></p>
-<p>{t("Oben unter Einstellungen Externen Proxmox-Sprachserver wählen und http://SERVER:5000 eintragen; danach TAFA neu starten. Dann in HA Wyoming-STT von SERVER:10300 ergänzen Die Wyoming-Entitäts-ID bei TAFA-Einstellungen oben auswählen (oder bei genau einer STT-Entität automatisch erkennen lassen). Es werden keine lokalen Sprachmodelle geladen.", "In Settings above select the external Proxmox speech server and enter http://SERVER:5000, then restart TAFA. Add Wyoming STT from SERVER:10300 in HA and set its entity ID in TAFA Settings above (or auto-select when exactly one Wyoming STT exists). No local CPU models are loaded.")}</p>
-<a href="{REPO}/blob/main/docs/{'en/' if en else ''}proxmox.md" target="_blank" rel="noopener">{t("Proxmox-Anleitung", "Proxmox guide")}</a>
-</div>
-<div class="tile"><strong>2 · {t("GPU-Hauptrechner (optional)", "GPU computer (optional)")}</strong>
-<p>{t("Qwen-Streaming auf Port 10502. Die Windows-BAT-Dateien erzeugen bei Bedarf eine .env ohne API-Token. Die GPU-Adresse oben unter Einstellungen eintragen.", "Qwen streaming uses port 10502. The Windows BAT files create an optional .env without API tokens. Configure the GPU URL in Settings above.")}</p>
-<p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
-<a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
-</div>
-<div class="tile"><strong>3 · {t("Text-KI für freie Fragen (Ollama)", "Text AI for open questions (Ollama)")}</strong>
-<p>{t("Qwen-TTS auf Port 10502 spricht nur die Antwort. Für Wissensfragen Ollama auf dem GPU-PC (meist Port 11434) als Home-Assistant-Integration hinzufügen. Dort ein Textmodell wie qwen3:4b-instruct wählen und oben unter Einstellungen die conversation-Entität bei Text-KI eintragen. Danach TAFA-App neu starten. Keine automatischen Modelldownloads.",
-"Qwen TTS on port 10502 only speaks the reply. For general questions, add Ollama from the GPU PC (usually port 11434) as a Home Assistant integration, select a text model such as qwen3:4b-instruct, and select its conversation entity under Settings above. Restart TAFA App afterwards. No automatic model downloads.")}</p>
-<a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("Text-KI-Anleitung", "Text AI guide")}</a>
-</div>
-<div class="tile"><strong>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
-<p>{t("Nur für Alexa-MP3-Durchsagen: Generator 5001, temporäre Dateien 8080 und gesonderter öffentlicher HTTPS-Proxy. Bei Bluetooth-Ausgabe an den Echo nicht nötig.", "Only for Alexa MP3 announcements: generator 5001, temporary files 8080, and a separate public HTTPS proxy. Not needed for Echo Bluetooth output.")}</p>
-<p>{t("Einstellungen oben im Bereich Alexa & Durchsagen.", "Configure in the Alexa & announcements area above.")}</p>
-<a href="{REPO}/blob/main/docs/{'en/' if en else ''}nginx-proxy.md" target="_blank" rel="noopener">{t("HTTPS-Anleitung", "HTTPS guide")}</a>
-</div>
-</div>
-<p class="muted">{t("Alle TAFA-Werte oben unter Einstellungen verwalten. Die Home-Assistant-App-Konfiguration ist nur eine technische Alternative.", "Manage TAFA options in Settings above. Home Assistant App Configuration is an advanced fallback.")}</p>
-</section>
-"""
-    return f"""<!doctype html>
-<html lang="{lang}"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-store">
-<title>TAFA · Control Center</title>
-<style>
-:root{{font:15px/1.5 system-ui,-apple-system,sans-serif;color-scheme:light dark;--accent:#259f8f}}
-*{{box-sizing:border-box}}body{{max-width:1000px;margin:0 auto;padding:22px 16px}}
-h1{{font-size:27px;margin:0}}h2{{font-size:17px;margin:0 0 8px}}p{{margin:8px 0}}
-.top{{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}}
-small,.muted{{opacity:.7}}.tiles{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:20px 0}}
-.tile,section{{border:1px solid #80808055;background:color-mix(in srgb,canvas 96%,var(--accent));border-radius:13px;padding:16px}}
-.tile strong,.tile span{{display:block}}.tile span{{font-size:13px;margin-top:8px;overflow-wrap:anywhere}}
-section{{margin:13px 0}}label{{display:block;font-weight:600;margin-top:10px}}select,input[type=text],textarea{{display:block;width:100%;padding:9px;margin:5px 0 12px;background:canvas;color:canvastext;border:1px solid #80808088;border-radius:8px}}textarea{{min-height:80px;resize:vertical}}details{{border-top:1px solid #80808055;padding:10px 0}}details summary{{cursor:pointer;font-weight:650;font-size:16px}}fieldset{{border:0;padding:0;margin:0}}button:disabled{{opacity:.45}}a,button{{font:inherit}}a{{color:var(--accent)}}button{{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 15px;border-radius:9px;cursor:pointer}}
-nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
-</style></head>
-<body>
-<div class="top"><div><h1>TAFA Control Center</h1><small>{t("Lokaler Sprachassistent","Local voice assistant")} · {APP_VERSION} · Beta</small></div>
-<nav><a href="?lang=de">Deutsch</a><a href="?lang=en">English</a></nav></div>
-<div class="tiles">{panels}</div>
-<section id="connections"><h2>{t("Verbindungsdiagnose", "Connection diagnostics")}</h2>
-<p>{t("Abfragen der eingerichteten GPU-/Piper-/MP3-Health-Endpunkte. Kein Test-Audio und keine Durchsage werden erzeugt.", "Checks the configured GPU, Piper and MP3 health endpoints. No speech or announcements are generated.")}</p>
-<p><a href="?lang={lang}#connections">{t("Verbindungen jetzt erneut prüfen", "Check connections now")}</a></p>
-<p class="muted">{t("Alle TAFA-Einstellungen werden zentral gespeichert und beim nächsten App-Start synchronisiert.", "All TAFA settings share one store and synchronize on the next App start.")}</p>
-</section>
-{picker}
-{guide}
-<section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
-<form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
-<button type="submit" name="action" value="backend">{install}</button>
-{retry_button}</form></section>
-<section><h2>{t("Lokale Sprachmodelle verwalten","Manage local speech models")}</h2>
-<p>{cache_info}</p>
-<p class="muted">{t("Es werden ausschließlich TAFA-eigene Piper-/Whisper-Downloads aus /data/tafa_speech verwaltet, keine Modelle aus Proxmox, Wyoming oder anderen Home-Assistant-Apps.", "Only TAFA-owned Piper/Whisper downloads in /data/tafa_speech are managed; Proxmox, Wyoming and other Home Assistant apps are untouched.")}</p>
-<p class="muted">{t("Zum Löschen zuerst in der App-Konfiguration external wählen und TAFA neu starten. Dadurch wird der lokale Sprachprozess beendet; ein unbeabsichtigtes erneutes Herunterladen wird verhindert.", "To delete, first select external in App Configuration and restart TAFA. This stops local speech so models cannot be redownloaded automatically.")}</p>
-{remove_button}
-</section>
-<section><h2>{t("Inbetriebnahme","Getting started")}</h2>
-<ol class="steps">
-<li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
-<li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
-<li>{t("Im lokalen Modus wird die TAFA-Lokal-Pipeline automatisch eingerichtet. Im externen Modus Wyoming-STT einrichten; bei genau einer STT-Entität erfolgt die Auswahl automatisch, andernfalls cpu_stt in der TAFA-App wählen. Danach erstellt TAFA die Assist-Pipeline.","Local mode can auto-create the TAFA Lokal pipeline. In external mode configure Wyoming STT and its entity in the TAFA App; TAFA then automatically creates the complete Assist pipeline.")}</li>
-<li>{t("TAFA Device Bridge für Rufwort/Audio verbinden. Die Pipeline in Home Assistant Assist auswählen; die Bridge selbst überträgt keine anschließende Frage.","Connect Device Bridge for wake events/audio. Select the Assist pipeline in Home Assistant; the Bridge does not transmit the following spoken question.")}</li>
-</ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
- · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>
-<p class="muted">{t("Externe GPU ist optional. Kameras und Mikrofone werden nicht automatisch aktiviert.","External GPU is optional. Cameras and microphones are never activated automatically.")}</p></section>
-<section><h2>{t("Anleitungen & Support","Guides & support")}</h2>
-<a href="{REPO}/blob/main/docs/app.md" target="_blank" rel="noopener">DE</a>
- · <a href="{REPO}/blob/main/docs/en/app.md" target="_blank" rel="noopener">EN</a>
- · <a href="{REPO}/tree/main/android" target="_blank" rel="noopener">Device Bridge</a>
- · <a href="{REPO}/issues" target="_blank" rel="noopener">GitHub Issues</a>
-<p class="muted">{t("Dein privates Dashboard wird nicht installiert oder verändert.","Your private dashboard is never installed or modified.")}</p></section>
-</body></html>"""
+    return render_dashboard(
+        lang=lang, version=APP_VERSION, default_tab=default_tab,
+        message=message, repo=REPO, csrf=CSRF,
+        cards=cards, picker=picker, checks=checks,
+        options={**load_options(), **preferences}, setup=setup,
+        links=links, latest=latest, cache_info=cache_info,
+        note=note, install=install, retry_button=retry_button,
+        remove_button=remove_button, mode=mode)
 
 class Handler(BaseHTTPRequestHandler):
     def allowed(self):
@@ -408,15 +334,32 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type","text/html; charset=utf-8")
         self.send_header("Cache-Control","no-store")
         self.send_header("X-Content-Type-Options","nosniff")
-        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
+        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'self'; script-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
         self.send_header("Content-Length",str(len(content)))
         self.end_headers()
         self.wfile.write(content)
     def do_GET(self):
         if not self.allowed():return self.send_error(403)
+        path=urlsplit(self.path).path
+        assets={"/assets/control-center.css":("control_center.css","text/css; charset=utf-8"),
+                "/assets/control-center.js":("control_center.js","text/javascript; charset=utf-8")}
+        if path in assets:
+            filename,mimetype=assets[path]
+            content=(Path(__file__).parent/filename).read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type",mimetype)
+            self.send_header("Content-Length",str(len(content)))
+            self.send_header("Cache-Control","public, max-age=300")
+            self.send_header("X-Content-Type-Options","nosniff")
+            self.end_headers()
+            self.wfile.write(content)
+            return
+        if path not in ("/",""):
+            return self.send_error(404)
         query=parse_qs(urlsplit(self.path).query)
         lang="en" if query.get("lang")==["en"] else "de"
-        self.respond(display(lang=lang))
+        tab=query.get("tab",["overview"])[0]
+        self.respond(display(lang=lang,default_tab=tab))
     def do_POST(self):
         if not self.allowed():return self.send_error(403)
         length=self.headers.get("Content-Length")
@@ -428,6 +371,9 @@ class Handler(BaseHTTPRequestHandler):
         if not secrets.compare_digest(fields.get("csrf",[""])[0],CSRF):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
+        tab=fields.get("tab",["maintenance"])[0]
+        if tab not in ("overview","setup","connections","maintenance"):
+            tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
             if action=="models":
@@ -458,10 +404,10 @@ class Handler(BaseHTTPRequestHandler):
                      else "Existing TAFA files preserved. / Bestehende Dateien bleiben unverändert.")
             else:
                 return self.send_error(400)
-            self.respond(display(msg,lang=lang))
+            self.respond(display(msg,lang=lang,default_tab=tab))
         except (OSError,ValueError,RuntimeError,SyntaxError) as exc:
             reason=str(exc)[:160] if isinstance(exc,ValueError) else type(exc).__name__
-            self.respond(display("TAFA configuration: "+reason,lang=lang),400)
+            self.respond(display("TAFA configuration: "+reason,lang=lang,default_tab=tab),400)
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO,format="%(levelname)s %(message)s")

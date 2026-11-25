@@ -79,17 +79,17 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
         else:
             control = (f'<input id="{name}" name="{name}" type="text" '
                        f'value="{current}" maxlength="{maximum}" placeholder="{esc(placeholder)}">')
-        return f'<label for="{name}">{label}</label>{control}' + (f'<p class="muted">{hint}</p>' if hint else "") + status_line(name)
+        return f'<div class="field"><label for="{name}">{label}</label>{control}' + (f'<p class="field-help">{hint}</p>' if hint else "") + status_line(name) + "</div>"
 
     def select(name, label, entries, selected=None):
         selected = _value(options, name) if selected is None else selected
         choices = []
         for value, title in entries:
             choices.append(f'<option value="{esc(value)}"{" selected" if selected == value else ""}>{esc(title)}</option>')
-        return f'<label for="{name}">{label}</label><select name="{name}" id="{name}">{"".join(choices)}</select>' + status_line(name)
+        return f'<div class="field"><label for="{name}">{label}</label><select name="{name}" id="{name}">{"".join(choices)}</select>' + status_line(name) + "</div>"
 
     def check(name, label):
-        return (f'<label><input type="checkbox" name="{name}" value="1"'
+        return (f'<label class="toggle"><input type="checkbox" name="{name}" value="1"'
                 f'{" checked" if options.get(name) is True else ""}> {label}</label>')
 
     def stt_picker(name, label):
@@ -111,13 +111,13 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
         recent = '<p class="muted">' + t("Letzte Spracherkennung: ", "Last speech recognition: ") + esc(label + duration_label) + '</p>'
 
     return f"""
-<section id="tafa-settings">
+<section id="tafa-settings" class="settings-card">
 <h2>{t("Einstellungen – zentral verwalten", "Settings – one place")}</h2>
 <p>{t("Hier richtest du TAFA vollständig ein. Alle Werte landen direkt in derselben Home-Assistant-App-Konfiguration. Die technische Konfigurationsseite wird nur für Fehlerbehebung benötigt.",
 "Configure TAFA here. All values are saved directly to the same Home Assistant App configuration. The technical configuration page is only needed for troubleshooting.")}</p>
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
-<input type="hidden" name="lang" value="{esc(lang)}">
+<input type="hidden" name="lang" value="{esc(lang)}"><input type="hidden" name="tab" value="setup">
 <details open><summary>1 · {t("Sprachserver und Whisper", "Speech server and Whisper")}</summary>
 {select("speech_mode",t("Wo läuft Piper?", "Where does Piper run?"),
  [("local",t("In der TAFA-App (einfach)", "Inside TAFA (simple)")),
@@ -130,7 +130,7 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 <p class="muted">{t("Wyoming einmal in Home Assistant unter Geräte & Dienste hinzufügen. Anschließend hier auswählen.", "Add Wyoming once under Home Assistant Devices & services, then select it here.")}</p>
 <p><a href="/config/integrations" target="_top">{t("Wyoming in Home Assistant hinzufügen", "Add Wyoming in Home Assistant")}</a></p></div>
 </details>
-<details open><summary>2 · {t("GPU, KI und Gesprächssteuerung", "GPU, AI and conversation")}</summary>
+<details><summary>2 · {t("GPU, KI und Gesprächssteuerung", "GPU, AI and conversation")}</summary>
 {field("gpu_base",t("Qwen-Sprachausgabe (Adresse samt Port 10502)", "Qwen speech (URL with port 10502)"),"","http://192.168.1.60:10502")}
 {field("gpu_stt_host",t("GPU-Whisper-IP (nur IP, ohne Port)", "GPU Whisper IP (IP only, no port)"))}
 {field("llm_agent",t("Text-KI: Home-Assistant-Gesprächsentität", "Text AI: Home Assistant conversation entity"),
@@ -163,7 +163,7 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 </details>
 <p class="muted">{t("Die Felder werden vor dem Speichern geprüft. Andere TAFA-Einstellungen bleiben erhalten. Nach dem Speichern die TAFA-App einmal neu starten.",
 "Fields are validated before saving; unrelated options remain intact. Restart the TAFA App once after saving.")}</p>
-<button type="submit" name="action" value="settings">{t("Einstellungen speichern", "Save settings")}</button>
+<div class="form-actions"><span class="form-actions-note">{t("Neustart der TAFA-App nach dem Speichern erforderlich", "Restart TAFA App after saving")}</span><button class="btn btn-primary" type="submit" name="action" value="settings">{t("Einstellungen speichern", "Save settings")}</button></div>
 </form></section>
 """
 
@@ -173,7 +173,7 @@ def validate_settings_form(fields, current, available):
     required = FORM_FIELDS - set(BOOL_FIELDS)
     if not required.issubset(fields):
         raise ValueError("Incomplete TAFA settings form")
-    if set(fields) - FORM_FIELDS - {"csrf", "lang", "action"}:
+    if set(fields) - FORM_FIELDS - {"csrf", "lang", "action", "tab"}:
         raise ValueError("Unknown TAFA settings field")
     if any(len(parts) != 1 for parts in fields.values()):
         raise ValueError("Duplicate TAFA settings field")

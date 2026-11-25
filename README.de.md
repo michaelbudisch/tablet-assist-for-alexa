@@ -9,7 +9,7 @@
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.21**, HA-Integration **0.4.9**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.22**, HA-Integration **0.4.9**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
@@ -87,3 +87,5 @@ Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergelad
 **TAFA App 0.3.19 Hotfix:** Fehlende Wyoming-Picker-Datei im Docker-Image ergänzt. App aktualisieren bzw. neu erstellen; bestehende Einstellungen und Android-App bleiben unverändert.
 
 **TAFA 0.3.21 / GPU-Worker 2.2.3:** Die TAFA-Benutzeroberfläche prüft konfigurierte private Sprach-Endpunkte (Piper, Qwen, GPU-Wyoming-TCP, MP3) und zeigt den zuletzt verwendeten Spracherkennungsrechner, sofern Home Assistant diesen meldet. Die automatisch erzeugte Worker-TXT ist auf die drei relevanten GPU-Endpunkte und ihre Eintragungsorte gekürzt. Proxmox-IP-Adressen bleiben manuell zu übernehmen.
+
+**TAFA App 0.3.22:** Das Control Center nutzt vier übersichtliche Tabs (Übersicht, Einrichtung, Verbindungen, Wartung & Hilfe) sowie eine ruhigere Navy-/Petrol-Farbpalette mit Hell-/Dunkelmodus. Status und Verbindungen sind kompakter; vorhandene Einstellungen und Endpunkte bleiben unverändert.

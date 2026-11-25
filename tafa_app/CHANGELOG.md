@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.22 — redesigned Control Center with clear tabs and refreshed colors
+- Redesigned the admin-only Control Center with four accessible responsive tabs: Overview, Settings, Connections, Maintenance & help, replacing the long scrolling page.
+- New restrained slate/navy/teal palette, light/dark modes, compact status dashboard, distinct endpoint cards, keyboard-accessible navigation and reduced-motion support.
+- Preserve settings form contents when switching tabs, retain the selected tab after submitting forms and when switching languages; keep all content usable without JavaScript. Local CSS and JS use a restrictive same-origin content security policy.
+- Existing App options, GPU worker, Home Assistant integration, Android Bridge and speech routing remain unchanged.
+
+
 ## 0.3.21 — endpoint-aware setup diagnostics
 - Show safe read-only connection status beside configured private Piper, Qwen, MP3 and GPU-Whisper TCP addresses; do not confuse an open Wyoming port with successful GPU transcription.
 - Display the last actual Home Assistant STT router backend (GPU versus CPU) when available; show an optional GPU Whisper host suggestion derived from the configured private Qwen IP.
