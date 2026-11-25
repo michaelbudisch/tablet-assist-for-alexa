@@ -6,9 +6,7 @@ android {
     buildFeatures { buildConfig true }
     defaultConfig { testInstrumentationRunner 'de.jarvis.audio.UiSmokeInstrumentation' }
     buildTypes {
-        debug {
-            applicationIdSuffix '.wakepilot'
-        }
+        debug { }
         release { minifyEnabled false }
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
