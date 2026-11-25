@@ -32,4 +32,18 @@ wake=(BASE/"relay"/"relay_wake_devices.py").read_text()
 assert 'url = "/api/jarvis_tablet_audio/wake_devices"' in wake
 assert "jarvis_android_wakeword_routed" in wake
 assert 'DOMAIN = "jarvis_tablet_audio"' in (BASE/"relay"/"const.py").read_text()
-print("TAFA unified component layout and compatibility API verified")
+# Prevent publishing a mismatched App release or dropping the external-only mode.
+config=(ROOT/"tafa_app"/"config.yaml").read_text(encoding="utf-8")
+server=(ROOT/"tafa_app"/"server.py").read_text(encoding="utf-8")
+docker=(ROOT/"tafa_app"/"Dockerfile").read_text(encoding="utf-8")
+app_changelog=(ROOT/"tafa_app"/"CHANGELOG.md").read_text(encoding="utf-8")
+version=re.search(r'^version: "([^"]+)"
+,config,re.MULTILINE)
+assert version, "App version missing"
+assert "APP_VERSION=\""+version.group(1)+"\\"" in server, "App version mismatch"
+assert "## "+version.group(1) in app_changelog, "Missing App changelog"
+assert "speech_mode: list(local|external)" in config
+assert "external_piper_base: str" in config
+assert "speech_source.py" in docker
+assert "choose_speech_source()" in server
+print("TAFA unified component layout, external mode and release metadata verified")
