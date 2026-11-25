@@ -306,10 +306,23 @@ class JarvisConversation(conversation.ConversationEntity):
             return self._reply(user_input, chat_log, "Die lokale Abfrage konnte nicht bestätigt werden. Bitte überprüfe die Datenquelle.")
 
         agent = self._cfg.get("llm_agent")
-        state = self.hass.states.get(agent) if agent else None
-        if self._cfg.get("hardware_profile") == "Homeserver" or not agent or agent == self.entity_id or state is None or state.state == "unavailable":
+        if not agent:
             self._remember_closed(key, monotonic())
-            return self._reply(user_input, chat_log, "Meine lokale KI ist gerade nicht verfügbar. Hausdaten und bekannte Befehle funktionieren weiterhin.")
+            return self._reply(
+                user_input, chat_log,
+                "Der KI-Gesprächsassistent ist in TAFA noch nicht eingerichtet. "
+                "Unter Apps, TAFA, Konfiguration kannst du den Ollama-Agenten auswählen."
+            )
+        state = self.hass.states.get(agent)
+        if (self._cfg.get("hardware_profile") == "Homeserver"
+                or agent == self.entity_id or state is None
+                or state.state in ("unavailable", "unknown")):
+            self._remember_closed(key, monotonic())
+            return self._reply(
+                user_input, chat_log,
+                "Der ausgewählte KI-Gesprächsassistent ist momentan nicht verfügbar. "
+                "Bitte prüfe den Ollama-Agenten und das Hardwareprofil in TAFA."
+            )
         try:
             async with asyncio.timeout(15):
                 result = await conversation.async_converse(
