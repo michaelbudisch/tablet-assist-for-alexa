@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA-App 0.3.10 / Integration 0.4.3 — externer Proxmox-Sprachserver
+- Neuer optionaler Modus `speech_mode=external` in den App-Einstellungen: keine doppelten Piper-/Whisper-Prozesse oder Modell-Downloads in der HA-App.
+- `local` bleibt Standard; Wyoming-STT und Assist-Pipeline im externen Modus bewusst in Home Assistant zuordnen.
+- GPU Worker 2.2.1, Android Device Bridge 1.0.0, Nginx-Proxy und privates Dashboard unverändert.
+
 ## TAFA-Integration 0.4.3 / App 0.3.9 — lokale Dienste ohne zusätzliche Tokens
 - TAFA-Optionen und lokale GPU-/MP3-Anfragen benötigen keinen zusätzlichen API-Schlüssel mehr.
 - GPU Worker 2.2.1: Qwen, Vision, Diagnose und optional Ollama ohne TAFA-Tokens.
