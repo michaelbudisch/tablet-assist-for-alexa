@@ -180,6 +180,52 @@
           "mp3_token": "PIPER_API_TOKEN from /etc/jarvis-local.env on Proxmox speech server. Keep private.",
           "rooms_json": "JSON mapping: room name Wohnzimmer with notify entity notify.living_room. See setup guide."
         }
+      },
+      "sources": {
+        "title": "Data sources and reminders",
+        "description": "All sources are optional. Select existing entities; empty fields stay disabled. Reminders are shared. An Echo room is optional.",
+        "data": {
+          "weather": "Weather entity",
+          "shopping": "Shopping list (Bring! or other to-do list)",
+          "restmuell": "Residual waste dates",
+          "bioabfall": "Organic waste dates",
+          "papier": "Paper collection dates",
+          "wertstoff": "Recycling collection dates",
+          "vorlauf": "Heating flow temperature (°C)",
+          "ruecklauf": "Heating return temperature (°C)",
+          "spreizung": "Temperature difference (K)",
+          "preis": "Current electricity price",
+          "guenstig": "Lowest electricity price tomorrow",
+          "netz": "Signed grid power (+ import, − export)",
+          "solar": "Total PV power",
+          "prognose": "Forecast PV yield tomorrow",
+          "solarheute": "PV yield today",
+          "netzheute": "Grid import today",
+          "einspeisungheute": "Grid export today",
+          "heizoel": "Heating oil stock",
+          "oelverbrauch": "Estimated oil use today",
+          "waschmaschine": "Washing machine power",
+          "waschkosten": "Washing machine cost today",
+          "waschenergie": "Washing machine energy today",
+          "waermepumpe": "Heat pump power",
+          "wpheute": "Heat pump energy today",
+          "wpkosten": "Heat pump cost today",
+          "kuehlschrank": "Refrigerator power",
+          "kuehlschrankheute": "Refrigerator energy today",
+          "reminders_enabled": "Enable shared reminders",
+          "reminder_room": "Optional Echo room for reminders",
+          "learning_enabled": "Optional learning for generic home-data questions"
+        },
+        "data_description": {
+          "restmuell": "ISO YYYY-MM-DD state or date-key attributes.",
+          "netz": "Positive values = import, negative = export.",
+          "preis": "ct/kWh or EUR/kWh.",
+          "guenstig": "Price sensor with a timestamp attribute for tomorrow.",
+          "solar": "Use an aggregate sensor for multiple arrays.",
+          "reminders_enabled": "One active reminder. HA notification, including after restart.",
+          "reminder_room": "One configured room only. Audio may use public short-lived links; no confidential content.",
+          "learning_enabled": "Off by default. Only generic unmatched home-data questions from a restricted vocabulary; suggestions in RAM for 24 hours, admin approval required."
+        }
       }
     },
     "error": {

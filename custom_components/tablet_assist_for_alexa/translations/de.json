@@ -180,6 +180,52 @@
           "mp3_token": "PIPER_API_TOKEN aus /etc/jarvis-local.env des Proxmox-Sprachservers. Nur lokal verwenden.",
           "rooms_json": "JSON-Zuordnung: Raumname Wohnzimmer mit Notify-Entität notify.echo_wohnzimmer. Siehe Ersteinrichtungsanleitung."
         }
+      },
+      "sources": {
+        "title": "Datenquellen und Erinnerungen",
+        "description": "Alle Datenquellen sind optional. Wähle vorhandene Entitäten; leere Felder bleiben deaktiviert. Erinnerungen sind gemeinsam sichtbar. Ein Echo-Raum ist optional.",
+        "data": {
+          "weather": "Wetter-Entität",
+          "shopping": "Einkaufsliste (Bring! oder andere To-do-Liste)",
+          "restmuell": "Restmüll-Abholtermine",
+          "bioabfall": "Biomüll-Abholtermine",
+          "papier": "Papier-Abholtermine",
+          "wertstoff": "Wertstoff-Abholtermine",
+          "vorlauf": "Vorlauftemperatur (°C)",
+          "ruecklauf": "Rücklauftemperatur (°C)",
+          "spreizung": "Heizungsspreizung (K)",
+          "preis": "Aktueller Strompreis",
+          "guenstig": "Niedrigster Strompreis morgen",
+          "netz": "Netzleistung (+ Bezug, − Einspeisung)",
+          "solar": "Gesamte PV-Leistung",
+          "prognose": "PV-Ertragsprognose morgen",
+          "solarheute": "PV-Ertrag heute",
+          "netzheute": "Netzbezug heute",
+          "einspeisungheute": "Einspeisung heute",
+          "heizoel": "Heizölbestand",
+          "oelverbrauch": "Geschätzter Heizölverbrauch heute",
+          "waschmaschine": "Waschmaschinenleistung",
+          "waschkosten": "Waschmaschinenkosten heute",
+          "waschenergie": "Waschmaschinenverbrauch heute",
+          "waermepumpe": "Wärmepumpenleistung",
+          "wpheute": "Wärmepumpenverbrauch heute",
+          "wpkosten": "Wärmepumpenkosten heute",
+          "kuehlschrank": "Kühlschrankleistung",
+          "kuehlschrankheute": "Kühlschrankverbrauch heute",
+          "reminders_enabled": "Gemeinsame Erinnerungen aktivieren",
+          "reminder_room": "Optionaler Echo-Raum für Erinnerungen",
+          "learning_enabled": "Optionale Lernfunktion für allgemeine Hausdaten-Abfragen"
+        },
+        "data_description": {
+          "restmuell": "ISO-Datum YYYY-MM-DD als Zustand oder als Datumsschlüssel in den Attributen.",
+          "netz": "Positive Werte = Netzbezug, negative Werte = Einspeisung.",
+          "preis": "ct/kWh oder EUR/kWh.",
+          "guenstig": "Preissensor mit timestamp-Attribut für morgen.",
+          "solar": "Nutze einen Gesamtsensor bei mehreren Anlagen.",
+          "reminders_enabled": "Maximal eine aktive Erinnerung. HA-Benachrichtigung; auch nach Neustart.",
+          "reminder_room": "Nur ein freigegebener Raum. Audio kann über öffentliche temporäre Links laufen; keine vertraulichen Inhalte.",
+          "learning_enabled": "Standardmäßig aus. Nur allgemeine, nicht erkannte Hausdaten-Fragen aus einer begrenzten Wortliste; Vorschläge 24 Stunden im RAM, Freigabe durch Administrator."
+        }
       }
     },
     "error": {
