@@ -30,19 +30,19 @@ get_host() {
 }
 get_ip() {
   IP="$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
-  [[ -n "$IP" ]] || IP="noch keine IPv4-Adresse"
+  [[ -n "$IP" ]] || IP="no IPv4 address yet"
 }
 svc() {
   if systemctl is-active --quiet "$1.service" 2>/dev/null; then
-    printf 'aktiv'
+    printf 'running'
   else
-    printf 'nicht aktiv'
+    printf 'nicht running'
   fi
 }
 tls_status() {
-  HTTPS="noch nicht eingerichtet"
+  HTTPS="not configured"
   if [[ "$MODE" == shared ]]; then
-    HTTPS="Zentraler Proxy $PROXY_IP (HTTPS dort pruefen)"
+    HTTPS="Central proxy $PROXY_IP (check HTTPS on proxy)"
     return
   fi
   if [[ -n "$HOST" && -r "/etc/letsencrypt/live/$HOST/fullchain.pem" &&
@@ -50,7 +50,7 @@ tls_status() {
         -f "/etc/nginx/sites-enabled/tablet-assist-audio" ]]; then
     if grep -q 'listen 443 ssl' /etc/nginx/sites-available/tablet-assist-audio 2>/dev/null &&
         systemctl is-active --quiet nginx; then
-      HTTPS="https://$HOST (Zertifikat vorhanden)"
+      HTTPS="https://$HOST (certificate available)"
     fi
   fi
 }
@@ -59,16 +59,16 @@ show_status() {
   get_host
   tls_status
   printf '\n============================================================\n'
-  printf ' TAFA | Sprachserver + Alexa-MP3 + Nginx (ein Proxmox-CT)\n'
+  printf ' TAFA | Speech services and Alexa MP3 delivery\n'
   printf '============================================================\n'
   printf ' LAN IPv4    : %s\n' "$IP"
   printf ' Piper TTS   : http://%s:5000 | %s\n' "$IP" "$(svc jarvis-piper)"
   printf ' Alexa MP3   : http://%s:5001 | %s\n' "$IP" "$(svc jarvis-mp3)"
   printf ' Wyoming STT : %s:10300 | %s\n' "$IP" "$(svc jarvis-whisper)"
   if [[ "$MODE" == shared ]]; then
-    printf ' MP3-Dateien : %s:8080 (nur Proxy %s erlaubt)\n' "$IP" "$PROXY_IP"
+    printf ' MP3 files : %s:8080 (only proxy %s is allowed)\n' "$IP" "$PROXY_IP"
   else
-    printf ' MP3-Dateien : 127.0.0.1:8080 (nur lokal im CT)\n'
+    printf ' MP3 files : 127.0.0.1:8080 (loopback only)\n'
   fi
   if [[ -f /etc/jarvis-local.env ]]; then
     GPU="$(sed -n 's/^JARVIS_GPU_BASE=//p' /etc/jarvis-local.env | head -n1)"
@@ -76,34 +76,34 @@ show_status() {
     GPU=""
   fi
   if [[ -n "$GPU" ]]; then
-    printf ' Qwen Worker : %s (MP3-Erzeugung, falls bereit)\n' "$GPU"
+    printf ' Qwen Worker : %s (used for MP3 generation when ready)\n' "$GPU"
   else
-    printf ' Qwen Worker : nicht konfiguriert (Piper wird verwendet)\n'
+    printf ' Qwen Worker : not configured (using Piper)\n'
   fi
   if [[ "$MODE" == shared ]]; then
-    printf ' Nginx       : externer zentraler Proxy CT %s (%s)\n' "$PROXY_CT" "$PROXY_IP"
+    printf ' Nginx       : existing central proxy CT %s (%s)\n' "$PROXY_CT" "$PROXY_IP"
   else
     printf ' Nginx       : %s\n' "$(svc nginx)"
   fi
   printf ' Alexa HTTPS : %s\n' "$HTTPS"
-  if [[ -n "$HOST" ]]; then printf ' Audio-Domain: %s\n' "$HOST"; fi
+  if [[ -n "$HOST" ]]; then printf ' Audio domain: %s\n' "$HOST"; fi
   printf '\n Home Assistant / TAFA App:\n'
-  printf '   Externer Piper: http://%s:5000\n' "$IP"
+  printf '   External Piper: http://%s:5000\n' "$IP"
   printf '   Wyoming (STT):  %s:10300\n' "$IP"
   printf '   MP3-Generator:  http://%s:5001\n' "$IP"
   if [[ "$MODE" == shared ]]; then
-    printf '   Audio-HTTPS:    https://%s (auf zentralem Proxy pruefen)\n' "$HOST"
+    printf '   Audio-HTTPS:    https://%s (check on central proxy)\n' "$HOST"
   fi
   if [[ "$HTTPS" == https://* ]]; then
     printf '   Alexa Audio:    https://%s\n' "$HOST"
   else
-    printf '   Alexa Audio:    noch nicht freigeschaltet\n'
+    printf '   Alexa Audio:    not enabled yet\n'
   fi
-  printf '\n Befehle: tafa-info | tafa-setup | journalctl -u jarvis-mp3 -n 30\n'
-  printf ' Netzwerk: Interne Ports nicht ins Internet weiterleiten.\n'
+  printf '\n Commands: tafa-info | tafa-setup | journalctl -u jarvis-mp3 -n 30\n'
+  printf ' Network: Never expose internal service ports to the Internet.\n'
   if [[ "$MODE" == shared ]]; then
-    printf ' Shared-Modus: HTTPS-Einrichtung auf Proxy CT %s abschliessen.\n' "$PROXY_CT"
-    printf ' Anleitung: tafa-setup (zeigt Befehle fuer Proxy CT %s)\n' "$PROXY_CT"
+    printf ' Shared proxy: Finish HTTPS configuration on proxy CT %s.\n' "$PROXY_CT"
+    printf ' Help: tafa-setup (prints commands for proxy CT %s)\n' "$PROXY_CT"
   fi
   printf '============================================================\n'
 }
@@ -113,13 +113,13 @@ refresh_banner() {
   get_host
   tls_status
   BANNER="$(cat <<EOF
-TAFA - kombinierter Proxmox-Sprachserver
+TAFA - Proxmox speech services
 IP: $IP
 Piper http://$IP:5000 | MP3 http://$IP:5001 | Wyoming $IP:10300
 Nginx: $HTTPS
-Proxy-Modus: $MODE
-Nach Login: tafa-info (Live-Status), tafa-setup (HTTPS-Assistent)
-Nur fuer das lokale Netzwerk; keine MP3-API an das Internet weiterleiten.
+Proxy mode: $MODE
+After login: tafa-info (live status), tafa-setup (HTTPS wizard)
+Private LAN only. Never expose MP3 generation to the Internet.
 
 EOF
 )"
@@ -128,15 +128,15 @@ EOF
 }
 validate_host() {
   python3 "$RENDER" "$1" 127.0.0.1 >/dev/null
-  [[ "$1" != *.local ]] || { echo "Keine private .local-Domain als oeffentliche Audio-URL."; return 1; }
+  [[ "$1" != *.local ]] || { echo "A .local hostname cannot be used as a public audio domain."; return 1; }
 }
 prepare_host() {
   get_host
   if [[ -z "$HOST" ]]; then
-    printf '\nOeffentlicher DNS-Hostname fuer Alexa MP3 (ohne https://): '
+    printf '\nPublic Alexa audio hostname (without https://): '
     IFS= read -r HOST
-    [[ -n "$HOST" ]] || { echo "Abbruch."; return 1; }
-    validate_host "$HOST" || { echo 'Host ungueltig.'; return 1; }
+    [[ -n "$HOST" ]] || { echo "Cancelled."; return 1; }
+    validate_host "$HOST" || { echo 'Invalid hostname.'; return 1; }
     bash "$INSTALLER" prepare "$HOST" 127.0.0.1
     printf '%s\n' "$HOST" > "$HOSTFILE"
     chmod 0600 "$HOSTFILE"
@@ -144,21 +144,21 @@ prepare_host() {
   fi
 }
 enable_https() {
-  [[ "$EUID" == 0 && -t 0 ]] || { echo "Root in interaktiver CT-Konsole erforderlich."; return 1; }
+  [[ "$EUID" == 0 && -t 0 ]] || { echo "Root in interrunninger CT-Konsole erforderlich."; return 1; }
   get_host
   if [[ "$MODE" == shared ]]; then
     get_ip
-    echo "Bestehender Nginx-Proxy CT $PROXY_CT ($PROXY_IP) bedient die Domain $HOST."
-    echo "DNS-Domain zuerst auf https://www.duckdns.org registrieren und aktualisieren."
-    echo "Keine Ports in der FRITZ!Box umstellen. In der Proxmox-Host-Shell:"
+    echo "Existing Nginx proxy CT $PROXY_CT ($PROXY_IP) serves $HOST."
+    echo "Register and update the domain at https://www.duckdns.org first."
+    echo "Keep existing router port forwards unchanged. On the Proxmox host:"
     printf '  pct enter %s\n' "$PROXY_CT"
-    echo "Dann IM PROXY-CT:"
+    echo "Then INSIDE THE PROXY CT:"
     printf '  certbot certonly --webroot -w /var/lib/tablet-assist-acme --cert-name %s -d %s\n' "$HOST" "$HOST"
     printf '  bash /opt/tafa-audio-setup-%s/install-nginx-proxy.sh enable %s %s --shared\n' "$NEW_CT" "$HOST" "$IP"
     if [[ "$HOST" == *.duckdns.org ]]; then
-      echo "Optional fuer DuckDNS-IP-Aktualisierung:"
+      echo "Optional DuckDNS IP updater:"
       printf '  bash /opt/tafa-audio-setup-%s/install-duckdns-updater.sh %s\n' "$NEW_CT" "$HOST"
-      echo "DuckDNS-Account-Token im Proxy-CT verdeckt eingeben, nicht im Chat."
+      echo "Enter the DuckDNS account token privately in the proxy CT, never in chat."
     fi
     return 0
   fi
@@ -166,42 +166,42 @@ enable_https() {
   get_host
   tls_status
   if [[ "$HTTPS" == https://* ]]; then
-    echo "HTTPS wurde bereits aktiviert: $HTTPS"
+    echo "HTTPS wurde bereits runningiert: $HTTPS"
     return 0
   fi
   if [[ ! -f /etc/nginx/sites-available/tablet-assist-audio ]]; then
-    echo "Nginx-Audio-Site fehlt, bitte die Installation kontrollieren."; return 1
+    echo "Nginx audio site is missing; check the installation."; return 1
   fi
-  printf '\nVor Zertifikatsausstellung bitte sicherstellen:\n'
-  printf '  - Oeffentlicher DNS-Name %s zeigt auf deine oeffentliche Anschluss-IP.\n' "$HOST"
-  printf '  - TCP 80 und 443 erreichen den Nginx-CT; es existiert keine konkurrierende Weiterleitung.\n'
-  printf '  - Nie 5000, 5001, 8080 oder 10300 ins Internet weiterleiten.\n'
-  printf 'Diese Voraussetzungen wurden ausserhalb dieses Scripts eingerichtet? Tippe JA: '
+  printf '\nBefore requesting a certificate, verify:\n'
+  printf '  - Public DNS name %s points to your public IP address.\n' "$HOST"
+  printf '  - TCP ports 80 and 443 reach this Nginx CT with no conflicting port forwards.\n'
+  printf '  - Never forward ports 5000, 5001, 8080 or 10300 to the Internet.\n'
+  printf 'Are these prerequisites in place? Type YES: '
   IFS= read -r ANSWER
-  [[ "$ANSWER" == "JA" ]] || { echo "Keine Aenderung, spaeter wiederholen."; return 1; }
+  [[ "$ANSWER" == "YES" ]] || { echo "No changes made; run this wizard again later."; return 1; }
   certbot certonly --webroot -w /var/lib/tablet-assist-acme \
     --cert-name "$HOST" -d "$HOST"
   bash "$INSTALLER" enable "$HOST" 127.0.0.1
   refresh_banner
-  echo "HTTPS ist aktiviert. In TAFA unter Alexa-Audio-URL https://$HOST eingeben."
+  echo "HTTPS ist runningiert. In TAFA unter Alexa-Audio-URL https://$HOST eingeben."
 }
 run_wizard() {
-  [[ "$EUID" == 0 && -t 0 ]] || { echo "Als root interaktiv im CT ausfuehren."; exit 1; }
+  [[ "$EUID" == 0 && -t 0 ]] || { echo "Als root interrunning im CT ausfuehren."; exit 1; }
   while true; do
-    printf '\nTAFA Setup (kombinierter Sprachserver)\n'
-    printf '  1) Status und Home-Assistant-Adressen anzeigen\n'
-    printf '  2) Alexa HTTPS per DNS und Certbot aktivieren\n'
-    printf '  3) Piper/MP3/Whisper/Nginx Service-Status anzeigen\n'
-    printf '  4) Konsoleninfo aktualisieren\n'
-    printf '  0) Beenden\nAuswahl: '
+    printf '\nTAFA setup (speech services)\n'
+    printf '  1) Show service status and Home Assistant endpoints\n'
+    printf '  2) Alexa HTTPS per DNS und Certbot runningieren\n'
+    printf '  3) Show detailed Piper/MP3/Whisper/Nginx service status\n'
+    printf '  4) Refresh the console login banner\n'
+    printf '  0) Exit\nSelect: '
     IFS= read -r SELECTED
     case "$SELECTED" in
       1) show_status ;;
       2) enable_https || true ;;
       3) systemctl --no-pager --full status jarvis-piper jarvis-mp3 jarvis-whisper jarvis-audio nginx || true ;;
-      4) refresh_banner; echo "Konsole aktualisiert." ;;
+      4) refresh_banner; echo "Console banner updated." ;;
       0) return 0 ;;
-      *) echo "Bitte 0 bis 4 waehlen." ;;
+      *) echo "Choose a number from 0 to 4." ;;
     esac
   done
 }
