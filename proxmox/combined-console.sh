@@ -100,6 +100,7 @@ show_status() {
   else
     printf '   Alexa Audio:    not enabled yet\n'
   fi
+  printf '\n Import-JSON: tafa-export-json (creates /root/tafa-speech.json)\n'
   printf '\n Commands: tafa-info | tafa-setup | journalctl -u jarvis-mp3 -n 30\n'
   printf ' Network: Never expose internal service ports to the Internet.\n'
   if [[ "$MODE" == shared ]]; then

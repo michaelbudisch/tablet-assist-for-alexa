@@ -49,4 +49,25 @@
     });
   });
   window.addEventListener("hashchange", () => select(activeFromHash()));
+  const manifestFile = document.getElementById("manifest-file");
+  const manifestText = document.getElementById("manifest-json");
+  if (manifestFile && manifestText) {
+    manifestFile.addEventListener("change", async () => {
+      const file=manifestFile.files?.[0];
+      if (!file) return;
+      if (file.size>10000) {
+        manifestText.setCustomValidity("JSON file too large (max. 10 KB)");
+        manifestText.reportValidity();
+        return;
+      }
+      try {
+        manifestText.value=await file.text();
+        manifestText.setCustomValidity("");
+        select("setup");
+      } catch (_) {
+        manifestText.setCustomValidity("Could not read the JSON file");
+        manifestText.reportValidity();
+      }
+    });
+  }
 })();

@@ -11,3 +11,6 @@ __pycache__/
 .mypy_cache/
 .venv/
 *.pyc
+
+tafa-worker.json
+.tafa-worker-id

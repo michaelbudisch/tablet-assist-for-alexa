@@ -1,5 +1,9 @@
 # Changelog
 
+## TAFA App 0.3.23 / GPU-Worker 2.2.4 — JSON-Import
+- Worker und Proxmox-Sprach-CT erzeugen JSON mit stabiler Gerätekennung. Im TAFA Control Center kann die Datei geprüft und nach Bestätigung übernommen werden. Wyoming-/Ollama-Einrichtung erfolgt im HA-Backend; fremde Integrationen und Modelle bleiben unverändert. Bei IP-Wechsel wird dieselbe Gerätekennung erneut importiert.
+
+
 ## TAFA App 0.3.21 / GPU-Worker 2.2.3 — Endpunktstatus und kurze IP-Datei
 - Für konfigurierte Piper-, Qwen-, GPU-Wyoming- und MP3-Adressen erscheint ein Live-Erreichbarkeitsstatus. TAFA zeigt den zuletzt gemeldeten STT-Rechner (GPU oder CPU) und schlägt die GPU-Whisper-IP aus der Qwen-IP vor, sofern beide auf demselben Rechner laufen.
 - Die GPU-Worker-TXT enthält nur die bekannten GPU-Endpunkte mit den jeweiligen Eintragungsorten (DE/EN). Öffentliches HTTPS-Audio wird nicht automatisch aufgerufen.

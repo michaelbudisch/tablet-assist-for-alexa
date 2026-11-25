@@ -31,6 +31,9 @@ from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from control_center_view import render_dashboard
+from import_manifest import preview as preview_import, consume as consume_import, proposed_options, load_records, save_record, render_panel
+from auto_setup import provision_worker_manifest
+from settings_ui import save_app_changes
 from speech_source import load_options
 
 LOG=logging.getLogger("tafa.app")
@@ -40,7 +43,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.22"
+APP_VERSION="0.3.23"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -198,7 +201,7 @@ def startup():
         LOG.error("Automatic HA setup unavailable: %s",type(exc).__name__)
         save_state("needs_attention",str(exc)[:150])
 
-def display(message="",lang="de",default_tab="overview"):
+def display(message="",lang="de",default_tab="overview",review=None):
     en=lang=="en"
     t=lambda de,eng:eng if en else de
     state=status(CONFIG)
@@ -315,10 +318,11 @@ def display(message="",lang="de",default_tab="overview"):
     checks=assess_endpoints({**load_options(),**preferences},mode,runtime,links,wyoming_entries)
     latest=recent_stt_backend(TOKEN) if TOKEN else None
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
+    import_panel=render_panel(lang,CSRF,review=review)
     return render_dashboard(
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
-        cards=cards, picker=picker, checks=checks,
+        cards=cards, picker=picker, import_panel=import_panel, checks=checks,
         options={**load_options(), **preferences}, setup=setup,
         links=links, latest=latest, cache_info=cache_info,
         note=note, install=install, retry_button=retry_button,
@@ -376,7 +380,38 @@ class Handler(BaseHTTPRequestHandler):
             tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
-            if action=="models":
+            if action=="manifest_preview":
+                payload=fields.get("manifest_json",[""])[0]
+                review=preview_import(payload,load_options())
+                self.respond(display(lang=lang,default_tab="setup",review=review))
+                return
+            elif action=="manifest_apply":
+                manifest=consume_import(fields.get("ticket",[""])[0])
+                current=load_options()
+                changes=proposed_options(manifest,current)
+                known=load_records().get(manifest["device_id"],{})
+                if known and known.get("kind")!=manifest["kind"]:
+                    raise ValueError("Device identity was previously used for a different server type")
+                results=provision_worker_manifest(manifest,known.get("entries",{}))
+                entries=results.get("entries",{})
+                entities=results.get("entities",{})
+                if not isinstance(entries,dict) or not isinstance(entities,dict):
+                    raise RuntimeError("Invalid HA provisioning result")
+                role="gpu_stt" if manifest["kind"]=="gpu_worker" else "cpu_stt"
+                if entities.get("stt"):
+                    changes[role]=entities["stt"]
+                if entities.get("llm_agent") and manifest["kind"]=="gpu_worker":
+                    changes["llm_agent"]=entities["llm_agent"]
+                if changes:
+                    save_app_changes(TOKEN,changes)
+                save_record(manifest,entries)
+                notes=results.get("messages",[])
+                msg=("JSON imported. Restart TAFA App to apply settings. / "
+                     "JSON importiert. TAFA-App neu starten. ")
+                if isinstance(notes,list):
+                    msg+=" | ".join(str(item)[:160] for item in notes[:4])
+                tab="setup"
+            elif action=="models":
                 if choose_speech_source()[0] != "local":
                     return self.send_error(400, "Bundled speech disabled in external mode")
                 accepted=retry_models()

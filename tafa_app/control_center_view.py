@@ -7,7 +7,7 @@ import html
 
 
 def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
-                     cards, picker, checks, options, setup, links, latest,
+                     cards, picker, import_panel, checks, options, setup, links, latest,
                      cache_info, note, install, retry_button, remove_button, mode):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
@@ -161,6 +161,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <h2>{t("Einstellungen","Settings")}</h2>
     <p>{t("Nur die gewünschten Bereiche öffnen. Alle Werte werden zentral gespeichert.","Expand only what you need. All settings share a single store.")}</p>
   </div>
+  {import_panel}
   {picker}
 </section>
 

@@ -221,3 +221,23 @@ def save_settings_form(token, fields, available):
     if reply.get("result") != "ok":
         raise RuntimeError("Supervisor rejected TAFA settings")
     return changes
+
+
+def save_app_changes(token,changes):
+    """Persist validated import changes to the one Supervisor App option store."""
+    if not token:
+        raise RuntimeError("Supervisor authentication unavailable")
+    if not isinstance(changes,dict):
+        raise ValueError("Invalid import options")
+    current=load_options()
+    proposed={**current,**changes}
+    # All values are checked against the same contract used by manual settings.
+    setup_settings_values(proposed)
+    data=json.dumps({"options":proposed},ensure_ascii=False).encode("utf-8")
+    req=urllib.request.Request(
+        SUPERVISOR_OPTIONS,data=data,method="POST",
+        headers={"Authorization":"Bearer "+token,"Content-Type":"application/json"})
+    with urllib.request.urlopen(req,timeout=8) as response:
+        if response.status!=200 or json.loads(response.read(16384)).get("result")!="ok":
+            raise RuntimeError("Supervisor did not accept import settings")
+    return changes

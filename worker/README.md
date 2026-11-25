@@ -1,4 +1,4 @@
-# Jarvis GPU Worker 2.2.3
+# Jarvis GPU Worker 2.2.4
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -9,6 +9,10 @@ Run **00-Konfiguration.bat** to create `.env` with LAN address and model default
 **Security:** Extra TAFA worker API keys are no longer required. Bind services to your private `LAN_IP` and restrict inbound Windows firewall traffic to Home Assistant and the speech server. No public port forwarding, guest Wi-Fi access or proxying of the generator/control routes. A public HTTPS audio proxy must only serve short-lived opaque MP3 GET URLs.
 
 
+
+## 2.2.4 — TAFA JSON import
+
+`04-Verbindungsdaten.bat` now generates **`tafa-worker.json`** rather than a text walkthrough. The manifest contains a stable local worker identity, current private IP, and only running Wyoming Whisper, Qwen TTS and optional Ollama endpoints. Import it in TAFA Control Center > Settings; reimport after an IP change uses the same identity. Models must be already installed and selected before Ollama conversation-agent provisioning. No API secrets, model changes or extra router ports.
 
 ## 2.2.3 — Compact endpoint TXT
 

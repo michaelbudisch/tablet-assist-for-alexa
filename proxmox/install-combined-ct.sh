@@ -33,7 +33,7 @@ assert isinstance(ip,ipaddress.IPv4Address) and ip.is_private and not ip.is_loop
 PY
 fi
 HERE="$(cd "$(dirname "$0")" && pwd)"
-[[ -f "$HERE/install-speechserver.sh" && -f "$HERE/install-nginx-proxy.sh" && -f "$HERE/combined-console.sh" ]] || {
+[[ -f "$HERE/install-speechserver.sh" && -f "$HERE/install-nginx-proxy.sh" && -f "$HERE/combined-console.sh" && -f "$HERE/tafa-export-json.py" ]] || {
   echo "Complete TAFA installer archive required"; exit 1;
 }
 if (( RESUME )); then
@@ -96,6 +96,7 @@ EOF
 fi
 systemctl is-active --quiet jarvis-audio.service || { echo "Audio service failed"; exit 1; }
 install -m 0755 "$HERE/combined-console.sh" /usr/local/sbin/tafa-info
+install -m 0755 "$HERE/tafa-export-json.py" /usr/local/sbin/tafa-export-json
 ln -s /usr/local/sbin/tafa-info /usr/local/sbin/tafa-setup
 printf '%s\n' "$HOST" > /etc/tafa-combined-hostname
 printf '%s\n' "$MODE" > /etc/tafa-proxy-mode
@@ -146,6 +147,7 @@ EOF
 systemctl daemon-reload
 systemctl enable --now tafa-console-info.timer
 /usr/local/sbin/tafa-info --refresh-banner
+/usr/local/sbin/tafa-export-json
 /usr/local/sbin/tafa-info
 if [[ "$MODE" == shared ]]; then
   printf '\nIMPORTANT: HTTPS certificates are installed exclusively on the existing central proxy.\n'

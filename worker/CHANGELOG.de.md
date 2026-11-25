@@ -1,5 +1,10 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.4
+
+- `04-Verbindungsdaten.bat` erstellt jetzt `tafa-worker.json` mit stabiler Worker-ID und tatsächlich gestarteten Whisper-, Qwen- und Ollama-Endpunkten. Ein Reimport identifiziert denselben Worker auch bei neuer IP. Keine Tokens oder Modelländerungen.
+
+
 ## 2.2.3
 
 - `04-Verbindungsdaten.bat` schreibt nun nur noch eine kurze DE/EN-Liste der GPU-Endpunkte (Wyoming 10300, Qwen 10502, optional Ollama 11434) und ihrer genauen Eintragungsorte in Home Assistant oder TAFA. Keine langen Installationshinweise oder erfundenen Proxmox-IPs.

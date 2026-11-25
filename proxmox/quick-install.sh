@@ -234,7 +234,7 @@ printf '\n=== Installation completed: CT %s ===\n' "$CTID"
 pct exec "$CTID" -- /usr/local/sbin/tafa-info || true
 printf '\nProxmox > CT %s > Console: persistent endpoint and service information.\n' "$CTID"
 printf 'PVE-Shell: pct enter %s\n' "$CTID"
-printf 'Inside CT: tafa-info (status) | tafa-setup (HTTPS wizard)\n'
+printf 'Inside CT: tafa-info (status) | tafa-setup (HTTPS wizard) | tafa-export-json\n'
 if [[ "$PUBLIC_MODE" == shared ]]; then
   printf 'Existing proxy CT %s remains the public HTTPS entry point; no router changes.\n' "$PROXY_CT"
   printf 'The new domain becomes available after certificate issuance and HTTPS activation.\n'

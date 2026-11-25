@@ -12,7 +12,8 @@ ALLOWED = {".py", ".md", ".yaml", ".yml", ".json", ".txt", ".ps1", ".sh",
            ".service", ".template", ".bat"}
 ALLOWED_NAMES = {".gitignore", "Dockerfile", "VERSION"}
 EXCLUDE = {".env", ".git", "__pycache__", ".pytest_cache", ".mypy_cache",
-           ".venv", "venv", "node_modules", "GPU-Worker-Verbindungsdaten.txt"}
+           ".venv", "venv", "node_modules", "GPU-Worker-Verbindungsdaten.txt",
+           "tafa-worker.json", ".tafa-worker-id"}
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 
 

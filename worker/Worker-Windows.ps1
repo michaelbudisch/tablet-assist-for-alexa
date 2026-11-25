@@ -5,7 +5,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 Set-Location -LiteralPath $PSScriptRoot
 $EnvFile=Join-Path $PSScriptRoot '.env'
-$Report=Join-Path $PSScriptRoot 'GPU-Worker-Verbindungsdaten.txt'
+$Report=Join-Path $PSScriptRoot 'tafa-worker.json'
+$WorkerIdFile=Join-Path $PSScriptRoot '.tafa-worker-id'
 function Get-Settings {
   $result=@{}
   if(Test-Path -LiteralPath $EnvFile) {
@@ -67,48 +68,51 @@ function Write-Report {
   $settings=Get-Settings
   $ip=[string]$settings['LAN_IP']
   if(-not (Private-IP $ip)){throw 'LAN_IP in .env ist keine private IPv4.'}
-  # This report is guidance, not a live Docker or Home Assistant status check.
-  # All endpoints are taken from the selected LAN_IP, never hard-coded to one user.
-  # Keep script messages ASCII so the script also works with Windows PowerShell 5.1.
-  $lines=@(
-    'TAFA GPU WORKER 2.2.3 - ADRESSEN / ENDPOINTS',
-    '==========================================',
-    ('GPU-PC IP / LAN IP: '+$ip),
-    '',
-    'DEUTSCH - WO EINTRAGEN?',
-    '',
-    'GPU-WHISPER (Sprache erkennen)',
-    ('  Home Assistant > Geraete & Dienste > Wyoming Protocol: Host '+$ip+' | Port 10300'),
-    ('  TAFA > Benutzeroberflaeche > Einstellungen > GPU-Whisper-IP (gpu_stt_host): '+$ip),
-    '  TAFA > GPU-Whisper (gpu_stt): die in HA angelegte stt.*-Entitaet waehlen',
-    '',
-    'QWEN (Sprache ausgeben)',
-    ('  TAFA > Benutzeroberflaeche > Einstellungen > Qwen (gpu_base): http://'+$ip+':10502'),
-    '',
-    'OLLAMA (KI-Gespraeche, optional)',
-    ('  Home Assistant > Geraete & Dienste > Ollama > Server-URL: http://'+$ip+':11434'),
-    '  TAFA > Text-KI (llm_agent): die in HA angelegte conversation.*-Entitaet waehlen',
-    '',
-    'ENGLISH - WHERE TO ENTER?',
-    '',
-    'GPU WHISPER (speech recognition)',
-    ('  Home Assistant > Devices & services > Wyoming Protocol: Host '+$ip+' | Port 10300'),
-    ('  TAFA > Control Center > Settings > GPU Whisper IP (gpu_stt_host): '+$ip),
-    '  TAFA > GPU Whisper (gpu_stt): select the stt.* entity created in HA',
-    '',
-    'QWEN (speech output)',
-    ('  TAFA > Control Center > Settings > Qwen (gpu_base): http://'+$ip+':10502'),
-    '',
-    'OLLAMA (text AI, optional)',
-    ('  Home Assistant > Devices & services > Ollama > Server URL: http://'+$ip+':11434'),
-    '  TAFA > Text AI (llm_agent): select the conversation.* entity created in HA',
-    '',
-    'Nur die GPU-PC-Adressen aus .env / Only addresses of this GPU PC.',
-    'Proxmox-Piper/MP3-Adressen sind nicht in dieser Datei bekannt.',
-    'Proxmox Piper/MP3 addresses are not known to this GPU worker.'
-  )
-  [IO.File]::WriteAllLines($Report,[string[]]$lines,(New-Object Text.UTF8Encoding($false)))
-  Write-Host ('Verbindungsliste / connection guide: '+$Report) -ForegroundColor Cyan
+  # Keep the worker identity across IP changes, without using an API token.
+  $workerId=''
+  if(Test-Path -LiteralPath $WorkerIdFile){
+    $workerId=([string](Get-Content -LiteralPath $WorkerIdFile -Raw)).Trim()
+  }
+  $idValue=[guid]::Empty
+  if(-not [guid]::TryParse($workerId,[ref]$idValue)){
+    $workerId=[guid]::NewGuid().ToString('D')
+    [IO.File]::WriteAllText($WorkerIdFile,$workerId,(New-Object Text.UTF8Encoding($false)))
+  }
+  $running=@()
+  if(Get-Command docker -ErrorAction SilentlyContinue){
+    try {
+      $running=@(& docker compose --profile '*' ps --status running --services 2>$null)
+      if($LASTEXITCODE -ne 0){$running=@()}
+    }catch{ $running=@() }
+  }
+  $running=@($running | ForEach-Object {$_.Trim()} | Where-Object {$_})
+  $hasWhisper=$running -contains 'whisper'
+  $hasQwen=$running -contains 'qwen-stream'
+  $hasOllama=($running -contains 'ollama') -and ($running -contains 'ollama-gateway')
+  $selectedModel=''
+  if($hasOllama){
+    try {
+      $models=@((Invoke-RestMethod -Uri ('http://'+$ip+':11434/api/tags') -TimeoutSec 2).models |
+        ForEach-Object {if($_.name){[string]$_.name}})
+      if($models -contains 'qwen3:4b-instruct'){$selectedModel='qwen3:4b-instruct'}
+      elseif($models.Count -eq 1){$selectedModel=[string]$models[0]}
+    }catch{ $selectedModel='' }
+  }
+  $manifest=[ordered]@{
+    schema='tafa-connection-v1'
+    kind='gpu_worker'
+    device_id=$workerId
+    host=$ip
+    services=[ordered]@{
+      wyoming_stt=[ordered]@{host=$ip;port=10300;enabled=$hasWhisper}
+      qwen_tts=[ordered]@{url=('http://'+$ip+':10502');enabled=$hasQwen}
+      ollama=[ordered]@{url=('http://'+$ip+':11434');enabled=$hasOllama;model=$selectedModel}
+    }
+  }
+  $json=$manifest | ConvertTo-Json -Depth 7
+  [IO.File]::WriteAllText($Report,[string]$json,(New-Object Text.UTF8Encoding($false)))
+  Write-Host ('TAFA Import-JSON: '+$Report) -ForegroundColor Cyan
+  Write-Host 'In TAFA > Einrichtung > JSON importieren. Die Datei enthaelt keine Tokens.'
 }
 try {
   Ensure-Env
@@ -138,7 +142,7 @@ try {
   }
   Write-Report
   if($Action -in @('Prepare','Install','Start')){
-    Write-Host '04-Verbindungsdaten.bat zeigt nur IP-Endpunkte und Eintragungsorte.' -ForegroundColor Cyan
+    Write-Host '04-Verbindungsdaten.bat oeffnet die TAFA-Importdatei tafa-worker.json.' -ForegroundColor Cyan
   }
   Write-Host 'Fertig.' -ForegroundColor Green
   exit 0

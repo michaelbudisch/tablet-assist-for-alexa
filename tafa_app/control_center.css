@@ -161,3 +161,15 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;co
   html{scroll-behavior:auto}
   .tab-link,.shortcut,.settings-card input[type=text]{transition:none}
 }
+/* Import assistant matches the Settings tab and stays compact. */
+.import-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:23px;margin-bottom:16px;box-shadow:var(--shadow)}
+.import-card h3{font-size:19px;letter-spacing:-.02em;margin:3px 0 6px}
+.import-card p{font-size:13px;color:var(--muted);margin:5px 0 13px}
+.import-card label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}
+.import-card input[type=file]{border:1px dashed var(--line);display:block;width:100%;border-radius:9px;padding:13px;background:var(--surface-alt);color:var(--ink)}
+.import-card textarea{display:block;width:100%;border:1px solid var(--line);background:var(--surface-alt);color:var(--ink);border-radius:10px;padding:11px;resize:vertical;min-height:104px;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
+.import-review{padding:18px;background:var(--accent-soft);border:1px solid var(--line);border-radius:11px;margin-top:18px}
+.import-review h4{margin:0 0 6px;font-size:15px}
+.import-review ul{padding-left:22px;max-height:240px;overflow:auto}
+.import-review li{font-size:13px;margin-bottom:5px;overflow-wrap:anywhere}
+.import-review .btn{background:var(--accent);color:white}

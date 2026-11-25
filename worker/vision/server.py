@@ -137,7 +137,7 @@ def create_app(default_model=DEFAULT_MODEL, call=ollama_json):
 
     @app.get("/capabilities")
     def capabilities():
-        return jsonify(worker_version="2.2.3", api_version=2, benchmark_api=1, sequence_api=1,
+        return jsonify(worker_version="2.2.4", api_version=2, benchmark_api=1, sequence_api=1,
                        endpoints=["/describe", "/detect", "/health", "/runtime", "/capabilities",
                                   "/benchmark/sequence", "/describe/sequence"],
                        sequence_profiles={"standard": {"frames": 12, "max_image_edge": 768},

@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.23 — JSON worker and speech CT setup import
+- Add a compact JSON file/paste wizard to Settings: preview first, explicitly confirm changes, and store a stable worker/CT identity for future IP reimport.
+- Provision Home Assistant Wyoming and optional Ollama through a separate admin-only TAFA backend command; preserve unrelated integration entries and existing Assist pipelines. Never auto-download an Ollama model.
+- Apply imported IPs and discovered STT/conversation entity IDs to Supervisor's existing App options, without creating a parallel settings store. A Home Assistant Core restart may be needed after installing the new backend.
+- Worker 2.2.4 exports `tafa-worker.json`; Proxmox installer exports `tafa-speech.json` with the same schema.
+
+
 ## 0.3.22 — redesigned Control Center with clear tabs and refreshed colors
 - Redesigned the admin-only Control Center with four accessible responsive tabs: Overview, Settings, Connections, Maintenance & help, replacing the long scrolling page.
 - New restrained slate/navy/teal palette, light/dark modes, compact status dashboard, distinct endpoint cards, keyboard-accessible navigation and reduced-motion support.

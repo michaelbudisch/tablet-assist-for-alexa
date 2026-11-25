@@ -1,5 +1,10 @@
 # GPU worker changelog
 
+## 2.2.4
+
+- Replace the verbose connection TXT with machine-readable `tafa-worker.json`. Save a stable worker ID across LAN IP changes and export only running Whisper/Qwen/Ollama endpoints. No credentials or model changes.
+
+
 ## 2.2.3
 
 - Make `04-Verbindungsdaten.bat` generate a concise bilingual endpoint-to-field list, including Wyoming GPU 10300, Qwen TTS 10502 and optional Ollama 11434. Only known local GPU addresses are included; no long instructions or invented Proxmox IPs.

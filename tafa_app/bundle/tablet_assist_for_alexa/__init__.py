@@ -15,6 +15,7 @@ from homeassistant.components import frontend, panel_custom
 
 from .const import DOMAIN, ROOMS, settings
 from .app_settings import async_sync_from_app
+from .ha_provision import provision_manifest
 from .announcement import audio_url, allowed_targets
 from .reminders import Reminders
 from .local_data import LocalData
@@ -34,6 +35,7 @@ ANNOUNCE_SCHEMA = vol.Schema({
 async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, learning_command)
     websocket_api.async_register_command(hass, async_sync_from_app)
+    websocket_api.async_register_command(hass, provision_manifest)
     # All files required at runtime are part of this integration's directory.
     await hass.http.async_register_static_paths([
         StaticPathConfig("/tablet_assist_for_alexa/keepalive.js", str(Path(__file__).parent / "frontend" / "keepalive.js"), False),

@@ -164,3 +164,37 @@ def ensure_pipeline(external_wyoming=False, configured_stt=""):
             wake_word_entity=None,wake_word_id=None,
             prefer_local_intents=True)
         return "pipeline_created"
+
+
+def provision_worker_manifest(manifest, tracked):
+    """Provision only administrator-confirmed endpoints through HA's own flow API.
+
+    The HA integration owns safe entity matching and config entries. App process
+    sends its manifest over the authenticated Supervisor/Core WebSocket, never
+    requests user-supplied API tokens and never opens public worker URLs.
+    """
+    if not TOKEN:
+        raise RuntimeError("Supervisor API access unavailable")
+    from websockets.sync.client import connect
+    with connect("ws://supervisor/core/websocket",open_timeout=6,close_timeout=2) as ws:
+        first=json.loads(ws.recv(timeout=8))
+        if first.get("type")=="auth_required":
+            ws.send(json.dumps({"type":"auth","access_token":TOKEN}))
+            first=json.loads(ws.recv(timeout=8))
+        if first.get("type")!="auth_ok":
+            raise RuntimeError("Home Assistant WebSocket authentication failed")
+        ws.send(json.dumps({
+            "id":1,"type":"tablet_assist_for_alexa/provision_manifest",
+            "manifest": {key:manifest[key] for key in
+                         ("kind","host","device_id","services")},
+            "tracked": tracked,
+        }))
+        for _ in range(8):
+            reply=json.loads(ws.recv(timeout=35))
+            if reply.get("id")!=1:
+                continue
+            if not reply.get("success"):
+                error=reply.get("error",{})
+                raise RuntimeError("TAFA HA provisioning not ready: "+str(error.get("code","unknown")))
+            return reply.get("result",{})
+    raise RuntimeError("HA provisioning did not answer")

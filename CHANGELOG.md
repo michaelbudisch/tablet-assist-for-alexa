@@ -1,3 +1,6 @@
+## TAFA App 0.3.23 / GPU Worker 2.2.4 — confirmed JSON import
+- Introduce JSON export from GPU Worker and Proxmox speech CT with stable device IDs, and a preview/confirm import in TAFA Control Center. Home Assistant provisions Wyoming and supported Ollama agents without overwriting unrelated integrations or downloading unknown models. Reimport the same device ID after IP changes.
+
 ## TAFA App 0.3.21 / GPU Worker 2.2.3 — endpoint status and concise connection TXT
 - The unified Control Center now shows read-only reachability for configured Piper, Qwen, GPU-Whisper Wyoming TCP and MP3 endpoints and the last HA STT backend when available. It suggests GPU Whisper IP from Qwen URL when both run on the same LAN computer.
 - GPU Worker TXT lists only its own known IP endpoints and exact Home Assistant/TAFA destinations (DE/EN); no extra instructions. Public HTTPS addresses are not automatically probed.

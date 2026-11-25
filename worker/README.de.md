@@ -1,4 +1,4 @@
-# Jarvis GPU Worker 2.2.3
+# Jarvis GPU Worker 2.2.4
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -9,6 +9,10 @@ Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erste
 **Sicherheit:** Diese HTTP-Schnittstellen akzeptieren Anfragen ohne zusätzlichen Worker-Schlüssel. Die Docker-Ports werden an die konfigurierte private `LAN_IP` gebunden. In der Windows-Firewall ausschließlich den Home-Assistant- und gegebenenfalls Proxmox-Server zulassen; keine Gastnetze, VPN-Weiterleitung, Reverse-Proxies auf Generator-Ports oder Router-Portfreigaben. Ein öffentlicher HTTPS-Proxy darf ausschließlich kurze, zufällig benannte MP3-Dateien per GET anbieten.
 
 
+
+## 2.2.4 – TAFA-Import per JSON
+
+Nach Installation erzeugt `04-Verbindungsdaten.bat` statt einer langen Textdatei die Datei **`tafa-worker.json`**. Sie enthält eine dauerhaft gespeicherte Rechnerkennung, die private IP und nur tatsächlich gestartete Wyoming-, Qwen- und optionale Ollama-Dienste. TAFA kann diese Datei im Control Center unter Einrichtung importieren, vorhandene Verbindungen zuordnen und dieselbe Rechnerkennung beim späteren Reimport nach IP-Änderung erkennen. Ollama braucht einen bereits installierten Textmodellnamen, andernfalls fordert TAFA eine bewusste Auswahl an. Die Kennung ist kein Zugriffstoken; keine Router-Portfreigaben einrichten. `.env` und Modelle werden nicht verändert.
 
 ## 2.2.3 – Kurze Endpunktliste
 
