@@ -1,5 +1,8 @@
 # Manual Home Assistant setup and Android tablet (legacy)
 
+> **TAFA 0.3.10 / integration 0.4.3:** This is the historical manual two-integration Jarvis guide. For new installations do **not** follow the legacy API-token or two-component steps. Instead use [TAFA App with optional external Proxmox speech](app.md) and the [setup guide](setup-guide.md). Private GPU/MP3 services need no additional TAFA API tokens; normal HA authorization is still required.
+
+
 **English** | [Deutsch](../home-assistant.md) · [Project overview](../../README.md)
 
 The repository contains sanitized legacy integrations and templates. The [Marketplace path](marketplace.md) is recommended for new users; the following is an alternative, not an upgrade procedure.
