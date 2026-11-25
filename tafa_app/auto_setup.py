@@ -130,9 +130,17 @@ def ensure_pipeline():
         if not all((stt,tts,agent)):
             return "waiting_for_entities"
         pipelines=rpc("assist_pipeline/pipeline/list")
-        if any(str(row.get("name","")).casefold()=="tafa lokal"
-               for row in (pipelines or {}).get("pipelines",[])):
-            return "pipeline_exists"
+        existing = next(
+            (row for row in (pipelines or {}).get("pipelines",[])
+             if str(row.get("name", "")).casefold() == "tafa lokal"), None
+        )
+        if existing is not None:
+            # Do not overwrite user-configured pipelines, but do not claim
+            # a broken or half-configured one is voice-ready, either.
+            required = ("stt_engine", "tts_engine", "conversation_engine")
+            return ("pipeline_exists"
+                    if all(existing.get(key) for key in required)
+                    else "pipeline_needs_review")
         rpc("assist_pipeline/pipeline/create",
             name="TAFA Lokal",language="de",
             conversation_engine=agent,conversation_language="de",
