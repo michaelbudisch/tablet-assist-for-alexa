@@ -177,10 +177,18 @@ if pct config "$CTID" >/dev/null 2>&1 || qm config "$CTID" >/dev/null 2>&1; then
   die "Die ID wurde zwischenzeitlich belegt."
 fi
 printf '\nLege neuen CT %s an ...\n' "$CTID"
-pct create "$CTID" "$TPL_STORE:vztmpl/$TEMPLATE" \
-  --hostname tafa-voice --unprivileged 1 --ostype debian \
-  --cores "$CORES" --memory "$RAM" --swap 1024 --rootfs "$STORE:$DISK" \
-  --net0 "$NET" --onboot 1
+# Proxmox VE 9 container bug #8295: umask 0077 makes the transient
+# /var/lib/lxc/CTID/rootfs directories inaccessible to the mapped root
+# of an unprivileged container during the archive extraction.
+# Use the system-default umask only for pct create. Secrets and staging
+# still use the restrictive umask 0077 set above.
+(
+  umask 0022
+  pct create "$CTID" "$TPL_STORE:vztmpl/$TEMPLATE" \
+    --hostname tafa-voice --unprivileged 1 --ostype debian \
+    --cores "$CORES" --memory "$RAM" --swap 1024 --rootfs "$STORE:$DISK" \
+    --net0 "$NET" --onboot 1
+)
 CREATED=1
 pct start "$CTID"
 tar -C "$SOURCE" -czf "$WORK/installer.tar.gz" speechserver proxmox
