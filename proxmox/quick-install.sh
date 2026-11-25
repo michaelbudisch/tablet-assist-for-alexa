@@ -111,8 +111,50 @@ assert len(host)<=253 and re.fullmatch(label+r"(?:\."+label+r")+",host)
 assert not host.endswith(".local")
 PY
 fi
+# With an existing public Nginx CT, keep router 80/443 unchanged.
+# The new CT is only the fresh speech backend; the shared proxy gets a NEW site.
+printf '\nHTTPS-Modus: dedicated = neuer CT mit eigenem Nginx/Portweiterleitung;\n'
+printf '            shared = bereits vorhandener zentraler Nginx-CT;\n'
+printf '            none = noch kein oeffentlicher HTTPS-Zugriff.\n'
+ask "HTTPS-Modus (dedicated/shared/none)" "dedicated"
+PUBLIC_MODE="$REPLY_VALUE"
+PROXY_CT=""
+PROXY_IP=""
+case "$PUBLIC_MODE" in
+  dedicated) : ;;
+  none)
+    [[ -z "$PUBLIC_HOST" ]] || die "Fuer eine Domain bitte dedicated oder shared waehlen."
+    ;;
+  shared)
+    [[ -n "$PUBLIC_HOST" ]] || die "Shared-Proxy-Modus erfordert einen neuen Audio-Hostnamen."
+    ask "CT-ID des vorhandenen zentralen Nginx-Proxys" "101"
+    PROXY_CT="$REPLY_VALUE"
+    [[ "$PROXY_CT" =~ ^[1-9][0-9]{2,7}$ && "$PROXY_CT" != "$CTID" ]] || die "Ungueltige Proxy-ID."
+    [[ "$(pct status "$PROXY_CT" 2>/dev/null)" == *running* ]] || die "Proxy CT laeuft nicht."
+    pct exec "$PROXY_CT" -- nginx -t || die "Vorhandener Nginx hat Konfigurationsfehler."
+    pct exec "$PROXY_CT" -- command -v certbot >/dev/null || die "Certbot fehlt auf Proxy-CT."
+    if pct exec "$PROXY_CT" -- test -e /etc/nginx/sites-available/tablet-assist-audio; then
+      die "Ein TAFA Audio-vHost existiert bereits auf dem Proxy; nicht ueberschreiben."
+    fi
+    PROXY_IP="$(pct exec "$PROXY_CT" -- hostname -I | tr ' ' '\n' | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -n1)"
+    [[ -n "$PROXY_IP" ]] || die "Keine private IPv4-Adresse des Proxy-CT gefunden."
+    printf 'Bestehender Proxy-CT %s hat LAN-IP %s und behaelt 80/443.\n' "$PROXY_CT" "$PROXY_IP"
+    printf 'Es wird spaeter nur eine NEUE Audio-Site hinzugefuegt, keine bestehende veraendert.\n'
+    ;;
+  *) die "Nur dedicated, shared oder none moeglich." ;;
+esac
+if [[ "$PUBLIC_HOST" == *.duckdns.org ]]; then
+  printf '\nDuckDNS: Domain %s vorher unter https://www.duckdns.org registrieren.\n' "$PUBLIC_HOST"
+  printf 'Der DuckDNS-Update-Token bleibt privat und ist KEIN TAFA-API-Token.\n'
+fi
 printf '\nNEUER CT %s | %s CPU | %s MiB RAM | %s GiB | %s\n' "$CTID" "$CORES" "$RAM" "$DISK" "$STORE"
 printf 'Netzwerk %s | Qwen: %s | HTTPS-Hostname: %s\n' "$NET" "$GPU_BASE" "$PUBLIC_HOST"
+printf 'HTTPS-Modus: %s | bestehender Proxy-CT: %s\n' "$PUBLIC_MODE" "${PROXY_CT:-keiner}"
+if [[ "$PUBLIC_MODE" == shared ]]; then
+  printf 'Zusatz-Bestaetigung: Eine neue Nginx-Site auf CT %s vorbereiten? JA eintippen: ' "$PROXY_CT"
+  IFS= read -r PROXY_CONFIRM </dev/tty
+  [[ "$PROXY_CONFIRM" == JA ]] || die "Proxy-Aenderung nicht bestaetigt; nichts erstellt."
+fi
 printf 'CT-ID %s zur endgueltigen Bestaetigung eintippen: ' "$CTID" >/dev/tty
 IFS= read -r CONFIRM </dev/tty
 [[ "$CONFIRM" == "$CTID" ]] || die "Abgebrochen, nichts erstellt."
@@ -145,11 +187,38 @@ tar -C "$SOURCE" -czf "$WORK/installer.tar.gz" speechserver proxmox
 pct push "$CTID" "$WORK/installer.tar.gz" /tmp/tafa-installer.tar.gz
 pct exec "$CTID" -- mkdir -p /opt/tafa-installer
 pct exec "$CTID" -- tar -xzf /tmp/tafa-installer.tar.gz -C /opt/tafa-installer
-pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE"
+if [[ "$PUBLIC_MODE" == shared ]]; then
+  pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE" shared "$PROXY_IP"
+  NEW_CT_IP="$(pct exec "$CTID" -- hostname -I | tr ' ' '\n' | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -n1)"
+  [[ -n "$NEW_CT_IP" ]] || die "Neuer CT hat noch keine private IPv4."
+  PROXY_SETUP="/opt/tafa-audio-setup-$CTID"
+  pct exec "$PROXY_CT" -- test ! -e "$PROXY_SETUP" || die "Das Verzeichnis $PROXY_SETUP ist belegt."
+  pct exec "$PROXY_CT" -- mkdir -m 0700 "$PROXY_SETUP"
+  for filename in install-nginx-proxy.sh render-nginx-proxy.py check-proxy-host.py; do
+    pct push "$PROXY_CT" "$SOURCE/proxmox/$filename" "$PROXY_SETUP/$filename"
+  done
+  # Existing sites are never edited. Prepare only a new hostname and ACME webroot.
+  pct exec "$PROXY_CT" -- bash "$PROXY_SETUP/install-nginx-proxy.sh" prepare "$PUBLIC_HOST" "$NEW_CT_IP" --shared
+  printf '\nNEUE Domain vorbereitet auf CT %s, ohne bestehende Sites zu veraendern.\n' "$PROXY_CT"
+  printf 'Wenn DNS aktuell ist, auf dem Proxmox-Host diese Schritte ausfuehren:\n'
+  printf '  pct enter %s\n' "$PROXY_CT"
+  printf '  certbot certonly --webroot -w /var/lib/tablet-assist-acme --cert-name %s -d %s\n' "$PUBLIC_HOST" "$PUBLIC_HOST"
+  printf '  bash %s/install-nginx-proxy.sh enable %s %s --shared\n' "$PROXY_SETUP" "$PUBLIC_HOST" "$NEW_CT_IP"
+elif [[ "$PUBLIC_MODE" == none ]]; then
+  pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "" "$GPU_BASE"
+else
+  pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE"
+fi
 printf '\n=== Installation beendet: CT %s ===\n' "$CTID"
 pct exec "$CTID" -- /usr/local/sbin/tafa-info || true
 printf '\nProxmox → CT %s → Konsole: dauerhafte Statusinfos.\n' "$CTID"
 printf 'PVE-Shell: pct enter %s\n' "$CTID"
 printf 'Im CT: tafa-info (Status) | tafa-setup (HTTPS-Assistent)\n'
-printf 'DNS und Router werden bewusst nicht automatisch umgestellt.\n'
+if [[ "$PUBLIC_MODE" == shared ]]; then
+  printf 'Der bisherige Proxy CT %s bleibt oeffentlicher HTTPS-Eingang; keine Routerumstellung.\n' "$PROXY_CT"
+  printf 'Die neue Domain wird erst nach Certbot und enable erreichbar.\n'
+  printf 'DuckDNS-Aktualisierung bei dynamischer oeffentlicher IP separat einrichten.\n'
+else
+  printf 'DNS und Router werden bewusst nicht automatisch umgestellt.\n'
+fi
 CREATED=0
