@@ -10,12 +10,16 @@
 
 TAFA combines local speech recognition, Home Assistant data, optional AI models and natural speech. An Android tablet acts as the microphone and interface; the Echo retains its ordinary Bluetooth and Alexa functions.
 
+## Marketplace scope and backend roadmap
+
+The current link installs the `tablet_assist_for_alexa` base integration only. The separate `jarvis_tablet_audio` backend (multiroom, device registration, native wake-word routing and camera/vision interfaces) is not installed by this link. Marketplace supports one integration per repository; the target is a single configurable domain with these backend capabilities ported and tested, while retaining documented compatibility with Device Bridge 1.0.0. External CPU/GPU speech servers and the Android APK remain separate installations. The private TAFA dashboard, its assets and household configuration are excluded. Do not install a second integration over a working system or assume automatic migration. See the [backend consolidation plan](docs/en/backend-roadmap.md).
+
 ## Features at a glance
 
 | Area | Capabilities |
 |---|---|
 | Voice | Whisper STT, wake word, conversation, follow-up questions |
-| Audio | CPU Piper, optional Qwen streaming, Echo Relay via Bluetooth |
+| Audio | CPU Piper, optional Qwen streaming, TAFA Device Bridge via Bluetooth |
 | Home control | Native HA intents, weather, energy, heating, Bring!, waste collection, reminders |
 | AI | Optional local Ollama LLM, model and context settings |
 | Native Android app | Echo Relay, Bluetooth streaming, front/rear camera, optional image-motion detection for HA |
@@ -26,7 +30,7 @@ TAFA combines local speech recognition, Home Assistant data, optional AI models 
 
 **Tested in the existing private home dashboard:** native Bluetooth playback, HA speech action, personalized greeting and automatic test-timer cancellation. The generic infobox is installed there; the Ring workflow and standalone updated card still need end-to-end testing.
 
-> **Developer preview:** base integration 0.3.1, backend 1.7.0, GPU Worker 2.2.0 (updated schema), APK 1.0.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
+> **Developer preview:** base integration 0.3.1, backend 1.7.1, GPU Worker 2.2.0 (updated schema), APK 1.0.0. Optional card 1.3.0 and automation templates are not a fully verified fresh-install release. A GPU is not required for the CPU setup.
 
 ## New: native HA automations
 
@@ -34,9 +38,9 @@ TAFA combines local speech recognition, Home Assistant data, optional AI models 
 
 ## Architecture
 
-Home Assistant is the central controller. The Android device handles voice input, camera capture and Bluetooth audio output through the native Echo Relay app.
+Home Assistant is the central controller. The Android device handles voice input, camera capture and Bluetooth audio output through the native TAFA Device Bridge app.
 
-**Voice:** Android microphone → Home Assistant Assist → Whisper (STT) → conversation router → local HA intents or LLM → Piper or Qwen (TTS) → Echo Relay on Android → Bluetooth → Amazon Echo.
+**Voice:** Android microphone → Home Assistant Assist → Whisper (STT) → conversation router → local HA intents or LLM → Piper or Qwen (TTS) → TAFA Device Bridge on Android → Bluetooth → Amazon Echo.
 
 **Camera & motion:** Android front/rear camera → Home Assistant (camera entity and motion sensor) → optional vision worker → image description or HA detection event.
 
