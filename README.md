@@ -6,7 +6,7 @@
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.9**, integrated HA component **0.4.3**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.10**, integrated HA component **0.4.3**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
@@ -16,7 +16,7 @@
 2. Settings → Apps → Install app → Repositories: add `https://github.com/michaelbudisch/tablet-assist-for-alexa`.
 3. Install and start **TAFA**, then open its built-in Control Center (Ingress).
 4. TAFA stages **one** Home Assistant integration at `custom_components/tablet_assist_for_alexa`. Restart Home Assistant once to discover the new component.
-5. TAFA downloads a German Piper voice and Faster-Whisper CPU model and checks their actual status. When the speech service and HA are ready, it attempts to configure the TAFA integration and create the **TAFA Lokal** Assist pipeline without overwriting any existing pipelines. Check Control Center if setup needs attention.
+5. **Before starting the App**, select `speech_mode=local` (CPU Piper/Whisper bundled) or `speech_mode=external` with `external_piper_base=http://PROXMOX-IP:5000` in App Configuration. External mode skips all bundled CPU models. Then add Proxmox Wyoming STT (`PROXMOX-IP:10300`) in HA, select it under TAFA Options, and create an Assist pipeline. Local mode retains automatic **TAFA Lokal** pipeline creation.
 6. Connect the unmodified [TAFA Device Bridge 1.0.0](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
 
 [Full installation guide](docs/en/app.md) · [Multiroom guide](homeassistant/examples/MULTIROOM.md) · [Android instructions](android/README.md)
