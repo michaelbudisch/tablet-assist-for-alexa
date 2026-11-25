@@ -1,4 +1,5 @@
 ## Integration 0.4.0 — unified backend candidate
+- Guided Proxmox installer, recovery wizard and CT console are fully English. Users can choose a validated container hostname (default `tafa-voice`); existing/running CT hostnames are unchanged.
 - Single TAFA integration with native Device Bridge API compatibility, multiroom services, camera/motion and opt-in vision. CPU STT can use the local TAFA App. The existing Android APK is unchanged.
 - Release acceptance: automated checks plus clean HA OS installation and real-audio testing required before marking stable.
 
