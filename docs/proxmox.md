@@ -41,24 +41,26 @@ Wenn derselbe Nginx-CT bereits Home Assistant, ShapeAnywhere-MCP und die oeffent
 
 Zum vorsichtigen Aufraeumen gibt es das **nur lesende** Skript `proxmox/audit-shared-proxy.sh`. Es listet aktive Nginx-Seiten, Domains, Proxy-Ziele sowie Zertifikatsablaufdaten auf, ohne Einstellungen zu veraendern. Erst nach dem Pruefen alter Sites etwas entfernen.
 
-## Unterbrochene CT-Installation nach `runuser ... Permission denied` fortsetzen
+## Unterbrochene Neuinstallation ohne CT-Neuerstellung fortsetzen
 
-Bei alten Installer-Versionen wurde die Python-venv mit `umask 077` angelegt. Der Systembenutzer `jarvis-local` konnte deshalb die Pakete nicht ausführen. Der aktuelle Installer verwendet `umask 022` **ausschließlich für die nicht vertrauliche venv-Installation**. Bereits heruntergeladene Pakete müssen nicht gelöscht werden.
+Wenn der neue Debian-CT bereits erstellt wurde, die Proxmox-Webkonsole aber geschlossen wurde, gibt es zwei unterstützte Wiederaufnahmepunkte: **(1) der leere neue CT, in dem noch kein TAFA installiert ist**, und **(2) nach `pip install` bei `runuser ... Permission denied`**, bevor Dienste konfiguriert wurden. Der Installer prüft den Zustand und verändert keine bereits vollständig eingerichtete TAFA-Installation.
 
-Wenn ein **neuer CT bereits existiert** und die Installation **genau nach dem `pip install` bei `runuser: failed to execute /opt/jarvis-local/venv/bin/python: Permission denied` abgebrochen** ist, auf dem **Proxmox-Host** starten:
+Bei alten Installer-Versionen wurde die Python-venv mit `umask 077` angelegt. Der aktuelle Installer verwendet `umask 022` ausschließlich für die venv-Installation. Bereits geladene Pakete können dadurch erhalten bleiben.
+
+Auf dem **Proxmox-Host** starten:
 
 ```bash
 curl -fsSLo /root/tafa-resume.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/resume-install.sh && bash /root/tafa-resume.sh
 ```
 
-Der Assistent fragt die CT-ID, die neue registrierte Audio-Domain, optional den GPU-Worker und den bestehenden Proxy-CT ab. Für den Fall mit einem zentralen Proxy `shared` verwenden. Er kontrolliert den genauen Abbruchzustand und verlangt die Bestätigung `FORTSETZEN`; er erstellt keinen neuen CT, entfernt keine Container, ändert keine bestehenden Websites und übernimmt die vorhandene Python-Umgebung. Dann bereitet er **eine zusätzliche** Audio-Website vor und zeigt die Certbot-/HTTPS-Befehle. Bei andersartigen Fehlern nicht blind fortsetzen.
+Der Assistent fragt die CT-ID, die neue registrierte Audio-Domain, optional den GPU-Worker und den bestehenden Proxy-CT ab. Für den Fall mit einem zentralen Proxy `shared` verwenden. Er kontrolliert den Abbruchzustand und verlangt die englische Bestätigung `RESUME`; er erstellt keinen neuen CT, entfernt keine Container und ändert keine bestehenden Websites. Ist der CT noch leer, installiert er TAFA; andernfalls repariert er die unterbrochene Python-Umgebung. Dann bereitet er **eine zusätzliche** Audio-Website vor und zeigt die Certbot-/HTTPS-Befehle. Bei andersartigen Fehlern nicht blind fortsetzen.
 
 ## Neuinstallation testen, obwohl bereits ein zentraler Nginx-Proxy läuft
 
 **Beispiel: Proxmox CT 101 bleibt für Home Assistant, ShapeAnywhere-MCP und Alexa zuständig.** So kannst du den Installer trotzdem vollständig testen, ohne 80/443 an einen anderen CT weiterzuleiten.
 
 1. Auf [duckdns.org](https://www.duckdns.org) eine **neue, noch verfügbare Subdomain** anlegen, z. B. `tafa-neu.duckdns.org`. DuckDNS-Domains werden im Web-Dashboard registriert; die dokumentierte Update-API ändert nur den DNS-Eintrag bereits registrierter Domains. Bestehende Domainnamen behalten.
-2. Im **Proxmox-Host** den Ein-Zeilen-Installer oben starten, neuen freien CT erstellen und bei **HTTPS-Modus** `shared` wählen. Danach den **bereits bestehenden Nginx-CT** angeben (z. B. `101`) und die zusätzliche Nginx-Audio-Site ausdrücklich mit `JA` bestätigen.
+2. Im **Proxmox-Host** den Ein-Zeilen-Installer oben starten, neuen freien CT erstellen und bei **HTTPS-Modus** `shared` wählen. Danach den **bereits bestehenden Nginx-CT** angeben (z. B. `101`) und die zusätzliche Nginx-Audio-Site ausdrücklich mit `YES` bestätigen.
 3. Der neue CT installiert **Piper, Whisper und MP3**, aber **keinen zweiten öffentlichen Nginx-Server**. Der alte Nginx-CT behält seine öffentlichen Portfreigaben. Der neue CT liefert MP3-Dateien auf Port 8080 ausschließlich an die IP des gewählten Proxys (zusätzliche Firewall-Einschränkungen empfohlen).
 4. Der Installer kopiert die benötigten Dateien in ein **neues Verzeichnis** auf dem bestehenden Proxy und ruft dort `prepare ... --shared` auf. Dabei wird nur eine neue, streng begrenzte Audio-Site angelegt; bereits existierende Websites, Zertifikate und Routing-Regeln werden nicht überschrieben.
 5. Nach erfolgter DNS-Aktualisierung auf **CT 101** das vom Installer ausgegebene `certbot certonly --webroot ...` ausführen und danach die ebenfalls ausgegebene `install-nginx-proxy.sh enable ... --shared`-Zeile. So wird das TLS-Zertifikat dort verwaltet, wo die öffentlichen Ports ankommen.
