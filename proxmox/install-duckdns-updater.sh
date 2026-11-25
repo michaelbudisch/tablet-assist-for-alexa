@@ -16,7 +16,7 @@ DOMAIN="$1"
 if [[ ! "$DOMAIN" =~ ^[a-z0-9][a-z0-9-]{0,61}\.duckdns\.org$ ]]; then
   echo "Use a registered DuckDNS domain label (lowercase), e.g. example.duckdns.org"; exit 2
 fi
-LABEL="\${DOMAIN%.duckdns.org}"
+LABEL="${DOMAIN%.duckdns.org}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 [[ -f "$HERE/duckdns-update.py" ]] || { echo "Missing updater source"; exit 1; }
 install -d -m 0700 /etc/tafa-duckdns
