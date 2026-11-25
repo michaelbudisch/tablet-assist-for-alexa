@@ -78,6 +78,15 @@ Bei **Gong ohne Sprache** zuerst die verwendete Notify-Entität prüfen und dana
 
 **Wichtig:** Die Rufwort-Geräteliste und die Audio-Räume sind getrennte Dienste. „Tablet registriert“ beweist nicht, dass der Audio-Player verbunden ist. Der Audio-Raum benötigt einen **eigenen aktiven HA-Benutzer ohne Administratorrechte**; der Administrator ordnet diesen über das TAFA-Dashboard zu, statt über Entwicklerwerkzeuge. Ein Token wird nie im Dashboard angezeigt oder hinterlegt. Der alte Helfer `input_text.jarvis_native_audio_command` ist im Multiroom-Modus nicht erforderlich.
 
+
+### Sprachtest nach der Tablet-Einrichtung
+
+**TAFA → Geräte → [Tablet] → Sprachtest · Einmal sprechen** aufrufen und den Abschnitt aufklappen. TAFA wählt die vorhandene **TAFA Lokal**-Assist-Pipeline mit Whisper und **Tablet Assist Stream** automatisch; andere vollständige Pipelines lassen sich auswählen. Tippe auf **Einmal sprechen**, erlaube dem Browser das Mikrofon, stelle eine kurze Frage und höre die Antwort über den verbundenen Tablet-/Bluetooth-Player. Das verwendet den bereits getesteten Assist- und Multiroom-Audioweg, keine zusätzlichen HA-Helfer oder Scripts.
+
+Der Browser benötigt eine **vertrauenswürdige HTTPS-Adresse** (oder localhost) für Mikrofonzugriff. Der Test kann auch mit einem angemeldeten HA-Administrator gezielt auf einen ihm angezeigten, bereits gekoppelten Tablet-Raum ausgeben; reguläre Tablet-Benutzer testen ausschließlich ihren eigenen Audio-Raum. Die Sprachausgabe wählt wie gewohnt Qwen mit Piper als Fallback. Beim Verlassen der Seite beziehungsweise Schließen des Sprachtests wird die Mikrofonaufnahme gestoppt. Wenn keine vollständige Assist-Pipeline (STT + TTS) existiert, wird auf die HA-Sprachassistenten-Konfiguration verwiesen.
+
+Der Sprachtest ist eine Funktion des **HA-Browsers/Dashboards**. Die Android **Device Bridge 1.0.0** überträgt weiterhin nur das Rufwort-Ereignis, nicht die nachfolgende Frage aus dem Hintergrund.
+
 ## Wo sind die Einstellungen?
 
 **Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bestehende App-eigene HA-Einträge werden beim Neustart automatisch synchronisiert.
