@@ -29,7 +29,8 @@ def pure_source(path, funcs=(), variables=()):
 
 def load_validators():
     namespace = {"ast": ast, "json": json, "re": re, "urlsplit": urlsplit,
-                 "DOMAIN": "tablet_assist_for_alexa"}
+                 "DOMAIN": "tablet_assist_for_alexa",
+                 "ROOMS": ("Büro", "Wohnzimmer", "Badezimmer", "Schlafzimmer", "Kinderzimmer")}
     combined = [
         *pure_source(HA / "config_flow.py", ("origin", "room_map"), ("CHOICES",)),
         *pure_source(HA / "sources.py", variables=("SOURCES",)),
