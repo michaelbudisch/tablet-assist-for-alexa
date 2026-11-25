@@ -8,7 +8,6 @@
           "piper_base": "Piper-Adresse",
           "cpu_stt": "CPU-Wyoming-Spracherkennung",
           "gpu_base": "GPU-Streaming-Adresse (optional)",
-          "qwen_token": "GPU-API-Schlüssel (optional)",
           "gpu_stt": "GPU-Wyoming-Spracherkennung (optional)",
           "gpu_stt_host": "GPU-STT-Host (optionaler Schnelltest)",
           "llm_agent": "KI-Konversationsagent (optional)",
@@ -17,7 +16,6 @@
           "voice_variant": "Stimmvariante",
           "conversation_mode": "Gesprächsmodus",
           "mp3_base": "MP3-API-Adresse (optional)",
-          "mp3_token": "MP3-API-Schlüssel (optional)",
           "public_audio_base": "Öffentliche HTTPS-Audioadresse (optional)",
           "rooms_json": "Raumzuordnung (JSON, optional)",
           "mp3_profile": "Klangprofil Durchsagen",
@@ -35,7 +33,6 @@
           "piper_base": "Piper-Adresse",
           "cpu_stt": "CPU-Wyoming-Spracherkennung",
           "gpu_base": "GPU-Streaming-Adresse (optional)",
-          "qwen_token": "GPU-API-Schlüssel (optional)",
           "gpu_stt": "GPU-Wyoming-Spracherkennung (optional)",
           "gpu_stt_host": "GPU-STT-Host (optionaler Schnelltest)",
           "llm_agent": "KI-Konversationsagent (optional)",
@@ -44,7 +41,6 @@
           "voice_variant": "Stimmvariante",
           "conversation_mode": "Gesprächsmodus",
           "mp3_base": "MP3-API-Adresse (optional)",
-          "mp3_token": "MP3-API-Schlüssel (optional)",
           "public_audio_base": "Öffentliche HTTPS-Audioadresse (optional)",
           "rooms_json": "Raumzuordnung (JSON, optional)",
           "mp3_profile": "Klangprofil Durchsagen",
@@ -146,13 +142,12 @@
       },
       "hardware": {
         "title": "Sprachserver & GPU",
-        "description": "Piper läuft entweder in der TAFA-App (Standard) oder auf einem Proxmox-Sprachserver. Bei Proxmox: http://SERVER:5000 eintragen; CPU-Whisper über Wyoming :10300 hinzufügen. Optional den Qwen-Worker http://GPU-PC:10502 samt API-Schlüssel ergänzen. Bei ausgeschaltetem PC bleibt Piper als Reserve. Leere Passwortfelder ändern gespeicherte Schlüssel nicht.",
+        "description": "Piper läuft entweder in der TAFA-App (Standard) oder auf einem Proxmox-Sprachserver. Bei Proxmox: http://SERVER:5000 eintragen; CPU-Whisper über Wyoming :10300 hinzufügen. Optional den Qwen-Worker http://GPU-PC:10502 samt API-Schlüssel ergänzen. Bei ausgeschaltetem PC bleibt Piper als Reserve.",
         "data": {
           "piper_base": "Piper-Serveradresse (TAFA lokal oder Proxmox :5000)",
           "cpu_stt": "Optional: Wyoming-Whisper CPU",
           "hardware_profile": "Routing-Modus",
           "gpu_base": "Optional: Qwen-Streaming-Adresse (:10502)",
-          "qwen_token": "Qwen-API-Schlüssel (leer = bisherigen behalten)",
           "gpu_stt": "Optional: Wyoming GPU-Whisper (:10300)",
           "gpu_stt_host": "GPU-Host für schnellen Erreichbarkeitstest",
           "llm_agent": "Optional: KI-Konversationsagent"
@@ -161,8 +156,7 @@
           "piper_base": "Bei TAFA All-in-one den internen Standard beibehalten. Proxmox-Server: http://SERVER-IP:5000",
           "cpu_stt": "Nur bei externem Wyoming-Whisper; ansonsten TAFA-internes Whisper verwenden.",
           "hardware_profile": "Automatisch: GPU-Qwen bevorzugen und Piper als Reserve nutzen. CPU: immer Piper.",
-          "gpu_base": "Qwen-Stream des separaten GPU-Workers, Port 10502. Leerlassen deaktiviert GPU-TTS.",
-          "qwen_token": "Wird durch worker/Setup.ps1 oder setup-linux.sh in der lokalen .env erzeugt. Nicht in Chats oder Screenshots teilen."
+          "gpu_base": "Qwen-Stream des separaten GPU-Workers, Port 10502. Leerlassen deaktiviert GPU-TTS."
         }
       },
       "announcements": {
@@ -170,14 +164,12 @@
         "description": "Nur nötig, wenn Echo-Lautsprecher Alexa-Ankündigungen per MP3 abspielen sollen. Proxmox: Generator http://SERVER:5001; öffentlicher HTTPS-Audiohost über separaten Nginx-Proxy auf Port 8080 des Sprachservers. Für Tablet→Echo-Bluetooth nichts hier konfigurieren.",
         "data": {
           "mp3_base": "Interne MP3-Generator-URL (:5001)",
-          "mp3_token": "API-Schlüssel (leer = bisherigen behalten)",
           "public_audio_base": "Öffentliche HTTPS-Audioadresse",
           "rooms_json": "Optionale Raum-/Notify-Zuordnung (JSON)",
           "mp3_profile": "Klangprofil",
           "chime": "Signalton vor Durchsage"
         },
         "data_description": {
-          "mp3_token": "PIPER_API_TOKEN aus /etc/jarvis-local.env des Proxmox-Sprachservers. Nur lokal verwenden.",
           "rooms_json": "JSON-Zuordnung: Raumname Wohnzimmer mit Notify-Entität notify.echo_wohnzimmer. Siehe Ersteinrichtungsanleitung."
         }
       },
@@ -229,7 +221,7 @@
       }
     },
     "error": {
-      "invalid_configuration": "Eingaben prüfen: Serveradressen, bestehende Wyoming-Entitäten, GPU-Schlüssel oder Raumzuordnung."
+      "invalid_configuration": "Eingaben prüfen: Serveradressen, bestehende Wyoming-Entitäten, GPU-Adresse oder Raumzuordnung."
     }
   }
 }

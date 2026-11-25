@@ -1,5 +1,5 @@
 """Local Piper-compatible TTS proxy. Only loopback clients may connect.
-Configuration: a root-controlled JSON file containing worker_url, token, mode.
+Configuration: a local JSON file containing worker_url and mode.
 No extra audio/text persistence; no output beyond existing Piper processing.
 """
 import http.server
@@ -24,10 +24,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
-def request_wav(url, body, token=None, timeout=30):
+def request_wav(url, body, timeout=30):
     headers = {"Content-Type": "application/json"}
-    if token:
-        headers["X-API-Key"] = token
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")
     with opener.open(req, timeout=timeout) as response:
         data = response.read(MAX_WAV+1)
@@ -70,7 +68,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 with open(CONFIG, encoding="utf-8") as f:
                     cfg = json.load(f)
                 worker = cfg.get("worker_url", "")
-                token = cfg.get("token", "")
                 url = urllib.parse.urlsplit(worker)
                 import ipaddress
                 ip = ipaddress.ip_address(url.hostname or "")
@@ -78,14 +75,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     and url.scheme == "http" and url.port == 10501
                     and ip.version == 4 and any(ip in ipaddress.ip_network(n) for n in ("10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"))
                     and not url.username and not url.password and url.path in ("", "/") and not url.query and not url.fragment
-                    and isinstance(token,str) and len(token)>=32):
+):
                     try:
                         # Cheap readiness probe avoids waiting for a sleeping PC.
                         with opener.open(worker.rstrip("/")+"/health", timeout=1.5) as h:
                             health = json.loads(h.read(4096))
                         if health.get("ready") is not True or health.get("busy"):
                             raise RuntimeError()
-                        audio = request_wav(worker.rstrip("/")+"/synthesize",body,token,timeout=18)
+                        audio = request_wav(worker.rstrip("/")+"/synthesize",body,timeout=18)
                         backend="qwen"
                         retry_after=0
                     except Exception:
