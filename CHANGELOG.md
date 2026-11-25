@@ -4,6 +4,11 @@
 
 # Changelog
 
+## TAFA App 0.3.10 / integration 0.4.3 — Proxmox-only speech option
+- Added opt-in external speech-server mode in the App Configuration to avoid duplicate local Piper/Whisper model downloads when using a trusted Proxmox guest.
+- Existing local setup remains the default; external Wyoming STT and Assist pipeline are selected explicitly in Home Assistant.
+- No change to GPU Worker 2.2.1, Android Device Bridge 1.0.0, Nginx proxy or the private dashboard.
+
 ## TAFA integration 0.4.3 / App 0.3.9 — token-free LAN endpoints
 - No additional GPU or MP3 generator API keys in TAFA options or LAN worker requests.
 - GPU Worker 2.2.1 offers token-free Qwen, Vision, Diagnostics and optional Ollama gateway.
