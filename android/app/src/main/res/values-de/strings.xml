@@ -233,4 +233,20 @@
     <string name="native_assist_inactive">Native Spracheingabe ausgeschaltet</string>
     <string name="native_assist_requirements">Unter Verbinden Multiroom-Audio aktivieren, das Tablet in TAFA zuordnen und Player sowie Rufworterkennung starten.</string>
     <string name="native_assist_privacy">Standardmäßig aus. Erst nach erkanntem Rufwort (oder manuellem Test) überträgt das Mikrofon 16-kHz-PCM an den eingestellten Home Assistant, bis die Frage beendet ist. Es werden keine Aufnahmen gespeichert. Während KI-Verarbeitung und Lautsprecherausgabe bleibt das Mikrofon aus. Ausschalten oder Stummschalten beendet die Aufnahme. LAN-HTTP ist unverschlüsselt; vertrauenswürdiges HTTPS bevorzugen.</string>
+    <string name="native_state_ready">Bereit für Hey Jarvis</string>
+    <string name="native_state_connecting">Verbinde mit Home Assistant …</string>
+    <string name="native_state_followup">Warte auf Anschlussfrage …</string>
+    <string name="native_state_authenticating">Prüfe Home-Assistant-Zugriff …</string>
+    <string name="native_state_waiting">Bereite Whisper vor …</string>
+    <string name="native_state_listening">Höre deine Frage …</string>
+    <string name="native_state_transcribing">Whisper erkennt den Text …</string>
+    <string name="native_state_thinking">Verarbeite deine Frage …</string>
+    <string name="native_state_voice">Erzeuge Qwen/Piper-Sprachausgabe …</string>
+    <string name="native_state_playback">Sende Antwort zum Tablet …</string>
+    <string name="native_state_buffering">Puffere die Antwort …</string>
+    <string name="native_state_playing">Wiedergabe über Bluetooth …</string>
+    <string name="native_state_done">Antwort beendet</string>
+    <string name="native_state_no_reply">Keine Antwort; warte auf Rufwort</string>
+    <string name="native_state_error">Fehler bei nativer Spracheingabe</string>
+    <string name="native_busy_notification">Jarvis verarbeitet eine Sprachanfrage</string>
 </resources>
