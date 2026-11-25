@@ -53,6 +53,21 @@ Der [Proxmox-Sprachserver](proxmox.md) enthält zusätzlich:
 
 Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen. Der [Nginx-Proxy-Leitfaden](nginx-proxy.md) beschreibt einen neuen CT oder das sichere Ergänzen eines bestehenden Proxy-CT. In **Apps → TAFA → Konfiguration** anschließend MP3-Generator und öffentliche HTTPS-Adresse und Raum-/Notify-Zuordnung angeben. Keine Ports 5000/5001/10300/10502 öffentlich freigeben. Die internen Generator-Ports niemals aus dem Internet erreichbar machen.
 
+### Alexa Devices: für Qwen-MP3 »Sprechen« statt »Durchsagen« verwenden
+
+**Im getesteten Setup mit der Home-Assistant-Integration „Alexa Devices“:** Die Entität **„Durchsagen“** (`notify.…_durchsagen`) spielte nur den Alexa-Ankündigungston, jedoch nicht die generierte MP3-Datei. Mit **„Sprechen“** (`notify.…_sprechen`) wurde die Qwen-MP3 tatsächlich abgespielt. TAFA übergibt einen `<audio src="https://…/datei.mp3"/>`-Tag an die Notify-Entität. Normale Text-Durchsagen können auf „Durchsagen“ trotzdem funktionieren; das beweist noch keine MP3-Unterstützung.
+
+1. Unter **Einstellungen → Geräte & Dienste → Entitäten** die exakte Entity-ID von **„[Echo-Name] – Sprechen“** kontrollieren (nicht den Anzeigenamen übernehmen).
+2. In **Einstellungen → Apps → TAFA → Konfiguration → Alexa-Räume (JSON)** die Sprechen-Entität eintragen, z. B.:
+
+   ```json
+   {"Büro":{"notify":"notify.buro_dot_sprechen"}}
+   ```
+
+3. App-Konfiguration speichern, TAFA neu starten und die Testdurchsage unter **TAFA → Alexa-Durchsage** erneut auslösen. Bei Bedarf die HA-Integration neu laden.
+
+Bei **Gong ohne Sprache** zuerst die verwendete Notify-Entität prüfen und danach testen, ob die erzeugte MP3-Datei über die öffentliche HTTPS-Adresse abrufbar ist. **„Sprechen“** erzeugt nicht zwingend den Alexa-Ankündigungsgong; falls gewünscht, den **TAFA-Signalton** für MP3-Durchsagen aktivieren. Die Zuordnung gilt für das getestete Alexa-Devices-Setup; andere Alexa-Integrationen können andere Möglichkeiten haben.
+
 ## Wo sind die Einstellungen?
 
 **Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bestehende App-eigene HA-Einträge werden beim Neustart automatisch synchronisiert.
