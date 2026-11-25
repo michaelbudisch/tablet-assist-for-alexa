@@ -36,7 +36,7 @@ svc() {
   if systemctl is-active --quiet "$1.service" 2>/dev/null; then
     printf 'running'
   else
-    printf 'nicht running'
+    printf 'stopped'
   fi
 }
 tls_status() {
@@ -166,7 +166,7 @@ enable_https() {
   get_host
   tls_status
   if [[ "$HTTPS" == https://* ]]; then
-    echo "HTTPS wurde bereits runningiert: $HTTPS"
+    echo "HTTPS is already enabled: $HTTPS"
     return 0
   fi
   if [[ ! -f /etc/nginx/sites-available/tablet-assist-audio ]]; then
@@ -183,14 +183,14 @@ enable_https() {
     --cert-name "$HOST" -d "$HOST"
   bash "$INSTALLER" enable "$HOST" 127.0.0.1
   refresh_banner
-  echo "HTTPS ist runningiert. In TAFA unter Alexa-Audio-URL https://$HOST eingeben."
+  echo "HTTPS is enabled. Configure Alexa audio URL in TAFA as https://$HOST."
 }
 run_wizard() {
   [[ "$EUID" == 0 && -t 0 ]] || { echo "Als root interrunning im CT ausfuehren."; exit 1; }
   while true; do
     printf '\nTAFA setup (speech services)\n'
     printf '  1) Show service status and Home Assistant endpoints\n'
-    printf '  2) Alexa HTTPS per DNS und Certbot runningieren\n'
+    printf '  2) Enable Alexa HTTPS with DNS and Certbot\n'
     printf '  3) Show detailed Piper/MP3/Whisper/Nginx service status\n'
     printf '  4) Refresh the console login banner\n'
     printf '  0) Exit\nSelect: '
