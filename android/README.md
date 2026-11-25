@@ -8,6 +8,8 @@ A native audio bridge from Home Assistant through an Android device to a Bluetoo
 
 ## Download and update
 
+[Download the signed 0.7.0 experimental update](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/download/audio-v0.7.0/HA-Jarvis-Echo-Relay-0.7.0-preview.apk) · [Separate Wake Pilot](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/download/audio-v0.7.0/HA-Jarvis-Echo-Relay-0.7.0-wakepilot.apk) · [SHA-256 checksums](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/download/audio-v0.7.0/SHA256SUMS-0.7.0). See [release notes](RELEASE_NOTES.md) before testing.
+
 [Download the previous stable 0.6.0 preview APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 **Install over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; only the visible app name and icon change.
@@ -20,7 +22,7 @@ Enable **Native wakeword recognition** in the Echo Relay app only after download
 
 The app recognizes wakewords locally, publishes only the recognized phrase using the configured authenticated Home Assistant connection as a `jarvis_android_wakeword` event, releases its microphone, and pauses detection for 50 seconds. The Home Assistant dashboard listens to the event and starts its existing Whisper STT capture. Keep the dashboard visible and turn off its own wakeword mode for the first tests; speech immediately following the wakeword may be cut off until the browser microphone is ready. There is no guarantee of working hands-free operation while the dashboard is closed. **Alexa** may simultaneously activate a real Echo.
 
-This is an experimental source branch, not a signed downloadable 0.7.0 APK. The GitHub Actions **debug APK** uses a separate application ID (`de.jarvis.audio.wakepilot`) and is labeled **Jarvis Wake Pilot**, allowing installation alongside the stable signed Echo Relay app. It has separate settings and needs its own Home Assistant connection. **In the pilot, enter the HA address/token and press only “Start native wakeword”**; that button saves the encrypted connection itself. Do not start a second Echo Relay player alongside the stable app. Detection reliability, processing time and Android microphone coexistence are unverified.
+The signed 0.7.0 preview updates the existing Echo Relay app. The separately published **Wake Pilot APK** is a debuggable test build with application ID `de.jarvis.audio.wakepilot` and label **Jarvis Wake Pilot**, allowing installation alongside the stable signed Echo Relay app. The published pilot uses the same persistent signing key as the release; GitHub Actions pilots can use a different temporary key and may require uninstalling that pilot before installation. It has separate settings and needs its own Home Assistant connection. **In the pilot, enter the HA address/token and press only “Start native wakeword”**; that button saves the encrypted connection itself. Do not start a second Echo Relay player alongside the stable app. Detection reliability, processing time and Android microphone coexistence are unverified.
 
 ## Setup
 

@@ -8,6 +8,8 @@ Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetoo
 
 ## Download und Update
 
+[Signiertes experimentelles Update 0.7.0 herunterladen](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/download/audio-v0.7.0/HA-Jarvis-Echo-Relay-0.7.0-preview.apk) · [Separater Wake Pilot](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/download/audio-v0.7.0/HA-Jarvis-Echo-Relay-0.7.0-wakepilot.apk) · [SHA-256-Prüfsummen](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/download/audio-v0.7.0/SHA256SUMS-0.7.0). Vor dem Test die [Versionshinweise](RELEASE_NOTES.de.md) lesen.
+
 [Bisherige stabile 0.6.0-Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Der sichtbare Name und das Icon ändern sich.
@@ -20,7 +22,7 @@ In der Echo-Relay-App unter **Native Rufworterkennung** das optionale deutsche S
 
 Die App erkennt die Rufwörter lokal und sendet nur das erkannte Rufwort über die hinterlegte Home-Assistant-Verbindung als `jarvis_android_wakeword`-Ereignis. Sie gibt das Mikrofon anschließend frei und pausiert 50 Sekunden. Das HA-Dashboard empfängt das Ereignis und startet seine vorhandene Whisper-STT-Aufnahme. Für die ersten Tests das Dashboard geöffnet lassen und dessen eigene Rufworterkennung ausschalten; direkt angehängte Wörter können vor der Übernahme durch das Browsermikrofon verloren gehen. Bei geschlossenem Dashboard ist ein vollständig freihändiger Betrieb noch nicht gewährleistet. **Alexa** kann zugleich einen echten Echo aktivieren.
 
-Das ist ein experimenteller Quellcode-Zweig, noch keine signierte 0.7.0-Update-APK. Die **Debug-APK aus GitHub Actions** verwendet die separate App-ID `de.jarvis.audio.wakepilot` und heißt **Jarvis Wake Pilot**. Sie kann neben der vorhandenen signierten Echo-Relay-App installiert werden, besitzt aber eigene Einstellungen und benötigt eine eigene HA-Verbindung. **In der Test-App HA-Adresse/Token eintragen und nur „Native Erkennung starten“ antippen**; dabei wird die Verbindung verschlüsselt gespeichert. Nicht zusätzlich den Audio-Player der Test-App starten, sonst laufen zwei Echo-Relay-Player parallel. Erkennungsqualität, Latenz und Mikrofon-Koexistenz müssen auf dem Tablet geprüft werden.
+Die signierte 0.7.0-Vorschau aktualisiert die vorhandene Echo-Relay-App. Die separat veröffentlichte **Wake-Pilot-APK** ist ein debuggbarer Test-Build mit eigener App-ID `de.jarvis.audio.wakepilot` und dem Namen **Jarvis Wake Pilot**. Sie kann parallel installiert werden, besitzt aber eigene Einstellungen und benötigt eine eigene HA-Verbindung. Der veröffentlichte Pilot verwendet denselben dauerhaften Signaturschlüssel wie der Release; GitHub-Actions-Piloten können einen anderen temporären Schlüssel verwenden. Ein solcher Pilot muss gegebenenfalls vor der Installation deinstalliert werden. **In der Test-App HA-Adresse/Token eintragen und nur „Native Erkennung starten“ antippen**; dabei wird die Verbindung verschlüsselt gespeichert. Nicht zusätzlich den Audio-Player der Test-App starten, sonst laufen zwei Echo-Relay-Player parallel. Erkennungsqualität, Latenz und Mikrofon-Koexistenz müssen auf dem Tablet geprüft werden.
 
 ## Einrichten
 
