@@ -99,7 +99,7 @@ class RoomAudioAdminView(HomeAssistantView):
             raise web.HTTPBadRequest()
         try:
             body = await request.json()
-            if not isinstance(body, dict) or body.get("action") not in ("list", "pair", "camera"):
+            if not isinstance(body, dict) or body.get("action") not in ("list", "pair", "camera", "job_status", "test"):
                 raise ValueError("Invalid action")
             data = hass.data.get(DOMAIN, {})
             transport = data.get(KEY)
@@ -128,6 +128,52 @@ class RoomAudioAdminView(HomeAssistantView):
                     "users": sorted(people, key=lambda p: p["name"].casefold()),
                     "rooms": paired,
                     "devices": devices,
+                }, headers={"Cache-Control": "no-store"})
+
+            if body["action"] == "test":
+                # Administrator explicitly tests one currently paired Android
+                # player. Only local /api/tts_proxy paths can be queued.
+                room, wake_id, op = body.get("room"), body.get("device_id"), body.get("operation")
+                if (not isinstance(room, str) or room not in transport.rooms
+                        or not isinstance(wake_id, str) or not re.fullmatch(r"[a-f0-9]{32}", wake_id)
+                        or op not in ("status", "activity", "submit", "cancel")):
+                    raise ValueError("Invalid speech-test target")
+                principal = transport.rooms[room]
+                owner = controller.devices.get(wake_id, {}).get("user_id")
+                associated = transport.settings.get(room, {}).get("wake_device_id", "")
+                if owner != principal or (associated and associated != wake_id):
+                    raise ValueError("Tablet and audio room do not belong to the same HA user")
+                if not associated and sum(d.get("user_id") == principal for d in controller.devices.values()) != 1:
+                    raise ValueError("Pair the tablet with its audio room first")
+                if op == "status":
+                    result = transport.status(principal, body.get("id"))
+                    result["device_id"] = transport.settings.get(room, {}).get("device_id", "")
+                elif op == "activity":
+                    # UI activity is advisory and must not change another
+                    # room's playback state or reserve the audio device.
+                    result = {"accepted": True}
+                elif op == "submit":
+                    path = body.get("path")
+                    if not isinstance(path, str) or not re.fullmatch(r"/api/tts_proxy/[A-Za-z0-9_.~-]{1,200}", path):
+                        raise ValueError("Only local TTS proxy audio may be submitted")
+                    job = transport.submit_room(room, path)
+                    result = {"id": job, "accepted": bool(job)}
+                else:
+                    job_id = body.get("id")
+                    if not isinstance(job_id, str) or not re.fullmatch(r"[a-f0-9]{32}", job_id):
+                        raise ValueError("Invalid test job ID")
+                    result = {"accepted": transport.cancel(principal, job_id)}
+                return web.json_response(result, headers={"Cache-Control": "no-store"})
+
+            if body["action"] == "job_status":
+                room, job_id = body.get("room"), body.get("job_id")
+                if (not isinstance(room, str) or room not in transport.rooms
+                        or not isinstance(job_id, str) or not re.fullmatch(r"[a-f0-9]{32}", job_id)):
+                    raise ValueError("Invalid room or test job")
+                current = transport.status(transport.rooms[room], job_id)
+                return web.json_response({
+                    "room": room, "stage": current["stage"], "online": current["online"],
+                    "ready": current["ready"],
                 }, headers={"Cache-Control": "no-store"})
 
             if body["action"] == "camera":
