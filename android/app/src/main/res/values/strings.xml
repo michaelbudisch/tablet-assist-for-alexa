@@ -181,4 +181,11 @@
     <string name="wake_unmute_button">Unmute native microphone</string>
     <string name="wake_remote_help">Settings are synchronized with Home Assistant. Muting releases the Android microphone; the pilot service remains running. Changes in TAFA take effect after the next sync (usually within 3 seconds).</string>
     <string name="wake_save_error">Could not save wakeword settings to Home Assistant: %1$s</string>
+    <string name="wake_multiroom_help">Multiroom: assign each tablet a different slot (1–4). The slot is permanently claimed by this app installation in Home Assistant. Pair this tablet with its own TAFA dashboard using the pairing button in Voice &amp; Audio settings. Other tablets will ignore its wakeword.</string>
+    <string name="wake_slot_label">Home Assistant tablet slot</string>
+    <string name="wake_room_label">Room name (for event diagnostics)</string>
+    <string name="wake_room_hint">e.g. Living room</string>
+    <string name="wake_device_id">This installation: %1$s</string>
+    <string name="wake_slot_in_use">Slot changed. Start the native microphone again after selecting an unassigned slot.</string>
+    <string-array name="wake_slots"><item>Tablet 1</item><item>Tablet 2</item><item>Tablet 3</item><item>Tablet 4</item></string-array>
 </resources>
