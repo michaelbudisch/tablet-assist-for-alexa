@@ -7,15 +7,20 @@ umask 077
   echo "Debian systemd CT required"; exit 1;
 }
 if command -v pveversion >/dev/null; then echo "Refusing to run on PVE host"; exit 1; fi
-[[ $# -eq 2 || $# -eq 4 ]] || { echo "Usage: install-combined-ct.sh HOST GPU_BASE [shared PROXY_IPV4]"; exit 2; }
+[[ $# -eq 2 || $# -eq 6 ]] || { echo "Usage: install-combined-ct.sh HOST GPU_BASE [shared PROXY_IPV4 PROXY_CT NEW_CT]"; exit 2; }
 HOST="$1"
 GPU_BASE="$2"
 MODE="dedicated"
 PROXY_IP=""
-if [[ $# -eq 4 ]]; then
+PROXY_CT=""
+NEW_CT=""
+if [[ $# -eq 6 ]]; then
   [[ "$3" == shared ]] || { echo "Only shared proxy mode is supported"; exit 2; }
   MODE=shared
   PROXY_IP="$4"
+  PROXY_CT="$5"
+  NEW_CT="$6"
+  [[ "$PROXY_CT" =~ ^[1-9][0-9]{2,7}$ && "$NEW_CT" =~ ^[1-9][0-9]{2,7}$ ]] || { echo "Invalid CT ID"; exit 2; }
   python3 - "$PROXY_IP" <<'PY'
 import ipaddress,sys
 ip=ipaddress.ip_address(sys.argv[1])
@@ -79,7 +84,9 @@ ln -s /usr/local/sbin/tafa-info /usr/local/sbin/tafa-setup
 printf '%s\n' "$HOST" > /etc/tafa-combined-hostname
 printf '%s\n' "$MODE" > /etc/tafa-proxy-mode
 printf '%s\n' "$PROXY_IP" > /etc/tafa-shared-proxy-ip
-chmod 0600 /etc/tafa-combined-hostname /etc/tafa-proxy-mode /etc/tafa-shared-proxy-ip
+printf '%s\n' "$PROXY_CT" > /etc/tafa-shared-proxy-ct
+printf '%s\n' "$NEW_CT" > /etc/tafa-new-ct-id
+chmod 0600 /etc/tafa-combined-hostname /etc/tafa-proxy-mode /etc/tafa-shared-proxy-ip /etc/tafa-shared-proxy-ct /etc/tafa-new-ct-id
 if [[ "$MODE" == dedicated ]]; then
   if [[ -n "$HOST" ]]; then
     bash "$HERE/install-nginx-proxy.sh" prepare "$HOST" 127.0.0.1
