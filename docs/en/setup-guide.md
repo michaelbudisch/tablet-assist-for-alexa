@@ -24,19 +24,19 @@ External mode checks private Proxmox Piper `/health` and can prepare the TAFA in
 
 On the GPU computer, run `00-Konfiguration.bat` and `01-Installieren.bat` on Windows, or `bash setup-linux.sh` on Linux. These create a local token-free `.env` if needed. Then run `docker compose --profile stream up -d --build qwen-stream`.
 
-Under **TAFA Options → Speech servers & GPU**, set **Automatic**, streaming URL `http://GPU-PC:10502`, (no API token needed). GPU Wyoming STT on port `10300` is optional. Select **Tablet Assist Stream** as the Assist pipeline's TTS engine. Qwen takes over when healthy; Piper falls back when the GPU fails **before audio playback starts**. Existing Assist pipelines are not silently changed. [GPU worker guide](worker.md).
+Under **Apps → TAFA → Configuration**, set **Automatic**, streaming URL `http://GPU-PC:10502`, (no API token needed). GPU Wyoming STT on port `10300` is optional. Select **Tablet Assist Stream** as the Assist pipeline's TTS engine. Qwen takes over when healthy; Piper falls back when the GPU fails **before audio playback starts**. Existing Assist pipelines are not silently changed. [GPU worker guide](worker.md).
 
 ## 3. Optional Alexa MP3 announcements over HTTPS
 
-Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has a LAN-only MP3 generator on `5001` and temporary audio files on `8080`. Follow the [Nginx HTTPS proxy guide](nginx-proxy.md) for a valid public HTTPS hostname. In **TAFA Options → Alexa announcements & HTTPS**, set MP3 generator address, public HTTPS origin and room/notify mapping. Never open internal speech/GPU ports publicly; never expose internal generator ports.
+Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has a LAN-only MP3 generator on `5001` and temporary audio files on `8080`. Follow the [Nginx HTTPS proxy guide](nginx-proxy.md) for a valid public HTTPS hostname. In **Apps → TAFA → Configuration**, set MP3 generator address, public HTTPS origin and room/notify mapping. Never open internal speech/GPU ports publicly; never expose internal generator ports.
 
 ## Where to configure
 
-**First:** Open **Settings → Apps → TAFA → Configuration** and configure Proxmox/Piper, GPU/Qwen, Alexa MP3, automatic Piper fallback, voice and sound profile. Restart the App. Live **Connection diagnostics** and safe TAFA-only CPU model cleanup are in **Apps → TAFA → Web UI**. Existing HA integration options are not silently replaced.
+**First:** Open **Settings → Apps → TAFA → Configuration** and configure Proxmox/Piper, GPU/Qwen, Alexa MP3, automatic Piper fallback, voice and sound profile. Restart the App. Live **Connection diagnostics** and safe TAFA-only CPU model cleanup are in **Apps → TAFA → Web UI**. Existing App-managed integration settings are synchronized from App Configuration on restart.
 
 
 1. Open **Apps → TAFA → Web UI** for status and guidance.
-2. Open **Settings → Devices & services → TAFA → Options** and select **Speech servers & GPU**, **Alexa announcements & HTTPS** or **Data sources & reminders**.
+2. Manage Piper, Wyoming entity ID (`cpu_stt`), Qwen, Alexa and optional data sources in **Settings → Apps → TAFA → Configuration**. There is no second TAFA options screen for App-managed installations.
 3. Save to reload TAFA. No extra TAFA API key is needed for GPU/MP3 LAN services; clear GPU URL to disable GPU TTS.
 4. Inspect **Settings → Voice assistants → TAFA Lokal**. Select **Tablet Assist Stream** for automatic Qwen/Piper routing.
 
