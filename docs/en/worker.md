@@ -41,15 +41,24 @@ Ollama shares the GPU. Test services one at a time with limited VRAM. Use the pr
 
 The vision profile shares Ollama, port 10503 restricted to HA. [Setup and API](../../worker/README.md#optional-vision-180). HA camera selection is separate.
 
-## 3. Connect Home Assistant and CPU server
+## 3. Connect GPU Whisper, CPU fallback and Ollama to Home Assistant
 
-Add GPU Wyoming to HA using the host IP and TCP 10300. Configure the optional GPU streaming URL in the TAFA integration; in the legacy configuration template set `gpu_stt` and the GPU host. For MP3 announcements, set your actual local values in /etc/jarvis-local.env:
+**Windows:** `04-Verbindungsdaten.bat` now generates and opens a complete **German and English** onboarding TXT using the actual GPU `LAN_IP` from `.env`. The Proxmox CPU server is separate; its IP cannot be inferred.
+
+1. **Install GPU Whisper via Wyoming Protocol:** HA → **Settings → Devices & services → Add integration → Wyoming Protocol**; host = `GPU-IP`, port = `10300`. Find the new real `stt.*` entity ID. In **Apps → TAFA → Configuration**, set `gpu_stt` to it and `gpu_stt_host` to the bare GPU IP (no URL scheme or port).
+2. **Install CPU Whisper via Wyoming Protocol:** Add a **second** Wyoming integration for the Proxmox speech server at its own IP and port `10300`. Set `cpu_stt` to this separate `stt.*` entity. The CPU and GPU STT IDs must differ. One Wyoming STT provider may be auto-selected; with two providers, select both IDs explicitly.
+3. **Configure Qwen TTS:** Set `gpu_base=http://GPU-IP:10502` and `hardware_profile=automatic` in **Apps → TAFA → Configuration**. This TTS URL does **not** automatically enable GPU Whisper.
+4. **Install Ollama for open questions:** Optionally run `docker compose --profile llm up -d ollama ollama-gateway` on the GPU computer. Then HA → **Devices & services → Add integration → Ollama** using `http://GPU-IP:11434`. Add a conversation agent with an **installed** text model such as `qwen3:4b-instruct` and set TAFA `llm_agent` to the agent's **actual** `conversation.*` entity ID (not device name). Ollama text inference is separate from Qwen speech output.
+5. **Check TAFA Lokal Assist pipeline:** STT = **Tablet Assist Sprachrouter** (GPU to CPU fallback), conversation = **Tablet Assist Gespraechsrouter** (Ollama agent), TTS = **Tablet Assist Stream** (Qwen to Piper fallback). Restart TAFA App after changing settings, and HA Core once after HA integration updates.
+6. **Verify the actual recognition host:** After a spoken question, inspect the `stt.*` entity **Tablet Assist Sprachrouter**: `letztes_backend=zusatzrechner` = GPU; `homeserver` = CPU/fallback. `letzte_dauer_ms` includes audio reception; Android's end-of-speech pause and Ollama inference add separate delay.
+
+For external CPU voice set `speech_mode=external` and `external_piper_base=http://PROXMOX-IP:5000`. The older optional Proxmox MP3 announcements setup still accepts its own local `/etc/jarvis-local.env`:
 
 ```ini
 JARVIS_GPU_BASE=http://gpu.example.invalid:10502
 ```
 
-Keep the file root-only. Restart with `systemctl restart jarvis-mp3`. Select Automatic. Without a GPU or on failure before playback starts, Piper is the fallback. Do not additionally install the original worker/proxmox/tts_router.py reference alongside the main installer.
+Keep it root-only and restart `jarvis-mp3` where appropriate. Do not install the old `worker/proxmox/tts_router.py` alongside the main installer. Keep every port on the trusted LAN, without token-bearing public proxy routes.
 
 ## 4. Test
 
