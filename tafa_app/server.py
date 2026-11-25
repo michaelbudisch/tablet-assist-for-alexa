@@ -21,7 +21,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit,parse_qs
 
-from auto_setup import configure, save_state, STATE as SETUP_STATE
+from auto_setup import configure, ensure_pipeline, save_state, STATE as SETUP_STATE
 from installer import bootstrap, status
 
 LOG=logging.getLogger("tafa.app")
@@ -31,7 +31,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.0"
+APP_VERSION="0.3.1"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -83,8 +83,11 @@ def autoconfigure(address):
                 outcome=configure(address)
                 save_state(outcome)
                 if outcome in ("configured","already_configured"):
-                    LOG.info("HA integration configuration: %s",outcome)
-                    return
+                    pipeline=ensure_pipeline()
+                    save_state(pipeline)
+                    if pipeline in ("pipeline_created","pipeline_exists"):
+                        LOG.info("TAFA Assist pipeline ready: %s",pipeline)
+                        return
         except (urllib.error.URLError,TimeoutError,ValueError,RuntimeError) as exc:
             save_state("waiting_for_home_assistant",type(exc).__name__)
         time.sleep(20)
@@ -149,7 +152,7 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <ol class="steps">
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
 <li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
-<li>{t("Die TAFA-Integration wird eingerichtet, sobald Piper verfügbar ist und Home Assistant sie erkennt.","The TAFA integration is configured when Piper is ready and Home Assistant discovers it.")}</li>
+<li>{t("Die TAFA-Integration und eine eigene Assist-Pipeline werden eingerichtet, sobald Piper verfügbar ist und Home Assistant die Komponenten erkennt.","The TAFA integration and its Assist pipeline are configured when Piper is ready and Home Assistant discovers the components.")}</li>
 <li>{t("TAFA Device Bridge auf dem Tablet mit Home Assistant verbinden und die Assist-Pipeline auswählen.","Connect TAFA Device Bridge to Home Assistant and select the Assist pipeline.")}</li>
 </ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
  · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>
