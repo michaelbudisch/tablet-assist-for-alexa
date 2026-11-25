@@ -94,3 +94,9 @@ The unchanged Device Bridge 1.0.0 emits wake events only; another active Assist 
 ### Ollama rejects the first question (TAFA App 0.3.17 / integration 0.4.9)
 
 A newly created Ollama conversation entity has Home Assistant state `unknown` until it handles its first message. That is **normal**; TAFA integration 0.4.8 incorrectly treated it as offline. Since 0.4.9, TAFA forwards the first request. Confirm the actual Ollama `conversation.*` entity ID under **Settings → Devices & services → Ollama → Conversation agent → Entity** and set it in **Apps → TAFA → Configuration → llm_agent**. After updating TAFA App, **restart Home Assistant Core once**, then **restart TAFA App** to synchronize settings. An actual `unavailable` state remains an error. The CPU hardware profile only governs Qwen/Piper TTS and no longer disables Ollama conversation. No Android update required.
+
+### Choose CPU/GPU Wyoming entities from dropdowns (TAFA App 0.3.18)
+
+Under **Settings → Apps → TAFA → Control Center**, the **“Automatically discover Wyoming STT”** section lists current enabled Home Assistant Wyoming `stt.*` entities in two dropdowns. Explicitly assign **CPU Whisper / Proxmox** and **GPU Whisper / Windows** to *different* entities, save and **restart the TAFA App**. Unrelated options and existing audio/camera mappings are preserved.
+
+If only CPU STT appears, GPU Whisper has not yet been registered in Home Assistant. Add **Wyoming Protocol** under **Devices & services**, with the GPU worker host and TCP **10300**, then reopen the Control Center. The Qwen TTS URL on port 10502 does **not** activate GPU transcription. After a spoken question check the **Tablet Assist Sprachrouter** entity attribute `letztes_backend`: `zusatzrechner` = GPU, `homeserver` = CPU. An old Fast Whisper log entry alone does not verify which backend handled the last question.

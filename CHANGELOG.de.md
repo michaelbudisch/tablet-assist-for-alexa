@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA App 0.3.18 / GPU-Worker 2.2.2 — Ersteinrichtung vereinfachen
+- GPU-Worker-Verbindungsdatei enthält jetzt eine vollständige deutsch-englische Anleitung für GPU-/CPU-Wyoming, Ollama sowie alle TAFA-Felder.
+- Im **TAFA Control Center** werden vorhandene Wyoming-STT-Entitäten als getrennte **CPU-/GPU-Dropdowns** angeboten. Speichern übernimmt die Auswahl in die App-Optionen; TAFA-App danach neu starten.
+- Deutlich erklärt, dass Qwen-TTS auf Port 10502 keine GPU-Whisper-Verbindung herstellt. Die neue Auswahl verändert keine anderen App-Optionen und deaktiviert keine bestehenden Modelle.
+
+
+
 ## TAFA App 0.3.17 / Integration 0.4.9 — Erste Ollama-Frage freigeben
 - Home Assistant meldet bei neuen Gesprächsassistenten zunächst `unknown` („Unbekannt“), solange sie noch keine Frage erhalten haben. TAFA wertete dies fälschlich als Ausfall und blockierte die erste Frage.
 - Jetzt wird `unknown` als gültiger Erstzustand behandelt. Nur tatsächlich fehlende, selbstreferenzierende oder `unavailable`-Agenten werden blockiert.

@@ -4,12 +4,12 @@
 
 **English** | [Deutsch](README.de.md)
 
-> **New in App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
+> **First-run configuration (App 0.3.18+):** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
 
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.14**, integrated HA component **0.4.6**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.18**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
@@ -81,3 +81,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **New in App 0.3.15 / integration 0.4.7:** **TAFA → Devices → Voice test** includes audio-only Qwen/Piper to Android playback verification that works on local HTTP. The full microphone test still requires HTTPS. [Guide](docs/en/setup-guide.md).
 
 **New in TAFA 0.3.16 / integration 0.4.8:** External Proxmox setup checks for Wyoming STT and a complete Assist pipeline before reporting ready. A single Wyoming STT provider is selected automatically; with multiple providers, choose `cpu_stt` in TAFA App Configuration. See the optional native Android 1.0.1 microphone setup under **TAFA → Devices**. [Setup](docs/en/setup-guide.md).
+
+**New:** TAFA Control Center lets you assign discovered Wyoming STT entities to CPU/GPU dropdowns. **GPU Worker 2.2.2** provides a complete DE/EN setup and connection TXT (`04-Verbindungsdaten.bat`), including the separate Ollama conversation integration. [Setup guide](docs/en/setup-guide.md).

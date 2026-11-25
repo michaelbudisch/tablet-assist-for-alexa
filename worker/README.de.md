@@ -1,4 +1,4 @@
-# Jarvis GPU Worker 2.2.1
+# Jarvis GPU Worker 2.2.2
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -9,6 +9,23 @@ Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erste
 **Sicherheit:** Diese HTTP-Schnittstellen akzeptieren Anfragen ohne zusätzlichen Worker-Schlüssel. Die Docker-Ports werden an die konfigurierte private `LAN_IP` gebunden. In der Windows-Firewall ausschließlich den Home-Assistant- und gegebenenfalls Proxmox-Server zulassen; keine Gastnetze, VPN-Weiterleitung, Reverse-Proxies auf Generator-Ports oder Router-Portfreigaben. Ein öffentlicher HTTPS-Proxy darf ausschließlich kurze, zufällig benannte MP3-Dateien per GET anbieten.
 
 
+
+## 2.2.2 – Vollstaendige GPU-Worker-Verbindungsdaten statt reiner Portliste
+
+**Neu:** `04-Verbindungsdaten.bat` erzeugt `GPU-Worker-Verbindungsdaten.txt` aus der vorhandenen `.env` / `LAN_IP` und oeffnet sie direkt in Notepad. Die TXT enthaelt eine **deutsche und englische** Schrittfolge von der Erstinstallation bis zum Sprachtest, inklusive aller benoetigten Home-Assistant-Integrationen. Keine Zugangsdaten oder API-Tokens. Die TXT wird auch bei Prepare, Install und Start geschrieben; die Reportfunktion startet keine Dienste.
+
+| Dienst | Home Assistant (einmalig) | TAFA App > Konfiguration |
+|---|---|---|
+| **GPU-Whisper** `GPU-IP:10300` | **Wyoming Protocol** unter Geraete & Dienste hinzufuegen (GPU-Host + Port 10300); dann die dort erzeugte `stt.*`-Entitaets-ID nachsehen | `gpu_stt` = GPU-STT-Entitaet, `gpu_stt_host` = reine GPU-IP |
+| **CPU-Whisper** `PROXMOX-IP:10300` | Separates **Wyoming Protocol** fuer CPU-Sprachserver; echte `stt.*`-ID kopieren | `cpu_stt` = CPU-STT-Entitaet, **anders als GPU-STT** |
+| **Qwen Streaming TTS** `http://GPU-IP:10502` | Als TTS in der Assist-Pipeline **Tablet Assist Stream** waehlen | `gpu_base` = vollstaendige URL, `hardware_profile=automatic` |
+| **Ollama Text-KI** `http://GPU-IP:11434` | Eigene Integration **Ollama** hinzufuegen und mit einem installierten Textmodell wie `qwen3:4b-instruct` einen **Konversationsagenten** einrichten; echte `conversation.*`-ID ablesen | `llm_agent` = HA-Konversationsentitaets-ID, nicht Geraetename |
+
+**Wichtig:** Eine GPU-Qwen-Adresse allein aktiviert **GPU-Whisper NICHT**. Die STT-Entitaet entsteht erst durch **Wyoming Protocol**. Bei genau einer Wyoming-STT-Entitaet kann TAFA diese automatisch auswaehlen; sobald CPU und GPU vorhanden sind, beide Entitaets-IDs manuell eintragen. Fuer Proxmox gelten weiterhin `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000`. Die Proxmox-IP kann der GPU-Worker-Bericht nicht kennen.
+
+**Assist-Pipeline TAFA Lokal:** STT = **Tablet Assist Sprachrouter** (GPU / CPU-Fallback), Gespraech = **Tablet Assist Gespraechsrouter** (Ollama-Agent), TTS = **Tablet Assist Stream** (Qwen / Piper-Fallback). Nach einer Frage die STT-Router-Attribute pruefen: `letztes_backend=zusatzrechner` bedeutet GPU, `homeserver` bedeutet CPU/Fallback. Auch die Android-Sprechpause (ca. 1700 ms) und Ollama-Antwortzeit beeinflussen die Gesamtdauer.
+
+Der Windows-Standardinstaller startet Ollama nicht automatisch. Optional im Worker-Ordner: `docker compose --profile llm up -d ollama ollama-gateway`; ein Textmodell muss bereits installiert sein oder bewusst installiert werden. Alle Ports **nur im vertrauenswuerdigen LAN** ohne Router-Freigaben nutzen.
 
 ## 2.2.1 – Strukturierte produktive Ring-Bildfolge
 

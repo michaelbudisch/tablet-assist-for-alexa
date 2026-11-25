@@ -1,5 +1,12 @@
 # GPU worker changelog
 
+## 2.2.2
+
+- GPU-Worker connection report now includes a bilingual (DE/EN) **first-run Home Assistant integration checklist** with the detected GPU LAN IP and exact TAFA App field mappings, rather than ports alone.
+- Explicitly explains adding **Wyoming Protocol** for GPU Whisper on TCP 10300, a separate CPU Wyoming STT for Proxmox fallback, and the **Ollama** HA integration for text AI. Makes clear that Qwen TTS at 10502 is not Whisper or Ollama.
+- Shows where to find real `stt.*` and `conversation.*` entity IDs, how to assign `cpu_stt`, `gpu_stt`, `gpu_stt_host`, `gpu_base`, `llm_agent`, and how to check the router's `letztes_backend` after a spoken request.
+- `04-Verbindungsdaten.bat` now opens the generated file in Notepad. Existing `.env`, models, ports, services and token-free LAN operation are unchanged.
+
 ## 2.2.1
 
 - Removed extra TAFA API token checks from private-LAN Qwen, Vision, Diagnostics and Ollama endpoints. Home Assistant user authentication stays in place.

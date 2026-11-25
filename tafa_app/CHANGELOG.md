@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.18 — live Wyoming STT dropdowns in the Control Center
+
+- New admin-only **TAFA Control Center → Automatically discover Wyoming STT** panel lists currently registered enabled `stt.*` entities directly from Home Assistant. Explicitly assign the CPU Proxmox and GPU Windows Whisper roles via dropdown instead of typing IDs.
+- Save persists the selected distinct entity IDs in the Supervisor-managed TAFA App options without changing unrelated options; restart the App once to synchronize the HA routing. Disabled, stale, unregistered and non-Wyoming entries cannot be selected for a new mapping.
+- Displays a clear missing-Wyoming explanation and setup link. Built-in HA Apps Configuration keeps its existing backward-compatible string fields because its static schema cannot dynamically populate choices.
+- The GPU Worker 2.2.2 connection TXT documents the companion Wyoming, Ollama and TAFA setup steps; no existing Android or HA service endpoints change.
+
 ## 0.3.17 — first Ollama question no longer blocked
 - Fix TAFA conversation router incorrectly rejecting Home Assistant ConversationEntity state `unknown` (the normal state before its first message). The first voice question now reaches the selected Ollama agent.
 - Hardware profile `cpu` selects Piper TTS and must not independently disable an otherwise configured Ollama text agent.

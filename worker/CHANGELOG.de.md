@@ -1,5 +1,12 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.2
+
+- GPU-Worker-Verbindungsdaten sind jetzt ein **vollständiger DE/EN-Ersteinrichtungsleitfaden** mit der erkannten GPU-LAN-IP und konkreten Home-Assistant-/TAFA-Eingabefeldern, nicht nur eine Portliste.
+- **Wyoming Protocol** für GPU-Whisper auf Port 10300 und separat für CPU-Whisper auf Proxmox beschrieben; **Ollama** als eigenständige HA-Integration für KI-Gespräche erklärt. Qwen-TTS auf 10502 ist weder Whisper noch Ollama.
+- Anleitung zur Übernahme der echten `stt.*`- und `conversation.*`-IDs sowie zu `cpu_stt`, `gpu_stt`, `gpu_stt_host`, `gpu_base`, `llm_agent` und zur Diagnose mit `letztes_backend`.
+- `04-Verbindungsdaten.bat` öffnet die generierte TXT direkt in Notepad. Vorhandene `.env`, Modelle, Dienste und tokenfreie LAN-Konfiguration bleiben erhalten.
+
 ## 2.2.1
 
 - Zusätzliche TAFA-API-Token-Abfragen bei Qwen, Vision, Diagnose und Ollama im privaten LAN entfernt. Home-Assistant-Benutzeranmeldung bleibt erhalten.

@@ -1,4 +1,4 @@
-# TAFA Home Assistant App 0.3.17 — release candidate
+# TAFA Home Assistant App 0.3.18 — release candidate
 
 The Ingress Control Center installs and safely upgrades one unified HA integration. Choose local Piper/Faster-Whisper (default), or external Proxmox Piper/Whisper with `speech_mode=external` and `external_piper_base=http://PROXMOX-IP:5000` in the App Configuration before starting. External mode skips local model processes and downloads. the Android Device Bridge stays unchanged. [English guide](../docs/en/app.md) · [Deutsche Anleitung](../docs/app.md).
 
@@ -15,3 +15,5 @@ All App-managed HA integration settings are now maintained in **Apps → TAFA �
 **New in 0.3.16:** External Proxmox mode now checks the complete Home Assistant Assist pipeline before reporting ready. When Wyoming STT is missing, configure it in HA. A single Wyoming STT provider is chosen automatically; with multiple providers, set `cpu_stt` in TAFA App options. The App retries automatically. See [native Android setup](../docs/en/setup-guide.md).
 
 **Fix in 0.3.17 / integration 0.4.9:** A freshly configured Ollama conversation entity initially has HA state `unknown`, which previously caused TAFA to refuse its first question. Update the App, restart Home Assistant Core once for the integration update, and restart the App to sync your selected `llm_agent`. No new Android APK is needed.
+
+**New in 0.3.18:** Under **TAFA Control Center → Automatically discover Wyoming STT**, select detected Home Assistant Wyoming speech entities from two dropdowns (**CPU** for Proxmox and **GPU** for Windows). The entries are saved to TAFA App Configuration without overwriting unrelated settings; **restart the TAFA App** to apply. If GPU Whisper is missing, install **Wyoming Protocol** in HA with GPU host and port 10300 first. The regular **Apps → TAFA → Configuration** static form still allows manually editing these fields.
