@@ -51,15 +51,15 @@ Der [Proxmox-Sprachserver](proxmox.md) enthält zusätzlich:
 | `5001` | Tokenfreie MP3-Erzeugung nur im privaten LAN (`/generate`) |
 | `8080` | Kurzlebige MP3-Dateien, nur für den internen Nginx-Proxy |
 
-Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen. Der [Nginx-Proxy-Leitfaden](nginx-proxy.md) beschreibt einen neuen CT oder das sichere Ergänzen eines bestehenden Proxy-CT. In **TAFA → Optionen → Alexa-Durchsagen & HTTPS** anschließend MP3-Generator und öffentliche HTTPS-Adresse und Raum-/Notify-Zuordnung angeben. Keine Ports 5000/5001/10300/10502 öffentlich freigeben. Die internen Generator-Ports niemals aus dem Internet erreichbar machen.
+Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen. Der [Nginx-Proxy-Leitfaden](nginx-proxy.md) beschreibt einen neuen CT oder das sichere Ergänzen eines bestehenden Proxy-CT. In **Apps → TAFA → Konfiguration** anschließend MP3-Generator und öffentliche HTTPS-Adresse und Raum-/Notify-Zuordnung angeben. Keine Ports 5000/5001/10300/10502 öffentlich freigeben. Die internen Generator-Ports niemals aus dem Internet erreichbar machen.
 
 ## Wo sind die Einstellungen?
 
-**Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bei bestehenden HA-Integrationen müssen abweichende Optionen gegebenenfalls dort abgeglichen werden.
+**Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bestehende App-eigene HA-Einträge werden beim Neustart automatisch synchronisiert.
 
 
 1. **TAFA Control Center** unter Home Assistant **Apps → TAFA → Weboberfläche** öffnen. Dort sind Zustände und diese Schritte erklärt.
-2. **Einstellungen → Geräte & Dienste → TAFA → Optionen** öffnen.
+2. **Einstellungen → Apps → TAFA → Konfiguration** öffnen.
 3. Einen Abschnitt auswählen: **Sprachserver & GPU**, **Alexa-Durchsagen & HTTPS** oder **Datenquellen & Erinnerungen**.
 4. Werte speichern; TAFA lädt die Integration neu. GPU- und MP3-Generator benötigen keine zusätzlichen TAFA-API-Tokens. Ein leerer GPU-Host deaktiviert GPU-TTS.
 5. **Einstellungen → Sprachassistenten → TAFA Lokal** prüfen. Für automatisches Qwen/Piper-TTS **Tablet Assist Stream** wählen.
@@ -67,7 +67,7 @@ Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen.
 ## Kurzer Funktionstest
 
 - **TAFA lokal:** Piper und Whisper im Control Center auf „Bereit“ prüfen; eine Assist-Anfrage manuell starten.
-- **Externer Proxmox-Server:** `curl -fsS http://SERVER:5000/health` prüfen. In TAFA muss „Piper · extern“ bereit sein, lokal dürfen keine Piper-/Whisper-Downloads starten. Wyoming-STT `SERVER:10300` in HA einrichten, CPU-STT im TAFA-Optionsdialog auswählen und Assist-Pipeline erstellen.
+- **Externer Proxmox-Server:** `curl -fsS http://SERVER:5000/health` prüfen. In TAFA muss „Piper · extern“ bereit sein, lokal dürfen keine Piper-/Whisper-Downloads starten. Wyoming-STT `SERVER:10300` in HA einrichten, CPU-STT über das Feld `cpu_stt` in der App einstellen (bei eindeutigem Wyoming automatisch) und Assist-Pipeline erstellen.
 - **GPU:** Qwen bei laufendem PC testen; PC ausschalten und dieselbe Assist-Ausgabe erneut prüfen → Piper-Fallback.
 - **Alexa-MP3 (optional):** Eine unkritische Testdurchsage senden und die kurzlebige öffentliche HTTPS-Datei prüfen.
 
