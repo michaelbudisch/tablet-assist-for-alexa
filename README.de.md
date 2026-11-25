@@ -4,12 +4,12 @@
 
 [English](README.md) | **Deutsch**
 
-> **Neu in App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration 0.4.4 geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
+> **Ersteinrichtung (ab App 0.3.18):** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration 0.4.4 geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
 
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.14**, zusammengeführte HA-Integration **0.4.6**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.18**, HA-Integration **0.4.9**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
@@ -81,3 +81,5 @@ Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergelad
 **Neu in App 0.3.15 / Integration 0.4.7:** Unter **TAFA → Geräte → Sprachtest** kannst du die Sprachausgabe auf dem verbundenen Tablet auch ohne HTTPS testen. Der separate Mikrofontest benötigt weiterhin HTTPS. [Anleitung](docs/setup-guide.md).
 
 **Neu in TAFA 0.3.16 / Integration 0.4.8:** Bei externen Proxmox-Sprachservern prüft TAFA die Wyoming-STT-Anbindung und die vollständige Assist-Pipeline, bevor die Einrichtung als bereit gilt. Eine einzelne Wyoming-STT-Entität wird automatisch gewählt, bei mehreren `cpu_stt` konfigurieren. Die optionale native Android-1.0.1-Sprachaufnahme wird unter **TAFA → Geräte** erklärt. [Einrichtung](docs/setup-guide.md).
+
+**Neu:** Im **TAFA Control Center** lassen sich CPU- und GPU-Whisper über Dropdowns aus bereits eingebundenen Wyoming-Entitäten auswählen. Der **GPU-Worker 2.2.2** schreibt eine vollständige DE/EN-Verbindungs- und Einrichtungsliste (`04-Verbindungsdaten.bat`), inklusive Ollama-Integration für freie KI-Fragen. [Anleitung](docs/setup-guide.md).
