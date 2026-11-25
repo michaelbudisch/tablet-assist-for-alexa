@@ -2,6 +2,16 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 0.8.0 · Native Rufworterkennung mit Multiroom
+
+- Jedes Android-Tablet erhält eine dauerhaft gespeicherte, zufällige Gerätekennung, einen auswählbaren eigenen Tablet-Platz (1–4) und einen frei wählbaren Raumnamen.
+- Vier getrennte Geräteprofile in Home Assistant für Stumm, Rufwort, Strenge, Sperrzeit und Mikrofonübergabe; jedes Profil wird mit der ersten Android-Installation, die es aktiviert, verknüpft. Gleiche Plätze auf mehreren Tablets sind gesperrt.
+- TAFA: Im Reiter **Sprache & Audio** den passenden Tablet-Platz auswählen, auf **Dieses Tablet koppeln** klicken und das Rufwort auslösen. Das Dashboard speichert die Gerätekennung lokal und verarbeitet nur noch Rufwörter genau dieser Installation.
+- Das zentrale HA-Ereignisrouting lässt innerhalb von drei Sekunden nur den zuerst eingetroffenen Rufwort-Kandidaten zu, um Doppelantworten zu verhindern. Es misst keine akustische Entfernung.
+- Die native Mikrofon-Stummschaltung oben rechts und die Android-App-Einstellungen arbeiten gerätegetrennt; bei Verbindungsverlust oder belegtem Tablet-Platz gibt der Wake Pilot das Mikrofon frei.
+- Die produktive Echo-Relay-Ausgabe bleibt unverändert; für echte raumbezogene Wiedergabe benötigen weitere Tablets weiterhin die bestehende Room-Audio-/Raumkonto-Einrichtung.
+- Die bisherigen globalen Helfer aus 0.7.1 bleiben für alte Clients bestehen, werden von 0.8.0 aber nicht mehr verwendet.
+
 ## 0.7.1 · Native Rufworterkennung fernsteuern
 
 - TAFA/HA: Stummschaltung über `input_boolean.jarvis_native_wake_stumm` und optional über das Mikrofonsymbol oben rechts im Dashboard. Der Android-Dienst gibt bei Stumm das Mikrofon frei.

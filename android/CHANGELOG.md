@@ -2,6 +2,16 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 0.8.0 · Multiroom native wakeword detection
+
+- Each Android tablet gets a persistent random installation ID, its own selectable device slot (1–4) and a user-editable room label.
+- Four independent Home Assistant profiles provide mute, phrase, strictness, cooldown and microphone handoff. Each slot is claimed by one installation; conflicting devices fail closed.
+- TAFA: select the matching device slot under **Voice & Audio**, click **Pair this tablet**, then say its wakeword. Only the exact paired installation can trigger this dashboard.
+- A central HA router accepts only the first wakeword arriving within a 3-second arbitration window, suppressing duplicate responses; this is not sound-distance estimation.
+- Top-right microphone mute and app settings are now device-specific. On lost HA connectivity or slot conflicts, the Wake Pilot releases its microphone.
+- Existing Echo Relay playback is untouched; room-specific output still requires the existing per-room HA user/Room Audio setup for additional tablets.
+- Old shared 0.7.1 helpers remain for legacy clients, but 0.8.0 no longer reads them.
+
 ## 0.7.1 · Remote controls for native wakeword
 
 - TAFA/HA: mute with `input_boolean.jarvis_native_wake_stumm` and optionally with the top-right dashboard microphone icon. Muting releases the Android recorder.

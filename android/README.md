@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.7.1 (experimental)
+# HA Jarvis Echo Relay · Android 0.8.0 (experimental)
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -33,6 +33,17 @@ All controls are available in the pilot app and through Home Assistant helpers. 
 - `input_number.jarvis_native_wake_aufnahmeubergabe`: 10–90 seconds after-detection pause to yield the microphone to Whisper
 
 Values synchronize with Home Assistant; remote mute normally takes effect within three seconds. If HA settings cannot be reached, the microphone fails closed. This Vosk integration does not provide a calibrated acoustic volume (dB) threshold. Debug APK signing can change between CI runs, potentially requiring uninstall/reinstall, fresh login and model download.
+
+### Multiple tablets and rooms (0.8.0)
+
+1. In each **Jarvis Wake Pilot 0.8.0** app choose a different **tablet slot** (1–4), and optionally set a friendly room name. A persistent random device ID is generated automatically.
+2. In that tablet's TAFA dashboard open **Jarvis → Voice & Audio → Native wakeword · multiroom**. Choose the same slot, press **Pair this tablet**, then say **Hey Jarvis** on the tablet within 45 seconds. Only that installation's events will start speech capture on this dashboard.
+3. Mute, wakeword, strictness, cooldown and handoff settings are now per slot. The top-right microphone button can still be assigned to native mic mute.
+4. If two tablets hear the same phrase at nearly the same time, Home Assistant accepts the **first arriving** event, suppressing subsequent candidates for three seconds. This is not microphone distance estimation.
+5. If a device already occupies a slot, another installation using it cannot activate recognition. Verify `input_text.jarvis_wake_tablet_N_geratekennung` in HA before intentionally releasing an old assignment.
+6. Continue to use separate HA room users / Room Audio when replies must play on different Echo speakers. Wakeword routing does not replace the existing audio transport.
+
+**Safety:** If HA becomes unavailable or the device-slot assignment is invalid, the pilot releases its microphone. TAFA must be open and visible for microphone handoff; Android background STT is not included. Legacy v0.7.1 clients still use shared HA helpers and require an app update for isolation.
 
 ## Setup
 

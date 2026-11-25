@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.7.1 (experimentell)
+# HA Jarvis Echo Relay · Android 0.8.0 (experimentell)
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -33,6 +33,17 @@ Alle Regler sind in der Pilot-App und über die Home-Assistant-Helfer erreichbar
 - `input_number.jarvis_native_wake_aufnahmeubergabe`: 10 bis 90 s Pause für das Whisper-Mikrofon nach dem Rufwort
 
 Die Einstellungen werden mit Home Assistant abgeglichen; das Stummschalten wirkt normalerweise binnen drei Sekunden. Bei Verbindungsverlust zum HA-Einstellungsdienst wird das Mikrofon sicherheitshalber freigegeben. Es gibt derzeit keinen zuverlässigen echten Mikrofon-Lautstärkeschwellwert (dB) in dieser Vosk-Anbindung. Nach Installation dieser neuen Debug-Version können aufgrund unterschiedlicher Debug-Signaturen gegebenenfalls Deinstallation, Neuanmeldung und Modell-Download nötig werden.
+
+### Mehrere Tablets und Räume (0.8.0)
+
+1. In jeder **Jarvis Wake Pilot 0.8.0**-App einen anderen **Tablet-Platz** (1, 2, 3 oder 4) wählen. Optional den Raumnamen (z. B. Wohnzimmer oder Büro) eintragen. Die Gerätekennung wird automatisch erzeugt und bleibt bis zum Entfernen der App stabil.
+2. In der jeweiligen TAFA-Ansicht unter **Jarvis → Sprache & Audio → Native Rufworterkennung · Multiroom** genau denselben Tablet-Platz auswählen. Auf **Dieses Tablet koppeln** tippen und innerhalb von 45 Sekunden direkt am Tablet **Hey Jarvis** sagen. Das Dashboard speichert die Kennung der passenden App lokal.
+3. Die Einstellungen für Stumm, Rufwort, Strenge, Sperrzeit und Übergabe gelten jetzt ausschließlich für diesen Platz. Der Mikrofonknopf oben rechts lässt sich wie zuvor auf die native Stummschaltung umstellen.
+4. Wenn zwei Tablets dasselbe Rufwort fast gleichzeitig erkennen, verarbeitet Home Assistant nur das **zuerst eingegangene** Ereignis; drei Sekunden lang werden weitere Kandidaten ignoriert. Das ist keine automatische Ermittlung des nächstgelegenen Mikrofons.
+5. Hat ein anderes Gerät einen Platz bereits belegt, wird der neue Wake Pilot für diesen Platz nicht aktiviert. Die Belegung ist im HA-Helfer `input_text.jarvis_wake_tablet_N_geratekennung` sichtbar. Einen Platz nur nach bewusstem Umzug eines Geräts zurücksetzen.
+6. Weiterhin pro Raum ein eigenes Home-Assistant-Raumkonto / Room Audio nutzen, wenn Antworten tatsächlich auf unterschiedlichen Echo-Lautsprechern ausgegeben werden sollen. Der Wake-Pilot allein ersetzt diese Audiozuordnung nicht.
+
+**Sicherheit:** Bei fehlender HA-Verbindung oder falscher Gerätezuordnung bleibt das native Mikrofon aus. Das gewählte Tablet muss das TAFA-Dashboard geöffnet und sichtbar haben; ein vollständig hintergrundfähiger Android-STT-Client ist nicht enthalten. Die bestehende Version 0.7.1 nutzt noch die alten globalen HA-Regler. Erst nach dem Update auf 0.8.0 funktioniert die geräteweise Steuerung.
 
 ## Einrichten
 
