@@ -18,6 +18,8 @@ CONSOLE = (PVE / "combined-console.sh").read_text(encoding="utf-8")
 DUCKDNS = (PVE / "install-duckdns-updater.sh").read_text(encoding="utf-8")
 DUCKDNS_UPDATE = (PVE / "duckdns-update.py").read_text(encoding="utf-8")
 AUDIO_SERVER = (ROOT / "speechserver/audio_server.py").read_text(encoding="utf-8")
+SPEECH_INSTALL = (PVE / "install-speechserver.sh").read_text(encoding="utf-8")
+RESUME_INSTALL = (PVE / "resume-install.sh").read_text(encoding="utf-8")
 
 spec = importlib.util.spec_from_file_location("proxy", PVE / "render-nginx-proxy.py")
 proxy = importlib.util.module_from_spec(spec)
@@ -133,8 +135,31 @@ class CombinedCTTests(unittest.TestCase):
             with patch.object(duckdns,"CONFIG_DIR",base), self.assertRaises(ValueError):
                 duckdns.update(settings)
 
+    def test_venv_readable_by_service_and_safe_interrupted_resume(self):
+        self.assertIn('umask 077', SPEECH_INSTALL)
+        self.assertIn('umask 022', SPEECH_INSTALL)
+        self.assertIn('python3 -m venv "$INSTALL/venv"', SPEECH_INSTALL)
+        self.assertLess(SPEECH_INSTALL.index('umask 022'),
+                        SPEECH_INSTALL.index('python3 -m venv "$INSTALL/venv"'))
+        self.assertIn('find "$INSTALL/venv" -type d -exec chmod a+rx', SPEECH_INSTALL)
+        self.assertIn('find "$INSTALL/venv" -type f -exec chmod a+r', SPEECH_INSTALL)
+        self.assertIn('! -e "$ENV"', SPEECH_INSTALL)
+        self.assertIn('runuser -u jarvis-local -- "$INSTALL/venv/bin/python"', SPEECH_INSTALL)
+        self.assertIn('bash "$HERE/install-speechserver.sh" --resume', GUEST)
+
+    def test_resumer_only_accepts_partial_install_and_preserves_live_cts(self):
+        self.assertIn('pct exec "$CTID" -- test -d /opt/jarvis-local/venv', RESUME_INSTALL)
+        self.assertIn('pct exec "$CTID" -- test ! -e /etc/jarvis-local.env', RESUME_INSTALL)
+        self.assertIn('pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh', RESUME_INSTALL)
+        self.assertIn('--resume "$HOST" "$GPU" shared', RESUME_INSTALL)
+        self.assertIn('[[ "$REPLY_VALUE" == FORTSETZEN ]]', RESUME_INSTALL)
+        self.assertIn('prepare "$HOST" "$NEW_IP" --shared', RESUME_INSTALL)
+        self.assertNotIn('pct destroy', RESUME_INSTALL)
+        self.assertNotIn('pct stop', RESUME_INSTALL)
+        self.assertNotIn('qm destroy', RESUME_INSTALL)
+
     def test_scripts_parse_and_status_works_without_root(self):
-        for path in ("quick-install.sh", "install-combined-ct.sh", "combined-console.sh", "install-duckdns-updater.sh"):
+        for path in ("quick-install.sh", "install-combined-ct.sh", "combined-console.sh", "install-duckdns-updater.sh", "resume-install.sh", "install-speechserver.sh"):
             with self.subTest(path=path):
                 subprocess.run(["bash", "-n", str(PVE / path)], check=True)
         result = subprocess.run(["bash", str(PVE / "combined-console.sh"), "--status"],
