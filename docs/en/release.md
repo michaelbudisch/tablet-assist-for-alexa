@@ -1,22 +1,31 @@
-# Tests and release checklist
+# TAFA — Tests and release checklist
 
 **English** | [Deutsch](../release.md) · [Project overview](../../README.md)
 
-Public developer preview 0.3.1 (not a production-ready stable release).
+**Current state:** TAFA Home Assistant App **0.3.4** (experimental release candidate), unified HA integration **0.4.1**, Android Device Bridge **1.0.0 unchanged**. No production or hardware certification.
 
-```bash
-python3 tests/check_sources.py
-python3 tests/test_audio.py
-python3 tests/test_install.py
-python3 tests/test_marketplace.py
-python3 tests/test_proxy.py
-python3 tests/test_proxy_host.py
-```
+## Automated checks
 
-Audio tests use synthetic signals and a Flask stub, without loading a TTS model. These are not tests of real HA, GPU or Alexa compatibility.
+GitHub Actions workflows provide:
 
-Before a stable release: fresh Debian CT and HA installation, STT and GPU inference, CPU fallback with the worker offline, tablet/Echo Bluetooth pairing, announcements, quiet times, device mapping, restart and security review. Never commit private configuration or models. Update VERSION and both changelogs together. The separately versioned original GPU worker remains at 1.5.0.
+- `python scripts/test_unified_layout.py`: one integration, app/Marketplace bundle matching, no placeholders/private network addresses, native compatibility API
+- `python -m unittest discover -s tafa_app/tests -v`: safe installation and rollback, Ingress/CSRF, Piper/Whisper HTTP API, and mocked HA config/Assist pipeline
+- `node --input-type=module --check < custom_components/tablet_assist_for_alexa/frontend/panel.js`: public UI syntax
+- `python tests/test_marketplace.py` and HACS/hassfest: integration structure and dependencies
+- `bash tests/ha_e2e/run.sh`: actual Home Assistant Core Docker startup, native relay services, multiroom, camera/motion entities, conversation, restart and persisted reminders
+- `linux/amd64` and `linux/arm64` Docker image builds in `.github/workflows/tafa-app.yml`.
 
-Public catalog inclusion requires additional validation, a release tag and successful CI. Test Add from link on HA 2026.11. Installers, GPU and HTTPS playback must be checked on real equipment.
+Previous successful CI runs validate **source, image build and HA Core behavior**, not an entire fresh Home Assistant OS/Supervisor installation with real downloaded CPU models or physical tablets. Verify current HEAD checks independently after changes.
 
-Additional tests: `python3 tests/test_local_intents.py` (synthetic states, no live HA install).
+## Outstanding stable-release gates
+
+1. Full clean Home Assistant OS installation including App Store, Supervisor APIs, Ingress and automatic pipeline.
+2. Real Piper/Whisper model download, RAM/CPU use, and speech quality on amd64/aarch64.
+3. Echo Bluetooth playback and simultaneous physical Android multiroom tests.
+4. **Native wake handoff:** unchanged Device Bridge 1.0.0 sends only the matched wake phrase and releases its microphone. It does not stream the subsequent spoken question. A separate active Assist client must capture speech. Fully hands-free use with just this Bridge and the TAFA App is **not yet supported**.
+5. Legacy migration with existing `jarvis_tablet_audio` entries and room assignments must be tested on backed-up copies.
+6. Security/voice-model license reviews and final stable tag only after these checks.
+
+**Release policy:** Keep App config version, integration manifest, `VERSION`, both changelogs and DE/EN guides consistent. Exclude private dashboards, household secrets, tokens, and changes to the Android APK.
+
+[App setup](app.md) · [Marketplace](marketplace.md) · [Backend](backend-roadmap.md) · [GitHub Actions](https://github.com/michaelbudisch/tablet-assist-for-alexa/actions).
