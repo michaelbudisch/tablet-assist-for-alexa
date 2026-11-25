@@ -13,9 +13,10 @@ const STRINGS={
     noUsers:"Kein aktiver Benutzer ohne Administratorrechte gefunden. Unter Einstellungen → Personen → Benutzer anlegen.",
     admin:"Die Audio-Raumzuordnung kann nur ein HA-Administrator vornehmen.",
     unavailable:"Die Audio-Raumverwaltung ist nicht erreichbar. Prüfe, ob die aktuelle TAFA-Integration geladen ist.",
-    mismatch:"Dieses Rufwortgerät wurde mit einem anderen HA-Benutzer registriert. Auf dem Tablet zuerst den Token des ausgewählten Benutzers verwenden und die Rufwort-Erkennung neu starten.",
+    mismatch:"Das Rufwortgerät gehört noch zu einem anderen HA-Benutzer. Beim Speichern kann ein Administrator die Zuordnung ausdrücklich übertragen. Anschließend den ausgewählten Benutzer-Token auf dem Tablet verwenden.",
     success:"Audio-Raum gespeichert. Auf dem Tablet Multiroom-Audio aktivieren und Player starten.",
     replace:"Dieser Raum gehört schon einem anderen Benutzer. Die Zuordnung überschreiben und seinen Player trennen?",
+    transfer:"Das Gerät gehört noch einem anderen HA-Benutzer. Die Geräteverwaltung auf den ausgewählten Benutzer übertragen? Danach auf dem Tablet dessen Token verwenden.",
     failed:"Die Zuordnung ist fehlgeschlagen. Prüfe die Benutzerwahl und ob der Tablet-Token zu diesem Benutzer gehört.",
     invalid:"Eine gültige Raumkennung eingeben (Kleinbuchstaben, Zahlen, _ oder -)."
   },
@@ -30,9 +31,10 @@ const STRINGS={
     noUsers:"No active non-admin HA users found. Create one in Settings → People → Users.",
     admin:"Only an HA administrator can pair audio rooms.",
     unavailable:"Audio room management is unavailable. Check that the current TAFA integration is loaded.",
-    mismatch:"This wake device was registered using a different HA account. First use the selected user's token in the tablet app and restart wake recognition.",
+    mismatch:"This wake device belongs to another HA user. An administrator can explicitly approve transfer when saving; then use the selected user's token on the tablet.",
     success:"Audio room saved. On the tablet, enable Multiroom audio and start the player.",
     replace:"This room belongs to another user. Overwrite the assignment and disconnect their player?",
+    transfer:"This device is owned by another HA user. Transfer device management to the selected account? Then use that account token on the tablet.",
     failed:"Could not pair this room. Check the HA user selection and tablet token.",
     invalid:"Enter a valid room ID (lowercase letters, digits, _ or -)."
   }
@@ -100,7 +102,7 @@ export function renderAudioPairing({container,hass,device,audio,language,onChang
   const warn=()=>{
     const mismatch=Boolean(ownerId&&select.value&&ownerId!==select.value);
     status.textContent=mismatch?t.mismatch:"";
-    btn.disabled=!select.value||mismatch;
+    btn.disabled=!select.value;
   };
   select.onchange=warn;warn();
   btn.onclick=async()=>{
@@ -109,10 +111,12 @@ export function renderAudioPairing({container,hass,device,audio,language,onChang
     const occupied=rooms.find(x=>x.room===room&&x.user_id!==userId);
     let replace=false;
     if(occupied){if(!window.confirm(t.replace))return;replace=true;}
+    let transfer_device=false;
+    if(ownerId&&ownerId!==userId){if(!window.confirm(t.transfer))return;transfer_device=true;}
     btn.disabled=true;status.textContent="";
     try{
       await hass.callApi("POST","jarvis_tablet_audio/room_admin",{
-        action:"pair",device_id:deviceId,user_id:userId,room,replace
+        action:"pair",device_id:deviceId,user_id:userId,room,replace,transfer_device
       });
       status.textContent=t.success;
       if(typeof onChanged==="function")await onChanged();
