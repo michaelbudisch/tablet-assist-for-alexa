@@ -12,7 +12,7 @@ A native audio bridge from Home Assistant through an Android device to a Bluetoo
 
 **Install the signed regular release over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; the regular app keeps the name **HA Jarvis Echo Relay**.
 
-The published, non-debuggable release APK uses the same local Android test signing key as earlier builds for update compatibility. Private signing keys are not included. CI debug APKs use a different temporary key and are not upgrade replacements for this download.
+Only an APK signed with the **original 0.7.1 keystore** can update the existing installation without uninstalling. Before publishing, the 0.9.0 signing certificate must be checked against the signed 0.7.1 APK. Unsigned and differently signed CI builds are not installable updates.
 
 ## Experimental offline wakeword (0.7.0 branch)
 
@@ -20,7 +20,7 @@ Enable **Native wakeword recognition** in the Echo Relay app only after download
 
 The app recognizes wakewords locally, publishes only the recognized phrase using the configured authenticated Home Assistant connection as a `jarvis_android_wakeword` event, releases its microphone, and pauses detection for 50 seconds. The Home Assistant dashboard listens to the event and starts its existing Whisper STT capture. Keep the dashboard visible and turn off its own wakeword mode for the first tests; speech immediately following the wakeword may be cut off until the browser microphone is ready. There is no guarantee of working hands-free operation while the dashboard is closed. **Alexa** may simultaneously activate a real Echo.
 
-This is an experimental source branch, not a signed downloadable 0.7.0 APK. The GitHub Actions **debug APK** uses a separate application ID (`de.jarvis.audio.wakepilot`) and is labeled **Jarvis Wake Pilot**, allowing installation alongside the stable signed Echo Relay app. It has separate settings and needs its own Home Assistant connection. **In the pilot, enter the HA address/token and press only “Start native wakeword”**; that button saves the encrypted connection itself. Do not start a second Echo Relay player alongside the stable app. Detection reliability, processing time and Android microphone coexistence are unverified.
+This is an experimental source branch, not a signed downloadable 0.7.0 APK. The GitHub Actions **debug APK** uses a separate application ID (`de.jarvis.audio.wakepilot`) and is labeled **HA Jarvis Echo Relay**, allowing installation alongside the stable signed Echo Relay app. It has separate settings and needs its own Home Assistant connection. **In the pilot, enter the HA address/token and press only “Start native wakeword”**; that button saves the encrypted connection itself. Do not start a second Echo Relay player alongside the stable app. Detection reliability, processing time and Android microphone coexistence are unverified.
 
 ### Native microphone and wakeword settings (0.7.1)
 
@@ -36,7 +36,7 @@ Values synchronize with Home Assistant; remote mute normally takes effect within
 
 ### Unlimited tablets · Dynamic multiroom (0.9.0)
 
-1. Install **HA Jarvis Echo Relay 0.9.0 (Test)** on each Android tablet. Optionally set a room name; a stable random installation ID is created automatically.
+1. Install **HA Jarvis Echo Relay 0.9.0** on each Android tablet. Optionally set a room name; a stable random installation ID is created automatically.
 2. Configure the HA connection, install the offline model and choose **Start native wakeword**. The app automatically enrolls in Home Assistant. There are no numbered slots or manually created helper entities.
 3. In **TAFA → Jarvis → Voice & Audio → Native wakeword**, click **Refresh devices**, select the tablet, then **Pair selected tablet to this dashboard** (or pair by speaking the wakeword).
 4. Each tablet has independent mute, phrase, strictness, cooldown and handoff settings. The top-right microphone controls only the dashboard-paired tablet. Rooms/devices can be renamed and removed from TAFA.
