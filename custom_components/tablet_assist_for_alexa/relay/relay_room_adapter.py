@@ -99,7 +99,7 @@ class RoomAudioAdminView(HomeAssistantView):
             raise web.HTTPBadRequest()
         try:
             body = await request.json()
-            if not isinstance(body, dict) or body.get("action") not in ("list", "pair", "camera"):
+            if not isinstance(body, dict) or body.get("action") not in ("list", "pair", "camera", "job_status"):
                 raise ValueError("Invalid action")
             data = hass.data.get(DOMAIN, {})
             transport = data.get(KEY)
@@ -128,6 +128,17 @@ class RoomAudioAdminView(HomeAssistantView):
                     "users": sorted(people, key=lambda p: p["name"].casefold()),
                     "rooms": paired,
                     "devices": devices,
+                }, headers={"Cache-Control": "no-store"})
+
+            if body["action"] == "job_status":
+                room, job_id = body.get("room"), body.get("job_id")
+                if (not isinstance(room, str) or room not in transport.rooms
+                        or not isinstance(job_id, str) or not re.fullmatch(r"[a-f0-9]{32}", job_id)):
+                    raise ValueError("Invalid room or test job")
+                current = transport.status(transport.rooms[room], job_id)
+                return web.json_response({
+                    "room": room, "stage": current["stage"], "online": current["online"],
+                    "ready": current["ready"],
                 }, headers={"Cache-Control": "no-store"})
 
             if body["action"] == "camera":
