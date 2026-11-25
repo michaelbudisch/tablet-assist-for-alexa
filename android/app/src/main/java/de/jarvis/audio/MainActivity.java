@@ -456,9 +456,34 @@ public class MainActivity extends Activity {
         String stage=WakeWordService.status;
         if(!getSharedPreferences(PREF,0).getBoolean("native_assist_enabled",false)){
             current.setText(R.string.native_assist_inactive);
+        }else if(stage.startsWith("native_error:")){
+            current.setText(getString(R.string.native_state_error)+": "+stage.substring(13));
         }else if(stage.startsWith("native_")){
-            current.setText(stage.substring(7).replace('_',' '));
-        }else current.setText(stage.startsWith("listening:")?"Bereit / Ready":stage);
+            int label;
+            switch(stage){
+                case "native_connecting": case "native_connected":
+                    label=R.string.native_state_connecting;break;
+                case "native_followup":label=R.string.native_state_followup;break;
+                case "native_authenticating":label=R.string.native_state_authenticating;break;
+                case "native_waiting_for_stt":case "native_starting_microphone":
+                    label=R.string.native_state_waiting;break;
+                case "native_listening":label=R.string.native_state_listening;break;
+                case "native_transcribing":label=R.string.native_state_transcribing;break;
+                case "native_thinking":case "native_processing":
+                    label=R.string.native_state_thinking;break;
+                case "native_generating_voice":label=R.string.native_state_voice;break;
+                case "native_sending_audio":case "native_waiting_for_playback":
+                    label=R.string.native_state_playback;break;
+                case "native_buffering":label=R.string.native_state_buffering;break;
+                case "native_playing":label=R.string.native_state_playing;break;
+                case "native_answer_completed":label=R.string.native_state_done;break;
+                case "native_no_speech":case "native_no_reply":
+                    label=R.string.native_state_no_reply;break;
+                default:label=R.string.native_state_waiting;break;
+            }
+            current.setText(label);
+        }else current.setText(stage.startsWith("listening:")?
+            getString(R.string.native_state_ready):stage);
         Button test=findViewById(R.id.native_assist_test);
         if(test!=null)test.setEnabled(WakeWordService.running&&AudioService.running
             &&getSharedPreferences(PREF,0).getBoolean("native_assist_enabled",false));
