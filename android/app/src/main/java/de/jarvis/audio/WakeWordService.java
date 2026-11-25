@@ -94,7 +94,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 main.removeCallbacks(rearm);
                 releaseRecognizer();
                 holdUntil=0;nativeConversationId="";nativeFollowupCount=0;
-                main.postDelayed(()->beginNativeAssist("",false),250);
+                beginNativeAssist("",false);
             }
             return START_NOT_STICKY;
         }
@@ -193,7 +193,7 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     private void startRecognition(){
         main.removeCallbacks(rearm);
-        if(!enabled||model==null||loading||muted||nativeSession!=null)return;
+        if(!enabled||model==null||loading||muted||nativeSession!=null||nativeFollowupCount>0)return;
         long remaining=holdUntil-SystemClock.elapsedRealtime();
         if(remaining>0){
             main.postDelayed(rearm,Math.max(500,remaining));
@@ -249,7 +249,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             holdUntil=0;
             nativeConversationId="";nativeFollowupCount=0;
             // Native mode owns the entire turn. Do not wake the browser as well.
-            main.postDelayed(()->beginNativeAssist(hit,false),250);
+            beginNativeAssist(hit,false);
         }else{
             holdUntil=now+holdSeconds*1000L;
             sendWakeEvent(hit);
@@ -260,6 +260,8 @@ public final class WakeWordService extends Service implements RecognitionListene
     /** Launch only while the explicitly started foreground wake service runs. */
     private void beginNativeAssist(String hit,boolean nextQuestion){
         if(!enabled||muted||nativeSession!=null)return;
+        // Exclusive recorder ownership, including the follow-up after playback.
+        releaseRecognizer();
         var prefs=getSharedPreferences(MainActivity.PREF,0);
         if(!prefs.getBoolean("native_assist_enabled",false)||
                 !prefs.getBoolean("room_audio_enabled",false)){
