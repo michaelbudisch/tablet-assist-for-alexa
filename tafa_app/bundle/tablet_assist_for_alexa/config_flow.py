@@ -191,10 +191,10 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                 new["piper_base"] = origin(
                     str(user_input.get("piper_base") or old.get("piper_base") or "")
                 )
-                new["cpu_stt"] = str(user_input.get("cpu_stt") or "").strip()
+                new["cpu_stt"] = str(user_input.get("cpu_stt", old.get("cpu_stt", "")) or "").strip()
                 new["gpu_base"] = (
-                    origin(str(user_input["gpu_base"]))
-                    if user_input.get("gpu_base") else ""
+                    origin(str(user_input.get("gpu_base", old.get("gpu_base"))))
+                    if user_input.get("gpu_base", old.get("gpu_base")) else ""
                 )
                 # The password selector deliberately has no suggested value.
                 # An empty submission retains the previous key if GPU stays on.
@@ -203,10 +203,12 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                      or str(old.get("qwen_token") or ""))
                     if new["gpu_base"] else ""
                 )
-                new["gpu_stt"] = str(user_input.get("gpu_stt") or "").strip()
-                new["gpu_stt_host"] = str(user_input.get("gpu_stt_host") or "").strip()
-                new["llm_agent"] = str(user_input.get("llm_agent") or "").strip()
-                slug = user_input.get("hardware_profile", "automatic")
+                new["gpu_stt"] = str(user_input.get("gpu_stt", old.get("gpu_stt", "")) or "").strip()
+                new["gpu_stt_host"] = str(user_input.get("gpu_stt_host", old.get("gpu_stt_host", "")) or "").strip()
+                new["llm_agent"] = str(user_input.get("llm_agent", old.get("llm_agent", "")) or "").strip()
+                slug = user_input.get("hardware_profile", next(
+                    (k for k,v in CHOICES["hardware_profile"].items()
+                     if v == old.get("hardware_profile")), "automatic"))
                 if slug not in CHOICES["hardware_profile"]:
                     raise ValueError("Invalid hardware profile")
                 new["hardware_profile"] = CHOICES["hardware_profile"][slug]
@@ -271,19 +273,21 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
             try:
                 data = {}
                 for key in ("mp3_base", "public_audio_base"):
-                    value = str(user_input.get(key) or "").strip()
+                    value = str(user_input.get(key, old.get(key, "")) or "").strip()
                     data[key] = origin(value, key == "public_audio_base") if value else ""
                 data["mp3_token"] = (
                     str(user_input.get("mp3_token") or "").strip()
                     or str(old.get("mp3_token") or "")
                 ) if data["mp3_base"] else ""
-                data["rooms_json"] = str(user_input.get("rooms_json") or "{}")
+                data["rooms_json"] = str(user_input.get("rooms_json", old.get("rooms_json") or json.dumps(old.get("rooms", {}), ensure_ascii=False)) or "{}")
                 data["rooms"] = room_map(data["rooms_json"])
-                profile = user_input.get("mp3_profile", "natural")
+                profile = user_input.get("mp3_profile", next(
+                    (k for k,v in CHOICES["mp3_profile"].items()
+                     if v == old.get("mp3_profile")), "natural"))
                 if profile not in CHOICES["mp3_profile"]:
                     raise ValueError("Invalid announcement profile")
                 data["mp3_profile"] = CHOICES["mp3_profile"][profile]
-                data["chime"] = bool(user_input.get("chime", False))
+                data["chime"] = bool(user_input.get("chime", old.get("chime", False)))
                 if data["rooms"] and not (
                     data["mp3_base"] and data["public_audio_base"]
                     and len(data["mp3_token"]) >= 32
