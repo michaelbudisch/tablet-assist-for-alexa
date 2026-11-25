@@ -2,7 +2,10 @@
 
 [English](en/setup-guide.md) · [App installieren](app.md)
 
-TAFA App **0.3.11** kann Piper/Whisper entweder lokal betreiben oder deinen vorhandenen **Proxmox-Sprachserver exklusiv nutzen**. Die Wahl erfolgt vor dem App-Start unter **Einstellungen → Apps → TAFA → Konfiguration**. Es gibt drei voneinander unabhängige Entscheidungen:
+> **Neu in App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration 0.4.4 geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
+
+
+TAFA App **0.3.12** kann Piper/Whisper entweder lokal betreiben oder deinen vorhandenen **Proxmox-Sprachserver exklusiv nutzen**. Die Wahl erfolgt vor dem App-Start unter **Einstellungen → Apps → TAFA → Konfiguration**. Es gibt drei voneinander unabhängige Entscheidungen:
 
 **Bestehender Proxmox-Sprachserver:** Um ausschließlich den bisherigen tokenpflichtigen MP3-Generator zu aktualisieren, die aktuellen Repository-Dateien im dedizierten Debian-Gast bereitstellen und dort `sudo bash proxmox/update-mp3-generator.sh` ausführen. Das Skript sichert die vorhandene `api.py`, startet nur `jarvis-mp3.service` neu und stellt bei Fehlern die Vorgängerversion wieder her. Piper, Whisper, Audiodateien und HTTPS-Proxy bleiben unverändert. Passend dazu TAFA-Integration 0.4.3 verwenden. **Nicht auf dem Proxmox-Host ausführen.** Port 5001 niemals ins Internet weiterleiten.
 
@@ -15,7 +18,7 @@ TAFA App **0.3.11** kann Piper/Whisper entweder lokal betreiben oder deinen vorh
 
 Für Proxmox die [CPU-Sprachserver-Anleitung](proxmox.md) öffnen. Nur in einem **frischen Debian-Gast** `install-speechserver.sh` ausführen – **niemals auf dem Proxmox-Host** und niemals blind über eine vorhandene Jarvis-Installation. Ein neuer CT wird mit `create-ct.sh` auf dem Proxmox-Host nach ausdrücklicher Bestätigung erstellt (4 vCPU, 4 GiB RAM, 20 GiB Speicher, DHCP). Der Installer richtet außerdem optional nutzbare Dienste für MP3-Durchsagen ein.
 
-Im externen Modus prüft das TAFA Control Center die Proxmox-Piper-API (`/health`) und versucht bei Erreichbarkeit, die TAFA-HA-Integration vorzubereiten. Unter **Einstellungen → Geräte & Dienste → TAFA → Optionen → Sprachserver & GPU** die externe Piper-Adresse kontrollieren, bei Wyoming die Integration für `SERVER:10300` hinzufügen und deren STT-Entität als **CPU-STT** auswählen. Anschließend unter **Einstellungen → Sprachassistenten** eine eigene Pipeline für TAFA mit STT-Router und **Tablet Assist Stream** erstellen. Die externe Proxmox-Piper-API besitzt selbst keinen `/stt`-Endpunkt, deshalb ist Wyoming zwingend für die externe Spracherkennung.
+Im externen Modus prüft das TAFA Control Center die Proxmox-Piper-API (`/health`) und versucht bei Erreichbarkeit, die TAFA-HA-Integration vorzubereiten. Unter **Apps → TAFA → Konfiguration** die externe Piper-Adresse kontrollieren, die Wyoming-Integration für `SERVER:10300` einmalig hinzufügen; die STT-Entität im Feld `cpu_stt` der TAFA-App eintragen (oder automatisch erkennen lassen). Anschließend unter **Einstellungen → Sprachassistenten** eine eigene Pipeline für TAFA mit STT-Router und **Tablet Assist Stream** erstellen. Die externe Proxmox-Piper-API besitzt selbst keinen `/stt`-Endpunkt, deshalb ist Wyoming zwingend für die externe Spracherkennung.
 
 ## 2. Soll der GPU-Hauptrechner die Qwen-Stimme übernehmen?
 
