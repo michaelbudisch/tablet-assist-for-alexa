@@ -4,6 +4,9 @@ No CT or VM is created by these tests, and no privileged host tools run.
 """
 import importlib.util
 import subprocess
+import tempfile
+import json
+from unittest.mock import patch
 import unittest
 from pathlib import Path
 
@@ -19,6 +22,9 @@ AUDIO_SERVER = (ROOT / "speechserver/audio_server.py").read_text(encoding="utf-8
 spec = importlib.util.spec_from_file_location("proxy", PVE / "render-nginx-proxy.py")
 proxy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(proxy)
+spec_dns = importlib.util.spec_from_file_location("duckdns", PVE / "duckdns-update.py")
+duckdns = importlib.util.module_from_spec(spec_dns)
+spec_dns.loader.exec_module(duckdns)
 
 
 class CombinedCTTests(unittest.TestCase):
@@ -89,6 +95,32 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn('https://www.duckdns.org/update?', DUCKDNS_UPDATE)
         self.assertIn('www.duckdns.org', HOST)
         self.assertNotIn('pct exec "$PROXY_CT" -- bash -c "curl', HOST)
+
+    def test_duckdns_update_is_bound_to_registered_domain_without_network(self):
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            settings = base / "fresh-audio.json"
+            token = "safe-unit-test-token-1234"
+            settings.write_text(json.dumps({"domain":"fresh-audio.duckdns.org", "token":token}))
+            settings.chmod(0o600)
+            class FakeResponse:
+                def __enter__(self): return self
+                def __exit__(self, *args): return False
+                def read(self, size): return b"OK"
+            calls = []
+            def fake_open(request, timeout):
+                calls.append((request.full_url, timeout))
+                return FakeResponse()
+            with patch.object(duckdns,"CONFIG_DIR",base), patch.object(duckdns,"urlopen",side_effect=fake_open):
+                self.assertEqual(duckdns.update(settings), "fresh-audio.duckdns.org")
+            self.assertEqual(len(calls),1)
+            self.assertIn("domains=fresh-audio",calls[0][0])
+            self.assertIn("token=",calls[0][0])
+            self.assertTrue(calls[0][0].startswith("https://www.duckdns.org/update?"))
+            settings.chmod(0o644)
+            with patch.object(duckdns,"CONFIG_DIR",base), self.assertRaises(ValueError):
+                duckdns.update(settings)
 
     def test_scripts_parse_and_status_works_without_root(self):
         for path in ("quick-install.sh", "install-combined-ct.sh", "combined-console.sh", "install-duckdns-updater.sh"):
