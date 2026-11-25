@@ -12,6 +12,9 @@ PVE = ROOT / "proxmox"
 HOST = (PVE / "quick-install.sh").read_text(encoding="utf-8")
 GUEST = (PVE / "install-combined-ct.sh").read_text(encoding="utf-8")
 CONSOLE = (PVE / "combined-console.sh").read_text(encoding="utf-8")
+DUCKDNS = (PVE / "install-duckdns-updater.sh").read_text(encoding="utf-8")
+DUCKDNS_UPDATE = (PVE / "duckdns-update.py").read_text(encoding="utf-8")
+AUDIO_SERVER = (ROOT / "speechserver/audio_server.py").read_text(encoding="utf-8")
 
 spec = importlib.util.spec_from_file_location("proxy", PVE / "render-nginx-proxy.py")
 proxy = importlib.util.module_from_spec(spec)
@@ -63,8 +66,32 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn("OnUnitActiveSec=5min", GUEST)
         self.assertNotIn("iptables -A", HOST + GUEST + CONSOLE)
 
+    def test_shared_proxy_does_not_move_public_port_forwarding(self):
+        self.assertIn('ask "HTTPS-Modus (dedicated/shared/none)"', HOST)
+        self.assertIn('[[ "$PROXY_CONFIRM" == JA ]]', HOST)
+        self.assertIn('install-nginx-proxy.sh" prepare', HOST)
+        self.assertIn('--shared', HOST)
+        self.assertIn('pct exec "$PROXY_CT" -- nginx -t', HOST)
+        self.assertIn('pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh', HOST)
+        self.assertIn('PROXY_IP', HOST)
+        self.assertIn('MODE=shared', GUEST)
+        self.assertIn('JARVIS_AUDIO_ALLOW_IP', GUEST)
+        self.assertIn('request.remote_addr != allowed_ip', AUDIO_SERVER)
+        self.assertIn('if [[ "$MODE" == shared ]]', CONSOLE)
+        self.assertNotIn('pct set "$PROXY_CT"', HOST)
+
+    def test_duckdns_token_is_collected_inside_the_guest_not_in_host_argv(self):
+        self.assertIn('install-duckdns-updater.sh', HOST)
+        self.assertIn('duckdns-update.py', HOST)
+        self.assertIn('read -r -s TOKEN </dev/tty', DUCKDNS)
+        self.assertIn('chmod 0600 "$DEST"', DUCKDNS)
+        self.assertIn('tafa-duckdns@.timer', DUCKDNS)
+        self.assertIn('https://www.duckdns.org/update?', DUCKDNS_UPDATE)
+        self.assertIn('www.duckdns.org', HOST)
+        self.assertNotIn('pct exec "$PROXY_CT" -- bash -c "curl', HOST)
+
     def test_scripts_parse_and_status_works_without_root(self):
-        for path in ("quick-install.sh", "install-combined-ct.sh", "combined-console.sh"):
+        for path in ("quick-install.sh", "install-combined-ct.sh", "combined-console.sh", "install-duckdns-updater.sh"):
             with self.subTest(path=path):
                 subprocess.run(["bash", "-n", str(PVE / path)], check=True)
         result = subprocess.run(["bash", str(PVE / "combined-console.sh"), "--status"],
