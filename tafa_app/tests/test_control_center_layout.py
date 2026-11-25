@@ -54,7 +54,7 @@ class ControlCenterLayoutTests(unittest.TestCase):
         self.assertIn("prefers-color-scheme:dark",css)
         self.assertIn("max-width:650px",css)
         self.assertIn("prefers-reduced-motion",css)
-        self.assertIn('event.key',js)
+        self.assertIn('const {key} = event',js)
         self.assertIn("ArrowRight",js)
         self.assertIn("hashchange",js)
         self.assertIn("panels[i].hidden",js)

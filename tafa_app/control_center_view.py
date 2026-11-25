@@ -116,7 +116,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
   <div class="hero-main">
     <div class="brand-mark" aria-hidden="true">T</div>
     <div class="hero-text">
-      <p class="eyebrow">TAFA <span aria-hidden="true">/</span> CONTROL CENTER</p>
+      <p class="eyebrow">TAFA Control Center</p>
       <h1>{t("Alles im Blick. Einfach eingestellt.","Everything in view. Easy to configure.")}</h1>
       <p>{t("Einrichtung, Verbindungen und Wartung an einem Ort.","Settings, connections and maintenance in one place.")}</p>
     </div>
