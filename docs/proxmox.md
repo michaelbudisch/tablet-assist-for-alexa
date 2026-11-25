@@ -39,6 +39,18 @@ Wenn derselbe Nginx-CT bereits Home Assistant, ShapeAnywhere-MCP und die oeffent
 
 Zum vorsichtigen Aufraeumen gibt es das **nur lesende** Skript `proxmox/audit-shared-proxy.sh`. Es listet aktive Nginx-Seiten, Domains, Proxy-Ziele sowie Zertifikatsablaufdaten auf, ohne Einstellungen zu veraendern. Erst nach dem Pruefen alter Sites etwas entfernen.
 
+## Unterbrochene CT-Installation nach `runuser ... Permission denied` fortsetzen
+
+Bei alten Installer-Versionen wurde die Python-venv mit `umask 077` angelegt. Der Systembenutzer `jarvis-local` konnte deshalb die Pakete nicht ausführen. Der aktuelle Installer verwendet `umask 022` **ausschließlich für die nicht vertrauliche venv-Installation**. Bereits heruntergeladene Pakete müssen nicht gelöscht werden.
+
+Wenn ein **neuer CT bereits existiert** und die Installation **genau nach dem `pip install` bei `runuser: failed to execute /opt/jarvis-local/venv/bin/python: Permission denied` abgebrochen** ist, auf dem **Proxmox-Host** starten:
+
+```bash
+curl -fsSLo /root/tafa-resume.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/resume-install.sh && bash /root/tafa-resume.sh
+```
+
+Der Assistent fragt die CT-ID, die neue registrierte Audio-Domain, optional den GPU-Worker und den bestehenden Proxy-CT ab. Für den Fall mit einem zentralen Proxy `shared` verwenden. Er kontrolliert den genauen Abbruchzustand und verlangt die Bestätigung `FORTSETZEN`; er erstellt keinen neuen CT, entfernt keine Container, ändert keine bestehenden Websites und übernimmt die vorhandene Python-Umgebung. Dann bereitet er **eine zusätzliche** Audio-Website vor und zeigt die Certbot-/HTTPS-Befehle. Bei andersartigen Fehlern nicht blind fortsetzen.
+
 ## Neuinstallation testen, obwohl bereits ein zentraler Nginx-Proxy läuft
 
 **Beispiel: Proxmox CT 101 bleibt für Home Assistant, ShapeAnywhere-MCP und Alexa zuständig.** So kannst du den Installer trotzdem vollständig testen, ohne 80/443 an einen anderen CT weiterzuleiten.
