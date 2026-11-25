@@ -25,9 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     session = async_get_clientsession(hass)
     cfg = settings(entry)
-    token = cfg.get("qwen_token", "") if cfg.get("gpu_base") else ""
+    token = ""  # GPU worker is restricted to the private network.
     entities = [JarvisNativeTTS(entry.entry_id, session, "piper", "Tablet Assist Piper", "", cfg)]
-    if token:
+    if cfg.get("gpu_base"):
         entities.append(JarvisNativeTTS(entry.entry_id, session, "qwen", "Tablet Assist Qwen", token, cfg))
     entities.append(JarvisStreamingTTS(entry.entry_id, session, "stream", "Tablet Assist Stream", token, cfg))
     async_add_entities(entities)
@@ -105,7 +105,7 @@ class JarvisNativeTTS(TextToSpeechEntity):
         # Only one outstanding synthesis per entity. Piper and Qwen remain separate.
         async with self._lock:
             start = monotonic()
-            if self._backend == "qwen" and self._token and self._cfg.get("hardware_profile") != "Homeserver" and monotonic() >= self._retry_after:
+            if self._backend == "qwen" and self._gpu_base and self._cfg.get("hardware_profile") != "Homeserver" and monotonic() >= self._retry_after:
                 try:
                     if await self._qwen_ready():
                         audio = await self._fetch(self._gpu_base + "/synthesize", text, 20, self._token)
@@ -176,7 +176,7 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 self._retry_after = 0.0
 
     async def _poll_health(self, _now=None):
-        if not self._token:
+        if not self._gpu_base:
             return
         try:
             async with self._session.get(
@@ -200,7 +200,7 @@ class JarvisStreamingTTS(JarvisNativeTTS):
         return value if value in {"default", *map(str, range(1, 10))} else "default"
 
     def _gpu_allowed(self):
-        return bool(self._token and self._profile() != "Homeserver"
+        return bool(self._gpu_base and self._profile() != "Homeserver"
                     and monotonic() >= self._retry_after)
 
     def _voice_variant(self):
@@ -241,7 +241,7 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 async with self._session.post(
                     self._gpu_base + "/stream",
                     json={"text": text, "voice_variant": voice_variant},
-                    headers={"X-API-Key": self._token},
+                    headers={},
                     timeout=aiohttp.ClientTimeout(total=90, connect=2, sock_read=15),
                     allow_redirects=False,
                 ) as response:

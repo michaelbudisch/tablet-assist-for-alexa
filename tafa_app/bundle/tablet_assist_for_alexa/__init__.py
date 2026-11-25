@@ -47,7 +47,7 @@ async def async_setup_entry(hass, entry):
 
     async def announce(call: ServiceCall):
         msg = call.data["text"].strip()
-        if not msg or not cfg.get("rooms") or not cfg.get("mp3_base") or not cfg.get("mp3_token") or not cfg.get("public_audio_base"):
+        if not msg or not cfg.get("rooms") or not cfg.get("mp3_base") or not cfg.get("public_audio_base"):
             raise HomeAssistantError("Configure optional Alexa announcements first.")
         # Never play to unconfigured/quiet/unavailable rooms.
         async with lock:
@@ -58,7 +58,7 @@ async def async_setup_entry(hass, entry):
                 async with session.post(cfg["mp3_base"]+"/generate",
                     json={"text":msg, "profile":cfg["hardware_profile"], "voice_variant":cfg["voice_variant"],
                           "sound_profile":cfg["mp3_profile"], "chime":cfg["chime"]},
-                    headers={"X-API-Key":cfg["mp3_token"]},
+                    headers={},
                     timeout=aiohttp.ClientTimeout(total=120), allow_redirects=False) as response:
                     if response.status != 200:
                         raise ValueError("Generation failed")

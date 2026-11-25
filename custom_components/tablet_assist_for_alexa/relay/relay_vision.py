@@ -169,13 +169,10 @@ async def _benchmark_http_error(response):
 
 
 async def request(relay, path, payload=None, *, timeout=None):
-    token = relay.entry.data.get("qwen_token", "")
-    if len(token) < 32:
-        raise ServiceValidationError("Worker token is missing")
     client = async_get_clientsession(relay.hass)
     try:
         async with client.request("POST" if payload is not None else "GET", worker_url(relay.entry) + path,
-                headers={"X-API-Key": token}, json=payload, allow_redirects=False,
+                headers={}, json=payload, allow_redirects=False,
                 timeout=aiohttp.ClientTimeout(total=timeout if timeout is not None else
                     (15 if path == "/detect" else 110 if payload else 10))) as response:
             if response.status != 200:

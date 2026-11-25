@@ -66,12 +66,10 @@ def translated_select(key, options):
         options=options, translation_key=key, mode=selector.SelectSelectorMode.DROPDOWN))
 
 def schema():
-    password = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD))
     return vol.Schema({
         vol.Required("piper_base", default="http://speechserver.local:5000"): str,
         vol.Optional("cpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
         vol.Optional("gpu_base", default=""): str,
-        vol.Optional("qwen_token", default=""): password,
         vol.Optional("gpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
         vol.Optional("gpu_stt_host", default=""): str,
         vol.Optional("llm_agent"): selector.EntitySelector(selector.EntitySelectorConfig(domain="conversation")),
@@ -80,7 +78,6 @@ def schema():
         vol.Required("voice_variant", default="default"): translated_select("voice_variant", ["default", *map(str, range(1, 10))]),
         vol.Required("conversation_mode", default="intelligent"): translated_select("conversation_mode", list(CHOICES["conversation_mode"])),
         vol.Optional("mp3_base", default=""): str,
-        vol.Optional("mp3_token", default=""): password,
         vol.Optional("public_audio_base", default=""): str,
         vol.Optional("rooms_json", default="{}"): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
         vol.Required("mp3_profile", default="natural"): translated_select("mp3_profile", list(CHOICES["mp3_profile"])),
@@ -101,8 +98,8 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data["cpu_stt"] = (data.get("cpu_stt") or "").strip()
             for key, choices in CHOICES.items():
                 data[key] = choices.get(data.get(key), data.get(key))
-            for key in ("gpu_base", "qwen_token", "gpu_stt", "gpu_stt_host", "llm_agent",
-                        "mp3_base", "mp3_token", "public_audio_base", "rooms_json"):
+            for key in ("gpu_base", "gpu_stt", "gpu_stt_host", "llm_agent",
+                        "mp3_base", "public_audio_base", "rooms_json"):
                 data[key] = (data.get(key) or "").strip()
             try:
                 data["piper_base"] = origin(data["piper_base"])
@@ -111,10 +108,8 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data[key] = origin(data[key], key == "public_audio_base")
                 if data["gpu_stt_host"] and not re.fullmatch(r"[A-Za-z0-9.-]+", data["gpu_stt_host"]):
                     raise ValueError("Invalid host")
-                if data["gpu_base"] and len(data["qwen_token"]) < 32:
-                    raise ValueError("Missing GPU token")
                 data["rooms"] = room_map(data["rooms_json"])
-                if data["rooms"] and not (data["mp3_base"] and data["public_audio_base"] and len(data["mp3_token"]) >= 32):
+                if data["rooms"] and not (data["mp3_base"] and data["public_audio_base"]):
                     raise ValueError("Missing announcement configuration")
                 registry = er.async_get(self.hass)
                 for key in ("cpu_stt", "gpu_stt"):
@@ -196,13 +191,6 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                     origin(str(user_input.get("gpu_base", old.get("gpu_base"))))
                     if user_input.get("gpu_base", old.get("gpu_base")) else ""
                 )
-                # The password selector deliberately has no suggested value.
-                # An empty submission retains the previous key if GPU stays on.
-                new["qwen_token"] = (
-                    (str(user_input.get("qwen_token") or "").strip()
-                     or str(old.get("qwen_token") or ""))
-                    if new["gpu_base"] else ""
-                )
                 new["gpu_stt"] = str(user_input.get("gpu_stt", old.get("gpu_stt", "")) or "").strip()
                 new["gpu_stt_host"] = str(user_input.get("gpu_stt_host", old.get("gpu_stt_host", "")) or "").strip()
                 new["llm_agent"] = str(user_input.get("llm_agent", old.get("llm_agent", "")) or "").strip()
@@ -212,8 +200,6 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                 if slug not in CHOICES["hardware_profile"]:
                     raise ValueError("Invalid hardware profile")
                 new["hardware_profile"] = CHOICES["hardware_profile"][slug]
-                if new["gpu_base"] and len(new["qwen_token"]) < 32:
-                    raise ValueError("GPU key missing")
                 if new["gpu_stt_host"] and not re.fullmatch(
                     r"[A-Za-z0-9.-]+", new["gpu_stt_host"]
                 ):
@@ -239,9 +225,6 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
             (k for k,v in CHOICES["hardware_profile"].items()
              if v == old.get("hardware_profile")), "automatic"
         )
-        password = selector.TextSelector(selector.TextSelectorConfig(
-            type=selector.TextSelectorType.PASSWORD
-        ))
         fields = vol.Schema({
             vol.Required("piper_base", default=old.get("piper_base", "http://speechserver.local:5000")): str,
             vol.Optional("cpu_stt"): selector.EntitySelector(
@@ -249,7 +232,6 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
             vol.Required("hardware_profile", default=default_mode):
                 translated_select("hardware_profile", list(CHOICES["hardware_profile"])),
             vol.Optional("gpu_base"): str,
-            vol.Optional("qwen_token"): password,
             vol.Optional("gpu_stt"): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="stt")),
             vol.Optional("gpu_stt_host"): str,
@@ -275,10 +257,6 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                 for key in ("mp3_base", "public_audio_base"):
                     value = str(user_input.get(key, old.get(key, "")) or "").strip()
                     data[key] = origin(value, key == "public_audio_base") if value else ""
-                data["mp3_token"] = (
-                    str(user_input.get("mp3_token") or "").strip()
-                    or str(old.get("mp3_token") or "")
-                ) if data["mp3_base"] else ""
                 data["rooms_json"] = str(user_input.get("rooms_json", old.get("rooms_json") or json.dumps(old.get("rooms", {}), ensure_ascii=False)) or "{}")
                 data["rooms"] = room_map(data["rooms_json"])
                 profile = user_input.get("mp3_profile", next(
@@ -290,7 +268,6 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                 data["chime"] = bool(user_input.get("chime", old.get("chime", False)))
                 if data["rooms"] and not (
                     data["mp3_base"] and data["public_audio_base"]
-                    and len(data["mp3_token"]) >= 32
                 ):
                     raise ValueError("Missing MP3 generator or HTTPS proxy")
             except (ValueError, KeyError, TypeError, json.JSONDecodeError):
@@ -298,16 +275,12 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
             if not errors:
                 return self._save(data)
 
-        password = selector.TextSelector(selector.TextSelectorConfig(
-            type=selector.TextSelectorType.PASSWORD
-        ))
         choice = next(
             (k for k,v in CHOICES["mp3_profile"].items()
              if v == old.get("mp3_profile")), "natural"
         )
         fields = vol.Schema({
             vol.Optional("mp3_base"): str,
-            vol.Optional("mp3_token"): password,
             vol.Optional("public_audio_base"): str,
             vol.Optional("rooms_json"): selector.TextSelector(
                 selector.TextSelectorConfig(multiline=True)),
