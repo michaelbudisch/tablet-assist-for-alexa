@@ -60,12 +60,12 @@ async def check_proactive(hass, relay, jpeg, device, nonce, admin, guest, worker
         async def forecast(call):
             return {'weather.proactive_fixture':{'forecast':[{'datetime':dt_util.utcnow().isoformat(),'condition':'rainy'}]}}
         hass.services.async_register('weather','get_forecasts',forecast,supports_response=SupportsResponse.ONLY)
-        await save(name='Fixture',weather_entity='weather.proactive_fixture');fresh()
+        await save(weather_entity='weather.proactive_fixture');fresh()
         check((await call({'action':'check'}))['status']=='detected','greeting candidate produced')
         await hass.async_block_till_done()
         check(len(prompts)==1 and set(prompts[0])=={'request_id','camera_entity_id'},'broadcast contains no speech or identity data')
         message=p.pending['message']
-        check('Fixture' in message and 'Regenschirm' in message and 'Tagesüberblick' in message,'fixed greeting uses actual forecast and offers overview')
+        check('Regenschirm' in message and 'Tagesüberblick' in message,'greeting uses actual forecast and offers overview')
         stream=SimpleNamespace(url='/api/tts_proxy/fixture',async_set_message=lambda message:None)
         with patch('homeassistant.components.tts.async_create_stream',return_value=stream):
             claim=await call({'action':'claim','client_id':'fixture-client','request_id':p.pending['id']},guest)

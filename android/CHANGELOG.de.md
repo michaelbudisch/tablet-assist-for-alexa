@@ -8,7 +8,7 @@
 - Weitere Home-Assistant-Einstellungen: Rufwort, Erkennungsstrenge (1–3 wiederholte Vosk-Erkennungsergebnisse), Sperrzeit (3–30 s) und Mikrofon-Übergabepause (10–90 s).
 - Android-App: alle Werte lokal anzeigen und ändern; authentifizierter Abgleich mit HA. Änderungen werden während der laufenden Erkennung übernommen. Kein akustischer dB-Schwellwert: das Modell stellt dafür keine verlässlich kalibrierte Lautstärkeskala bereit.
 - HA-Synchronisierung etwa alle 2,5 Sekunden (weitere Einstellungen alle ca. 12 Sekunden); bei nicht erreichbarem HA wird das Mikrofon aus Datenschutzgründen deaktiviert.
-- Experimentelle Debug-App bleibt separat von der signierten 0.6.0-Produktivversion. Reale Geräteprüfung erforderlich.
+- Veröffentlichung als signierte Release-APK `HA-Jarvis-Echo-Relay-0.7.1.apk` mit bisheriger App-ID und Signatur für Updates von 0.6.0/0.7.0. Der optionale Debug-Pilot bleibt separat. Reale Geräteprüfung erforderlich.
 
 ## 0.7.0 · Experimentelle native Rufworterkennung
 

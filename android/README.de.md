@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.7.1 (experimentell)
+# HA Jarvis Echo Relay · Android 0.7.1
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -8,23 +8,23 @@ Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetoo
 
 ## Download und Update
 
-[Bisherige stabile 0.6.0-Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Signierte APK 0.7.1 herunterladen](downloads/HA-Jarvis-Echo-Relay-0.7.1.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v0.7.1) · [SHA-256-Prüfsummen](downloads/SHA256SUMS).
 
-Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Der sichtbare Name und das Icon ändern sich.
+Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Eine Deinstallation ist für das Update nicht nötig.
 
-Die Vorschau verwendet denselben lokalen Android-Testsignaturschlüssel wie die vorherigen Builds, damit Updates funktionieren. Die veröffentlichte APK ist ein signierter, nicht debuggbarer Release-Build; Signaturschlüssel werden nicht veröffentlicht. CI-Debug-APKs verwenden einen anderen Testschlüssel und sind kein Ersatz für dieses Update.
+Der Release verwendet denselben lokalen Android-Testsignaturschlüssel wie die vorherigen Builds, damit Updates funktionieren. Die veröffentlichte APK ist ein signierter, nicht debuggbarer Release-Build; Signaturschlüssel werden nicht veröffentlicht. CI-Debug-APKs verwenden einen anderen Testschlüssel und sind kein Ersatz für dieses Update.
 
-## Experimentelle native Rufworterkennung (0.7.0-Testzweig)
+## Optionale native Rufworterkennung
 
 In der Echo-Relay-App unter **Native Rufworterkennung** das optionale deutsche Sprachmodell (~45 MB) auf Knopfdruck laden und den Mikrofonzugriff erlauben. **Hey Jarvis**, **Jarvis**, **Alexa** oder **Alle drei** auswählen und **Native Erkennung starten** antippen. Eine dauerhafte Android-Benachrichtigung zeigt den aktiven Mikrofon-Dienst und bietet **Stoppen**. Die Erkennung kann auch in der App beendet werden. Das Sprachmodell stammt von Alpha Cephei, wird über HTTPS geladen und bleibt im privaten App-Speicher.
 
-Die App erkennt die Rufwörter lokal und sendet nur das erkannte Rufwort über die hinterlegte Home-Assistant-Verbindung als `jarvis_android_wakeword`-Ereignis. Sie gibt das Mikrofon anschließend frei und pausiert 50 Sekunden. Das HA-Dashboard empfängt das Ereignis und startet seine vorhandene Whisper-STT-Aufnahme. Für die ersten Tests das Dashboard geöffnet lassen und dessen eigene Rufworterkennung ausschalten; direkt angehängte Wörter können vor der Übernahme durch das Browsermikrofon verloren gehen. Bei geschlossenem Dashboard ist ein vollständig freihändiger Betrieb noch nicht gewährleistet. **Alexa** kann zugleich einen echten Echo aktivieren.
+Die App erkennt die Rufwörter lokal und sendet nur das erkannte Rufwort über die hinterlegte Home-Assistant-Verbindung als `jarvis_android_wakeword`-Ereignis. Sie gibt das Mikrofon anschließend frei und pausiert für die eingestellte Übergabezeit (standardmäßig 50 Sekunden). Das HA-Dashboard empfängt das Ereignis und startet seine vorhandene Whisper-STT-Aufnahme. Für die ersten Tests das Dashboard geöffnet lassen und dessen eigene Rufworterkennung ausschalten; direkt angehängte Wörter können vor der Übernahme durch das Browsermikrofon verloren gehen. Bei geschlossenem Dashboard ist ein vollständig freihändiger Betrieb noch nicht gewährleistet. **Alexa** kann zugleich einen echten Echo aktivieren.
 
-Das ist ein experimenteller Quellcode-Zweig, noch keine signierte 0.7.0-Update-APK. Die **Debug-APK aus GitHub Actions** verwendet die separate App-ID `de.jarvis.audio.wakepilot` und heißt **Jarvis Wake Pilot**. Sie kann neben der vorhandenen signierten Echo-Relay-App installiert werden, besitzt aber eigene Einstellungen und benötigt eine eigene HA-Verbindung. **In der Test-App HA-Adresse/Token eintragen und nur „Native Erkennung starten“ antippen**; dabei wird die Verbindung verschlüsselt gespeichert. Nicht zusätzlich den Audio-Player der Test-App starten, sonst laufen zwei Echo-Relay-Player parallel. Erkennungsqualität, Latenz und Mikrofon-Koexistenz müssen auf dem Tablet geprüft werden.
+Die signierte 0.7.1-APK aktualisiert die vorhandene Echo-Relay-App mit der bisherigen App-ID `de.jarvis.audio`. Rufworterkennung, Hintergrundbetrieb und Mikrofonübergabe müssen weiterhin auf einem echten Tablet geprüft werden. Der separat kompilierbare Debug-Build heißt **Jarvis Wake Pilot** und verwendet `de.jarvis.audio.wakepilot` mit eigenen Einstellungen. Bei paralleler Installation nur einen Echo-Relay-Audio-Player betreiben.
 
 ### Rufwort- und Mikrofoneinstellungen (0.7.1)
 
-Alle Regler sind in der Pilot-App und über die Home-Assistant-Helfer erreichbar. Im TAFA-Dashboard kann das Mikrofon oben rechts zur Steuerung der **nativen App** umgeschaltet werden; der Knopf schaltet dann die native Erkennung **stumm/frei**. Stumm bedeutet, dass Android `AudioRecord` freigibt – es wird nicht nur das Ereignis unterdrückt.
+Alle Regler sind in der App und über die Home-Assistant-Helfer erreichbar. Die folgenden Helfer und ein Dashboard-Empfänger für `jarvis_android_wakeword` müssen in Home Assistant separat eingerichtet sein; das APK-Update legt sie nicht an. Fehlen die Helfer, bleibt die native Erkennung stumm. Im TAFA-Dashboard kann das Mikrofon oben rechts zur Steuerung der **nativen App** umgeschaltet werden; der Knopf schaltet dann die native Erkennung **stumm/frei**. Stumm bedeutet, dass Android `AudioRecord` freigibt – es wird nicht nur das Ereignis unterdrückt.
 
 - `input_boolean.jarvis_native_wake_stumm`: Ein = Mikrofon stumm / aus
 - `input_select.jarvis_native_wake_rufwort`: Hey Jarvis / Jarvis / Alexa / Alle drei
@@ -32,7 +32,7 @@ Alle Regler sind in der Pilot-App und über die Home-Assistant-Helfer erreichbar
 - `input_number.jarvis_native_wake_sperrzeit`: 3 bis 30 s
 - `input_number.jarvis_native_wake_aufnahmeubergabe`: 10 bis 90 s Pause für das Whisper-Mikrofon nach dem Rufwort
 
-Die Einstellungen werden mit Home Assistant abgeglichen; das Stummschalten wirkt normalerweise binnen drei Sekunden. Bei Verbindungsverlust zum HA-Einstellungsdienst wird das Mikrofon sicherheitshalber freigegeben. Es gibt derzeit keinen zuverlässigen echten Mikrofon-Lautstärkeschwellwert (dB) in dieser Vosk-Anbindung. Nach Installation dieser neuen Debug-Version können aufgrund unterschiedlicher Debug-Signaturen gegebenenfalls Deinstallation, Neuanmeldung und Modell-Download nötig werden.
+Die Einstellungen werden mit Home Assistant abgeglichen; das Stummschalten wirkt normalerweise binnen drei Sekunden. Bei Verbindungsverlust zum HA-Einstellungsdienst wird das Mikrofon sicherheitshalber freigegeben. Es gibt derzeit keinen zuverlässigen echten Mikrofon-Lautstärkeschwellwert (dB) in dieser Vosk-Anbindung. Die signierte Update-APK verwendet den bisherigen Schlüssel. Nur CI-Debug-APKs können wegen wechselnder Schlüssel eine Neuinstallation der separaten Pilot-App benötigen.
 
 ## Einrichten
 

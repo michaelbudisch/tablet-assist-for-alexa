@@ -8,7 +8,7 @@
 - Shared HA helpers for wakeword choice, recognition strictness (1–3 repeated Vosk hypotheses), cooldown (3–30 s) and microphone handoff pause (10–90 s).
 - Android app shows and edits all settings; authenticated synchronization with HA updates active detection. There is no calibrated acoustic dB threshold; Vosk does not expose one in the current implementation.
 - HA mute sync roughly every 2.5 seconds (full settings roughly every 12 seconds); if HA becomes inaccessible, the microphone fails closed.
-- Experimental debug app remains separate from signed stable 0.6.0. Physical Android testing remains necessary.
+- Published as signed release APK `HA-Jarvis-Echo-Relay-0.7.1.apk`, with the existing application ID and signing key for updates from 0.6.0/0.7.0. The optional debug pilot remains separate. Physical Android testing remains necessary.
 
 ## 0.7.0 · Experimental native wakeword recognition
 

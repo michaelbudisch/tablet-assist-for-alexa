@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.7.1 (experimental)
+# HA Jarvis Echo Relay · Android 0.7.1
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -8,31 +8,31 @@ A native audio bridge from Home Assistant through an Android device to a Bluetoo
 
 ## Download and update
 
-[Download the previous stable 0.6.0 preview APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Download signed APK 0.7.1](downloads/HA-Jarvis-Echo-Relay-0.7.1.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v0.7.1) · [SHA-256 checksums](downloads/SHA256SUMS).
 
-**Install over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; only the visible app name and icon change.
+**Install over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; uninstalling the app is not required.
 
 The published, non-debuggable release APK uses the same local Android test signing key as earlier builds for update compatibility. Private signing keys are not included. CI debug APKs use a different temporary key and are not upgrade replacements for this download.
 
-## Experimental offline wakeword (0.7.0 branch)
+## Optional offline wakeword recognition
 
 Enable **Native wakeword recognition** in the Echo Relay app only after downloading the optional German speech model (~45 MB) and granting microphone permission. Select **Hey Jarvis**, **Jarvis**, **Alexa**, or **All three** and press **Start native wakeword**. Android displays an ongoing foreground-service notification with a **Stop** control; you can also stop it in the app. The model is downloaded from Alpha Cephei over HTTPS to private app storage.
 
-The app recognizes wakewords locally, publishes only the recognized phrase using the configured authenticated Home Assistant connection as a `jarvis_android_wakeword` event, releases its microphone, and pauses detection for 50 seconds. The Home Assistant dashboard listens to the event and starts its existing Whisper STT capture. Keep the dashboard visible and turn off its own wakeword mode for the first tests; speech immediately following the wakeword may be cut off until the browser microphone is ready. There is no guarantee of working hands-free operation while the dashboard is closed. **Alexa** may simultaneously activate a real Echo.
+The app recognizes wakewords locally, publishes only the recognized phrase using the configured authenticated Home Assistant connection as a `jarvis_android_wakeword` event, releases its microphone, and pauses detection for the configured handoff time (50 seconds by default). The Home Assistant dashboard listens to the event and starts its existing Whisper STT capture. Keep the dashboard visible and turn off its own wakeword mode for the first tests; speech immediately following the wakeword may be cut off until the browser microphone is ready. There is no guarantee of working hands-free operation while the dashboard is closed. **Alexa** may simultaneously activate a real Echo.
 
-This is an experimental source branch, not a signed downloadable 0.7.0 APK. The GitHub Actions **debug APK** uses a separate application ID (`de.jarvis.audio.wakepilot`) and is labeled **Jarvis Wake Pilot**, allowing installation alongside the stable signed Echo Relay app. It has separate settings and needs its own Home Assistant connection. **In the pilot, enter the HA address/token and press only “Start native wakeword”**; that button saves the encrypted connection itself. Do not start a second Echo Relay player alongside the stable app. Detection reliability, processing time and Android microphone coexistence are unverified.
+The signed 0.7.1 APK updates the existing Echo Relay app with application ID `de.jarvis.audio`. Wakeword reliability, background operation and microphone handoff still require real tablet testing. The separately buildable debug variant is labeled **Jarvis Wake Pilot** and uses `de.jarvis.audio.wakepilot` with independent settings. Run only one Echo Relay audio player when both are installed.
 
 ### Native microphone and wakeword settings (0.7.1)
 
-All controls are available in the pilot app and through Home Assistant helpers. In TAFA settings, the top-right microphone icon may optionally be switched to **Native App** mode, where clicking it toggles actual Android microphone mute/unmute. Mute releases `AudioRecord`; it does not merely suppress incoming wakeword events.
+All controls are available in the app and through Home Assistant helpers. The following helpers and a dashboard listener for `jarvis_android_wakeword` must be configured separately in Home Assistant; the APK update does not create them. Without the helpers, native detection remains muted. In TAFA settings, the top-right microphone icon may optionally be switched to **Native App** mode, where clicking it toggles actual Android microphone mute/unmute. Mute releases `AudioRecord`; it does not merely suppress incoming wakeword events.
 
 - `input_boolean.jarvis_native_wake_stumm`: on = microphone muted/off
-- `input_select.jarvis_native_wake_rufwort`: Hey Jarvis / Jarvis / Alexa / All three
+- `input_select.jarvis_native_wake_rufwort`: Hey Jarvis / Jarvis / Alexa / Alle drei
 - `input_number.jarvis_native_wake_erkennungsstrenge`: 1–3 consecutive Vosk hypothesis confirmations
 - `input_number.jarvis_native_wake_sperrzeit`: 3–30 seconds
 - `input_number.jarvis_native_wake_aufnahmeubergabe`: 10–90 seconds after-detection pause to yield the microphone to Whisper
 
-Values synchronize with Home Assistant; remote mute normally takes effect within three seconds. If HA settings cannot be reached, the microphone fails closed. This Vosk integration does not provide a calibrated acoustic volume (dB) threshold. Debug APK signing can change between CI runs, potentially requiring uninstall/reinstall, fresh login and model download.
+Values synchronize with Home Assistant; remote mute normally takes effect within three seconds. If HA settings cannot be reached, the microphone fails closed. This Vosk integration does not provide a calibrated acoustic volume (dB) threshold. The signed update retains the existing signing key. Only CI debug builds may require reinstalling the separate pilot because their temporary keys can change.
 
 ## Setup
 
