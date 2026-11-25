@@ -2,6 +2,14 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 0.7.0 · Experimental native wakeword recognition
+
+- Opt-in German offline Vosk recognition for **Hey Jarvis**, **Jarvis**, **Alexa**, or **all three**. Default: off.
+- Download the ~45 MB model explicitly through the app. Microphone service uses Android's visible foreground notification with a Stop action.
+- Publish only the matched wakeword as an authenticated Home Assistant `jarvis_android_wakeword` event; microphone audio and transcripts are not uploaded.
+- Pause local detection for 50 seconds after wake detection, releasing the microphone for the existing HA/Whisper dashboard pipeline.
+- The old audio bridge, camera and Bluetooth player remain unchanged. Requires a live dashboard event listener and physical testing; no signed 0.7.0 APK has been released.
+
 ## 0.6.0 · Rooms and camera intervals
 
 - Room-specific audio helpers and camera push using authorized non-admin accounts; existing single-device mode remains available.
