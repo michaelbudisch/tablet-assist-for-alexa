@@ -6,7 +6,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-DOMAINS = ("tablet_assist_for_alexa", "jarvis_tablet_audio")
+DOMAINS = ("tablet_assist_for_alexa",)
 FIELDS = ("cpu_host", "gpu_host", "cpu_stt", "gpu_stt", "llm_agent")
 HOST = re.compile(r"[A-Za-z0-9][A-Za-z0-9.-]{0,252}\Z")
 ENTITY = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+\Z")
@@ -54,8 +54,8 @@ def install(config, bundle, values, domains=DOMAINS):
     pending = [d for d in domains if not (root / d).exists() and not (root / d).is_symlink()]
     if not pending:
         return []
-    # The base integration is host-independent. Legacy audio needs explicit validated hosts.
-    repl = replacements(values) if "jarvis_tablet_audio" in pending else {}
+    # All public backend modules are now in the single bundled component.
+    repl = {}
     # Build and validate every new component before publishing any directory.
     with tempfile.TemporaryDirectory(prefix=".tafa-stage-", dir=root) as tmp:
         stage = Path(tmp)
@@ -73,13 +73,6 @@ def install(config, bundle, values, domains=DOMAINS):
                 out.parent.mkdir(parents=True, exist_ok=True)
                 if f.suffix in (".py", ".json", ".yaml", ".js"):
                     content = f.read_text(encoding="utf-8")
-                    if domain == "jarvis_tablet_audio":
-                        for key, value in repl.items():
-                            content = content.replace(key, value)
-                        if f.name == "const.py":
-                            content = content.replace(":10501", ":10502")
-                        if "__JARVIS_" in content:
-                            raise ValueError("Unresolved configuration placeholder: " + f.name)
                     if f.suffix == ".py":
                         ast.parse(content, filename=str(f))
                     if f.suffix == ".json":
