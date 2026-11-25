@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased — Marketplace backend consolidation plan
+- Clarified the current installation boundary and the single-domain target; Android branding updated to TAFA Device Bridge 1.0.0. Private dashboard remains excluded. No new integration release or backend migration is claimed.
+
 ## Unreleased — TAFA kiosk room audio compatibility
 - Reusable TAFA integration fix: assigned room players remain discoverable when an existing room user later receives admin privileges. Unassigned users retain their legacy audio route.
 - Standalone room card and Multiroom backend remain unchanged; dedicated non-admin room accounts remain the default.
