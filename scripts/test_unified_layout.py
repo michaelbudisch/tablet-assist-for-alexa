@@ -37,10 +37,9 @@ config=(ROOT/"tafa_app"/"config.yaml").read_text(encoding="utf-8")
 server=(ROOT/"tafa_app"/"server.py").read_text(encoding="utf-8")
 docker=(ROOT/"tafa_app"/"Dockerfile").read_text(encoding="utf-8")
 app_changelog=(ROOT/"tafa_app"/"CHANGELOG.md").read_text(encoding="utf-8")
-version=re.search(r'^version: "([^"]+)"
-,config,re.MULTILINE)
+version=re.search(r'^version: "([^"]+)"$',config,re.MULTILINE)
 assert version, "App version missing"
-assert "APP_VERSION=\""+version.group(1)+"\\"" in server, "App version mismatch"
+assert f'APP_VERSION="{version.group(1)}"' in server, "App version mismatch"
 assert "## "+version.group(1) in app_changelog, "Missing App changelog"
 assert "speech_mode: list(local|external)" in config
 assert "external_piper_base: str" in config
