@@ -41,7 +41,8 @@ version=re.search(r'^version: "([^"]+)"$',config,re.MULTILINE)
 assert version, "App version missing"
 assert f'APP_VERSION="{version.group(1)}"' in server, "App version mismatch"
 assert "## "+version.group(1) in app_changelog, "Missing App changelog"
-assert "speech_mode: list(local|external)" in config
+assert "speech_mode: list(setup|local|external)" in config
+assert "  speech_mode: setup" in config, "Fresh installs must not download CPU models before import"
 assert "external_piper_base: str" in config
 assert "speech_source.py" in docker
 assert "choose_speech_source()" in server
