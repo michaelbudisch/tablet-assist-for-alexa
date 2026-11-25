@@ -303,14 +303,14 @@ def display(message="",lang="de"):
                            (' selected' if selected==item["id"] else '')+'>'+
                            html.escape(label)+'</option>')
         return "".join(choices)
-    note=wyoming_error or (t("Keine Wyoming-STT-Entitaeten gefunden. Erst Wyoming Protocol in HA installieren.",
+    picker_note=wyoming_error or (t("Keine Wyoming-STT-Entitaeten gefunden. Erst Wyoming Protocol in HA installieren.",
                               "No Wyoming STT entities found. Install Wyoming Protocol in HA first.")
                            if not wyoming_entries else t("Erkannte Entitaeten: ","Discovered entities: ")+str(len(wyoming_entries)))
     picker=f"""
 <section id="wyoming-picker"><h2>{t("Wyoming-STT automatisch erkennen", "Automatically discover Wyoming STT")}</h2>
 <p>{t("Waehle vorhandene Wyoming-Entitaeten fuer CPU und GPU aus. Die GPU/CPU-Zuordnung muss bestaetigt werden, weil Home Assistant sie nicht automatisch unterscheiden kann.",
 "Select registered Wyoming entities for CPU and GPU. Confirm their roles: Home Assistant cannot reliably identify which PC is the GPU.")}</p>
-<p class="muted">{html.escape(note)}</p>
+<p class="muted">{html.escape(picker_note)}</p>
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
 <label for="cpu_stt">{t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox")}</label>
