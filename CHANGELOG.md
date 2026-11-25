@@ -4,6 +4,13 @@
 
 # Changelog
 
+## TAFA App 0.3.11 — Central onboarding, diagnostics and cache cleanup
+- Translated HA App options for Proxmox, Qwen/Piper fallback, voice, and Alexa MP3.
+- Ingress read-only connection diagnostics for GPU, Piper and MP3 without generating audio.
+- Explicit safe deletion of TAFA-owned downloaded CPU models when external mode is active.
+- App configuration seeds new HA integration entries; existing entries remain user-controlled.
+
+
 ## TAFA App 0.3.10 / integration 0.4.3 — Proxmox-only speech option
 - Added opt-in external speech-server mode in the App Configuration to avoid duplicate local Piper/Whisper model downloads when using a trusted Proxmox guest.
 - Existing local setup remains the default; external Wyoming STT and Assist pipeline are selected explicitly in Home Assistant.
