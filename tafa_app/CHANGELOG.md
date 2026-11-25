@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.15 — Audio-only device self-test works from private HTTP
+- TAFA → Devices → Voice test now offers **Test speech output** with editable phrase; generate via the selected HA TTS engine (Qwen/Piper), queue to the selected authenticated tablet room, and display player-confirmed progress.
+- Does not require browser microphone or HTTPS, so LAN HTTP setups can verify the full TTS-to-Android playback path after first installation.
+- Full Speak once/Whisper microphone test requires trusted HTTPS. Hide its controls on insecure HTTP and show a clear explanation instead of a misleading error.
+- No Android update, credentials, Home Assistant helper entities or network exposure changes.
+
+
+
 ## 0.3.14 — First-run speech and tablet playback self-test
 - Built-in **TAFA → Devices → Speak once** guided microphone test reuses the user's proven room Assist implementation: browser microphone → Whisper STT → conversation → Qwen/Piper TTS → paired Android/Bluetooth audio player.
 - Automatically choose TAFA Lokal when configured, allow selection of another complete STT+TTS pipeline, and show actionable errors for missing pipelines, insecure microphone origins and offline room players.
