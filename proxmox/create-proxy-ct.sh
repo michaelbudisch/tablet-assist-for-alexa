@@ -18,9 +18,10 @@ CT_HOSTNAME="${CT_HOSTNAME:-tablet-assist-proxy}"
 }
 [[ "$CT_HOSTNAME" != localhost ]] || { echo 'Hostname localhost is reserved.' >&2; exit 2; }
 printf 'Create NEW unprivileged proxy CT %s (%s; 1 vCPU, 512 MiB RAM, 4 GiB, DHCP)? Type CT ID: ' "$ID" "$CT_HOSTNAME"
+printf 'Proxmox will securely prompt for the new CT root password during creation.\n'
 read -r confirm </dev/tty
 [[ "$confirm" == "$ID" ]] || exit 1
-pct create "$ID" "$TEMPLATE" --hostname "$CT_HOSTNAME" --unprivileged 1 --cores 1 --memory 512 --swap 512 --rootfs "$STORE:4" --net0 "name=eth0,bridge=$BRIDGE,ip=dhcp" --onboot 1
+pct create "$ID" "$TEMPLATE" --hostname "$CT_HOSTNAME" --unprivileged 1 --cores 1 --memory 512 --swap 512 --rootfs "$STORE:4" --net0 "name=eth0,bridge=$BRIDGE,ip=dhcp" --onboot 1 --password
 pct start "$ID"
 pct exec "$ID" -- mkdir -p /opt/tablet-assist-proxy
 pct push "$ID" "$DIR/install-nginx-proxy.sh" /opt/tablet-assist-proxy/install-nginx-proxy.sh
