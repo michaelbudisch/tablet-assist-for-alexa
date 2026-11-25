@@ -2,7 +2,7 @@
 
 [Deutsch](../setup-guide.md) · [Install the App](app.md)
 
-> **New in App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
+> **Since App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for the updated integration, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
 
 
 TAFA App **0.3.12** can use bundled CPU Piper/Whisper or a trusted **Proxmox-only speech server**. Choose under **Settings → Apps → TAFA → Configuration** before starting. There are three independent choices.
@@ -44,6 +44,15 @@ Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has a 
 3. Save the App options, restart TAFA, then retry the announcement in **TAFA → Alexa announcements**. Reload the HA integration if necessary.
 
 If you **hear a chime but no voice**, check the Notify entity first; next verify that the temporary MP3 is available through the configured public HTTPS URL. The Speak entity may omit the Alexa announcement chime; you can optionally enable TAFA's own MP3 chime. Other Alexa integrations may behave differently.
+
+### Set up tablet and Multiroom without YAML
+
+1. In the Android **TAFA Device Bridge → Connect**, use an active **non-admin HA account** and its own access token. Start wake recognition under **Wake word** so the tablet appears in **TAFA → Devices**.
+2. As an **HA administrator**, open **TAFA → Devices** and choose the detected tablet. Under **Multiroom audio**, select the HA user, accept/edit the suggested room ID and click **Connect audio room**. Unchanged existing rooms and active players are preserved.
+3. If this device belongs to another HA user, an administrator must explicitly confirm the ownership transfer; then use the selected account token on the tablet.
+4. On Android enable **Multiroom audio** and **Start player**. **TAFA → Devices** now reports audio connected, player offline or playback not ready. For playback not ready, check the Bluetooth media output.
+
+**Important:** Wake device registration and audio room pairing are separate systems. A registered wake device alone does not prove audio playback is connected. Each audio room requires its own active non-admin HA account; its assignment is managed in the TAFA Devices page rather than Developer tools. The dashboard does not store or display access tokens. The legacy `input_text.jarvis_native_audio_command` helper is not required in Multiroom mode.
 
 ## Where to configure
 
