@@ -27,6 +27,7 @@ from speech_source import (choose as choose_speech_source,
                            piper_ready as external_piper_ready,
                            setup_settings, connection_status)
 from model_store import inventory as local_model_inventory, remove_local_models
+from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 
 LOG=logging.getLogger("tafa.app")
 CONFIG=Path("/homeassistant")
@@ -35,7 +36,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.17"
+APP_VERSION="0.3.18"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -277,6 +278,53 @@ def display(message="",lang="de"):
         f'<input name="confirmation" type="text" maxlength="10" required pattern="ENTFERNEN" autocomplete="off"></label>'
         f'<button type="submit" name="action" value="cleanup">{t("TAFA-Sprachmodelle löschen","Delete TAFA speech models")}</button>'
         f'</form>' if mode == "external" and has_cache else "")
+    # Home Assistant's native App options schema has no dynamic entity picker.
+    # This admin-only Ingress UI reads the HA registry without changing it.
+    current_cpu=str(preferences.get("cpu_stt","") or "")
+    current_gpu=str(preferences.get("gpu_stt","") or "")
+    try:
+        wyoming_entries=discover_wyoming_stt(TOKEN)
+        wyoming_error=""
+    except Exception:
+        wyoming_entries=[]
+        wyoming_error=t("Wyoming-Entitaeten momentan nicht abrufbar.",
+                        "Wyoming entities temporarily unavailable.")
+    def stt_options(selected):
+        choices=['<option value=""'+(' selected' if not selected else '')+
+                 '>'+t("Keine / deaktiviert","None / disabled")+'</option>']
+        available={item["id"] for item in wyoming_entries}
+        if selected and selected not in available:
+            choices.append('<option disabled selected value="'+html.escape(selected,quote=True)+'">'+
+                           html.escape(selected)+' ('+t("nicht gefunden","not found")+')</option>')
+        for item in wyoming_entries:
+            name=item["name"] or item["id"]
+            label=name+(" · "+item["id"] if name!=item["id"] else "")
+            choices.append('<option value="'+html.escape(item["id"],quote=True)+'"'+
+                           (' selected' if selected==item["id"] else '')+'>'+
+                           html.escape(label)+'</option>')
+        return "".join(choices)
+    note=wyoming_error or (t("Keine Wyoming-STT-Entitaeten gefunden. Erst Wyoming Protocol in HA installieren.",
+                              "No Wyoming STT entities found. Install Wyoming Protocol in HA first.")
+                           if not wyoming_entries else t("Erkannte Entitaeten: ","Discovered entities: ")+str(len(wyoming_entries)))
+    picker=f"""
+<section id="wyoming-picker"><h2>{t("Wyoming-STT automatisch erkennen", "Automatically discover Wyoming STT")}</h2>
+<p>{t("Waehle vorhandene Wyoming-Entitaeten fuer CPU und GPU aus. Die GPU/CPU-Zuordnung muss bestaetigt werden, weil Home Assistant sie nicht automatisch unterscheiden kann.",
+"Select registered Wyoming entities for CPU and GPU. Confirm their roles: Home Assistant cannot reliably identify which PC is the GPU.")}</p>
+<p class="muted">{html.escape(note)}</p>
+<form action="./" method="post">
+<input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
+<label for="cpu_stt">{t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox")}</label>
+<select id="cpu_stt" name="cpu_stt">{stt_options(current_cpu)}</select>
+<label for="gpu_stt">{t("GPU-Whisper / Windows", "GPU Whisper / Windows")}</label>
+<select id="gpu_stt" name="gpu_stt">{stt_options(current_gpu)}</select>
+<p class="muted">{t("CPU/GPU brauchen unterschiedliche STT-IDs. Zuerst in Home Assistant unter Geraete & Dienste Wyoming Protocol fuer jeden Sprachserver hinzufuegen.",
+"CPU/GPU require different entity IDs. First add Wyoming Protocol in Home Assistant Devices & services for each speech server.")}</p>
+<button type="submit" name="action" value="wyoming"{" disabled" if not wyoming_entries else ""}>{t("STT-Auswahl speichern", "Save STT selection")}</button>
+</form>
+<p class="muted">{t("Speichert beide Werte dauerhaft in der TAFA-App-Konfiguration, ohne andere Einstellungen zu aendern. Danach TAFA-App einmal neu starten.",
+"Saves both values in TAFA App Configuration without altering other settings. Restart TAFA App once to apply.")}</p>
+<p><a href="/config/integrations" target="_top">{t("Wyoming-Integrationen einrichten", "Set up Wyoming integrations")}</a></p></section>
+"""
     guide = f"""
 <section><h2>{t("Einrichtung in vier Schritten", "Setup in four steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
@@ -320,7 +368,7 @@ h1{{font-size:27px;margin:0}}h2{{font-size:17px;margin:0 0 8px}}p{{margin:8px 0}
 small,.muted{{opacity:.7}}.tiles{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:20px 0}}
 .tile,section{{border:1px solid #80808055;background:color-mix(in srgb,canvas 96%,var(--accent));border-radius:13px;padding:16px}}
 .tile strong,.tile span{{display:block}}.tile span{{font-size:13px;margin-top:8px;overflow-wrap:anywhere}}
-section{{margin:13px 0}}a,button{{font:inherit}}a{{color:var(--accent)}}button{{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 15px;border-radius:9px;cursor:pointer}}
+section{{margin:13px 0}}label{{display:block;font-weight:600;margin-top:10px}}select{{display:block;width:100%;max-width:100%;padding:9px;margin:5px 0 12px;background:canvas;color:canvastext;border:1px solid #80808088;border-radius:8px}}button:disabled{{opacity:.45}}a,button{{font:inherit}}a{{color:var(--accent)}}button{{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 15px;border-radius:9px;cursor:pointer}}
 nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 </style></head>
 <body>
@@ -333,6 +381,7 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <p class="muted">{t("Die Sprachausgabe-Prognose stammt aus den App-Optionen. Bei bestehenden HA-Integrationen müssen abweichende Optionen dort separat angeglichen werden.", "The predicted speech route uses App options. Existing HA integration settings may need to be aligned separately.")}</p>
 </section>
 {guide}
+{picker}
 <section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
 <form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
 <button type="submit" name="action" value="backend">{install}</button>
@@ -398,6 +447,13 @@ class Handler(BaseHTTPRequestHandler):
                 accepted=retry_models()
                 msg=("Speech model retry requested / Sprachmodelle erneut gestartet."
                      if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
+            elif action=="wyoming":
+                choices=discover_wyoming_stt(TOKEN)
+                selection=save_wyoming_selection(TOKEN,
+                    fields.get("cpu_stt",[""])[0],fields.get("gpu_stt",[""])[0],choices)
+                msg=("Wyoming-Auswahl gespeichert. TAFA-App neu starten! / "
+                     "Wyoming selection saved. Restart TAFA App! "
+                     "CPU="+selection["cpu_stt"]+" GPU="+selection["gpu_stt"])
             elif action=="cleanup":
                 if fields.get("confirmation",[""])[0] != "ENTFERNEN":
                     return self.send_error(400, "Explicit deletion confirmation required")
@@ -411,8 +467,9 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 return self.send_error(400)
             self.respond(display(msg,lang=lang))
-        except (OSError,ValueError,SyntaxError) as exc:
-            self.respond(display("Installation stopped: "+type(exc).__name__,lang=lang),400)
+        except (OSError,ValueError,RuntimeError,SyntaxError) as exc:
+            reason=str(exc)[:160] if isinstance(exc,ValueError) else type(exc).__name__
+            self.respond(display("TAFA configuration: "+reason,lang=lang),400)
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO,format="%(levelname)s %(message)s")
