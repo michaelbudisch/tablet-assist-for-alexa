@@ -28,6 +28,32 @@ jobs:
           $tokens=$null; $errors=$null
           [System.Management.Automation.Language.Parser]::ParseFile("worker/Worker-Windows.ps1",[ref]$tokens,[ref]$errors) | Out-Null
           if ($errors.Count) { $errors | Format-List; exit 1 }
+      - name: Windows launcher Compose argument smoke test
+        shell: pwsh
+        run: |
+          $parseErrors = $null
+          $tokens = $null
+          $ast = [System.Management.Automation.Language.Parser]::ParseFile("worker/Worker-Windows.ps1", [ref]$tokens, [ref]$parseErrors)
+          if ($parseErrors.Count) { throw 'PowerShell launcher syntax error' }
+          $composeFunction = $ast.Find({ param($node)
+            $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Compose'
+          }, $true)
+          if (-not $composeFunction) { throw 'Compose function missing' }
+          Invoke-Expression $composeFunction.Extent.Text
+          $script:captured = @()
+          function docker {
+            $script:captured = @($args)
+            $global:LASTEXITCODE = 0
+          }
+          Compose -Arguments @('--profile', 'stream', 'config', '--quiet')
+          $expected = @('compose', '--profile', 'stream', 'config', '--quiet')
+          if (($script:captured -join '|') -ne ($expected -join '|')) {
+            throw "Compose argument forwarding failed: $($script:captured -join ' ')"
+          }
+          $launcher = Get-Content worker/Worker-Windows.ps1 -Raw
+          if ($launcher -match '(?m)^\s*Compose\s+@\(') {
+            throw 'An unbound positional Compose splat remains'
+          }
       - name: Vision API and queue tests
         working-directory: worker/vision
         run: python -m unittest -v test_server test_sequence_benchmark test_priority_gate
