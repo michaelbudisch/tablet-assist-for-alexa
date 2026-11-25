@@ -90,3 +90,7 @@ Under **TAFA → Devices → Voice test** the UI reports whether a complete Assi
 Test local Assist, external Piper health at `http://SERVER:5000/health`, optional GPU-on/GPU-off fallback, and finally an optional harmless Alexa announcement over HTTPS.
 
 The unchanged Device Bridge 1.0.0 emits wake events only; another active Assist client needs to record the following question. The private dashboard is excluded. GPU hosts, DNS, proxy and routers are deliberately not auto-discovered or changed.
+
+### Ollama rejects the first question (TAFA App 0.3.17 / integration 0.4.9)
+
+A newly created Ollama conversation entity has Home Assistant state `unknown` until it handles its first message. That is **normal**; TAFA integration 0.4.8 incorrectly treated it as offline. Since 0.4.9, TAFA forwards the first request. Confirm the actual Ollama `conversation.*` entity ID under **Settings → Devices & services → Ollama → Conversation agent → Entity** and set it in **Apps → TAFA → Configuration → llm_agent**. After updating TAFA App, **restart Home Assistant Core once**, then **restart TAFA App** to synchronize settings. An actual `unavailable` state remains an error. The CPU hardware profile only governs Qwen/Piper TTS and no longer disables Ollama conversation. No Android update required.
