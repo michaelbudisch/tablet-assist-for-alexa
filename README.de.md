@@ -10,6 +10,16 @@
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
+## Proxmox: neuer kombinierter Sprachserver + Nginx (ein CT)
+
+Für eine frische Proxmox-Installation gibt es jetzt einen geführten **Ein-Zeilen-Installer**, der nur einen **neuen** unprivilegierten CT erstellt (Piper, Wyoming-Whisper, tokenfreier MP3-Generator und Nginx). Bestehende CTs und VM bleiben unverändert:
+
+```bash
+curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
+```
+
+**Auf dem Proxmox-Host als root** ausführen. Der Assistent fragt nach CT-ID, Speicher, Netzwerk, Ressourcen sowie optional GPU-Worker/Audio-Domain und verlangt die CT-ID als Bestätigung. In der CT-Konsole sind IP-Adressen, Ports und Dienste dauerhaft sichtbar. `tafa-info` zeigt den Status, `tafa-setup` führt durch die spätere Alexa-HTTPS-Aktivierung (nach DNS-/Router-Einrichtung). [Ausführliche Anleitung](docs/proxmox.md).
+
 ## Schnellinstallation — Home Assistant OS
 
 1. Eine Home-Assistant-Sicherung anlegen. Zuerst möglichst auf einer Testinstallation prüfen.
