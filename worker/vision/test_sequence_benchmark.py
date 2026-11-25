@@ -232,6 +232,7 @@ class ProductionSequenceTests(unittest.TestCase):
 
     def test_bounds_and_auth(self):
         self.assertEqual(self.client.post("/describe/sequence", json={"frames": frames(12)}).status_code, 200)
+        self.requests.clear()  # Valid unauthenticated call may reach inference; next cases may not.
         for count, kw in [(4, {}), (12, {"profile": "detail"}),
                           (12, {"num_ctx": 65536}), (12, {"source_url": "https://example.com"})]:
             self.assertEqual(self.send(count, **kw).status_code, 400)
