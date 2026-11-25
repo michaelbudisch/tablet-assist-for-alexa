@@ -269,7 +269,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         }
         status=nextQuestion?"native_followup":"native_connecting";
         final NativeAssistSession[] holder=new NativeAssistSession[1];
-        NativeAssistSession session=new NativeAssistSession(this,hit;
+        NativeAssistSession session=new NativeAssistSession(this,hit,
             nextQuestion?nativeConversationId:"",
             prefs.getInt("native_pause_ms",1700),nextQuestion,
             new NativeAssistSession.Listener(){
