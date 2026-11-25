@@ -223,4 +223,14 @@
     <string name="wake_error_state">Mikrofon benötigt Aufmerksamkeit</string>
     <string name="bluetooth_advanced_collapse">Bluetooth-Optionen schließen</string>
     <string name="wake_advanced_collapse">Feineinstellungen schließen</string>
+    <string name="native_assist_eyebrow">OPTIONAL · NEU</string>
+    <string name="native_assist_title">Native Sprachunterhaltung</string>
+    <string name="native_assist_description">Nach Hey Jarvis nimmt diese Android-App die nächste Frage direkt auf und überträgt sie an Home Assistant Whisper. Antworten kommen über den vorhandenen Multiroom-Bluetooth-Player. Die bisherige reine Rufworterkennung bleibt verfügbar.</string>
+    <string name="native_assist_switch">Nach Rufwort vollständige Frage aufnehmen</string>
+    <string name="native_followup_switch">Bis zu zwei kurze Anschlussfragen ohne Rufwort zulassen</string>
+    <string name="native_pause_label">Sprechpause bis Ende: %1$d ms</string>
+    <string name="native_assist_test">Native Frage ohne Rufwort testen</string>
+    <string name="native_assist_inactive">Native Spracheingabe ausgeschaltet</string>
+    <string name="native_assist_requirements">Unter Verbinden Multiroom-Audio aktivieren, das Tablet in TAFA zuordnen und Player sowie Rufworterkennung starten.</string>
+    <string name="native_assist_privacy">Standardmäßig aus. Erst nach erkanntem Rufwort (oder manuellem Test) überträgt das Mikrofon 16-kHz-PCM an den eingestellten Home Assistant, bis die Frage beendet ist. Es werden keine Aufnahmen gespeichert. Während KI-Verarbeitung und Lautsprecherausgabe bleibt das Mikrofon aus. Ausschalten oder Stummschalten beendet die Aufnahme. LAN-HTTP ist unverschlüsselt; vertrauenswürdiges HTTPS bevorzugen.</string>
 </resources>
