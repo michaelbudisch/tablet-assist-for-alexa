@@ -1,18 +1,26 @@
-# HA Jarvis Echo Relay · Android 0.6.0
+# HA Jarvis Echo Relay · Android 0.7.0 (experimental)
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-A native audio bridge from Home Assistant through an Android device to a Bluetooth speaker, including Amazon Echo. Android 9+. No microphone access, wake word or automatic startup after reboot.
+A native audio bridge from Home Assistant through an Android device to a Bluetooth speaker, including Amazon Echo. Android 9+. Native wakeword recognition is optional, switched off by default, and requires explicit microphone consent. No automatic startup after reboot.
 
 ![English tablet interface](docs/ui-en-tablet.png)
 
 ## Download and update
 
-[Download the ready-to-install preview APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Download the previous stable 0.6.0 preview APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 **Install over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; only the visible app name and icon change.
 
 The published, non-debuggable release APK uses the same local Android test signing key as earlier builds for update compatibility. Private signing keys are not included. CI debug APKs use a different temporary key and are not upgrade replacements for this download.
+
+## Experimental offline wakeword (0.7.0 branch)
+
+Enable **Native wakeword recognition** in the Echo Relay app only after downloading the optional German speech model (~45 MB) and granting microphone permission. Select **Hey Jarvis**, **Jarvis**, **Alexa**, or **All three** and press **Start native wakeword**. Android displays an ongoing foreground-service notification with a **Stop** control; you can also stop it in the app. The model is downloaded from Alpha Cephei over HTTPS to private app storage.
+
+The app recognizes wakewords locally, publishes only the recognized phrase using the configured authenticated Home Assistant connection as a `jarvis_android_wakeword` event, releases its microphone, and pauses detection for 50 seconds. The Home Assistant dashboard listens to the event and starts its existing Whisper STT capture. Keep the dashboard visible and turn off its own wakeword mode for the first tests; speech immediately following the wakeword may be cut off until the browser microphone is ready. There is no guarantee of working hands-free operation while the dashboard is closed. **Alexa** may simultaneously activate a real Echo.
+
+This is an experimental source branch, not a signed downloadable 0.7.0 APK. Detection reliability, processing time and Android microphone coexistence are unverified.
 
 ## Setup
 
