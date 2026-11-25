@@ -95,5 +95,6 @@ def ensure_pipeline():
             conversation_engine=agent,conversation_language="de",
             stt_engine=stt,stt_language="de",
             tts_engine=tts,tts_language="de",tts_voice=None,
+            wake_word_entity=None,wake_word_id=None,
             prefer_local_intents=True)
         return "pipeline_created"
