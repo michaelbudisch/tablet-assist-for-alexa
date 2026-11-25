@@ -6,6 +6,14 @@
 
 **New:** [Guided setup for TAFA local, Proxmox, GPU worker and Alexa MP3](setup-guide.md). All three areas now have separate **TAFA → Options** screens.
 
+## Primary App setup and live connection checks
+
+Start in **Apps → TAFA → Configuration**: choose local/Proxmox Piper, optional GPU-Qwen URL, automatic Qwen-to-Piper fallback, voice variant, sound profile, and optional Alexa MP3/HTTPS URLs. DE/EN field descriptions are provided. Restart TAFA after saving. New HA integration entries inherit these settings. Existing entries remain user-owned and can be adjusted in TAFA → Options.
+
+The **Control Center → Connection diagnostics** refresh link checks GPU readiness/busy/offline, Piper fallback and MP3 generator health without generating speech or announcements. The expected route is based on App options, not necessarily on an older HA integration configuration.
+
+The **Control Center → Manage local speech models** section shows TAFA-owned download sizes. To remove them, select **external** speech mode, restart TAFA, and type **ENTFERNEN** to confirm. Proxmox, Wyoming and other HA apps are untouched.
+
 ## One-App setup
 
 1. Create a Home Assistant backup. Prefer a clean test instance for the first deployment.
