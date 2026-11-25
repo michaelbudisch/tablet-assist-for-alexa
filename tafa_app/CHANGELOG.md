@@ -1,11 +1,19 @@
 # TAFA App changelog
 
-## 0.3.8 — Guided first-run setup (release candidate)
+## 0.3.9 — No additional service tokens on private LAN
+- Removed GPU and MP3 generator API-token fields from the new Home Assistant integration.
+- Supports token-free GPU Worker 2.2.1 and token-free LAN MP3 generator.
+- Added Windows BAT helpers, connection-report TXT and token-free .env templates for the worker.
+- Home Assistant authentication and the public MP3-only HTTPS proxy remain unchanged.
+- Private GPU and generator ports MUST NOT be forwarded to the Internet. Existing configs preserved.
+
+
+## 0.3.9 — Guided first-run setup (release candidate)
 - Guided TAFA-local CPU, external Proxmox, Qwen GPU routing and optional Alexa MP3/HTTPS instructions in Control Center.
 - HA Options split into Speech servers & GPU, Alexa announcements & HTTPS, and Data sources & reminders.
 - Public integration panel links directly to TAFA settings, with bilingual setup documentation.
 - Saved GPU/MP3 keys are retained when password fields are blank; the bundled CPU processes are not yet stopped by selecting external services.
-- Integration updated to 0.4.2. Android Device Bridge and private dashboard unchanged.
+- Integration updated to 0.4.3. Android Device Bridge and private dashboard unchanged.
 - End-to-end HA OS hardware verification pending.
 
 

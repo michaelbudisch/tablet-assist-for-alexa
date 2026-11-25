@@ -4,7 +4,15 @@
 
 # Changelog
 
-## TAFA unified integration 0.4.2 / App 0.3.8 — guided onboarding
+## TAFA integration 0.4.3 / App 0.3.9 — token-free LAN endpoints
+- No additional GPU or MP3 generator API keys in TAFA options or LAN worker requests.
+- GPU Worker 2.2.1 offers token-free Qwen, Vision, Diagnostics and optional Ollama gateway.
+- Token-free Proxmox MP3 generation; public HTTPS audio access remains read-only and restricted to short-lived opaque files.
+- Home Assistant authentication, Android Device Bridge and private dashboard remain unchanged.
+- Restrict GPU/generator ports to trusted LAN; never port-forward them.
+
+
+## TAFA unified integration 0.4.3 / App 0.3.9 — guided onboarding
 - Focused integration options for local/Proxmox speech servers, optional Qwen GPU routing and Alexa MP3/HTTPS.
 - App Control Center now provides clear three-step setup with port hints; concise DE/EN guides.
 - Data-source settings and existing credentials preserved, Android Device Bridge unchanged.

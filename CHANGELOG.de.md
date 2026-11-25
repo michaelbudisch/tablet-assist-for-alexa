@@ -1,6 +1,14 @@
 # Changelog
 
-## TAFA-Integration 0.4.2 / App 0.3.8 — geführte Einrichtung
+## TAFA-Integration 0.4.3 / App 0.3.9 — lokale Dienste ohne zusätzliche Tokens
+- TAFA-Optionen und lokale GPU-/MP3-Anfragen benötigen keinen zusätzlichen API-Schlüssel mehr.
+- GPU Worker 2.2.1: Qwen, Vision, Diagnose und optional Ollama ohne TAFA-Tokens.
+- Proxmox-MP3-Generator tokenfrei; öffentlicher HTTPS-Proxy liefert nur kurzlebige MP3-Dateien per GET.
+- Home-Assistant-Anmeldung bleibt bestehen; Android Device Bridge und privates Dashboard unverändert.
+- Worker-/Generator-Ports nur für vertrauenswürdige LAN-Geräte erlauben.
+
+
+## TAFA-Integration 0.4.3 / App 0.3.9 — geführte Einrichtung
 - Getrennte Optionsbereiche für lokale/Proxmox-Sprachserver, Qwen-GPU-Routing und Alexa-MP3/HTTPS.
 - Control Center mit drei klaren Einrichtungsbereichen, Portübersicht und DE/EN-Anleitungen.
 - Datenquellen und vorhandene Schlüssel bleiben erhalten, Android Device Bridge unverändert.
