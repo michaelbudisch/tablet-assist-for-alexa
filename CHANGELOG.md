@@ -7,6 +7,7 @@
 
 ## TAFA App 0.3.13 / integration 0.4.5 — tablet room pairing
 - TAFA → Devices now combines wake-device controls and admin-only Multiroom audio room pairing, selectable non-admin HA user, room ID and live online/ready state.
+- Opt-in per-room camera access is managed in the same panel, disabled by default, and cleared on revocation; Android still requires explicit capture start and uses the room user token.
 - Secure, explicit ownership transfer with confirmed account reassignment; existing player sessions, quiet-hours and audio room settings remain intact when unchanged.
 - No YAML, duplicate installation or new token handling in the HA dashboard. Android app 1.0.0 unchanged.
 
