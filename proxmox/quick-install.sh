@@ -183,6 +183,8 @@ if pct config "$CTID" >/dev/null 2>&1 || qm config "$CTID" >/dev/null 2>&1; then
   die "The CT ID became unavailable during setup."
 fi
 printf '\nCreating new CT %s ...\n' "$CTID"
+printf 'Set the CT root password when Proxmox prompts (input is hidden).\n'
+printf 'This is the login for the CT console; the password will NOT be passed as a shell argument.\n'
 # Proxmox VE 9 container bug #8295: umask 0077 makes the transient
 # /var/lib/lxc/CTID/rootfs directories inaccessible to the mapped root
 # of an unprivileged container during the archive extraction.
@@ -193,7 +195,7 @@ printf '\nCreating new CT %s ...\n' "$CTID"
   pct create "$CTID" "$TPL_STORE:vztmpl/$TEMPLATE" \
     --hostname "$CT_HOSTNAME" --unprivileged 1 --ostype debian \
     --cores "$CORES" --memory "$RAM" --swap 1024 --rootfs "$STORE:$DISK" \
-    --net0 "$NET" --onboot 1
+    --net0 "$NET" --onboot 1 --password
 )
 CREATED=1
 pct start "$CTID"
