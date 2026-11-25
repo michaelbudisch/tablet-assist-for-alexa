@@ -29,7 +29,7 @@ tafa-info               # Current IP, endpoints, service state
 tafa-setup              # Guided Nginx/Certbot HTTPS completion
 ```
 
-If the GUI CT console asks for a root password and none exists, enter from PVE with `pct enter CTID` and set one using `passwd root` inside the guest. Do not put passwords in scripts or logs. Only expose the Nginx 80/443 entry point when intentionally configured; **never publish** 5000, 5001, 8080, 10300, or GPU ports. If another proxy already owns port forwarding, keep it in place until a deliberate migration.
+**Root password:** During `pct create`, Proxmox prompts you to enter and confirm the CT's root password with hidden input. You can then immediately sign in as `root` through the CT's normal console. No password is stored in TAFA scripts, command-line arguments or setup logs. Previously created CTs without a root password still need a one-time `pct enter CTID` followed by `passwd root` inside the guest. Only expose the Nginx 80/443 entry point when intentionally configured; **never publish** 5000, 5001, 8080, 10300, or GPU ports. If another proxy already owns port forwarding, keep it in place until a deliberate migration.
 
 ## New VM/container
 
