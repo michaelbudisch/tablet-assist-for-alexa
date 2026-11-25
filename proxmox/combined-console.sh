@@ -8,8 +8,16 @@ RENDER=/opt/tafa-installer/proxmox/render-nginx-proxy.py
 
 get_host() {
   HOST=""
+  MODE="dedicated"
+  PROXY_IP=""
   if [[ -f "$HOSTFILE" ]]; then
     IFS= read -r HOST < "$HOSTFILE" || true
+  fi
+  if [[ -f /etc/tafa-proxy-mode ]]; then
+    IFS= read -r MODE </etc/tafa-proxy-mode || true
+  fi
+  if [[ -f /etc/tafa-shared-proxy-ip ]]; then
+    IFS= read -r PROXY_IP </etc/tafa-shared-proxy-ip || true
   fi
 }
 get_ip() {
@@ -25,6 +33,10 @@ svc() {
 }
 tls_status() {
   HTTPS="noch nicht eingerichtet"
+  if [[ "$MODE" == shared ]]; then
+    HTTPS="Zentraler Proxy $PROXY_IP (HTTPS dort pruefen)"
+    return
+  fi
   if [[ -n "$HOST" && -r "/etc/letsencrypt/live/$HOST/fullchain.pem" &&
         -r "/etc/letsencrypt/live/$HOST/privkey.pem" &&
         -f "/etc/nginx/sites-enabled/tablet-assist-audio" ]]; then
@@ -45,7 +57,11 @@ show_status() {
   printf ' Piper TTS   : http://%s:5000 | %s\n' "$IP" "$(svc jarvis-piper)"
   printf ' Alexa MP3   : http://%s:5001 | %s\n' "$IP" "$(svc jarvis-mp3)"
   printf ' Wyoming STT : %s:10300 | %s\n' "$IP" "$(svc jarvis-whisper)"
-  printf ' MP3-Dateien : 127.0.0.1:8080 (nur lokal im CT)\n'
+  if [[ "$MODE" == shared ]]; then
+    printf ' MP3-Dateien : %s:8080 (nur Proxy %s erlaubt)\n' "$IP" "$PROXY_IP"
+  else
+    printf ' MP3-Dateien : 127.0.0.1:8080 (nur lokal im CT)\n'
+  fi
   if [[ -f /etc/jarvis-local.env ]]; then
     GPU="$(sed -n 's/^JARVIS_GPU_BASE=//p' /etc/jarvis-local.env | head -n1)"
   else
@@ -56,13 +72,20 @@ show_status() {
   else
     printf ' Qwen Worker : nicht konfiguriert (Piper wird verwendet)\n'
   fi
-  printf ' Nginx       : %s\n' "$(svc nginx)"
+  if [[ "$MODE" == shared ]]; then
+    printf ' Nginx       : externer zentraler Proxy %s\n' "$PROXY_IP"
+  else
+    printf ' Nginx       : %s\n' "$(svc nginx)"
+  fi
   printf ' Alexa HTTPS : %s\n' "$HTTPS"
   if [[ -n "$HOST" ]]; then printf ' Audio-Domain: %s\n' "$HOST"; fi
   printf '\n Home Assistant / TAFA App:\n'
   printf '   Externer Piper: http://%s:5000\n' "$IP"
   printf '   Wyoming (STT):  %s:10300\n' "$IP"
   printf '   MP3-Generator:  http://%s:5001\n' "$IP"
+  if [[ "$MODE" == shared ]]; then
+    printf '   Audio-HTTPS:    https://%s (auf zentralem Proxy pruefen)\n' "$HOST"
+  fi
   if [[ "$HTTPS" == https://* ]]; then
     printf '   Alexa Audio:    https://%s\n' "$HOST"
   else
@@ -70,6 +93,9 @@ show_status() {
   fi
   printf '\n Befehle: tafa-info | tafa-setup | journalctl -u jarvis-mp3 -n 30\n'
   printf ' Netzwerk: Interne Ports nicht ins Internet weiterleiten.\n'
+  if [[ "$MODE" == shared ]]; then
+    printf ' Shared-Modus: HTTPS-Einrichtung auf dem bisherigen Proxy abschliessen.\n'
+  fi
   printf '============================================================\n'
 }
 refresh_banner() {
@@ -82,6 +108,7 @@ TAFA - kombinierter Proxmox-Sprachserver
 IP: $IP
 Piper http://$IP:5000 | MP3 http://$IP:5001 | Wyoming $IP:10300
 Nginx: $HTTPS
+Proxy-Modus: $MODE
 Nach Login: tafa-info (Live-Status), tafa-setup (HTTPS-Assistent)
 Nur fuer das lokale Netzwerk; keine MP3-API an das Internet weiterleiten.
 
@@ -109,6 +136,13 @@ prepare_host() {
 }
 enable_https() {
   [[ "$EUID" == 0 && -t 0 ]] || { echo "Root in interaktiver CT-Konsole erforderlich."; return 1; }
+  get_host
+  if [[ "$MODE" == shared ]]; then
+    echo "Bestehender zentraler Nginx-Proxy $PROXY_IP bedient die HTTPS-Domain."
+    echo "Nginx/Certbot auf dem Proxy-CT vorbereiten, nicht im neuen Sprachserver-CT."
+    echo "Die zugehoerigen Befehle stehen am Ende des Proxmox-Host-Installers."
+    return 0
+  fi
   prepare_host || return 1
   get_host
   tls_status
