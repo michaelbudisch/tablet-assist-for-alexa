@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA App 0.3.20 — Zentrale Einstellungsoberfläche
+- Sprachserver, Wyoming CPU/GPU, Qwen, Ollama, Stimmen und Alexa werden an einer Stelle im TAFA Control Center verwaltet. Die native Home-Assistant-App-Konfiguration ist eine erweiterte Ansicht derselben gespeicherten Werte und kein zweiter Speicher.
+- Einstellungen werden vor dem Speichern validiert; nach dem Speichern TAFA neu starten. Bei einer frischen Proxmox-Einrichtung kann `external` weiterhin vor dem allerersten Start über die native Konfiguration gewählt werden, damit keine lokalen Modelle geladen werden.
+
+
 ## TAFA App 0.3.19 — Docker-Startfehler behoben
 - Die Datei `wyoming_picker.py` wird ins App-Image kopiert. In 0.3.18 verursachte ihr Fehlen einen `ModuleNotFoundError` beim Start.
 - Importprüfung beim Build und Regressionstest ergänzt. Einstellungen, HA-Integration 0.4.9, GPU-Worker und Android-App unverändert.

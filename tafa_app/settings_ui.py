@@ -8,7 +8,7 @@ import json
 import urllib.request
 
 from speech_source import load_options, private_http_origin, setup_settings_values
-from wyoming_picker import SUPERVISOR_OPTIONS, validate_selection
+from wyoming_picker import SUPERVISOR_OPTIONS
 
 CHOICES = {
     "speech_mode": ("local", "external"),
@@ -85,8 +85,8 @@ def render_settings_form(options, wyoming, lang, csrf, note):
 {field("external_piper_base",t("Piper-Adresse (nur bei Proxmox)", "Piper URL (Proxmox only)"),
  t("Im lokalen Modus ignoriert.", "Ignored in local mode."),"http://192.168.1.50:5000")}
 <div id="wyoming-picker"><p class="muted">{esc(note)}</p>
-{stt_picker("cpu_stt",t("Whisper auf CPU/Proxmox", "Whisper on CPU/Proxmox"))}
-{stt_picker("gpu_stt",t("Whisper auf GPU/Windows (optional)", "Whisper on GPU/Windows (optional)"))}
+{stt_picker("cpu_stt",t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox"))}
+{stt_picker("gpu_stt",t("GPU-Whisper / Windows (optional)", "GPU Whisper / Windows (optional)"))}
 <p class="muted">{t("Wyoming einmal in Home Assistant unter Geräte & Dienste hinzufügen. Anschließend hier auswählen.", "Add Wyoming once under Home Assistant Devices & services, then select it here.")}</p>
 <p><a href="/config/integrations" target="_top">{t("Wyoming in Home Assistant hinzufügen", "Add Wyoming in Home Assistant")}</a></p></div>
 </details>
@@ -159,11 +159,6 @@ def validate_settings_form(fields, current, available):
     for key in ("cpu_stt", "gpu_stt"):
         if update[key] and update[key] not in valid and update[key] != current.get(key, ""):
             raise ValueError("Wyoming entity is not registered: " + key)
-    # The picker enforces distinct providers, even if existing options were damaged.
-    if valid:
-        for key in ("cpu_stt", "gpu_stt"):
-            if update[key] and update[key] not in valid and update[key] != current.get(key, ""):
-                raise ValueError("Invalid Wyoming selection")
     if update["cpu_stt"] and update["cpu_stt"] == update["gpu_stt"]:
         raise ValueError("CPU and GPU Wyoming providers must differ")
     return update

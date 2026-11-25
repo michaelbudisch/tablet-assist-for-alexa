@@ -1,3 +1,8 @@
+## TAFA App 0.3.20 — unified settings interface
+- Settings are now configured from one grouped, bilingual TAFA Control Center form. Native HA App Configuration is an advanced fallback on the same Supervisor-managed options, not another store.
+- Existing configurations preserved, validated and stored; restart TAFA to apply. CPU/GPU Wyoming selection is included in the central form.
+- External speech mode can still be preselected through native App Configuration before the very first launch to avoid downloading bundled models.
+
 ## TAFA App 0.3.19 — fix Docker startup
 - Include the missing `wyoming_picker.py` in the Docker image and verify it imports during the build.
 - Regression guard prevents omitting local TAFA server modules. No existing configuration, HA integration, Android app or GPU changes.

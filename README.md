@@ -4,12 +4,12 @@
 
 **English** | [Deutsch](README.de.md)
 
-> **First-run configuration (App 0.3.18+):** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
+> **From App 0.3.20:** Open the **TAFA Control Center → Settings** to configure speech servers, GPU, Wyoming, Ollama and Alexa in one place. Save and restart TAFA once to apply. Both the Control Center and Home Assistant's technical **Apps → TAFA → Configuration** editor write the same persistent options; the latter is for troubleshooting or pre-start external mode selection. Add Wyoming/Ollama providers once in **Devices & services**. Existing pipelines are preserved; Marketplace-only installations retain their native HA options flow.
 
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.19**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.20**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 

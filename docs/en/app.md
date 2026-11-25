@@ -2,16 +2,16 @@
 
 [Deutsch](../app.md) · [Project overview](../../README.md)
 
-> **New in App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
+> **From App 0.3.20:** Use **TAFA Control Center → Settings** to configure all TAFA features. The technical **Apps → TAFA → Configuration** is an advanced view of the same persistent options, especially useful before the first start to choose external speech without downloading local models. Restart TAFA after saving. Wyoming/Ollama are added once in Devices & services; existing Assist pipelines are preserved.
 
 
 **TAFA App 0.3.12 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
 
-**New:** [Guided setup for TAFA local, Proxmox, GPU worker and Alexa MP3](setup-guide.md). All three areas now have separate **Apps → TAFA → Configuration** screens.
+**New:** [Guided setup for TAFA local, Proxmox, GPU worker and Alexa MP3](setup-guide.md). All TAFA options are managed together in **Control Center → Settings**.
 
 ## Primary App setup and live connection checks
 
-Start in **Apps → TAFA → Configuration**: choose local/Proxmox Piper, optional GPU-Qwen URL, automatic Qwen-to-Piper fallback, voice variant, sound profile, and optional Alexa MP3/HTTPS URLs. DE/EN field descriptions are provided. Restart TAFA after saving. New HA integration entries inherit these settings. Existing App-managed entries are synchronized from App Configuration after restart.
+Start in **TAFA Control Center → Settings**: choose local/Proxmox Piper, optional GPU-Qwen URL, automatic Qwen-to-Piper fallback, voice variant, sound profile, and optional Alexa MP3/HTTPS URLs. DE/EN field descriptions are provided. Restart TAFA after saving. New HA integration entries inherit these settings. Existing App-managed entries are synchronized from App Configuration after restart.
 
 The **Control Center → Connection diagnostics** refresh link checks GPU readiness/busy/offline, Piper fallback and MP3 generator health without generating speech or announcements. The expected route is based on App options, not necessarily on an older HA integration configuration.
 

@@ -1,10 +1,10 @@
-# TAFA Home Assistant App 0.3.19 — release candidate
+# TAFA Home Assistant App 0.3.20 — release candidate
 
 The Ingress Control Center installs and safely upgrades one unified HA integration. Choose local Piper/Faster-Whisper (default), or external Proxmox Piper/Whisper with `speech_mode=external` and `external_piper_base=http://PROXMOX-IP:5000` in the App Configuration before starting. External mode skips local model processes and downloads. the Android Device Bridge stays unchanged. [English guide](../docs/en/app.md) · [Deutsche Anleitung](../docs/app.md).
 
 No private dashboard is shipped. A Home Assistant Core restart is required after first install or backend update. Clean HA OS and hardware tests are still pending.
 
-All App-managed HA integration settings are now maintained in **Apps → TAFA → Configuration** (App restart required). Built-in HA configuration flows remain available for Marketplace-only installations. On upgrade, restart HA Core once to load integration 0.4.4, then restart TAFA to synchronize existing settings. Advanced source and room mappings are optional JSON fields.
+Use **TAFA Control Center → Settings** for day-to-day configuration. All controls write the existing Supervisor App options, just like the technical **Apps → TAFA → Configuration** editor (advanced fallback; App restart required). Built-in HA configuration flows remain available for Marketplace-only installations. On upgrade, restart HA Core once to load integration 0.4.4, then restart TAFA to synchronize existing settings. Advanced source and room mappings are optional JSON fields.
 
 **New in 0.3.13:** Administrators pair registered tablets directly in **TAFA → Devices → Multiroom audio**. Select an existing non-admin HA user and room; status shows audio offline/online/ready without YAML. Use the same HA user token on the Android Device Bridge; enable Multiroom audio and start its player. Existing room settings remain in place. [Full steps](../docs/en/setup-guide.md).
 
@@ -19,3 +19,5 @@ All App-managed HA integration settings are now maintained in **Apps → TAFA �
 **New in 0.3.18:** Under **TAFA Control Center → Automatically discover Wyoming STT**, select detected Home Assistant Wyoming speech entities from two dropdowns (**CPU** for Proxmox and **GPU** for Windows). The entries are saved to TAFA App Configuration without overwriting unrelated settings; **restart the TAFA App** to apply. If GPU Whisper is missing, install **Wyoming Protocol** in HA with GPU host and port 10300 first. The regular **Apps → TAFA → Configuration** static form still allows manually editing these fields.
 
 **Hotfix 0.3.19:** Rebuild/update TAFA to fix the missing Wyoming picker module in the 0.3.18 Docker image. Saved settings are retained and no Android update is needed.
+
+**App 0.3.20:** The Control Center now has one grouped settings editor (Piper, Wyoming CPU/GPU, Qwen, Ollama, Alexa, voice and advanced sources). The technical HA Configuration editor remains available for recovery and to choose `speech_mode=external` *before the first launch* if local CPU models should never download. Save and restart TAFA; there is no second settings store.

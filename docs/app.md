@@ -2,16 +2,16 @@
 
 [English](en/app.md) · [Projektübersicht](../README.de.md)
 
-> **Neu in App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration 0.4.4 geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
+> **Ab App 0.3.20:** Das **TAFA Control Center → Einstellungen** ist die zentrale Oberfläche für alle TAFA-Optionen. Die technische **Apps → TAFA → Konfiguration** ist eine alternative Ansicht auf dieselben gespeicherten Werte, hauptsächlich für Fehlerbehebung und für die Proxmox-Vorauswahl vor dem ersten App-Start. Nach Änderungen TAFA neu starten. Wyoming und Ollama werden einmalig unter Geräte & Dienste hinzugefügt. Bestehende Pipelines bleiben unverändert.
 
 
 **TAFA App 0.3.12 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
 
-**Neu:** [Geführte Einrichtung für TAFA lokal, Proxmox, GPU-Worker und Alexa-MP3](setup-guide.md). Alle drei Bereiche sind über **Apps → TAFA → Konfiguration** getrennt erreichbar.
+**Neu:** [Geführte Einrichtung für TAFA lokal, Proxmox, GPU-Worker und Alexa-MP3](setup-guide.md). Alle TAFA-Optionen werden im **Control Center → Einstellungen** gemeinsam bearbeitet.
 
 ## App-Konfiguration und Verbindungsdiagnose
 
-Nutze **Apps → TAFA → Konfiguration** als erste Anlaufstelle: Sprachserver (lokal/Proxmox), GPU-Qwen-Adresse, Automatik mit Piper-Fallback, Stimmvariante, Klangprofil und optionale Alexa-MP3-/HTTPS-Adressen. Die Felder sind auf Deutsch/Englisch beschrieben. Nach dem Speichern die TAFA-App neu starten. Bei einer **neuen** HA-Integration werden diese Werte zur Ersteinrichtung übernommen; bestehende HA-Einträge werden beim Neustart mit der App-Konfiguration synchronisiert.
+Nutze **TAFA Control Center → Einstellungen** als erste Anlaufstelle: Sprachserver (lokal/Proxmox), GPU-Qwen-Adresse, Automatik mit Piper-Fallback, Stimmvariante, Klangprofil und optionale Alexa-MP3-/HTTPS-Adressen. Die Felder sind auf Deutsch/Englisch beschrieben. Nach dem Speichern die TAFA-App neu starten. Bei einer **neuen** HA-Integration werden diese Werte zur Ersteinrichtung übernommen; bestehende HA-Einträge werden beim Neustart mit der App-Konfiguration synchronisiert.
 
 Im **Control Center → Verbindungsdiagnose** zeigt **Verbindungen jetzt erneut prüfen**, ob Qwen bereit, beschäftigt oder nicht erreichbar ist, ob Piper als Reserve verfügbar ist und ob der MP3-Generator antwortet. Es wird weder Audio erzeugt noch eine Durchsage gesendet. Die Vorhersage des Sprachwegs basiert auf den App-Optionen.
 
