@@ -9,10 +9,10 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent
 ALLOWED = {".py", ".md", ".yaml", ".yml", ".json", ".txt", ".ps1", ".sh",
-           ".service", ".template"}
+           ".service", ".template", ".bat"}
 ALLOWED_NAMES = {".gitignore", "Dockerfile", "VERSION"}
 EXCLUDE = {".env", ".git", "__pycache__", ".pytest_cache", ".mypy_cache",
-           ".venv", "venv", "node_modules"}
+           ".venv", "venv", "node_modules", "GPU-Worker-Verbindungsdaten.txt"}
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 
 

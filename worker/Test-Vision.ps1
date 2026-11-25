@@ -12,10 +12,10 @@ Set-Location $PSScriptRoot
 if (-not (Test-Path .env)) { throw 'Use the existing private .env file.' }
 $cfg = @{}
 Get-Content .env | ForEach-Object { if ($_ -match '^([^=]+)=(.*)$') { $cfg[$matches[1]] = $matches[2] } }
-if (-not $cfg['JARVIS_TTS_TOKEN'] -or -not $cfg['LAN_IP']) { throw 'Missing settings' }
-$headers = @{'X-API-Key'=$cfg['JARVIS_TTS_TOKEN']}
+if (-not $cfg['LAN_IP']) { throw 'Missing settings' }
+$headers = @{}
 $base = "http://$($cfg['LAN_IP']):10503"
-Invoke-RestMethod -Uri "$base/health" -Headers $headers -TimeoutSec 15 | ConvertTo-Json
+Invoke-RestMethod -Uri "$base/health" -TimeoutSec 15 | ConvertTo-Json
 $body = @{image=[Convert]::ToBase64String([IO.File]::ReadAllBytes($image.FullName));mode=$Mode}
 if ($Model) { $body.model = $Model }
-Invoke-RestMethod -Uri "$base/describe" -Headers $headers -Method Post -ContentType 'application/json' -Body ($body | ConvertTo-Json -Compress) -TimeoutSec 125 | ConvertTo-Json
+Invoke-RestMethod -Uri "$base/describe" -Method Post -ContentType 'application/json' -Body ($body | ConvertTo-Json -Compress) -TimeoutSec 125 | ConvertTo-Json
