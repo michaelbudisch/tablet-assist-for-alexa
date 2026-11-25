@@ -103,21 +103,25 @@ def autoconfigure(address, mode="local"):
                     # App Configuration is authoritative even for already-existing
                     # HA entries. Do not require Devices & services options.
                     sync_app_configuration(address, settings)
-                    if not (settings.get("cpu_stt") or settings.get("gpu_stt")):
-                        save_state("waiting_for_external_stt",
-                                   "TAFA backend installed. Choose a Wyoming Whisper STT "
-                                   "entity (cpu_stt) in Settings -> Apps -> TAFA -> Configuration "
-                                   "for the native voice pipeline.")
-                        time.sleep(20)
-                        continue
-                    pipeline = ensure_pipeline()
+                    # A single Wyoming STT entity can be automatically chosen by
+                    # TAFA's HA settings sync even if App cpu_stt was left blank.
+                    # Validate providers after sync, not raw App options.
+                    pipeline = ensure_pipeline(
+                        external_wyoming=True,
+                        configured_stt=(settings.get("cpu_stt") or
+                                        settings.get("gpu_stt") or ""))
                     if pipeline in ("pipeline_created", "pipeline_exists"):
                         save_state("external_ready",
                                    "App settings synchronized; " + pipeline +
                                    ". TAFA Lokal Assist pipeline available.")
                         LOG.info("TAFA external speech / Assist pipeline ready: %s", pipeline)
                         return
-                    if pipeline == "waiting_for_entities":
+                    if pipeline == "waiting_for_external_stt":
+                        save_state("waiting_for_external_stt",
+                                   "Connect Wyoming Whisper STT in HA first. TAFA can "
+                                   "auto-select one Wyoming provider, or select its entity "
+                                   "explicitly as cpu_stt under TAFA App Configuration.")
+                    elif pipeline == "waiting_for_entities":
                         save_state("waiting_for_entities",
                                    "External Proxmox: add Wyoming STT in Home Assistant, "
                                    "select its entity in TAFA App Configuration "
