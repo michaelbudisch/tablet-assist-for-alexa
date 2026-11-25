@@ -73,11 +73,17 @@ class CombinedCTTests(unittest.TestCase):
     def test_all_entry_points_present_english_prompts(self):
         self.assertIn('Type YES:', HOST)
         self.assertIn('Type YES:', CONSOLE)
-        self.assertIn('Type RESUME', RESUME_INSTALL)
+        self.assertIn('type RESUME', RESUME_INSTALL)
         self.assertIn('Type YES:', DUCKDNS)
         for token in ('FEHLER:', 'Ungueltig', 'Oeffentlicher',
                       'Installationsfortsetzung', 'Konsole aktualisiert'):
             self.assertNotIn(token, HOST + CONSOLE + RESUME_INSTALL + GUEST)
+
+    def test_legacy_standalone_ct_allows_custom_hostname(self):
+        standalone = (PVE / "create-ct.sh").read_text(encoding="utf-8")
+        self.assertIn("Container hostname [jarvis-speechserver]", standalone)
+        self.assertIn('--hostname "$CT_HOSTNAME"', standalone)
+        self.assertNotIn('--hostname jarvis-speechserver', standalone)
 
     def test_proxmox_bug_8295_unprivileged_create_umask(self):
         # PVE 9 before upstream bugfix creates the rootfs dir as 0700 when
