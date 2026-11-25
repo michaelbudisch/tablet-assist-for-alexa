@@ -179,7 +179,8 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
   const body=el("div");
   body.style.cssText="display:grid;gap:10px;padding:10px 0";
   wrap.append(body);
-  const choices=Array.isArray(pipelines)?pipelines.filter(p=>p?.id&&p?.stt_engine&&p?.tts_engine):[];
+  const choices=Array.isArray(pipelines)?
+    pipelines.filter(p=>p?.id&&p?.stt_engine&&p?.tts_engine&&p?.conversation_engine):[];
   const devices=Array.isArray(audio?.devices)?audio.devices:[];
   const rooms=Array.isArray(audio?.rooms)?audio.rooms:[];
   const owner=devices.find(d=>d.device_id===device.device_id)?.owner_user_id||"";
@@ -195,14 +196,18 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
   }
   if(!choices.length){
     body.append(el("p",de?
-      "Keine vollständige Assist-Pipeline (Whisper + TTS) gefunden. Richte zuerst TAFA Lokal unter Sprachassistenten ein.":
-      "No complete Assist pipeline (speech recognition + TTS) found. Configure TAFA Lokal in Voice assistants first."));
+      "Native Spracheingabe noch nicht bereit: Es fehlt eine vollständige Assist-Pipeline mit Whisper/STT, Gesprächsassistent und Qwen/Piper-TTS.":
+      "Native voice input not configured: a complete Assist pipeline with Whisper/STT, conversation engine and Qwen/Piper TTS is missing."));
     const link=el("a",de?"Sprachassistenten öffnen":"Open Voice assistants");
     link.href="/config/voice-assistants";body.append(link);container.append(wrap);return;
   }
+  const native=el("p",de?
+    "Assist-Pipeline in Home Assistant konfiguriert. Für native Fragen: TAFA Device Bridge ab Android 1.0.1 → Rufwort → Native Sprachunterhaltung einschalten. Das Tablet benötigt denselben HA-Benutzer wie sein Multiroom-Audio-Raum. Die Anzeige prüft die Konfiguration, nicht den laufenden Whisper-Dienst.":
+    "Home Assistant Assist pipeline configured. For native questions: TAFA Device Bridge Android 1.0.1+ → Wakeword → enable Native voice conversation. Use the same HA account as the paired Multiroom audio room. This checks configuration, not live Whisper health.");
+  body.append(native);
   const help=el("p",de?
-    "Wie im bisherigen Dashboard: Mikrofon aktivieren, Frage sprechen, Whisper erkennt sie und Qwen/Piper antwortet über den gekoppelten Tablet-Player.":
-    "Same as the original dashboard: activate the mic, ask a question, Whisper transcribes it and Qwen/Piper responds on the paired tablet player.");
+    "Browser-Test: Einmal sprechen nutzt das Browser-Mikrofon; native Android-Fragen brauchen diesen Browser nicht. Beide verwenden die vorhandene Assist-Pipeline und Qwen/Piper-TTS.":
+    "Browser test: Speak once uses the browser microphone; native Android questions do not need this browser. Both use the existing Assist pipeline and Qwen/Piper TTS.");
   body.append(help);
   const label=el("label",de?"Assist-Pipeline":"Assist pipeline");
   label.style.cssText="display:grid;gap:6px";
