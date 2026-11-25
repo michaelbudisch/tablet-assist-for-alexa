@@ -103,6 +103,25 @@ async def phase_one(hass):
         data=hass.data[DOMAIN][entry.entry_id]
         check(data.sources.get("shopping")==todo_id and data.cfg.get("reminders_enabled"),"options live")
         check(DOMAIN in hass.data[frontend.DATA_PANELS],"sidebar survives options reload")
+        menu=await hass.config_entries.options.async_init(entry.entry_id)
+        check(menu["type"]=="menu","hardware setup reachable from categorized options")
+        hardware=await hass.config_entries.options.async_configure(menu["flow_id"],{"next_step_id":"hardware"})
+        check(hardware["type"]=="form","hardware settings displayed")
+        previous=hass.data[DOMAIN][entry.entry_id]
+        saved=await hass.config_entries.options.async_configure(hardware["flow_id"],{
+            "piper_base":"http://127.0.0.1:15001",
+            "cpu_stt":row.entity_id,
+            "hardware_profile":"automatic",
+        })
+        check(saved["type"]=="create_entry","hardware settings saved: "+str(saved.get("errors",{})))
+        await wait_until(lambda: hass.data.get(DOMAIN,{}).get(entry.entry_id) not in (None,previous)
+                         and entry.state==ConfigEntryState.LOADED,"hardware settings reload")
+        updated=hass.data[DOMAIN][entry.entry_id]
+        check(updated.cfg.get("hardware_profile")=="Automatisch","automatic GPU/CPU routing configured")
+        check(updated.sources.get("shopping")==todo_id,"hardware settings preserve data-source options")
+        menu=await hass.config_entries.options.async_init(entry.entry_id)
+        menu=await hass.config_entries.options.async_configure(menu["flow_id"],{"next_step_id":"announcements"})
+        check(menu["type"]=="form","optional Alexa announcement settings displayed")
         agent=entity(hass,entry,"conversation")
         speech,cid,keep=await converse(hass,agent,"Wie hoch ist die Vorlauftemperatur?")
         check("40" in speech and keep,"flow temperature and follow-up requested")
