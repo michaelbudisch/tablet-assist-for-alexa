@@ -68,7 +68,8 @@ public final class WakeWordService extends Service implements RecognitionListene
         return new Notification.Builder(this,CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.wake_title))
-            .setContentText(getString(R.string.wake_running))
+            .setContentText(getString(status.startsWith("native_")?
+                R.string.native_busy_notification:R.string.wake_running))
             .setContentIntent(launch)
             .addAction(new Notification.Action.Builder(null,getString(R.string.wake_stop),stop).build())
             .setOngoing(true).build();
@@ -209,6 +210,8 @@ public final class WakeWordService extends Service implements RecognitionListene
             speech=new SpeechService(recognizer,16000f);
             if(!speech.startListening(this))throw new IllegalStateException("Recorder not started");
             status="listening: "+wordChoice;
+            NotificationManager manager=getSystemService(NotificationManager.class);
+            if(manager!=null)manager.notify(43,notification());
         }catch(Exception e){
             Log.w(TAG,"Wakeword microphone unavailable",e);
             status="microphone_error: "+e.getClass().getSimpleName();
@@ -292,7 +295,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                             status="native_answer_completed";
                         }else {
                             nativeConversationId="";
-                            status="native_no_reply";
+                            if(!status.startsWith("native_error:"))status="native_no_reply";
                         }
                         if(answered&&prefs.getBoolean("native_followup_enabled",false)
                                 &&nativeFollowupCount<2){
@@ -316,6 +319,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     @Override public void onResult(String text){candidate(text,"text");}
     @Override public void onFinalResult(String text){candidate(text,"text");}
     @Override public void onError(Exception e){
+        if(nativeSession!=null)return;
         Log.w(TAG,"Wakeword recognition error",e);
         if(enabled){
             status="recognition_error: "+e.getClass().getSimpleName();
