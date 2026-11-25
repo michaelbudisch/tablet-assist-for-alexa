@@ -18,7 +18,7 @@ for port in 5000 5001 8080 10300; do
     if ss -ltnH "sport = :$port" | grep -q .; then echo "Port $port already in use."; exit 1; fi
 done
 apt-get update
-apt-get install -y python3 python3-venv python3-pip ffmpeg ca-certificates curl iproute2 libgomp1
+apt-get install -y python3 python3-venv python3-pip ffmpeg ca-certificates curl iproute2 libgomp1 libespeak-ng1 espeak-ng-data libsndfile1 libstdc++6
 if ! id jarvis-local >/dev/null 2>&1; then useradd --system --home-dir "$DATA" --shell /usr/sbin/nologin jarvis-local; fi
 install -d -m 0755 "$INSTALL"
 install -d -o jarvis-local -g jarvis-local -m 0750 "$DATA" "$DATA/audio" "$DATA/models" "$DATA/whisper"
