@@ -107,7 +107,7 @@ if [[ "$MODE" == dedicated ]]; then
   if [[ -n "$HOST" ]]; then
     bash "$HERE/install-nginx-proxy.sh" prepare "$HOST" 127.0.0.1
   else
-    echo "Kein öffentlicher Hostname: Nginx installiert, HTTPS bleibt deaktiviert."
+    echo "No public hostname supplied: Nginx installed, HTTPS remains disabled."
     if [[ -L /etc/nginx/sites-enabled/default &&
           $(readlink /etc/nginx/sites-enabled/default) == /etc/nginx/sites-available/default ]]; then
       rm /etc/nginx/sites-enabled/default
@@ -148,8 +148,8 @@ systemctl enable --now tafa-console-info.timer
 /usr/local/sbin/tafa-info --refresh-banner
 /usr/local/sbin/tafa-info
 if [[ "$MODE" == shared ]]; then
-  printf '\nWICHTIG: Die HTTPS-Zertifikate werden ausschließlich auf dem bestehenden Proxy installiert.\n'
+  printf '\nIMPORTANT: HTTPS certificates are installed exclusively on the existing central proxy.\n'
 else
-  printf '\nWICHTIG: TLS nur nach DNS-/Router-Einrichtung per tafa-setup aktivieren.\n'
+  printf '\nIMPORTANT: Enable TLS through tafa-setup only after DNS/router configuration is ready.\n'
 fi
-printf 'Ports 5000, 5001, 10300: nur vertrauenswürdiges LAN, keinesfalls Internet-Freigaben.\n'
+printf 'Ports 5000, 5001 and 10300: trusted private LAN only; never forward them to the Internet.\n'
