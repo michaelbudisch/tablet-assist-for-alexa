@@ -22,8 +22,12 @@ def call(path,data=None,method="POST"):
     with urllib.request.urlopen(req,timeout=8) as response:
         return json.loads(response.read(65536).decode())
 
-def configure(piper_base):
-    """Use HA's documented config flow REST API. Never modify .storage directly."""
+def configure(piper_base, preferences=None):
+    """Create HA's TAFA entry using the App Configuration as the first-run source.
+
+    Does not modify existing Config Entries; those remain user-owned and may
+    be updated through Home Assistant's supported Options Flow.
+    """
     flow=call("config/config_entries/flow",{"handler":"tablet_assist_for_alexa"})
     if flow.get("type")=="abort":
         return "already_configured"
@@ -34,6 +38,11 @@ def configure(piper_base):
             "live_profile":"natural","voice_variant":"default",
             "conversation_mode":"intelligent","mp3_profile":"natural",
             "rooms_json":"{}","chime":False}
+    if preferences:
+        allowed={"hardware_profile", "live_profile", "voice_variant",
+                 "mp3_base", "public_audio_base", "mp3_profile",
+                 "gpu_base", "chime"}
+        fields.update({key:value for key,value in preferences.items() if key in allowed})
     try:
         done=call("config/config_entries/flow/"+fid,fields)
         if done.get("type")=="create_entry":
