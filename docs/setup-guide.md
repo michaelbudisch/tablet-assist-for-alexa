@@ -121,3 +121,7 @@ Unter **TAFA → Geräte → Sprachtest** wird angezeigt, ob eine vollständige 
 Die unveränderte **TAFA Device Bridge 1.0.0** meldet Rufwörter, überträgt aber nicht die folgende Frage. Ein aktiver Assist-Client mit Mikrofon ist dafür weiterhin notwendig. Das private TAFA-Dashboard wird nicht installiert.
 
 Die Geräte-/Worker-Konfiguration ist nicht automatisch: Qwen-Host sowie DNS-/Router-/HTTPS-Einrichtung werden bewusst nicht durchs Netz ermittelt oder ungefragt verändert.
+
+### Ollama antwortet bei der ersten Frage nicht (TAFA 0.3.17 / Integration 0.4.9)
+
+Ein neuer Ollama-Gesprächsassistent hat in Home Assistant bis zum ersten Aufruf den Zustand `unknown` („Unbekannt“). Dies ist **normal**; TAFA hat dies bis Integration 0.4.8 fälschlich blockiert. Seit 0.4.9 wird die Frage weitergereicht. Die echte Entitäts-ID des Ollama-Agenten unter **Einstellungen → Geräte & Dienste → Ollama → Gesprächsassistent → Entität** ablesen und unter **Apps → TAFA → Konfiguration → llm_agent** speichern. Nach dem TAFA-App-Update **Home Assistant Core einmal neu starten**, anschließend **TAFA-App neu starten**, um die Einstellungen zu synchronisieren. `unavailable` ist weiterhin ein tatsächlicher Fehlerzustand. Das CPU-Hardwareprofil regelt nur Qwen/Piper-Sprachausgabe und unterbindet Ollama nicht länger. Die Android-App muss dafür nicht geändert werden.
