@@ -69,6 +69,13 @@ def speech_status():
         return {"piper_ready":False,"whisper_ready":False,
                 "piper_error":"Service offline","whisper_error":"Service offline"}
 
+def retry_models():
+    """Ask the internal CPU worker to retry failed model initialization."""
+    req=urllib.request.Request("http://127.0.0.1:5000/retry",data=b"{}",method="POST",
+                               headers={"Content-Type":"application/json"})
+    with urllib.request.urlopen(req,timeout=3) as response:
+        return json.loads(response.read(2048).decode("utf-8")).get("accepted",False)
+
 def setup_status():
     try:
         return json.loads(SETUP_STATE.read_text())
@@ -79,7 +86,15 @@ def autoconfigure(address):
     # Reattempt after HA Core restarts and discovers newly installed files.
     while True:
         try:
-            if speech_status().get("piper_ready"):
+            speech=speech_status()
+            if not speech.get("piper_ready"):
+                if speech.get("piper_phase")=="error":
+                    save_state("waiting_for_speech",speech.get("piper_error","Piper failed")[:150])
+                else:
+                    save_state("waiting_for_speech","Piper model "+str(speech.get("piper_phase","loading")))
+                time.sleep(20)
+                continue
+            if speech.get("piper_ready"):
                 outcome=configure(address)
                 save_state(outcome)
                 if outcome in ("configured","already_configured"):
@@ -127,16 +142,27 @@ def display(message="",lang="de"):
     state=status(CONFIG)
     runtime=speech_status()
     setup=setup_status()
+    def model_state(prefix):
+        if runtime.get(prefix+"_ready"):
+            return t("Bereit","Ready")
+        phase=str(runtime.get(prefix+"_phase","initializing"))
+        stages={"loading":t("Modell wird geladen","Loading model"),
+                "downloading":t("Modell wird heruntergeladen","Downloading model"),
+                "initializing":t("Startet","Starting"),
+                "error":t("Fehler","Error")}
+        detail=str(runtime.get(prefix+"_error",""))[:180] if phase=="error" else ""
+        return stages.get(phase,t("Noch nicht bereit","Not ready")) + (": "+detail if detail else "")
     cards=[
       (t("Home-Assistant-Backend","Home Assistant backend"),state.get("tablet_assist_for_alexa","not installed")),
-      ("Piper · TTS",t("Bereit","Ready") if runtime.get("piper_ready") else t("Noch nicht bereit","Not ready")),
-      ("Whisper · STT",t("Bereit","Ready") if runtime.get("whisper_ready") else t("Noch nicht bereit","Not ready")),
+      ("Piper · TTS",model_state("piper")),
+      ("Whisper · STT",model_state("whisper")),
       (t("HA-Einrichtung","HA setup"),setup.get("status","pending"))
     ]
     panels="".join('<div class="tile"><strong>'+html.escape(a)+'</strong><span>'+html.escape(str(b))+'</span></div>' for a,b in cards)
     note=t("Neue Komponenten werden beim App-Start eingebunden. Home Assistant muss danach einmal neu gestartet werden.",
       "New components are staged at app startup. Home Assistant needs one restart afterwards.")
     install=t("Backend erneut prüfen","Check backend installation")
+    retry=t("Sprachmodelle erneut laden","Retry speech models")
     return f"""<!doctype html>
 <html lang="{lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -159,7 +185,8 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <div class="tiles">{panels}</div>
 <section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
 <form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
-<button type="submit">{install}</button></form></section>
+<button type="submit" name="action" value="backend">{install}</button>
+<button type="submit" name="action" value="models">{retry}</button></form></section>
 <section><h2>{t("Inbetriebnahme","Getting started")}</h2>
 <ol class="steps">
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
@@ -208,9 +235,17 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
         try:
-            added=bootstrap(CONFIG,BUNDLE)
-            msg=("Installed: "+", ".join(added)+". Restart HA." if added
-                 else "Existing TAFA files preserved. / Bestehende Dateien bleiben unverändert.")
+            action=fields.get("action",["backend"])[0]
+            if action=="models":
+                accepted=retry_models()
+                msg=("Speech model retry requested / Sprachmodelle erneut gestartet."
+                     if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
+            elif action=="backend":
+                added=bootstrap(CONFIG,BUNDLE)
+                msg=("Installed: "+", ".join(added)+". Restart HA." if added
+                     else "Existing TAFA files preserved. / Bestehende Dateien bleiben unverändert.")
+            else:
+                return self.send_error(400)
             self.respond(display(msg,lang=lang))
         except (OSError,ValueError,SyntaxError) as exc:
             self.respond(display("Installation stopped: "+type(exc).__name__,lang=lang),400)

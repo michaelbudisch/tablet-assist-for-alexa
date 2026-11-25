@@ -67,6 +67,27 @@ class TestSpeech(unittest.TestCase):
     def test_invalid_audio(self):
         code,_,_=self.call("/stt",b"not a wav","audio/wav")
         self.assertEqual(code,400)
+    def test_status_includes_model_phases(self):
+        speech.STATE.tts_phase="error"
+        speech.STATE.stt_phase="error"
+        speech.STATE.tts_error="RuntimeError: example model error"
+        speech.STATE.stt_error="ImportError: example library error"
+        code,data,_=self.call("/status")
+        self.assertEqual(code,200)
+        payload=json.loads(data)
+        self.assertEqual(payload["piper_phase"],"error")
+        self.assertIn("ImportError",payload["whisper_error"])
+    def test_retry(self):
+        speech.STATE.voice=None
+        speech.STATE.asr=None
+        speech.STATE.tts_phase="error"
+        speech.STATE.stt_phase="error"
+        from unittest.mock import patch
+        with patch.object(speech.STATE,"retry",return_value=True) as retry:
+            code,data,_=self.call("/retry",b"{}","application/json")
+        self.assertEqual(code,200)
+        self.assertTrue(json.loads(data)["accepted"])
+        retry.assert_called_once_with()
     def test_busy(self):
         speech.STATE.stt_lock.acquire()
         try:

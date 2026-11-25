@@ -51,6 +51,15 @@ class Tests(unittest.TestCase):
  def test_csrf_required(self):
   code,_=self.post({"csrf":"wrong","lang":"de"})
   self.assertEqual(code,403)
+ def test_model_errors_visible(self):
+  with patch.object(server,"status",return_value={"tablet_assist_for_alexa":"installed · 0.4.1"}),\
+       patch.object(server,"speech_status",return_value={"piper_ready":False,"whisper_ready":False,"piper_phase":"error","whisper_phase":"error","piper_error":"RuntimeError: model unavailable","whisper_error":"ImportError: library unavailable"}),\
+       patch.object(server,"setup_status",return_value={"status":"waiting_for_speech"}):
+   code,body,_=self.get()
+   self.assertEqual(code,200)
+   self.assertIn("RuntimeError",body)
+   self.assertIn("ImportError",body)
+   self.assertIn("Sprachmodelle erneut laden",body)
  def test_install_confirmation_preserves_error_handling(self):
   with patch.object(server,"bootstrap",return_value=[]),\
        patch.object(server,"status",return_value={"tablet_assist_for_alexa":"installed · 0.4.0"}),\
