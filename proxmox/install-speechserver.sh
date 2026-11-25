@@ -28,17 +28,13 @@ python3 -m venv "$INSTALL/venv"
 "$INSTALL/venv/bin/pip" install -r "$INSTALL/requirements.txt"
 runuser -u jarvis-local -- "$INSTALL/venv/bin/python" -m piper.download_voices --data-dir "$DATA/models" "$VOICE"
 [[ -f "$DATA/models/$VOICE.onnx" ]] || { echo 'Voice model missing.'; exit 1; }
-TOKEN=$(python3 -c 'import secrets;print(secrets.token_hex(32))')
 cat > "$ENV" <<EOF
-PIPER_API_TOKEN=$TOKEN
-JARVIS_TTS_TOKEN=
 JARVIS_GPU_BASE=
 JARVIS_PIPER_URL=http://127.0.0.1:5000/synthesize
 JARVIS_PIPER_MODEL=$DATA/models/$VOICE.onnx
 JARVIS_AUDIO_DIR=$DATA/audio
 EOF
 chmod 0600 "$ENV"
-unset TOKEN
 # The ports below are LAN services. Restrict guest traffic to Home Assistant and
 # the trusted optional reverse proxy using the Proxmox/network firewall.
 for svc in piper mp3 audio whisper cleanup; do
@@ -88,7 +84,7 @@ systemctl enable --now jarvis-piper.service jarvis-mp3.service jarvis-whisper.se
 for i in {1..30}; do
   if curl -fsS --max-time 2 http://127.0.0.1:5000/health >/dev/null && curl -fsS --max-time 2 http://127.0.0.1:5001/health; then
     echo; echo 'Piper and MP3 service are ready. Whisper downloads its model on first start.'
-    echo 'The random API token is in root-only /etc/jarvis-local.env. Copy it locally into HA secrets.yaml; never commit it.'
+    echo 'Private LAN only: no additional TAFA API token is needed. Keep the generator port 5001 behind the LAN firewall.'
     exit 0
   fi
   sleep 2

@@ -2,7 +2,6 @@
 import os
 import uuid
 import json
-import hmac
 import time
 import hashlib
 import re
@@ -21,10 +20,6 @@ app.config['MAX_CONTENT_LENGTH'] = 8192
 AUDIO_DIR = Path(os.environ.get('JARVIS_AUDIO_DIR', '/var/lib/jarvis/audio'))
 PIPER_URL = os.environ.get('JARVIS_PIPER_URL', 'http://127.0.0.1:5000/synthesize')
 GPU_BASE = os.environ.get('JARVIS_GPU_BASE', '').rstrip('/')
-API_TOKEN = os.environ['PIPER_API_TOKEN']
-if len(API_TOKEN) < 32:
-    raise RuntimeError('Set a random PIPER_API_TOKEN of at least 32 characters')
-GPU_TOKEN = os.environ.get('JARVIS_TTS_TOKEN', '')
 MAX_WAV = 16 * 1024 * 1024
 MAX_ITEMS = 32
 MAX_CACHED_MP3 = 2 * 1024 * 1024
@@ -37,10 +32,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
-def fetch(url, payload=None, token='', timeout=10, limit=MAX_WAV):
+def fetch(url, payload=None, timeout=10, limit=MAX_WAV):
     headers = {'Content-Type': 'application/json'} if payload is not None else {}
-    if token:
-        headers['X-API-Key'] = token
     req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8') if payload is not None else None, headers=headers)
     with HTTP.open(req, timeout=timeout) as resp:
         result = resp.read(limit+1)
@@ -52,7 +45,7 @@ GPU_WAIT_SECONDS = 8.0
 
 
 def gpu_state():
-    if not GPU_TOKEN or not GPU_BASE:
+    if not GPU_BASE:
         return 'not_configured'
     try:
         data, _ = fetch(GPU_BASE+'/health', timeout=1.5, limit=65536)
@@ -175,7 +168,7 @@ def fetch_jarvis_stream(text, variant):
     # Same synthesis route and audio format as native Jarvis Assist.
     payload = json.dumps({'text': text, 'voice_variant': variant}).encode('utf-8')
     req = urllib.request.Request(GPU_BASE+'/stream', data=payload,
-        headers={'Content-Type':'application/json','X-API-Key':GPU_TOKEN}, method='POST')
+        headers={'Content-Type':'application/json'}, method='POST')
     deadline = time.monotonic() + 45
     pcm = bytearray()
     with HTTP.open(req, timeout=15) as response:
@@ -235,13 +228,11 @@ def get_audio(text, backend, variant, chime=False, sound_profile='Natürlich'):
 
 @app.get('/health')
 def health():
-    return jsonify(status='online', version='2.3.0', sound_profiles=list(SOUND_PROFILES), mp3_channels=MP3_CHANNELS, mp3_bitrate=48000, mp3_rate=24000, gpu_configured=bool(GPU_TOKEN and GPU_BASE))
+    return jsonify(status='online', version='2.3.0', sound_profiles=list(SOUND_PROFILES), mp3_channels=MP3_CHANNELS, mp3_bitrate=48000, mp3_rate=24000, gpu_configured=bool(GPU_BASE))
 
 @app.post('/generate')
 def generate():
     started = time.monotonic()
-    if not hmac.compare_digest(request.headers.get('X-API-Key','').encode(), API_TOKEN.encode()):
-        return jsonify(error='Unauthorized'), 401
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify(error='JSON fehlt'), 400
