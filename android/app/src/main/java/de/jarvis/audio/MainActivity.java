@@ -149,7 +149,7 @@ public class MainActivity extends Activity {
 
     private static final int WAKE_MICROPHONE_PERMISSION = 120;
     private static final String[] WAKE_KEYS={"hey_jarvis","jarvis","alexa","all"};
-    private Spinner wakeChoice,wakeSlot;
+    private Spinner wakeChoice;
     private EditText wakeRoomName;
     private Button wakeInstall;
     private TextView wakeStatus;
@@ -221,25 +221,13 @@ public class MainActivity extends Activity {
 
     private void initializeNativeWake(){
         var preferences=getSharedPreferences(PREF,0);
-        wakeSlot=findViewById(R.id.wake_slot);
-        ArrayAdapter<CharSequence> slots=ArrayAdapter.createFromResource(this,
-            R.array.wake_slots,android.R.layout.simple_spinner_dropdown_item);
-        wakeSlot.setAdapter(slots);
-        wakeSlot.setSelection(WakeDeviceIdentity.slot(this)-1);
-        wakeSlot.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override public void onNothingSelected(AdapterView<?> parent){}
-            @Override public void onItemSelected(AdapterView<?> parent,View view,int position,long id){
-                int next=position+1;
-                if(next==WakeDeviceIdentity.slot(MainActivity.this))return;
-                preferences.edit().putInt("wake_slot",next).apply();
-                if(WakeWordService.running){
-                    stopService(new Intent(MainActivity.this,WakeWordService.class));
-                    wakeStatus.setText(R.string.wake_slot_in_use);
-                }
-            }
-        });
         wakeRoomName=findViewById(R.id.wake_room_name);
         wakeRoomName.setText(preferences.getString("wake_room_name",""));
+        wakeRoomName.setOnFocusChangeListener((v,focus)->{
+            if(!focus&&WakeWordService.running){
+                remoteWakeSetting("room",wakeRoomName.getText().toString().trim());
+            }
+        });
         wakeRoomName.addTextChangedListener(new TextWatcher(){
             @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
             @Override public void onTextChanged(CharSequence s,int start,int before,int count){}
