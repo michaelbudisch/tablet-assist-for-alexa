@@ -35,9 +35,9 @@ fi
 
 echo "DuckDNS domain: $DOMAIN"
 echo "Create it on https://www.duckdns.org before this step."
-printf 'Is the domain registered under YOUR DuckDNS account? Type JA: '
+printf 'Is this domain registered under YOUR DuckDNS account? Type YES: '
 IFS= read -r CONFIRM </dev/tty
-[[ "$CONFIRM" == JA ]] || { echo "Cancelled, nothing changed."; exit 1; }
+[[ "$CONFIRM" == YES ]] || { echo "Cancelled, nothing changed."; exit 1; }
 printf 'DuckDNS account token (hidden; needed ONLY for DuckDNS IP updates): ' >/dev/tty
 IFS= read -r -s TOKEN </dev/tty
 printf '\n' >/dev/tty
