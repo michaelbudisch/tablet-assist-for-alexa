@@ -31,6 +31,15 @@ def validate():
     for service in ("vision", "qwen-stream", "ops"):
         if f"image: jarvis-{service}:{version}" not in compose:
             raise RuntimeError(f"compose image tag for {service} is not {version}")
+    # All public worker health/capability version fields follow the release.
+    runtime_versions = {
+        "ops/server.py": f'VERSION = "{version}"',
+        "qwen-stream/server.py": f"worker_version='{version}'",
+        "vision/server.py": f'worker_version="{version}"',
+    }
+    for name, marker in runtime_versions.items():
+        if marker not in (ROOT / name).read_text(encoding="utf-8"):
+            raise RuntimeError(f"{name} reports a different worker version")
     return version
 
 
