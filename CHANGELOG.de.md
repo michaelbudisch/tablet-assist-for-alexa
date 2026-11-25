@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA App 0.3.17 / Integration 0.4.9 — Erste Ollama-Frage freigeben
+- Home Assistant meldet bei neuen Gesprächsassistenten zunächst `unknown` („Unbekannt“), solange sie noch keine Frage erhalten haben. TAFA wertete dies fälschlich als Ausfall und blockierte die erste Frage.
+- Jetzt wird `unknown` als gültiger Erstzustand behandelt. Nur tatsächlich fehlende, selbstreferenzierende oder `unavailable`-Agenten werden blockiert.
+- Das CPU-/Homeserver-Profil beeinflusst weiterhin Piper/Qwen-TTS, deaktiviert aber nicht länger einen vorhandenen Ollama-Gesprächsassistenten. Android-APK unverändert.
+
+
+
 ## TAFA App 0.3.16 / Integration 0.4.8 — Native Spracheingabe vorbereiten
 - Externer Proxmox-Sprachserver: Die App meldet erst dann `external_ready`, wenn eine vollständige Assist-Pipeline angelegt oder vorhanden ist; vorher wird die Einrichtung weiter geprüft.
 - Unvollständige vorhandene Pipeline wird nicht überschrieben, sondern als `pipeline_needs_review` angezeigt.
