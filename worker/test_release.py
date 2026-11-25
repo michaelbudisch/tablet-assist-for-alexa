@@ -20,6 +20,8 @@ class ReleaseTests(unittest.TestCase):
                 self.assertFalse(any(n.endswith((".wav", ".pcm", ".key", ".pem")) for n in paths))
                 self.assertTrue(any(n.endswith("/vision/server.py") for n in paths))
                 self.assertTrue(any(n.endswith("/ops/server.py") for n in paths))
+                self.assertTrue(any(n.endswith("/01-Installieren.bat") for n in paths))
+                self.assertTrue(any(n.endswith("/Worker-Windows.ps1") for n in paths))
 
 
 if __name__ == "__main__":

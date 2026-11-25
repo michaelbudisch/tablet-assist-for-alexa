@@ -5,8 +5,7 @@ import json
 from PIL import Image
 from server import create_app, DEFAULT_MODEL, MAX_BYTES, ModelUnavailable
 
-TOKEN = "test-only-" + "x" * 40
-HEADERS = {"X-API-Key": TOKEN}
+HEADERS = {}
 
 def fixture():
     buf = io.BytesIO()
@@ -24,12 +23,12 @@ class VisionTests(unittest.TestCase):
                 return {"models": [{"name": DEFAULT_MODEL, "size_vram": 3500000000, "context_length": 4096},
                     {"name": "private-unrelated-model", "secret": "not exposed"}]}
             return {"message": {"content": "Eine blaue Fläche."}}
-        self.client = create_app(TOKEN, call=fake).test_client()
+        self.client = create_app( call=fake).test_client()
     def post(self, data):
         return self.client.post("/describe", json=data, headers=HEADERS)
-    def test_auth(self):
-        self.assertEqual(self.client.post("/describe", json={"image": fixture()}).status_code, 401)
-        self.assertEqual(self.calls, [])
+    def test_tokenless_private_lan(self):
+        self.assertEqual(self.client.post("/describe", json={"image": fixture()}).status_code, 200)
+        self.assertEqual(len(self.calls), 1)
     def test_health(self):
         self.assertTrue(self.client.get("/health", headers=HEADERS).json["ready"])
     def test_description(self):
@@ -79,7 +78,7 @@ class VisionTests(unittest.TestCase):
         self.assertEqual(result.json["vision_models"],[DEFAULT_MODEL])
         self.assertEqual(len(result.json["loaded"]),1)
         self.assertEqual([x[0] for x in self.calls],["/api/tags","/api/ps"])
-        self.assertEqual(self.client.get("/runtime").status_code,401)
+        self.assertEqual(self.client.get("/runtime").status_code,200)
     def test_generic_people_without_identity(self):
         self.assertEqual(self.post({"image":fixture(),"mode":"scene"}).status_code,200)
         system=self.calls[0][1]["messages"][0]["content"]
@@ -100,11 +99,11 @@ class VisionTests(unittest.TestCase):
     def test_offline_missing_model(self):
         def fail(*args, **kwargs):
             raise ModelUnavailable()
-        c = create_app(TOKEN, call=fail).test_client()
+        c = create_app( call=fail).test_client()
         self.assertEqual(c.post("/describe", json={"image":fixture()}, headers=HEADERS).status_code, 503)
         self.assertEqual(c.get("/health",headers=HEADERS).status_code,503)
-    def test_wrong_token(self):
-        self.assertEqual(self.client.get("/health",headers={"X-API-Key":"bad"}).status_code,401)
+    def test_no_auth_header_required(self):
+        self.assertEqual(self.client.get("/health").status_code,200)
 
     def test_structured_detection(self):
         detection={"person_count":1,"dog_count":0,"age_groups":["adult"],"genders":["woman"],"uncertain":False}
@@ -112,7 +111,7 @@ class VisionTests(unittest.TestCase):
         def fake(path,data=None,timeout=8):
             calls.append(data)
             return {"message":{"content":json.dumps(detection)}}
-        client=create_app(TOKEN,call=fake).test_client()
+        client=create_app(call=fake).test_client()
         response=client.post("/detect",json={"image":fixture(),"keep_alive":300,"num_ctx":2048},headers=HEADERS)
         self.assertEqual(response.status_code,200)
         self.assertEqual(response.json["labels"],["person","adult","woman"])
@@ -122,7 +121,7 @@ class VisionTests(unittest.TestCase):
         self.assertEqual(calls[0]["options"]["num_ctx"],2048)
         self.assertIn("Never identify",calls[0]["messages"][0]["content"])
         self.assertIn("genders",calls[0]["format"]["properties"])
-        self.assertEqual(client.post("/detect",json={"image":fixture()}).status_code,401)
+        self.assertEqual(client.post("/detect",json={"image":fixture()}).status_code,200)
 
     def test_invalid_or_uncertain_detection_never_selects_an_action(self):
         from detection import validate, labels
@@ -134,7 +133,7 @@ class VisionTests(unittest.TestCase):
             with self.subTest(invalid=invalid):
                 with self.assertRaises(ValueError):validate(invalid)
         def fake(*args,**kwargs):return {"message":{"content":'go open a door'}}
-        client=create_app(TOKEN,call=fake).test_client()
+        client=create_app(call=fake).test_client()
         self.assertEqual(client.post("/detect",json={"image":fixture()},headers=HEADERS).status_code,503)
         self.assertEqual(client.post("/detect",json={"image":fixture(),"action":"script.anything"},headers=HEADERS).status_code,400)
 

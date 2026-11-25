@@ -1,8 +1,16 @@
-# Jarvis GPU Worker 2.2.0
+# Jarvis GPU Worker 2.2.1
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-## 2.2.0 — Structured production Ring sequence
+## Token-free Windows setup
+
+Run **00-Konfiguration.bat** to create `.env` with LAN address and model defaults only; **01-Installieren.bat** builds/starts GPU Whisper and Qwen Stream; **02-Starten.bat** starts them, **03-Neustarten.bat** restarts active worker containers, and **04-Verbindungsdaten.bat** generates a token-free IP/port TXT for Home Assistant. `Setup.ps1` remains a compatible entry point. Existing `.env` and Docker volumes are preserved. Android app and private dashboard are not changed.
+
+**Security:** Extra TAFA worker API keys are no longer required. Bind services to your private `LAN_IP` and restrict inbound Windows firewall traffic to Home Assistant and the speech server. No public port forwarding, guest Wi-Fi access or proxying of the generator/control routes. A public HTTPS audio proxy must only serve short-lived opaque MP3 GET URLs.
+
+
+
+## 2.2.1 — Structured production Ring sequence
 
 New authenticated `POST /describe/sequence` on the existing Vision service. Standard: 12 chronological JPEGs (768 px max edge); detail: 4 selected higher-resolution JPEGs (1024 px max edge). Both use a bounded internal 16384-token context and the same vision gate. JSON includes a concise German description, tri-state evidence (yes/no/uncertain), delivery_assessment (likely/uncertain/no_evidence) and timing. A clothing hint alone is uncertain. Invalid or contradictory model output is rejected or downgraded. This is not proof of delivery. Existing /describe, /detect and /benchmark/sequence remain compatible.
 

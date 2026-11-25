@@ -8,16 +8,14 @@ from urllib.request import Request, urlopen
 
 from server import VERSION, make_handler, status
 
-TOKEN = "test-only-" + "x" * 40
-
 
 class OpsTests(unittest.TestCase):
     def setUp(self):
-        def fake(_token):
+        def fake():
             return {"worker_version": VERSION, "mode": "read-only",
                     "services": {"vision": {"available": True}, "whisper": {"available": False}},
                     "gpu": {"available": False}, "overall": "degraded"}
-        self.srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(TOKEN, checker=fake))
+        self.srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(checker=fake))
         self.thread = threading.Thread(target=self.srv.serve_forever, daemon=True)
         self.thread.start()
 
@@ -26,16 +24,13 @@ class OpsTests(unittest.TestCase):
         self.srv.server_close()
         self.thread.join(timeout=2)
 
-    def get(self, path, token=TOKEN):
-        req = Request(f"http://127.0.0.1:{self.srv.server_port}{path}",
-                      headers={"X-API-Key": token})
+    def get(self, path):
+        req = Request(f"http://127.0.0.1:{self.srv.server_port}{path}")
         with urlopen(req, timeout=2) as response:
             return response.status, json.loads(response.read()), response.headers
 
-    def test_authentication(self):
-        with self.assertRaises(HTTPError) as err:
-            self.get("/status", token="wrong")
-        self.assertEqual(err.exception.code, 401)
+    def test_tokenless_status(self):
+        self.assertEqual(self.get("/status")[0], 200)
 
     def test_health_and_status(self):
         self.assertEqual(self.get("/health")[1]["worker_version"], VERSION)
@@ -55,8 +50,8 @@ class OpsTests(unittest.TestCase):
         self.assertEqual(err.exception.code, 404)
 
     def test_offline_status(self):
-        fake = lambda n, e, t: {"available": False, "latency_ms": 1}
-        report = status(TOKEN, check=fake, gpu=lambda: {"available": False})
+        fake = lambda n, e: {"available": False, "latency_ms": 1}
+        report = status(check=fake, gpu=lambda: {"available": False})
         self.assertEqual(report["overall"], "unavailable")
 
 

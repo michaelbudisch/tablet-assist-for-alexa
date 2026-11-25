@@ -7,8 +7,7 @@ import unittest
 from PIL import Image
 from server import create_app, DEFAULT_MODEL
 
-TOKEN = "unit-test-token-" + "z" * 40
-AUTH = {"X-API-Key": TOKEN}
+AUTH = {}
 
 
 def image():
@@ -35,7 +34,7 @@ class SequenceBenchmarkTests(unittest.TestCase):
                 "eval_duration": 12_000_000,
             }
 
-        self.client = create_app(TOKEN, call=fake).test_client()
+        self.client = create_app( call=fake).test_client()
 
     def send(self, *, n=4, mode="joint", **kwargs):
         return self.client.post(
@@ -44,12 +43,12 @@ class SequenceBenchmarkTests(unittest.TestCase):
             headers=AUTH,
         )
 
-    def test_not_accessible_without_api_key(self):
+    def test_accessible_without_token_on_private_network(self):
         result = self.client.post(
             "/benchmark/sequence", json={"frames": frames()}, headers={}
         )
-        self.assertEqual(result.status_code, 401)
-        self.assertEqual(self.requests, [])
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(len(self.requests), 1)
 
     def test_joint_four_frames_one_inference(self):
         result = self.send()
@@ -157,7 +156,7 @@ class SequenceBenchmarkTests(unittest.TestCase):
     def test_failed_model_returns_generic_error(self):
         def bad(*args, **kwargs):
             raise RuntimeError("untrusted host internal details")
-        client = create_app(TOKEN, call=bad).test_client()
+        client = create_app( call=bad).test_client()
         result = client.post(
             "/benchmark/sequence",
             json={"frames": frames(4), "mode": "joint"}, headers=AUTH,
@@ -185,7 +184,7 @@ class ProductionSequenceTests(unittest.TestCase):
         def fake(path, data=None, timeout=8):
             self.requests.append((path, data, timeout))
             return {"message": {"content": json.dumps(self.answer)}}
-        self.client = create_app(TOKEN, call=fake).test_client()
+        self.client = create_app( call=fake).test_client()
 
     def send(self, count=12, **kw):
         return self.client.post("/describe/sequence", headers=AUTH,
@@ -232,7 +231,7 @@ class ProductionSequenceTests(unittest.TestCase):
         self.assertEqual(self.send().status_code, 503)
 
     def test_bounds_and_auth(self):
-        self.assertEqual(self.client.post("/describe/sequence", json={"frames": frames(12)}).status_code, 401)
+        self.assertEqual(self.client.post("/describe/sequence", json={"frames": frames(12)}).status_code, 200)
         for count, kw in [(4, {}), (12, {"profile": "detail"}),
                           (12, {"num_ctx": 65536}), (12, {"source_url": "https://example.com"})]:
             self.assertEqual(self.send(count, **kw).status_code, 400)

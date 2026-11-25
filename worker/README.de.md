@@ -1,8 +1,16 @@
-# Jarvis GPU Worker 2.2.0
+# Jarvis GPU Worker 2.2.1
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-## 2.2.0 – Strukturierte produktive Ring-Bildfolge
+## Installation ohne Tokens (Windows)
+
+Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erstellen; mit **01-Installieren.bat** die Whisper- und Qwen-Streaming-Container bauen und starten. **02-Starten.bat** startet die Standarddienste, **03-Neustarten.bat** startet bereits laufende Dienste neu; **04-Verbindungsdaten.bat** erzeugt `GPU-Worker-Verbindungsdaten.txt` mit IP, Ports und Home-Assistant-Einstellungen, **ohne Tokens**. `Setup.ps1` bleibt als kompatibler Einstieg verfügbar. Vorhandene `.env` und Modell-Volumes bleiben unangetastet. Kein Eingriff in Android-App oder Dashboard.
+
+**Sicherheit:** Diese HTTP-Schnittstellen akzeptieren Anfragen ohne zusätzlichen Worker-Schlüssel. Die Docker-Ports werden an die konfigurierte private `LAN_IP` gebunden. In der Windows-Firewall ausschließlich den Home-Assistant- und gegebenenfalls Proxmox-Server zulassen; keine Gastnetze, VPN-Weiterleitung, Reverse-Proxies auf Generator-Ports oder Router-Portfreigaben. Ein öffentlicher HTTPS-Proxy darf ausschließlich kurze, zufällig benannte MP3-Dateien per GET anbieten.
+
+
+
+## 2.2.1 – Strukturierte produktive Ring-Bildfolge
 
 Neuer authentifizierter Endpunkt `POST /describe/sequence` im vorhandenen Vision-Dienst. Standard: zwölf chronologische JPEGs (maximal 768 px Kantenlänge); Detail: vier ausgewählte höher aufgelöste JPEGs (maximal 1024 px). Beide Profile nutzen intern 16384 Kontext-Tokens und dieselbe Vision-Warteschlange. JSON enthält eine kurze deutsche Szenenbeschreibung, dreistufige Merkmale (yes/no/uncertain), Lieferbewertung (likely/uncertain/no_evidence) und Laufzeiten. Kleidung allein bleibt unsicher. Ungültige oder widersprüchliche Modellausgaben werden abgelehnt oder herabgestuft. Kein Zustellnachweis. /describe, /detect und /benchmark/sequence bleiben kompatibel.
 

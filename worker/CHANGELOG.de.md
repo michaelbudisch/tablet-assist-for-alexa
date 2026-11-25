@@ -1,5 +1,13 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.1
+
+- Zusätzliche TAFA-API-Token-Abfragen bei Qwen, Vision, Diagnose und Ollama im privaten LAN entfernt. Home-Assistant-Benutzeranmeldung bleibt erhalten.
+- BAT-Dateien für Konfiguration, Installation, Start, Neustart und tokenfreie IP-/Portübersicht ergänzt.
+- Setup.ps1 und setup-linux.sh erstellen .env ohne Token; vorhandene .env und Modellvolumes bleiben erhalten.
+- GPU- und MP3-Generator-Ports nur im vertrauenswürdigen LAN mit Firewall-Freigaben verwenden, niemals Portweiterleitung ins Internet.
+
+
  
 ## 2.2.0
 

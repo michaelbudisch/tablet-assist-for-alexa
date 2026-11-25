@@ -1,5 +1,13 @@
 # GPU worker changelog
 
+## 2.2.1
+
+- Removed extra TAFA API token checks from private-LAN Qwen, Vision, Diagnostics and Ollama endpoints. Home Assistant user authentication stays in place.
+- Added one-click Windows BAT scripts for configuration, installation, start, restart and a token-free IP/port report.
+- Setup.ps1 and setup-linux.sh create a token-free .env; existing .env and model volumes are preserved.
+- Ports must remain on a trusted LAN with firewall allowlisting; never forward GPU/MP3 generator ports to the Internet.
+
+
  
 ## 2.2.0
 
