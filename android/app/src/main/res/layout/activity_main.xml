@@ -81,6 +81,15 @@
 <TextView style="@style/Body" android:text="@string/wake_description"/>
 <TextView style="@style/Body" android:text="@string/wake_privacy" android:textSize="12sp"/>
 <Spinner android:id="@+id/wake_choice" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/wake_select"/>
+<TextView style="@style/Body" android:text="@string/wake_strict_help" android:textSize="12sp"/>
+<TextView android:id="@+id/wake_strict_label" style="@style/Body" android:text="@string/wake_strict_label"/>
+<SeekBar android:id="@+id/wake_strict_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="2" android:progress="0"/>
+<TextView android:id="@+id/wake_cooldown_label" style="@style/Body" android:text="@string/wake_cooldown_label"/>
+<SeekBar android:id="@+id/wake_cooldown_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="27" android:progress="9"/>
+<TextView android:id="@+id/wake_hold_label" style="@style/Body" android:text="@string/wake_hold_label"/>
+<SeekBar android:id="@+id/wake_hold_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="16" android:progress="8"/>
+<Button android:id="@+id/wake_mute_toggle" style="@style/Action" android:text="@string/wake_mute_button"/>
+<TextView style="@style/Body" android:text="@string/wake_remote_help" android:textSize="12sp"/>
 <Button android:id="@+id/wake_model_install" style="@style/Action" android:text="@string/wake_install"/>
 <TextView android:id="@+id/wake_status" style="@style/Body" android:text="@string/wake_stopped" android:accessibilityLiveRegion="polite"/>
 <Button android:id="@+id/wake_start" style="@style/Primary" android:text="@string/wake_start"/>
