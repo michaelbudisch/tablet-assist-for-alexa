@@ -1,3 +1,13 @@
+# TAFA Device Bridge 1.0.1 (source candidate — signing required)
+
+- **Optional native voice conversation:** Keep existing wake-only behavior by default. After explicit opt-in, detect a wakeword with local Vosk, record 16 kHz PCM in the Android foreground service and stream the complete question into Home Assistant Assist (Whisper → conversation → Qwen/Piper).
+- Use the existing, authenticated per-user Multiroom playback service for Bluetooth answers; no open browser or browser HTTPS required for microphone access. On LAN HTTP the app's explicit unencrypted connection consent still applies.
+- Two optional short follow-up questions, adjustable 900–3200 ms pause, manual question test button, live native state and remote mute handling.
+- Same Android package id and existing encrypted preferences; versionCode 14. **No public compatible signed APK until the original private keystore is used. Do not relabel the signed 1.0.0 APK.**
+- Full physical Android microphone and Bluetooth end-to-end test is still required.
+
+---
+
 # TAFA Device Bridge 1.0.0
 
 Based on Android 0.9.0, source 9cf27e7691a7340f98424ef044583f26528f2546.
