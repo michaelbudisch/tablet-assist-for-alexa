@@ -17,6 +17,10 @@ jobs:
         with:
           node-version: '22'
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Validate local speech server and Proxmox upgrade scripts
+        run: |
+          bash -n proxmox/*.sh worker/setup-linux.sh
+          python -m py_compile speechserver/api.py speechserver/piper_service.py
       - run: python tests/check_sources.py
       - run: python tests/test_audio.py
       - run: python tests/test_install.py
