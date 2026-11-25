@@ -1,5 +1,9 @@
 # Changelog
 
+## TAFA-Integration 0.4.10 — Gerätezuordnung per bestätigtem JSON-Import
+- Neue Admin-Schnittstelle für Wyoming-/Ollama-Einrichtung nach ausdrücklicher Freigabe im Control Center. Bestehende, nicht zugeordnete HA-Integrationen und Assist-Pipelines bleiben erhalten. Fehlende KI-Modelle werden nicht automatisch geladen.
+
+
 ## TAFA App 0.3.23 / GPU-Worker 2.2.4 — JSON-Import
 - Worker und Proxmox-Sprach-CT erzeugen JSON mit stabiler Gerätekennung. Im TAFA Control Center kann die Datei geprüft und nach Bestätigung übernommen werden. Wyoming-/Ollama-Einrichtung erfolgt im HA-Backend; fremde Integrationen und Modelle bleiben unverändert. Bei IP-Wechsel wird dieselbe Gerätekennung erneut importiert.
 

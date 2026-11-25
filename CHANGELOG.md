@@ -1,3 +1,6 @@
+## TAFA integration 0.4.10 — approved device manifest provisioning
+- Adds admin-only HA setup for imported GPU/Proxmox manifests: matches/reconfigures Wyoming and provisions compatible Ollama connections and existing-model conversation agents while preserving unrelated entries and existing Assist pipelines.
+
 ## TAFA App 0.3.23 / GPU Worker 2.2.4 — confirmed JSON import
 - Introduce JSON export from GPU Worker and Proxmox speech CT with stable device IDs, and a preview/confirm import in TAFA Control Center. Home Assistant provisions Wyoming and supported Ollama agents without overwriting unrelated integrations or downloading unknown models. Reimport the same device ID after IP changes.
 
