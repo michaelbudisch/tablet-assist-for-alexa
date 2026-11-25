@@ -56,6 +56,13 @@ If you **hear a chime but no voice**, check the Notify entity first; next verify
 **Important:** Wake device registration and audio room pairing are separate systems. A registered wake device alone does not prove audio playback is connected. Each audio room requires its own active non-admin HA account; its assignment is managed in the TAFA Devices page rather than Developer tools. The dashboard does not store or display access tokens. The legacy `input_text.jarvis_native_audio_command` helper is not required in Multiroom mode.
 
 
+
+### Test speech playback from a private HTTP address
+
+Once the Android audio player shows connected under **TAFA → Devices**, open **Voice test** and click **“Test speech output”**. You can edit the sample phrase, then the selected **TAFA Lokal** Assist pipeline generates speech with Qwen/Piper and sends the result to the paired Android/Bluetooth player. Status shows synthesis, transfer, buffering, playback and final success/error, based on the actual tablet player report. **No browser microphone** is used, so this works on a private HTTP Home Assistant address.
+
+**“Speak once”** remains the full microphone/Assist test, which browsers restrict to trustworthy HTTPS (or localhost). On insecure HTTP the microphone control is replaced by a helpful explanation rather than a broken button. No new Android APK, HA helpers or tokens are required.
+
 ### Test a spoken question after pairing a tablet
 
 Open **TAFA → Devices → [tablet] → Voice test · Speak once** and expand the section. TAFA automatically selects an existing **TAFA Lokal** Assist pipeline with speech recognition and **Tablet Assist Stream**; another complete pipeline can be selected. Tap **Speak once**, grant browser microphone permission, ask a short question and hear the reply on the paired tablet/Bluetooth player. This reuses the tested Assist and room-audio transport; no additional HA helpers or scripts are required.
