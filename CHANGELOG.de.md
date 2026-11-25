@@ -1,5 +1,8 @@
 # Changelog
 
+## Unveröffentlicht — Marketplace-Backend-Konsolidierung
+- Aktuelle Installationsgrenze und Ziel einer einzigen Integration dokumentiert; Android-Bezeichnung TAFA Device Bridge 1.0.0. Privates Dashboard bleibt ausgeschlossen. Kein neuer Integrationsrelease und keine Backend-Migration.
+
 ## Unveröffentlicht — Raum-Audio-Zuordnung im TAFA-Kiosk
 - Wiederverwendbarer TAFA-Kompatibilitätsfix: Bei nachträglich vergebenen Adminrechten wird ein bereits zugewiesener Raumplayer weiterhin erkannt. Nicht zugewiesene Benutzer behalten den bisherigen Audio-Pfad.
 - Eigene Multiroom-Raumkarte und Backend bleiben unverändert; getrennte Nicht-Admin-Benutzer für neue Räume bleiben Standard.
