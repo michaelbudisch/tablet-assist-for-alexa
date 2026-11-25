@@ -1,3 +1,8 @@
+## TAFA App 0.3.18 / GPU Worker 2.2.2 — guided Home Assistant setup
+- Generated GPU connection TXT now provides complete bilingual Wyoming GPU/CPU STT, Ollama conversation, Qwen TTS and precise TAFA field mapping.
+- TAFA Control Center discovers registered Wyoming STT entities and offers explicit CPU/GPU dropdown assignment. Save persists only these two choices in the App options; restart the App to synchronize.
+- Existing backend configuration, Android APK, GPU endpoints, LAN-only policy and CPU fallback are unchanged.
+
 ## TAFA App 0.3.17 / integration 0.4.9 — first Ollama conversation fix
 - `unknown` is the normal HA ConversationEntity state until its first message, not proof of a disconnected LLM. Allow the first voice turn to reach the configured agent.
 - CPU/Homeserver hardware profile controls TTS routing, not whether a configured HA conversation agent may respond.
