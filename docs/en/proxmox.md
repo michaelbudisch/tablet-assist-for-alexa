@@ -35,7 +35,7 @@ The local configuration remains in `/etc/jarvis-local.env` (root only). The curr
 | Port | Service | Access |
 |---|---|---|
 | 5000 | Piper HTTP (WAV) | Trusted internal clients only |
-| 5001 | MP3 API | Internal, API key |
+| 5001 | MP3 API | Trusted private LAN only, no token |
 | 10300 | Wyoming STT | Internal only |
 | 8080 | Temporary audio files | Internal; optional restricted HTTPS proxy |
 
