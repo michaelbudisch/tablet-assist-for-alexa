@@ -10,6 +10,14 @@ get_host() {
   HOST=""
   MODE="dedicated"
   PROXY_IP=""
+  PROXY_CT=""
+  NEW_CT=""
+  if [[ -f /etc/tafa-shared-proxy-ct ]]; then
+    IFS= read -r PROXY_CT </etc/tafa-shared-proxy-ct || true
+  fi
+  if [[ -f /etc/tafa-new-ct-id ]]; then
+    IFS= read -r NEW_CT </etc/tafa-new-ct-id || true
+  fi
   if [[ -f "$HOSTFILE" ]]; then
     IFS= read -r HOST < "$HOSTFILE" || true
   fi
@@ -73,7 +81,7 @@ show_status() {
     printf ' Qwen Worker : nicht konfiguriert (Piper wird verwendet)\n'
   fi
   if [[ "$MODE" == shared ]]; then
-    printf ' Nginx       : externer zentraler Proxy %s\n' "$PROXY_IP"
+    printf ' Nginx       : externer zentraler Proxy CT %s (%s)\n' "$PROXY_CT" "$PROXY_IP"
   else
     printf ' Nginx       : %s\n' "$(svc nginx)"
   fi
@@ -94,7 +102,8 @@ show_status() {
   printf '\n Befehle: tafa-info | tafa-setup | journalctl -u jarvis-mp3 -n 30\n'
   printf ' Netzwerk: Interne Ports nicht ins Internet weiterleiten.\n'
   if [[ "$MODE" == shared ]]; then
-    printf ' Shared-Modus: HTTPS-Einrichtung auf dem bisherigen Proxy abschliessen.\n'
+    printf ' Shared-Modus: HTTPS-Einrichtung auf Proxy CT %s abschliessen.\n' "$PROXY_CT"
+    printf ' Anleitung: tafa-setup (zeigt Befehle fuer Proxy CT %s)\n' "$PROXY_CT"
   fi
   printf '============================================================\n'
 }
@@ -138,9 +147,19 @@ enable_https() {
   [[ "$EUID" == 0 && -t 0 ]] || { echo "Root in interaktiver CT-Konsole erforderlich."; return 1; }
   get_host
   if [[ "$MODE" == shared ]]; then
-    echo "Bestehender zentraler Nginx-Proxy $PROXY_IP bedient die HTTPS-Domain."
-    echo "Nginx/Certbot auf dem Proxy-CT vorbereiten, nicht im neuen Sprachserver-CT."
-    echo "Die zugehoerigen Befehle stehen am Ende des Proxmox-Host-Installers."
+    get_ip
+    echo "Bestehender Nginx-Proxy CT $PROXY_CT ($PROXY_IP) bedient die Domain $HOST."
+    echo "DNS-Domain zuerst auf https://www.duckdns.org registrieren und aktualisieren."
+    echo "Keine Ports in der FRITZ!Box umstellen. In der Proxmox-Host-Shell:"
+    printf '  pct enter %s\n' "$PROXY_CT"
+    echo "Dann IM PROXY-CT:"
+    printf '  certbot certonly --webroot -w /var/lib/tablet-assist-acme --cert-name %s -d %s\n' "$HOST" "$HOST"
+    printf '  bash /opt/tafa-audio-setup-%s/install-nginx-proxy.sh enable %s %s --shared\n' "$NEW_CT" "$HOST" "$IP"
+    if [[ "$HOST" == *.duckdns.org ]]; then
+      echo "Optional fuer DuckDNS-IP-Aktualisierung:"
+      printf '  bash /opt/tafa-audio-setup-%s/install-duckdns-updater.sh %s\n' "$NEW_CT" "$HOST"
+      echo "DuckDNS-Account-Token im Proxy-CT verdeckt eingeben, nicht im Chat."
+    fi
     return 0
   fi
   prepare_host || return 1
