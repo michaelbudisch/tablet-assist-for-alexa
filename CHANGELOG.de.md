@@ -1,5 +1,11 @@
 # Changelog
 
+## TAFA App 0.3.14 / Integration 0.4.6 — Sprachtest für frische Installationen
+- Unter **TAFA → Geräte** lässt sich der bekannte **Einmal sprechen**-Test direkt durchführen: Browser-Mikrofon, Whisper, Assist, Qwen/Piper und Ausgabe auf dem verbundenen Tablet/Bluetooth-Lautsprecher.
+- TAFA sucht selbst eine passende Assist-Pipeline; der Administrator kann gezielt ein gekoppeltes Tablet testen, andere Benutzer nur den eigenen Raum. Keine neuen Helfer oder Android-App-Änderungen.
+- HTTPS für Browser-Mikrofon notwendig; Aufnahme endet beim Schließen des Tests.
+
+
 ## TAFA App 0.3.13 / Integration 0.4.5 — Tablet-Raumzuordnung
 - Unter TAFA → Geräte kann ein Administrator jetzt direkt einen Audio-Raum und einen bestehenden HA-Benutzer ohne Adminrechte auswählen, speichern und den Verbindungsstatus prüfen.
 - Kamerafreigabe pro Raum als separater Schalter (Standard: aus). Die Kamera wird nur am Tablet ausdrücklich gestartet; ein Administrator-Token ist für den Multiroom-Kamerastream nicht nötig. Beim Deaktivieren werden gespeicherte Bilder verworfen.
