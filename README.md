@@ -89,3 +89,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **TAFA 0.3.21 / GPU Worker 2.2.3:** TAFA now shows safe private endpoint reachability and the last observed STT routing backend where available. The worker-generated TXT contains only the three relevant GPU PC endpoints and their exact configuration destinations; Proxmox IP addresses are not assumed.
 
 **TAFA App 0.3.22:** The Control Center now uses four accessible responsive tabs (Overview, Settings, Connections, Maintenance & help), a calmer navy/teal palette with light/dark variants, and more compact system status and connection cards. Existing settings and backend endpoints remain unchanged.
+
+**TAFA 0.3.26 compatibility fix:** If HA Core is still running older integration code and a deleted Wyoming entry triggers `Previously mapped integration missing; review first`, TAFA retries the approved JSON import with the stale stored entry association cleared. Only this exact error triggers the retry. The permanent HA integration fix remains 0.4.12; restart HA Core to activate it. No worker changes are required.

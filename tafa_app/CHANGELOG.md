@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.26 — recover stale Wyoming mappings even when HA still runs old code
+- Compatibility retry for HA Core processes still running integration 0.4.11: when the backend reports exactly "Previously mapped integration missing; review first", TAFA retries the approved manifest after dropping only the stale recorded mapping(s).
+- Never retry for connectivity errors, invalid JSON, missing backend or other provisioning failures; keep existing unrelated HA entries untouched.
+- On success, the importer saves the newly returned Wyoming/Ollama entry IDs so the next import is clean. The installed integration 0.4.12 still provides the permanent fix; HA Core restart is recommended to load that version.
+
+
 ## 0.3.25 — recover deleted Wyoming and explain JSON setup errors
 - Re-importing a previously approved GPU/Proxmox JSON now recreates a Wyoming integration that was explicitly deleted in Home Assistant; a stale mapped config-entry ID no longer blocks provisioning.
 - Also recover deleted previously linked Ollama integration entries when an enabled server is reachable; never overwrite or delete unrelated integrations.

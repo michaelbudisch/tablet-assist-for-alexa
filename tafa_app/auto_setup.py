@@ -183,32 +183,58 @@ def provision_worker_manifest(manifest, tracked):
             first=json.loads(ws.recv(timeout=8))
         if first.get("type")!="auth_ok":
             raise RuntimeError("Home Assistant WebSocket authentication failed")
-        ws.send(json.dumps({
-            "id":1,"type":"tablet_assist_for_alexa/provision_manifest",
-            "manifest": {key:manifest[key] for key in
-                         ("kind","host","device_id","services")},
-            "tracked": tracked,
-        }))
-        for _ in range(8):
-            reply=json.loads(ws.recv(timeout=35))
-            if reply.get("id")!=1:
+        # Old HA Core processes can keep the 0.4.11 Python module loaded
+        # after the TAFA App and on-disk integration have been updated.
+        # That module rejects a deleted, previously mapped config entry.
+        # Retry ONLY that exact server error, and remove only the stale
+        # mapping, preserving the approved JSON endpoint and all unrelated
+        # Home Assistant config entries. A later successful result persists
+        # the newly created config entry through save_record().
+        active=dict(tracked)
+        retry_keys=[
+            key for key in ("wyoming_stt","ollama")
+            if key in active and manifest["services"].get(key,{}).get("enabled") is True
+        ]
+        used_compatibility=False
+        for request_id in range(1,len(retry_keys)+2):
+            ws.send(json.dumps({
+                "id":request_id,"type":"tablet_assist_for_alexa/provision_manifest",
+                "manifest": {key:manifest[key] for key in
+                             ("kind","host","device_id","services")},
+                "tracked":active,
+            }))
+            reply=None
+            for _ in range(8):
+                response=json.loads(ws.recv(timeout=35))
+                if response.get("id")==request_id:
+                    reply=response
+                    break
+            if reply is None:
+                raise RuntimeError("HA provisioning did not answer")
+            if reply.get("success"):
+                result=reply.get("result",{})
+                if used_compatibility and isinstance(result,dict):
+                    result.setdefault("messages",[]).append(
+                        "Veraltete Wyoming-/Ollama-Zuordnung wurde beim JSON-Import repariert. "
+                        "/ Deleted integration mapping repaired during JSON import.")
+                return result
+            error=reply.get("error") or {}
+            code=str(error.get("code","unknown"))
+            if code in ("unknown_command","not_found"):
+                raise RuntimeError(
+                    "TAFA HA backend not loaded yet. Restart Home Assistant Core once, "
+                    "then retry JSON import / TAFA-Backend noch nicht geladen. "
+                    "Home Assistant Core einmal neu starten.")
+            detail=" ".join(str(error.get("message") or "").split())[:150]
+            if (code=="provision_failed"
+                    and detail=="Previously mapped integration missing; review first"
+                    and retry_keys):
+                active.pop(retry_keys.pop(0),None)
+                used_compatibility=True
                 continue
-            if not reply.get("success"):
-                error=reply.get("error",{})
-                code=str(error.get("code","unknown"))
-                if code in ("unknown_command","not_found"):
-                    raise RuntimeError(
-                        "TAFA HA backend not loaded yet. Restart Home Assistant Core once, "
-                        "then reimport JSON / TAFA-Backend noch nicht geladen. "
-                        "Home Assistant Core einmal neu starten, dann JSON erneut importieren.")
-                detail=str(error.get("message") or "").strip()
-                # HA sends a bounded, plain-text flow explanation. Display
-                # only printable characters, without newlines or markup.
-                detail=" ".join(detail.split())[:150]
-                raise RuntimeError("TAFA HA provisioning unavailable: "+code+
-                                   (" — "+detail if detail else ""))
-            return reply.get("result",{})
-    raise RuntimeError("HA provisioning did not answer")
+            raise RuntimeError("TAFA HA provisioning unavailable: "+code+
+                               (" — "+detail if detail else ""))
+        raise RuntimeError("TAFA HA provisioning retry limit exceeded")
 
 
 
