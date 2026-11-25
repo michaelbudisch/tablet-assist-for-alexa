@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 0.7.0 · Experimentelle native Rufworterkennung
+
+- Wahlweise lokale deutsche Vosk-Erkennung für **Hey Jarvis**, **Jarvis**, **Alexa** oder **alle drei**. Standardmäßig ausgeschaltet.
+- Das ca. 45 MB große Modell wird nur auf ausdrücklichen Knopfdruck geladen. Ein sichtbarer Android-Mikrofon-Dienst hat eine eigene Stopp-Aktion.
+- Nur das erkannte Rufwort wird als authentifiziertes Home-Assistant-Ereignis `jarvis_android_wakeword` gesendet; Audiodaten und Transkripte werden nicht übertragen.
+- Nach Erkennung 50 Sekunden Mikrofonpause zur Übergabe an die vorhandene HA-/Whisper-Verarbeitung.
+- Bluetooth-Ausgabe, Kamera und bestehender Player bleiben unangetastet. Der Dashboard-Empfänger und Hardwaretest sind erforderlich; noch keine signierte 0.7.0-APK veröffentlicht.
+
 ## 0.6.0 · Räume und Kamera-Intervalle
 
 - Raumbezogene Audio-Helfer und Raumkamera-Übertragung mit freigegebenen Nicht-Admin-Konten; Einzelgeräte-Modus bleibt erhalten.
