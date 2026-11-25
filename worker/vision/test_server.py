@@ -1,3 +1,4 @@
+from pathlib import Path
 import base64
 import io
 import unittest
@@ -48,7 +49,7 @@ class VisionTests(unittest.TestCase):
     def test_capabilities_and_vision_queue(self):
         response = self.client.get("/capabilities", headers=HEADERS)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["worker_version"], "2.2.2")
+        self.assertEqual(response.json["worker_version"], (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip())
         self.assertEqual(response.json["priority_queue"]["scope"], "vision-only")
         result = self.post({"image": fixture(), "priority": "background", "wait_ms": 50})
         self.assertEqual(result.status_code, 200)
