@@ -16,12 +16,9 @@ def _safe(path):
     """Never traverse symlinks even when model cache content was tampered with."""
     if ROOT.is_symlink() or path.is_symlink():
         raise ValueError("Unexpected symlink in TAFA model data")
-    if not path.exists():
-        return
-    if path.is_dir():
-        for item in path.rglob("*"):
-            if item.is_symlink():
-                raise ValueError("Unexpected symlink in TAFA model cache")
+    # Hugging Face Whisper caches legitimately use symlinks *inside*
+    # snapshots/. shutil.rmtree() unlinks them without following targets.
+    # Never accept a symlink as one of the top-level delete roots.
 
 
 def _size(path):
@@ -30,7 +27,7 @@ def _size(path):
         return 0
     if path.is_file():
         return path.stat().st_size
-    return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
+    return sum(item.stat().st_size for item in path.rglob("*") if not item.is_symlink() and item.is_file())
 
 
 def inventory():
