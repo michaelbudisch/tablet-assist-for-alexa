@@ -3,6 +3,11 @@
 # Install one Piper/Whisper/MP3 backend + localhost-only Nginx MP3 HTTPS frontend.
 set -Eeuo pipefail
 umask 077
+RESUME=0
+if [[ "${1:-}" == --resume ]]; then
+  RESUME=1
+  shift
+fi
 [[ "$EUID" == 0 && -f /etc/debian_version && -d /run/systemd/system ]] || {
   echo "Debian systemd CT required"; exit 1;
 }
@@ -31,16 +36,27 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 [[ -f "$HERE/install-speechserver.sh" && -f "$HERE/install-nginx-proxy.sh" && -f "$HERE/combined-console.sh" ]] || {
   echo "Complete TAFA installer archive required"; exit 1;
 }
-[[ ! -e /opt/jarvis-local && ! -e /etc/tafa-combined-hostname ]] || {
-  echo "Existing installation detected. Refusing to overwrite."; exit 1;
-}
+if (( RESUME )); then
+  [[ -d /opt/jarvis-local/venv && ! -e /etc/jarvis-local.env &&
+     ! -e /etc/tafa-combined-hostname ]] || {
+    echo "Resume refused: the guest is not at the known interrupted Python stage."; exit 1;
+  }
+else
+  [[ ! -e /opt/jarvis-local && ! -e /etc/tafa-combined-hostname ]] || {
+    echo "Existing installation detected. Refusing to overwrite."; exit 1;
+  }
+fi
 
 # Do not weaken or replace a running Nginx configuration on an existing CT.
 if [[ "$MODE" == dedicated ]] && systemctl list-unit-files nginx.service --no-legend 2>/dev/null | grep -q '^nginx'; then
   echo "Nginx already installed. Use a fresh CT."; exit 1
 fi
 
-bash "$HERE/install-speechserver.sh"
+if (( RESUME )); then
+  bash "$HERE/install-speechserver.sh" --resume
+else
+  bash "$HERE/install-speechserver.sh"
+fi
 # Connect the MP3 Qwen route only when the user explicitly supplied a LAN worker.
 if [[ -n "$GPU_BASE" ]]; then
   python3 - "$GPU_BASE" <<'PY'
