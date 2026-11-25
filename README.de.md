@@ -15,7 +15,7 @@
 3. **TAFA** installieren, starten und das integrierte Control Center öffnen (Ingress).
 4. TAFA stellt **eine** gemeinsame HA-Integration unter `custom_components/tablet_assist_for_alexa` bereit. Home Assistant einmal neu starten, damit die Integration erkannt wird.
 5. TAFA lädt eine deutsche Piper-Stimme und ein Faster-Whisper-CPU-Modell herunter und zeigt den tatsächlichen Status an. Sobald Sprachserver und HA bereit sind, versucht TAFA automatisch, die Integration einzurichten und eine separate Assist-Pipeline **TAFA Lokal** anzulegen, ohne bestehende Pipelines zu überschreiben.
-6. Die unveränderte [TAFA Device Bridge 1.0.0](android/README.de.md) mit HA verbinden und die TAFA-Lokal-Pipeline auswählen. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
+6. Die unveränderte [TAFA Device Bridge 1.0.0](android/README.de.md) für Rufwort-Ereignisse und Audio mit HA verbinden. Die Pipeline **TAFA Lokal** in Home Assistant Assist oder der HA Companion App auswählen – nicht in der Device Bridge. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
 
 [Vollständige Anleitung](docs/app.md) · [Multiroom](homeassistant/examples/MULTIROOM.de.md) · [Android-Einrichtung](android/README.de.md)
 
@@ -33,6 +33,10 @@
 | Sichere Updates | Nur unveränderte, von TAFA installierte Dateien werden aktualisiert; vorherige Versionen werden gesichert |
 
 GPU-Worker, Ollama und Alexa-MP3-Durchsagen sind **optional**. Das private Dashboard ist nicht enthalten. Die CPU-Sprachmodelle werden beim ersten Start heruntergeladen und im persistenten App-Datenverzeichnis gespeichert. Dafür wird einmalig Internet benötigt.
+
+## Native Rufwortübergabe – wichtige Einschränkung
+
+Device Bridge 1.0.0 **sendet ausschließlich das erkannte Rufwort** und gibt danach das Mikrofon frei. Die anschließende Frage wird **nicht** von der Bridge an Home Assistant übertragen. Dafür muss ein eigener, aktiver Assist-Client mit Mikrofonfreigabe übernehmen (zum Beispiel die Home-Assistant-Sprachoberfläche). Das Backend kann nicht auf Sprachdaten zugreifen, die die unveränderte Android-App nicht überträgt. Assist lässt sich unabhängig vom Rufwort manuell starten. Ein vollständig freihändiger Betrieb mit **nur** TAFA-App und Device Bridge 1.0.0 ist daher **noch nicht möglich**. Für einen stabilen All-in-one-Sprachrelease ist das ein offener Punkt.
 
 ## Alternative: Home Assistant Marketplace
 

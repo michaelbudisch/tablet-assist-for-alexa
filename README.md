@@ -15,7 +15,7 @@
 3. Install and start **TAFA**, then open its built-in Control Center (Ingress).
 4. TAFA stages **one** Home Assistant integration at `custom_components/tablet_assist_for_alexa`. Restart Home Assistant once to discover the new component.
 5. TAFA downloads a German Piper voice and Faster-Whisper CPU model and checks their actual status. When the speech service and HA are ready, it attempts to configure the TAFA integration and create the **TAFA Lokal** Assist pipeline without overwriting any existing pipelines. Check Control Center if setup needs attention.
-6. Connect the unmodified [TAFA Device Bridge 1.0.0](android/README.md) to HA and select the TAFA Lokal Assist pipeline. The Echo is an optional Bluetooth output device, not the microphone.
+6. Connect the unmodified [TAFA Device Bridge 1.0.0](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
 
 [Full installation guide](docs/en/app.md) · [Multiroom guide](homeassistant/examples/MULTIROOM.md) · [Android instructions](android/README.md)
 
@@ -33,6 +33,10 @@
 | Safe updates | Only app-owned, unmodified integration files can be updated; previous versions backed up |
 
 The GPU worker, Ollama and Alexa MP3 notifications are **optional**. The app does not bundle or redistribute those models, nor does it install the private dashboard. Model files for CPU speech are downloaded on first start and retained in the app's persistent data volume. Internet access is needed for that initial download.
+
+## Native wake-word handoff — important limitation
+
+Device Bridge 1.0.0 **sends only the recognized wake-word event** and releases its microphone; it does **not** stream the subsequent spoken question. A separate active Assist client (for example Home Assistant's voice interface with microphone permission) must record the question. The TAFA backend alone cannot capture audio that the unchanged Android app never transmits. Manual Assist works independently of wake-word handoff. Fully hands-free use with **only** the TAFA App and Device Bridge 1.0.0 is **not yet supported**. This is a blocker for a stable all-in-one voice release.
 
 ## Marketplace alternative
 

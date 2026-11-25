@@ -165,7 +165,7 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
 <li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
 <li>{t("Die TAFA-Integration und eine eigene Assist-Pipeline werden eingerichtet, sobald Piper verfügbar ist und Home Assistant die Komponenten erkennt.","The TAFA integration and its Assist pipeline are configured when Piper is ready and Home Assistant discovers the components.")}</li>
-<li>{t("TAFA Device Bridge auf dem Tablet mit Home Assistant verbinden und die Assist-Pipeline auswählen.","Connect TAFA Device Bridge to Home Assistant and select the Assist pipeline.")}</li>
+<li>{t("TAFA Device Bridge für Rufwort/Audio verbinden. Die Pipeline in Home Assistant Assist auswählen; die Bridge selbst überträgt keine anschließende Frage.","Connect Device Bridge for wake events/audio. Select the Assist pipeline in Home Assistant; the Bridge does not transmit the following spoken question.")}</li>
 </ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
  · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>
 <p class="muted">{t("Externe GPU ist optional. Kameras und Mikrofone werden nicht automatisch aktiviert.","External GPU is optional. Cameras and microphones are never activated automatically.")}</p></section>

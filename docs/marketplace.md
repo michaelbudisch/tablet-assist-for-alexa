@@ -17,7 +17,7 @@ Marketplace kann keine laufenden CPU-Sprachdienste installieren. Bei alleiniger 
 3. Installieren und bei Bedarf Home Assistant neu starten.
 4. Einstellungen → Geräte & Dienste → Integration hinzufügen → **TAFA**.
 5. Erreichbare Piper-Adresse eintragen; optional Wyoming-STT, GPU-Worker, KI-Agent und Durchsagen konfigurieren.
-6. Assist-Pipeline mit TAFA STT, Gesprächsrouter und TTS erstellen/auswählen. Die Pipeline auf der Device Bridge einstellen.
+6. Assist-Pipeline mit TAFA STT, Gesprächsrouter und TTS erstellen/auswählen. Die Pipeline in Home Assistant Assist oder der HA Companion App auswählen, nicht in der Device Bridge.
 
 [In HA öffnen](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Einrichtung starten](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
 

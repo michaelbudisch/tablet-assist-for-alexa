@@ -11,7 +11,11 @@
 3. Open the **TAFA Control Center**. CPU models download on first launch (network access needed). The status tiles distinguish real Piper/Whisper readiness from pending or failed initialization.
 4. TAFA stages **one** component: `custom_components/tablet_assist_for_alexa`. Restart Home Assistant **once** using the normal Home Assistant settings. No YAML edits or second HA integration are needed on a fresh installation.
 5. The App attempts the HA integration config flow through the Supervisor Core API and then creates a **TAFA Lokal** Assist pipeline when STT, TTS and the conversation router are registered. Existing HA pipelines remain untouched. If automatic setup is unavailable, open **Settings → Devices & services → Add integration → TAFA**, then select the built-in Piper service and HA Assist pipeline from Control Center. Do not manually edit `.storage`.
-6. Install/connect the existing [TAFA Device Bridge 1.0.0](../../android/README.md); select TAFA Lokal. Optionally pair an Echo as the Android Bluetooth output. The app's audio, camera and wake-word permissions remain under Android user control.
+6. Install/connect the existing [TAFA Device Bridge 1.0.0](../../android/README.md); select the TAFA Lokal pipeline in Home Assistant Assist (or the HA Companion app), not in Device Bridge. Optionally pair an Echo as the Android Bluetooth output. The app's audio, camera and wake-word permissions remain under Android user control.
+
+## Native wake-word limitation
+
+Device Bridge 1.0.0 sends the recognized wake word and releases its microphone but does not transmit the following question. An active Assist client must capture the question after that event; no backend-only change can recover missing audio. Direct manual Assist works. Do not advertise fully hands-free operation with only the unchanged Bridge until the handoff is independently tested and supported.
 
 ## What is bundled
 

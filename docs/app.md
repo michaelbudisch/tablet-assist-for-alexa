@@ -11,7 +11,11 @@
 3. Das **TAFA Control Center** öffnen. CPU-Sprachmodelle werden beim ersten Start heruntergeladen (Internet nötig). Die Statuskarten zeigen tatsächliche Bereitschaft oder Fehler von Piper und Whisper.
 4. TAFA stellt **eine** Integration bereit: `custom_components/tablet_assist_for_alexa`. Home Assistant über die normalen Einstellungen **einmal neu starten**. Keine YAML-Bearbeitung und keine zweite HA-Integration bei einer Neuinstallation nötig.
 5. Die App versucht, den HA-Konfigurationsdialog über die Supervisor-Core-API automatisch abzuschließen, und erstellt anschließend eine **TAFA Lokal**-Assist-Pipeline, sobald STT, TTS und Gesprächsrouter registriert sind. Bestehende Pipelines bleiben unverändert. Wenn die automatische Einrichtung fehlschlägt, unter **Einstellungen → Geräte & Dienste → Integration hinzufügen → TAFA** wechseln und die verfügbaren Sprachdienste im Control Center prüfen. Nicht manuell in `.storage` eingreifen.
-6. Die vorhandene [TAFA Device Bridge 1.0.0](../android/README.de.md) installieren/verbinden und TAFA Lokal wählen. Optional den Echo über Android-Bluetooth als Lautsprecher koppeln. Audio-, Kamera- und Rufwortberechtigungen bleiben unter Android-Kontrolle.
+6. Die vorhandene [TAFA Device Bridge 1.0.0](../android/README.de.md) für Rufwort und Audio verbinden. **TAFA Lokal** in Home Assistant Assist beziehungsweise in der HA Companion App wählen, nicht in der Device Bridge. Optional den Echo über Android-Bluetooth als Lautsprecher koppeln. Audio-, Kamera- und Rufwortberechtigungen bleiben unter Android-Kontrolle.
+
+## Einschränkung bei der Rufwortübergabe
+
+Device Bridge 1.0.0 sendet das erkannte Rufwort und gibt anschließend das Mikrofon frei, überträgt aber nicht die Frage. Nach dem Ereignis muss ein aktiver Assist-Client die Frage mit eigener Mikrofonfreigabe aufnehmen; diese fehlenden Audiodaten kann das Backend allein nicht erzeugen. Manuelles Assist funktioniert unabhängig davon. Vollständig freihändige Nutzung mit nur der unveränderten Bridge und TAFA-App darf deshalb noch nicht als unterstützt gelten.
 
 ## Inhalt der App
 

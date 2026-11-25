@@ -17,7 +17,7 @@ Marketplace cannot deploy the running CPU processes. If you install via Marketpl
 3. Install and restart Home Assistant if prompted.
 4. Settings → Devices & services → Add integration → **TAFA**.
 5. Configure an accessible Piper origin, optionally select a Wyoming STT entity, GPU worker, conversation agent and external announcements.
-6. Create/select an Assist pipeline with the TAFA STT, conversation and TTS entities. Choose the pipeline on Device Bridge.
+6. Create/select an Assist pipeline with the TAFA STT, conversation and TTS entities. Choose the pipeline in the Home Assistant Assist interface or Companion app, not in Device Bridge.
 
 [Open in HA](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Start integration setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
 
