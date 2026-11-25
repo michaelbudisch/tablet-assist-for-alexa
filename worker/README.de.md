@@ -1,4 +1,4 @@
-# Jarvis GPU Worker 2.2.1
+# Jarvis GPU Worker 2.2.2
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
