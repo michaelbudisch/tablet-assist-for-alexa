@@ -4,7 +4,7 @@
 
 ## 0.9.0 · Unbegrenzte dynamische Multiroom-Geräte
 
-- Weiterhin **HA Jarvis Echo Relay**; die separat installierbare Debug-App heißt **HA Jarvis Echo Relay (Test)**. Der Testzweig verwendet dieselbe Versionsfolge wie die Haupt-App (0.7.1 → 0.8.0 → 0.9.0), aber 0.9.0 ist noch kein signiertes reguläres Update.
+- App-Name **HA Jarvis Echo Relay**, bisherige App-ID `de.jarvis.audio` und Versionsfolge `0.7.1 → 0.8.0 → 0.9.0`. Die aktualisierbare Release-APK wird mit dem originalen Zertifikat von 0.7.1 geprüft.
 
 - Keine vordefinierten Tablet-Plätze mehr. Jedes Android-Gerät meldet sich über eine zufällige, eindeutige Installationskennung beim HA-Modul an.
 - Home Assistant legt die Gerätedatensätze und alle fünf Einstellungen dynamisch in seiner Speicherdatei an; manuelles Anlegen einzelner Helfer entfällt. Neue Geräte sind direkt in der TAFA-Geräteliste sichtbar.
