@@ -266,13 +266,14 @@ public final class WakeWordService extends Service implements RecognitionListene
             holdUntil=0;main.postDelayed(rearm,300);return;
         }
         status=nextQuestion?"native_followup":"native_connecting";
-        NativeAssistSession session=new NativeAssistSession(this,hit,
+        final NativeAssistSession[] holder=new NativeAssistSession[1];
+        NativeAssistSession session=new NativeAssistSession(this,hit;
             nextQuestion?nativeConversationId:"",
             prefs.getInt("native_pause_ms",1700),nextQuestion,
             new NativeAssistSession.Listener(){
                 @Override public void state(String stage){
                     main.post(()->{
-                        if(enabled&&nativeSession==session){
+                        if(enabled&&nativeSession==holder[0]){
                             status="native_"+stage;
                             NotificationManager manager=getSystemService(NotificationManager.class);
                             if(manager!=null)manager.notify(43,notification());
@@ -281,7 +282,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 }
                 @Override public void finished(boolean answered,String conversationId){
                     main.post(()->{
-                        if(nativeSession!=session)return;
+                        if(nativeSession!=holder[0])return;
                         nativeSession=null;
                         if(!enabled||muted)return;
                         if(answered){
@@ -304,6 +305,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                     });
                 }
             });
+        holder[0]=session;
         nativeSession=session;
         session.start();
     }
