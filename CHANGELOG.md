@@ -5,6 +5,13 @@
 
 # Changelog
 
+## TAFA App 0.3.15 / integration 0.4.7 — HTTP-compatible speech output check
+- New editable **Test speech output** action in TAFA → Devices → Voice test, sending actual Qwen/Piper audio through the authenticated paired Android room and reporting playback states.
+- A trusted HTTPS context remains required for browser microphone testing, but not for the audio-only TTS test. On HTTP, avoid mounting the unsupported microphone test UI.
+- No Android, secrets or network exposure changes.
+
+
+
 ## TAFA App 0.3.14 / integration 0.4.6 — built-in spoken setup test
 - TAFA → Devices includes the proven "Speak once" browser microphone → Whisper → Assist → Qwen/Piper → paired tablet audio test, with automatic pipeline selection and a clear secure-context requirement.
 - Authenticated room user or administrator-scoped selected device, with no token in the dashboard, no duplicate HA helper scripts and no Android APK update. Capture stops on closing the view.
