@@ -24,11 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     session = async_get_clientsession(hass)
-    token = entry.data.get("qwen_token", "")
-    entities = [JarvisNativeTTS(entry.entry_id, session, "piper", "Jarvis Tablet Piper", "")]
-    if token:
-        entities.append(JarvisNativeTTS(entry.entry_id, session, "qwen", "Jarvis Tablet Qwen", token))
-    entities.append(JarvisStreamingTTS(entry.entry_id, session, "stream", "Jarvis Tablet Stream", token))
+    entities = [JarvisNativeTTS(entry.entry_id, session, "piper", "Jarvis Tablet Piper")]
+    entities.append(JarvisNativeTTS(entry.entry_id, session, "qwen", "Jarvis Tablet Qwen"))
+    entities.append(JarvisStreamingTTS(entry.entry_id, session, "stream", "Jarvis Tablet Stream"))
     async_add_entities(entities)
 
 
@@ -50,19 +48,17 @@ class JarvisNativeTTS(TextToSpeechEntity):
     _attr_supported_languages = ["de", "de-DE"]
     _attr_supported_options = []
 
-    def __init__(self, entry_id, session, backend, name, token):
+    def __init__(self, entry_id, session, backend, name):
         self._attr_unique_id = entry_id + "_" + backend
         self._attr_name = name
         self._session = session
         self._backend = backend
-        self._token = token
         self._retry_after = 0.0
         self._lock = asyncio.Lock()
 
-    async def _fetch(self, url, text, timeout, token="", voice_variant=None):
-        headers = {"X-API-Key": token} if token else {}
+    async def _fetch(self, url, text, timeout, voice_variant=None):
         async with self._session.post(
-            url, json={"text": text, **({"voice_variant": voice_variant} if voice_variant else {})}, headers=headers,
+            url, json={"text": text, **({"voice_variant": voice_variant} if voice_variant else {})},
             timeout=aiohttp.ClientTimeout(total=timeout),
             allow_redirects=False,
         ) as response:
@@ -101,10 +97,10 @@ class JarvisNativeTTS(TextToSpeechEntity):
         # Only one outstanding synthesis per entity. Piper and Qwen remain separate.
         async with self._lock:
             start = monotonic()
-            if self._backend == "qwen" and self._token and monotonic() >= self._retry_after:
+            if self._backend == "qwen" and monotonic() >= self._retry_after:
                 try:
                     if await self._qwen_ready():
-                        audio = await self._fetch(QWEN_BASE + "/synthesize", text, 20, self._token)
+                        audio = await self._fetch(QWEN_BASE + "/synthesize", text, 20)
                         _LOGGER.debug("Tablet TTS: Qwen in %.2fs", monotonic() - start)
                         return "wav", audio
                 except (aiohttp.ClientError, TimeoutError, ValueError):
@@ -175,8 +171,6 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 self._retry_after = 0.0
 
     async def _poll_health(self, _now=None):
-        if not self._token:
-            return
         try:
             async with self._session.get(
                 STREAM_BASE + "/health",
@@ -200,7 +194,7 @@ class JarvisStreamingTTS(JarvisNativeTTS):
 
     def _gpu_allowed(self):
         profile = self.hass.states.get("input_select.jarvis_stt_profil")
-        return bool(self._token and (profile is None or profile.state != "Homeserver")
+        return bool((profile is None or profile.state != "Homeserver")
                     and monotonic() >= self._retry_after)
 
     def _voice_variant(self):
@@ -244,7 +238,6 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 async with self._session.post(
                     STREAM_BASE + "/stream",
                     json={"text": text, "voice_variant": voice_variant},
-                    headers={"X-API-Key": self._token},
                     timeout=aiohttp.ClientTimeout(total=90, connect=2, sock_read=15),
                     allow_redirects=False,
                 ) as response:
@@ -326,7 +319,7 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 try:
                     if not await self._stream_ready():
                         raise ValueError("GPU stream not ready")
-                    audio = await self._fetch(STREAM_BASE + "/synthesize", text, 20, self._token, self._requested_variant(options))
+                    audio = await self._fetch(STREAM_BASE + "/synthesize", text, 20, self._requested_variant(options))
                     if sound_profile != "Natürlich":
                         audio = await self.hass.async_add_executor_job(filter_wav, audio, sound_profile)
                     self._attr_extra_state_attributes = {"letztes_backend": "Faster Qwen (Datei)", "erste_audio_ms": round((monotonic()-start)*1000), "klangprofil": sound_profile, **getattr(self, "_voice_metadata", {})}
