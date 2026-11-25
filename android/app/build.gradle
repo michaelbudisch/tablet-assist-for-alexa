@@ -5,7 +5,7 @@ android {
     defaultConfig { applicationId 'de.jarvis.audio'; minSdk 28; targetSdk 34; versionCode 9; versionName '0.7.0' }
     buildFeatures { buildConfig true }
     defaultConfig { testInstrumentationRunner 'de.jarvis.audio.UiSmokeInstrumentation' }
-    buildTypes { release { minifyEnabled false } }
+    buildTypes { debug { applicationIdSuffix '.wakepilot'; versionNameSuffix '-pilot' } release { minifyEnabled false } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
 dependencies {
