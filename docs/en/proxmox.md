@@ -64,6 +64,19 @@ The local configuration remains in `/etc/jarvis-local.env` (root only). The curr
 
 Configure firewall rules to allow only the required HA and proxy hosts. No automatic router configuration. The GPU address initially remains empty; see [GPU worker](worker.md).
 
+## Fresh installation behind an existing central Nginx proxy
+
+A new DuckDNS domain can be registered in the [DuckDNS dashboard](https://www.duckdns.org); the published update endpoint maintains existing domains and does not register names. Use a separate new name, leaving the existing domain and router forwarding intact.
+
+1. Run the PVE host installer shown above; choose a **new CT** and select HTTPS mode `shared`, then the **existing proxy CT ID** (for example 101). Explicitly confirm the addition of a new audio virtual host.
+2. The new CT installs Piper, Whisper and MP3 generation, but **no second public Nginx**. Temporary MP3 files on port 8080 respond only to requests from the chosen Nginx proxy IP. Restrict internal network access with host/guest firewalls too.
+3. The host wizard copies new, isolated setup scripts to the existing proxy CT and prepares **one new audio hostname**, without modifying pre-existing Nginx sites or certificates.
+4. After DuckDNS points at your existing public address, run the printed `certbot certonly --webroot` and `install-nginx-proxy.sh enable ... --shared` commands **on the existing proxy CT**; 80/443 continue to point there.
+5. Optionally run `install-duckdns-updater.sh NEW-NAME.duckdns.org` from the new setup folder on the existing proxy CT. The DuckDNS-account token is prompted privately and stored only in a local root-only file (0600), updated every ten minutes. It is not a TAFA API token.
+6. In the **test HA installation**, configure Piper, Wyoming, new CT's MP3 generator and the new public audio hostname together. A new domain pointing to the new CT cannot serve files generated on the old CT: always migrate the MP3-generator URL and public-audio URL as a pair after successful tests.
+
+Keep the old public hostname, all pre-existing proxy sites, and the production HA installation unchanged during testing.
+
 ## Optional HTTPS proxy
 
 **With the new combined single-CT installer Nginx is already installed.** Run `tafa-setup` inside the new guest once public DNS/routing has been prepared. A separate proxy CT remains available as an alternative in the [Nginx guide](nginx-proxy.md). No public proxy is needed for tablet-to-Echo Bluetooth.
