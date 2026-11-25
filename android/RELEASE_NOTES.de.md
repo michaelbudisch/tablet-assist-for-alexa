@@ -1,5 +1,5 @@
-# HA Jarvis Echo Relay 0.6.0
+# HA Jarvis Echo Relay 0.7.0 · experimentell
 
-Raumbezogenes Audio, separate JPEG-Kamerabilder und optionale lokale Bildbewegung. Je gemeinsam genutztem Raum ein separates HA-Konto ohne Administratorrechte; Kamerafreigabe standardmäßig aus. Übertragung ausschließlich am Tablet starten und sichtbar stoppen. Aktualisierungsintervall 1, 2, 3, 5 oder 10 Sekunden. Version und Buildnummer auf der Startseite. Einzelgeräte-Modus bleibt erhalten. Raumkameras benötigen HA-Integration 1.7.0.
+Dieser Testzweig ergänzt eine wahlweise lokale Vosk-Rufworterkennung mit vier Modi: Hey Jarvis, Jarvis, Alexa oder alle drei. Die Mikrofonberechtigung wird erst beim Start angefordert, das etwa 45 MB große Offline-Modell wird nur auf Knopfdruck installiert und lediglich erkannte Rufwörter werden an Home Assistant gemeldet (kein Audio). Ein Dashboard-Empfänger öffnet die bisherige STT-Pipeline. Über die sichtbare Benachrichtigung kann man den Dienst stoppen.
 
-Die [veröffentlichte signierte Update-APK](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk) verwendet den bisherigen Signierschlüssel. Über die vorhandene Version installieren. [Vollständige Multiroom-Einrichtung](../homeassistant/examples/MULTIROOM.de.md). Hardwareprüfung mit zwei Tablets steht aus.
+**Testzweig, noch keine veröffentlichte signierte APK.** Modellstart, Erkennungsqualität, Hintergrundbetrieb, Audioübergabe und Kompatibilität müssen auf dem echten Android-Tablet geprüft werden. Die veröffentlichte signierte Version 0.6.0 bleibt vorerst die stabile Downloadversion.
