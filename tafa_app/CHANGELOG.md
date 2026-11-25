@@ -2,6 +2,7 @@
 
 ## 0.3.13 — Device audio pairing in the TAFA Devices page
 - Administrators can choose a non-admin HA user, assign or update an audio room, and see online/ready status for each registered tablet without developer tools or YAML.
+- Each room has a separate opt-in camera permission toggle in TAFA → Devices. Camera uploads remain off by default, must be started on the tablet, and use the room account rather than an administrator token. Disabling permission revokes and clears buffered frames.
 - Existing room connections and quiet-hours settings are preserved when saving the same mapping. An ownership transfer or user reassignment requires explicit administrator confirmation; never transmit tokens through the dashboard.
 - Admin-protected room management API; Android Device Bridge 1.0.0 unchanged. Restart HA after updating the bundled component; new App version is 0.3.13 / integration 0.4.5.
 - Confirm end-to-end on a physical HA OS and tablet before promoting to stable.
