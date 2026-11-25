@@ -10,6 +10,23 @@ Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erste
 
 
 
+## 2.2.2 – Vollstaendige GPU-Worker-Verbindungsdaten statt reiner Portliste
+
+**Neu:** `04-Verbindungsdaten.bat` erzeugt `GPU-Worker-Verbindungsdaten.txt` aus der vorhandenen `.env` / `LAN_IP` und oeffnet sie direkt in Notepad. Die TXT enthaelt eine **deutsche und englische** Schrittfolge von der Erstinstallation bis zum Sprachtest, inklusive aller benoetigten Home-Assistant-Integrationen. Keine Zugangsdaten oder API-Tokens. Die TXT wird auch bei Prepare, Install und Start geschrieben; die Reportfunktion startet keine Dienste.
+
+| Dienst | Home Assistant (einmalig) | TAFA App > Konfiguration |
+|---|---|---|
+| **GPU-Whisper** `GPU-IP:10300` | **Wyoming Protocol** unter Geraete & Dienste hinzufuegen (GPU-Host + Port 10300); dann die dort erzeugte `stt.*`-Entitaets-ID nachsehen | `gpu_stt` = GPU-STT-Entitaet, `gpu_stt_host` = reine GPU-IP |
+| **CPU-Whisper** `PROXMOX-IP:10300` | Separates **Wyoming Protocol** fuer CPU-Sprachserver; echte `stt.*`-ID kopieren | `cpu_stt` = CPU-STT-Entitaet, **anders als GPU-STT** |
+| **Qwen Streaming TTS** `http://GPU-IP:10502` | Als TTS in der Assist-Pipeline **Tablet Assist Stream** waehlen | `gpu_base` = vollstaendige URL, `hardware_profile=automatic` |
+| **Ollama Text-KI** `http://GPU-IP:11434` | Eigene Integration **Ollama** hinzufuegen und mit einem installierten Textmodell wie `qwen3:4b-instruct` einen **Konversationsagenten** einrichten; echte `conversation.*`-ID ablesen | `llm_agent` = HA-Konversationsentitaets-ID, nicht Geraetename |
+
+**Wichtig:** Eine GPU-Qwen-Adresse allein aktiviert **GPU-Whisper NICHT**. Die STT-Entitaet entsteht erst durch **Wyoming Protocol**. Bei genau einer Wyoming-STT-Entitaet kann TAFA diese automatisch auswaehlen; sobald CPU und GPU vorhanden sind, beide Entitaets-IDs manuell eintragen. Fuer Proxmox gelten weiterhin `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000`. Die Proxmox-IP kann der GPU-Worker-Bericht nicht kennen.
+
+**Assist-Pipeline TAFA Lokal:** STT = **Tablet Assist Sprachrouter** (GPU / CPU-Fallback), Gespraech = **Tablet Assist Gespraechsrouter** (Ollama-Agent), TTS = **Tablet Assist Stream** (Qwen / Piper-Fallback). Nach einer Frage die STT-Router-Attribute pruefen: `letztes_backend=zusatzrechner` bedeutet GPU, `homeserver` bedeutet CPU/Fallback. Auch die Android-Sprechpause (ca. 1700 ms) und Ollama-Antwortzeit beeinflussen die Gesamtdauer.
+
+Der Windows-Standardinstaller startet Ollama nicht automatisch. Optional im Worker-Ordner: `docker compose --profile llm up -d ollama ollama-gateway`; ein Textmodell muss bereits installiert sein oder bewusst installiert werden. Alle Ports **nur im vertrauenswuerdigen LAN** ohne Router-Freigaben nutzen.
+
 ## 2.2.1 – Strukturierte produktive Ring-Bildfolge
 
 Neuer LAN-Endpunkt `POST /describe/sequence` im vorhandenen Vision-Dienst. Standard: zwölf chronologische JPEGs (maximal 768 px Kantenlänge); Detail: vier ausgewählte höher aufgelöste JPEGs (maximal 1024 px). Beide Profile nutzen intern 16384 Kontext-Tokens und dieselbe Vision-Warteschlange. JSON enthält eine kurze deutsche Szenenbeschreibung, dreistufige Merkmale (yes/no/uncertain), Lieferbewertung (likely/uncertain/no_evidence) und Laufzeiten. Kleidung allein bleibt unsicher. Ungültige oder widersprüchliche Modellausgaben werden abgelehnt oder herabgestuft. Kein Zustellnachweis. /describe, /detect und /benchmark/sequence bleiben kompatibel.
