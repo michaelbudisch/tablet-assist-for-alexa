@@ -6,6 +6,10 @@
 
 Für einen bereits vorhandenen NGINX-/Certbot-Proxy mit Home-Assistant-Weiterleitung gibt es zusätzlich die Anleitung [lokales HTTPS / Split-DNS für das Tablet-Mikrofon](local-https.md). Damit wird kein vorhandener vHost geändert.
 
+## Neuer Ein-CT-Installer (empfohlen für Neuinstallationen)
+
+Statt zwei neuen CTs kann der [geführte Ein-Zeilen-Installer](proxmox.md) **Piper, Whisper, MP3 und Nginx gemeinsam** in einem einzigen Debian-CT einrichten. In diesem Modus liefert Nginx die kurzlebigen MP3-Dateien direkt von `127.0.0.1:8080`. Zertifikate werden bewusst erst nach DNS-/Router-Einrichtung über `tafa-setup` aktiviert. Die folgende Anleitung beschreibt weiterhin die **getrennte** Proxy-CT-Variante und die Nutzung bestehender Nginx-Installationen. Nicht ungefragt die Weiterleitungen eines bereits verwendeten Proxys umstellen.
+
 ## Voraussetzungen
 
 Ein neuer Debian-CT auf Proxmox, eine freie CT-ID, der bestehende CPU-Sprachserver mit internem Port 8080, ein eigener öffentlicher DNS-Name und ein gültiges öffentlich vertrauenswürdiges TLS-Zertifikat. Für Let's Encrypt HTTP-01 müssen öffentliche DNS-Auflösung und TCP 80 funktionieren, für Alexa TCP 443. Bei CGNAT, DS-Lite oder einem vorhandenen Reverse Proxy die tatsächliche Netzarchitektur prüfen; keine konkurrierenden Portweiterleitungen. Intern ausschließlich dem Proxy den benötigten Zugriff auf Port 8080 erlauben; HA und die übrigen Sprach-/GPU-Dienste bleiben im vertrauenswürdigen LAN. DNS und Router werden nicht automatisiert verändert.
