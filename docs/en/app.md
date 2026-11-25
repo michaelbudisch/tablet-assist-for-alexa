@@ -2,7 +2,7 @@
 
 [Deutsch](../app.md) · [Project overview](../../README.md)
 
-**TAFA App 0.3.5 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
+**TAFA App 0.3.6 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
 
 ## One-App setup
 
@@ -24,9 +24,13 @@ Device Bridge 1.0.0 sends the recognized wake word and releases its microphone b
 - The GPU worker, Ollama and Alexa MP3/HTTPS notifications remain optional and must be configured separately.
 - This App does not install the private TAFA dashboard or modify Android/APK source.
 
+## Troubleshooting: Docker build fails on a virtual CPU
+
+If Supervisor reports `NumPy was built with baseline optimizations: (X86_V2) but your machine doesn't support (X86_V2)`, a generic virtual CPU profile may lack the required instruction set. **App 0.3.6 pins NumPy 1.26.4**, avoiding the x86-64-v2 baseline introduced in NumPy 2.4. Refresh the App repository, install **TAFA 0.3.6**, and keep your existing HA integration and App data. Other native libraries may have independent CPU feature requirements; investigate separately if an `illegal instruction` persists.
+
 ## Troubleshooting: Piper or Whisper not ready
 
-The initial App 0.3.4 test could terminate Piper with `RuntimeError` and Whisper with `ImportError`. From 0.3.5 the container validates native speech-library imports during its build, includes eSpeak runtime/data, and shows the underlying initialization error (not only the exception class) in Control Center.
+The initial App 0.3.4 test could terminate Piper with `RuntimeError` and Whisper with `ImportError`. From 0.3.6 the container validates native speech-library imports during its build, includes eSpeak runtime/data, and shows the underlying initialization error (not only the exception class) in Control Center.
 
 Update the TAFA App under **Settings → Apps → TAFA**, restart the App, and inspect both model statuses in Control Center. Initial model downloads require internet and can take time. Use **Retry speech models** when a model reports an error. If it persists, inspect the detailed Control Center error and TAFA App log. No HA integration reinstall is needed for these speech dependencies.
 

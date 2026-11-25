@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.6 — CPU compatibility hotfix
+- Fix failed updates on virtual CPUs without x86-64-v2: pin NumPy 1.26.4 instead of automatically selecting NumPy 2.5.5.
+- Validate the resolved NumPy version and imports of Piper/Faster-Whisper during both amd64 and arm64 container builds.
+- Run pip dependency checks and add a regression test for the CPU-safe NumPy pin.
+- No changes to Device Bridge or the private dashboard.
+
+
 ## 0.3.5 — CPU speech startup repair
 - Updated Piper to 1.8.0 and supplied missing Debian espeak-ng runtime/data.
 - The Docker image now validates imports for both Piper and Faster-Whisper during builds.

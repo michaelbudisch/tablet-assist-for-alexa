@@ -1,6 +1,6 @@
 name: TAFA
 slug: tafa
-version: "0.3.5"
+version: "0.3.6"
 description: Unified voice assistant backend and setup control center
 url: https://github.com/michaelbudisch/tablet-assist-for-alexa/tree/main/tafa_app
 arch:
