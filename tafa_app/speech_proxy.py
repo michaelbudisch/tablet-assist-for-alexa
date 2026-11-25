@@ -4,10 +4,6 @@ Only accepts bounded in-memory WAV or short text requests. Audio and transcripts
 are never archived or logged. No public host port is mapped by the HA App.
 """
 import io
-import importlib.metadata
-import os
-import time
-import traceback
 import json
 import logging
 import subprocess

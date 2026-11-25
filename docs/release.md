@@ -2,7 +2,7 @@
 
 [English](en/release.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-**Aktueller Stand:** TAFA Home-Assistant-App **0.3.4** (experimenteller Release-Kandidat), gemeinsame HA-Integration **0.4.1**, Android Device Bridge **1.0.0 unverändert**. Keine Produktions-/Hardwarefreigabe.
+**Aktueller Stand:** TAFA Home-Assistant-App **0.3.5** (experimenteller Release-Kandidat), gemeinsame HA-Integration **0.4.1**, Android Device Bridge **1.0.0 unverändert**. Keine Produktions-/Hardwarefreigabe.
 
 ## Automatisierte Prüfungen
 

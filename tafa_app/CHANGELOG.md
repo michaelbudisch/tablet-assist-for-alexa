@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.5 — CPU speech startup repair
+- Updated Piper to 1.8.0 and supplied missing Debian espeak-ng runtime/data.
+- The Docker image now validates imports for both Piper and Faster-Whisper during builds.
+- Ingress now distinguishes model download, model load, runtime errors and HA setup waiting for speech services.
+- Add model-retry action and a full startup traceback in App logs, without logging speech or transcripts.
+- Device Bridge 1.0.0 and private dashboards are unchanged.
+
+
 ## 0.3.4 — Release-candidate documentation correction
 - Clarifies that unchanged Device Bridge 1.0.0 emits wake events only; a separate microphone-capable Assist client must capture the spoken question.
 - Ingress guidance no longer asks users to select a pipeline inside Device Bridge.

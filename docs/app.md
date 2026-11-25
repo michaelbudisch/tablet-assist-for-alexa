@@ -2,7 +2,7 @@
 
 [English](en/app.md) · [Projektübersicht](../README.de.md)
 
-**TAFA App 0.3.4 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
+**TAFA App 0.3.5 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
 
 ## Installation mit einer App
 
@@ -23,6 +23,12 @@ Device Bridge 1.0.0 sendet das erkannte Rufwort und gibt anschließend das Mikro
 - **Deutsche CPU-Sprachdienste Piper und Faster-Whisper** laufen im App-Container. Heruntergeladene Modelle bleiben im persistenten App-Verzeichnis `/data`. Keine öffentlich freigegebenen Ports.
 - GPU-Worker, Ollama und Alexa-MP3-/HTTPS-Durchsagen sind optional und werden separat eingerichtet.
 - Das private TAFA-Dashboard und der Android-APK-Quellcode bleiben unverändert.
+
+## Fehlerbehebung: Piper oder Whisper nicht bereit
+
+In der ersten Testinstallation mit App 0.3.4 konnten Piper mit `RuntimeError` und Whisper mit `ImportError` abbrechen. Ab 0.3.5 werden native Sprachbibliotheken beim Docker-Build geladen, eSpeak-Systemdaten installiert und der tatsächliche Fehler (nicht nur die Fehlerklasse) im Control Center angezeigt.
+
+Unter **Einstellungen → Apps → TAFA → Aktualisieren** die neue Version installieren, TAFA neu starten und im Control Center die beiden Modellzustände prüfen. Herunterladen kann beim ersten Start Zeit und Internet benötigen. Bei einem Fehler **Sprachmodelle erneut laden** wählen; bei weiterhin bestehendem Fehler die vollständige Meldung aus dem Control Center beziehungsweise dem TAFA-App-Protokoll prüfen. Die HA-Integration muss hierfür nicht neu installiert werden.
 
 ## Updates, Sicherheit und Grenzen
 
