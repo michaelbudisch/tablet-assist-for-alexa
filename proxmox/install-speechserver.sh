@@ -2,6 +2,13 @@
 # Run as root INSIDE a dedicated Debian 12/13 VM or unprivileged container.
 set -Eeuo pipefail
 umask 077
+RESUME=0
+if [[ $# -eq 1 && "$1" == --resume ]]; then
+  RESUME=1
+elif [[ $# -ne 0 ]]; then
+  echo "Usage: install-speechserver.sh [--resume]" >&2
+  exit 2
+fi
 [[ $EUID -eq 0 ]] || { echo 'Run as root inside the speechserver guest.'; exit 1; }
 [[ -r /etc/debian_version ]] || { echo 'Debian guest required.'; exit 1; }
 if command -v pveversion >/dev/null; then echo 'Refusing to install on the Proxmox host.'; exit 1; fi
@@ -13,19 +20,54 @@ ENV=/etc/jarvis-local.env
 VOICE=${JARVIS_PIPER_VOICE:-de_DE-thorsten-medium}
 MODEL=${JARVIS_WHISPER_MODEL:-small-int8}
 [[ "$VOICE" =~ ^[A-Za-z0-9_-]+$ && "$MODEL" =~ ^[A-Za-z0-9_-]+$ ]] || exit 1
-[[ ! -e "$INSTALL" && ! -e "$ENV" ]] || { echo 'Already installed or incomplete installation; do not overwrite.'; exit 1; }
+if (( RESUME )); then
+    # Continue only the precise interrupted state: source and dependencies were
+    # staged, but no runtime configuration or services have been installed.
+    [[ -d "$INSTALL/venv" && ! -L "$INSTALL" && ! -L "$INSTALL/venv" &&
+       -f "$INSTALL/requirements.txt" && -e "$INSTALL/venv/bin/python" &&
+       ! -e "$ENV" && ! -e /etc/systemd/system/jarvis-piper.service ]] || {
+        echo 'Cannot resume: installation is not at the expected voice-download stage.' >&2
+        exit 1
+    }
+else
+    [[ ! -e "$INSTALL" && ! -e "$ENV" ]] || {
+        echo 'Already installed or incomplete installation; use --resume only for the interrupted voice-download stage.' >&2
+        exit 1
+    }
+fi
 for port in 5000 5001 8080 10300; do
     if ss -ltnH "sport = :$port" | grep -q .; then echo "Port $port already in use."; exit 1; fi
 done
-apt-get update
-apt-get install -y python3 python3-venv python3-pip ffmpeg ca-certificates curl iproute2 libgomp1 libespeak-ng1 espeak-ng-data libsndfile1 libstdc++6
-if ! id jarvis-local >/dev/null 2>&1; then useradd --system --home-dir "$DATA" --shell /usr/sbin/nologin jarvis-local; fi
-install -d -m 0755 "$INSTALL"
-install -d -o jarvis-local -g jarvis-local -m 0750 "$DATA" "$DATA/audio" "$DATA/models" "$DATA/whisper"
-install -m 0644 "$ROOT"/speechserver/{api.py,piper_service.py,audio_server.py,cleanup.py,requirements.txt} "$INSTALL/"
-python3 -m venv "$INSTALL/venv"
-"$INSTALL/venv/bin/pip" install --upgrade pip
-"$INSTALL/venv/bin/pip" install -r "$INSTALL/requirements.txt"
+if (( ! RESUME )); then
+    apt-get update
+    apt-get install -y python3 python3-venv python3-pip ffmpeg ca-certificates curl iproute2 libgomp1 libespeak-ng1 espeak-ng-data libsndfile1 libstdc++6
+    if ! id jarvis-local >/dev/null 2>&1; then useradd --system --home-dir "$DATA" --shell /usr/sbin/nologin jarvis-local; fi
+    install -d -m 0755 "$INSTALL"
+    install -d -o jarvis-local -g jarvis-local -m 0750 "$DATA" "$DATA/audio" "$DATA/models" "$DATA/whisper"
+    install -m 0644 "$ROOT"/speechserver/{api.py,piper_service.py,audio_server.py,cleanup.py,requirements.txt} "$INSTALL/"
+    # The venv is executed by the unprivileged jarvis-local system account.
+    # A global umask 077 made venv directories 0700 and site-packages files
+    # 0600, preventing runuser and systemd services from importing Python.
+    # Relax only the non-secret Python installation stage.
+    (
+        umask 022
+        python3 -m venv "$INSTALL/venv"
+        "$INSTALL/venv/bin/pip" install --upgrade pip
+        "$INSTALL/venv/bin/pip" install -r "$INSTALL/requirements.txt"
+    )
+else
+    # Repair only public Python package files from an interrupted pre-fix run.
+    # Do not change ownership or permissions of secrets in /etc or /var/lib.
+    [[ -d "$DATA/models" && -x /usr/sbin/runuser ]] || {
+        echo 'Resume prerequisites missing; no changes made.' >&2
+        exit 1
+    }
+    find "$INSTALL/venv" -type d -exec chmod a+rx {} +
+    find "$INSTALL/venv" -type f -exec chmod a+r {} +
+    find "$INSTALL/venv" -type f -perm /111 -exec chmod a+rx {} +
+    echo 'Recovered interpreter and site-packages permissions in the existing venv.'
+fi
+runuser -u jarvis-local -- "$INSTALL/venv/bin/python" -c 'import flask, piper; print("TAFA Python permissions OK")'
 runuser -u jarvis-local -- "$INSTALL/venv/bin/python" -m piper.download_voices --data-dir "$DATA/models" "$VOICE"
 [[ -f "$DATA/models/$VOICE.onnx" ]] || { echo 'Voice model missing.'; exit 1; }
 cat > "$ENV" <<EOF
