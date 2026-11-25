@@ -7,18 +7,29 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-/** HA helpers are the shared settings for the Wake Pilot and the TAFA dashboard.
- * All HTTPS/explicitly-approved local-HTTP calls are authenticated. No audio data is exchanged.
+/**
+ * Authenticated per-tablet HA helpers. 4 explicit slots, bound to one installation each.
+ * A different device cannot reuse a claimed slot until its helper is cleared in HA.
+ * Audio is never transferred; only control values and event metadata are exchanged.
  */
 final class WakePilotSettings {
-    static final String MUTE="input_boolean.jarvis_native_wake_stumm";
-    static final String WORD="input_select.jarvis_native_wake_rufwort";
-    static final String STRICT="input_number.jarvis_native_wake_erkennungsstrenge";
-    static final String COOLDOWN="input_number.jarvis_native_wake_sperrzeit";
-    static final String HOLD="input_number.jarvis_native_wake_aufnahmeubergabe";
     static final String[] CHOICES={"hey_jarvis","jarvis","alexa","all"};
     static final String[] DISPLAY={"Hey Jarvis","Jarvis","Alexa","Alle drei"};
     private WakePilotSettings(){}
+
+    static String entity(String key,int slot){
+        if(slot<1||slot>4)throw new IllegalArgumentException("Invalid tablet slot");
+        String prefix="jarvis_wake_tablet_"+slot+"_";
+        switch(key){
+            case "muted":return "input_boolean."+prefix+"stumm";
+            case "word":return "input_select."+prefix+"rufwort";
+            case "strict":return "input_number."+prefix+"strenge";
+            case "cooldown":return "input_number."+prefix+"sperrzeit";
+            case "hold":return "input_number."+prefix+"ubergabe";
+            case "owner":return "input_text."+prefix+"geratekennung";
+            default:throw new IllegalArgumentException("Unknown Wake Pilot setting");
+        }
+    }
 
     static final class Snapshot {
         final boolean muted;
@@ -57,8 +68,8 @@ final class WakePilotSettings {
         try{
             conn=(HttpURLConnection)new URL(apiBase(ctx)+path).openConnection();
             conn.setInstanceFollowRedirects(false);
-            conn.setConnectTimeout(2000);
-            conn.setReadTimeout(2500);
+            conn.setConnectTimeout(2200);
+            conn.setReadTimeout(2800);
             conn.setRequestProperty("Authorization","Bearer "+token(ctx));
             conn.setRequestProperty("Accept","application/json");
             if(body!=null){
@@ -74,9 +85,9 @@ final class WakePilotSettings {
             if(body!=null)return new JSONObject();
             try(java.io.InputStream stream=conn.getInputStream()){
                 java.io.ByteArrayOutputStream buffer=new java.io.ByteArrayOutputStream();
-                byte[] chunk=new byte[4096];int n;int total=0;
+                byte[] chunk=new byte[4096];int n,total=0;
                 while((n=stream.read(chunk))!=-1){
-                    total+=n;if(total>1024*1024)throw new java.io.IOException("HA settings response too large");
+                    total+=n;if(total>1024*1024)throw new java.io.IOException("HA settings too large");
                     buffer.write(chunk,0,n);
                 }
                 return new JSONObject(new String(buffer.toByteArray(),StandardCharsets.UTF_8));
@@ -84,20 +95,43 @@ final class WakePilotSettings {
         }finally{if(conn!=null)conn.disconnect();}
     }
 
-    private static String state(Context ctx,String entityId) throws Exception {
+    static String state(Context ctx,String entityId) throws Exception {
         return request(ctx,"/api/states/"+entityId,null).getString("state");
     }
 
+    /** Claim the selected slot, or reject it if another installation owns it. */
+    static void ensureOwner(Context ctx) throws Exception {
+        int slot=WakeDeviceIdentity.slot(ctx);
+        String ownerEntity=entity("owner",slot);
+        String device=WakeDeviceIdentity.get(ctx);
+        String current=state(ctx,ownerEntity);
+        if("unavailable".equals(current)||"unknown".equals(current))
+            throw new IllegalStateException("Tablet slot helper unavailable");
+        if(current.isEmpty()){
+            JSONObject data=new JSONObject().put("entity_id",ownerEntity).put("value",device);
+            request(ctx,"/api/services/input_text/set_value",data);
+            current=state(ctx,ownerEntity);
+        }
+        if(!device.equals(current))
+            throw new IllegalStateException("Tablet "+slot+" already assigned to another Wake Pilot");
+    }
+
     static boolean readMute(Context ctx) throws Exception {
-        return "on".equals(state(ctx,MUTE));
+        ensureOwner(ctx);
+        String state=state(ctx,entity("muted",WakeDeviceIdentity.slot(ctx)));
+        if(!"on".equals(state)&&!"off".equals(state))
+            throw new IllegalStateException("Wake Pilot mute state unavailable");
+        return "on".equals(state);
     }
 
     static Snapshot readFull(Context ctx) throws Exception {
+        ensureOwner(ctx);
+        int slot=WakeDeviceIdentity.slot(ctx);
         boolean muted=readMute(ctx);
-        String word=choiceFor(state(ctx,WORD));
-        int strict=clamp((int)Math.round(Double.parseDouble(state(ctx,STRICT))),1,3);
-        int cooldown=clamp((int)Math.round(Double.parseDouble(state(ctx,COOLDOWN))),3,30);
-        int hold=clamp((int)Math.round(Double.parseDouble(state(ctx,HOLD))),10,90);
+        String word=choiceFor(state(ctx,entity("word",slot)));
+        int strict=clamp((int)Math.round(Double.parseDouble(state(ctx,entity("strict",slot)))),1,3);
+        int cooldown=clamp((int)Math.round(Double.parseDouble(state(ctx,entity("cooldown",slot)))),3,30);
+        int hold=clamp((int)Math.round(Double.parseDouble(state(ctx,entity("hold",slot)))),10,90);
         SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
         prefs.edit().putBoolean("wake_muted",muted).putString("wake_choice",word)
             .putInt("wake_strict",strict).putInt("wake_cooldown",cooldown)
@@ -106,19 +140,19 @@ final class WakePilotSettings {
     }
 
     static void write(Context ctx,String key,Object value) throws Exception {
-        final String domain,service,entity;
-        JSONObject body=new JSONObject();
+        ensureOwner(ctx);
+        String domain,service;
+        JSONObject data=new JSONObject();
         if("muted".equals(key)){
-            domain="input_boolean";service=Boolean.TRUE.equals(value)?"turn_on":"turn_off";entity=MUTE;
+            domain="input_boolean";service=Boolean.TRUE.equals(value)?"turn_on":"turn_off";
         }else if("word".equals(key)){
-            domain="input_select";service="select_option";entity=WORD;
-            body.put("option",displayFor((String)value));
+            domain="input_select";service="select_option";
+            data.put("option",displayFor((String)value));
         }else if("strict".equals(key)||"cooldown".equals(key)||"hold".equals(key)){
             domain="input_number";service="set_value";
-            entity="strict".equals(key)?STRICT:"cooldown".equals(key)?COOLDOWN:HOLD;
-            body.put("value",((Number)value).intValue());
+            data.put("value",((Number)value).intValue());
         }else throw new IllegalArgumentException("Unknown Wake Pilot setting");
-        body.put("entity_id",entity);
-        request(ctx,"/api/services/"+domain+"/"+service,body);
+        data.put("entity_id",entity(key,WakeDeviceIdentity.slot(ctx)));
+        request(ctx,"/api/services/"+domain+"/"+service,data);
     }
 }
