@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.0.1 Quellcode-Vorschau
+# TAFA Device Bridge · Android 1.0.1
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -8,9 +8,9 @@ Die Android-Geräteanbindung für TAFA: Home-Assistant-Audio über Bluetooth, op
 
 ## Download und Update
 
-Bisher signierter stabiler Build: **TAFA-Device-Bridge-1.0.0.apk**. **Android 1.0.1 liegt noch nicht als signierte Installationsdatei vor. Das CI-Debug-APK darf nicht über die bestehende App installiert werden.**
+[Signierte APK 1.0.1 herunterladen](downloads/TAFA-Device-Bridge-1.0.1.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.0.1) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Über die vorhandene signierte App installieren.
 
-App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Einstellungen, heruntergeladenes Modell und dauerhafte Multiroom-Gerätekennung bleiben erhalten. Der Android 1.0.1 verwendet nach der Signierung Versionscode **14**. Vor dem Update nicht deinstallieren. Home Assistant verwendet weiterhin die vorhandenen Echo-Relay-/Jarvis-Tablet-Audio-Kennungen.
+App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Einstellungen, heruntergeladenes Modell und dauerhafte Multiroom-Gerätekennung bleiben erhalten. Android 1.0.1 verwendet Versionscode **14**. Vor dem Update nicht deinstallieren. Home Assistant verwendet weiterhin die vorhandenen Echo-Relay-/Jarvis-Tablet-Audio-Kennungen.
 
 ## Einstellungen finden
 
@@ -62,7 +62,7 @@ Keepalive ist standardmäßig aus. Die stille Schleife bei laufendem Player kann
 
 ## Build und Signatur
 
-JDK 17, Android-Plattform 35 und Build Tools 36.0.0 verwenden. build.ps1 -Configuration Release -Check ausführen, danach sign-release.ps1 mit -KeystorePath und -Alias. Standardausgabe: **dist/TAFA-Device-Bridge-1.0.0.apk**. Das Skript vergleicht das ursprüngliche 0.7.1-Zertifikat; private Schlüssel werden nicht mitgeliefert.
+JDK 17, Android-Plattform 35 und Build Tools 36.0.0 verwenden. build.ps1 -Configuration Release -Check ausführen, danach sign-release.ps1 mit -KeystorePath und -Alias. Standardausgabe: **dist/TAFA-Device-Bridge-1.0.1.apk**. Das Skript vergleicht das ursprüngliche 0.7.1-Zertifikat; private Schlüssel werden nicht mitgeliefert.
 
 Build, JVM-Tests, Lint und Handy-/Tablet-UI-Instrumentierung werden lokal validiert. Physische Bluetooth- und Mehrgerätetests bleiben nötig. Siehe [Versionshinweise](RELEASE_NOTES.de.md) und [Drittanbieterhinweise](THIRD_PARTY_NOTICES.de.md).
 

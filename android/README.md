@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.0.1 source preview
+# TAFA Device Bridge · Android 1.0.1
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -8,9 +8,9 @@ The Android companion for TAFA: Home Assistant audio through Bluetooth, optional
 
 ## Download and update
 
-Existing signed stable build: **TAFA-Device-Bridge-1.0.0.apk**. **Android 1.0.1 is not yet published as a signed installer; do not attempt to install an unsigned CI build over your existing app.**
+[Download signed APK 1.0.1](downloads/TAFA-Device-Bridge-1.0.1.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.0.1) · [SHA-256 checksum](downloads/SHA256SUMS). Install over the existing signed app.
 
-The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Android 1.0.1 will use version code **14** after signing. Do not uninstall before updating. The Home Assistant backend continues using its existing Echo Relay / Jarvis Tablet Audio identifiers.
+The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Android 1.0.1 uses version code **14**. Do not uninstall before updating. The Home Assistant backend continues using its existing Echo Relay / Jarvis Tablet Audio identifiers.
 
 ## Find your settings
 
@@ -62,7 +62,7 @@ Keepalive defaults off. Its silent loop while the player runs may reduce Echo id
 
 ## Build and signing
 
-Use JDK 17, Android Platform 35 and Build Tools 36.0.0. Run build.ps1 -Configuration Release -Check, then sign-release.ps1 with -KeystorePath and -Alias. The default output is **dist/TAFA-Device-Bridge-1.0.0.apk**. The script checks the original 0.7.1 certificate; no private signing keys are included.
+Use JDK 17, Android Platform 35 and Build Tools 36.0.0. Run build.ps1 -Configuration Release -Check, then sign-release.ps1 with -KeystorePath and -Alias. The default output is **dist/TAFA-Device-Bridge-1.0.1.apk**. The script checks the original 0.7.1 certificate; no private signing keys are included.
 
 Build, JVM tests, lint and phone/tablet UI instrumentation are validated locally. Physical Bluetooth and multi-device testing remain necessary. See [release notes](RELEASE_NOTES.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 

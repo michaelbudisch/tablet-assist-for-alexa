@@ -9,6 +9,9 @@ Der eigene Android-App-Code und die Vektorgrafiken stehen unter der MIT-Lizenz d
 - [AndroidX Core und Fragment, einschließlich transitiver AndroidX-Abhängigkeiten](https://android.googlesource.com/platform/frameworks/support/) — Copyright The Android Open Source Project; Apache License 2.0.
 - [Vosk Android 0.3.75](https://github.com/alphacep/vosk-api) — Vosk-Mitwirkende; Apache License 2.0. Lokale Rufworterkennung.
 - [Java Native Access (JNA) 5.18.1](https://github.com/java-native-access/jna) — JNA-Mitwirkende; wahlweise Apache License 2.0 oder LGPL-2.1-or-later. Für diese Distribution wird Apache License 2.0 verwendet. Enthält die native JNA-Anbindung.
+- [OkHttp 4.12.0](https://github.com/square/okhttp) — Square; Apache License 2.0.
+- [Okio 3.6.0](https://github.com/square/okio) — Square; Apache License 2.0.
+- [Kotlin standard library](https://github.com/JetBrains/kotlin) — JetBrains; Apache License 2.0.
 - [JUnit 4.13.2](https://github.com/junit-team/junit4) — Eclipse Public License 1.0; ausschließlich Testabhängigkeit, nicht in der App enthalten.
 
 Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0

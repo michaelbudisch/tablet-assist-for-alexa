@@ -2,6 +2,12 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 1.0.1 · Native Assist voice conversation
+
+- Optional native Assist streaming after the wakeword; wake-only recognition remains the default.
+- Two optional follow-up questions, 900–3200 ms silence endpoint and manual test button.
+- Signed update with the existing certificate and version code 14. Physical microphone/Bluetooth testing remains outstanding.
+
 ## 1.0.0 · TAFA Device Bridge
 
 - New name and approved cyan/mint identity with adaptive app icons.

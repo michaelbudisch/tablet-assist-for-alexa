@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 1.0.1 · Native Assist-Sprachunterhaltung
+
+- Optionale native Assist-Übertragung nach dem Rufwort; reine Rufworterkennung bleibt Standard.
+- Zwei optionale Anschlussfragen, Sprechpause 900–3200 ms und manuelle Testtaste.
+- Signiertes Update mit bisherigem Zertifikat und Versionscode 14. Physische Mikrofon-/Bluetooth-Tests stehen aus.
+
 ## 1.0.0 · TAFA Device Bridge
 
 - Neuer Name und freigegebenes Cyan-/Mint-Design mit adaptiven App-Icons.

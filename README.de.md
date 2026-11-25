@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.0** auf dem Android-Gerät weiterverwenden. Die native Tablet-App wird **nicht verändert**.
+**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.1** auf dem Android-Gerät weiterverwenden. Die native Tablet-App wird **nicht verändert**.
 
 [English](README.md) | **Deutsch**
 
@@ -30,7 +30,7 @@ curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelb
 3. **TAFA** installieren, starten und das integrierte Control Center öffnen (Ingress).
 4. TAFA stellt **eine** gemeinsame HA-Integration unter `custom_components/tablet_assist_for_alexa` bereit. Home Assistant einmal neu starten, damit die Integration erkannt wird.
 5. **Vor dem ersten Start** in der App-Konfiguration `speech_mode=local` (CPU-Modelle in der App) oder `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000` auswählen. Bei `external` werden keine lokalen Sprachmodelle gestartet. Die HA-Integration wird vorbereitet; danach Wyoming-STT (`PROXMOX-IP:10300`) in HA hinzufügen, die passende STT-Entität unter Apps → TAFA → Konfiguration im Feld `cpu_stt` auswählen bzw. automatisch erkennen lassen und eine Assist-Pipeline anlegen. Im lokalen Modus erfolgt die Einrichtung der TAFA-Lokal-Pipeline automatisch.
-6. Die unveränderte [TAFA Device Bridge 1.0.0](android/README.de.md) für Rufwort-Ereignisse und Audio mit HA verbinden. Die Pipeline **TAFA Lokal** in Home Assistant Assist oder der HA Companion App auswählen – nicht in der Device Bridge. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
+6. Die unveränderte [TAFA Device Bridge 1.0.1](android/README.de.md) für Rufwort-Ereignisse und Audio mit HA verbinden. Die Pipeline **TAFA Lokal** in Home Assistant Assist oder der HA Companion App auswählen – nicht in der Device Bridge. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
 
 [Vollständige Anleitung](docs/app.md) · [Multiroom](homeassistant/examples/MULTIROOM.de.md) · [Android-Einrichtung](android/README.de.md)
 

@@ -9,6 +9,9 @@ The original Android app code and vector artwork are distributed under the repos
 - [AndroidX Core and Fragment, including their transitive AndroidX dependencies](https://android.googlesource.com/platform/frameworks/support/) — Copyright The Android Open Source Project; Apache License 2.0.
 - [Vosk Android 0.3.75](https://github.com/alphacep/vosk-api) — Vosk contributors; Apache License 2.0. On-device wakeword recognition.
 - [Java Native Access (JNA) 5.18.1](https://github.com/java-native-access/jna) — JNA contributors; dual licensed under Apache License 2.0 or LGPL-2.1-or-later. This distribution uses Apache License 2.0. Includes the native JNA bridge.
+- [OkHttp 4.12.0](https://github.com/square/okhttp) — Square; Apache License 2.0.
+- [Okio 3.6.0](https://github.com/square/okio) — Square; Apache License 2.0.
+- [Kotlin standard library](https://github.com/JetBrains/kotlin) — JetBrains; Apache License 2.0.
 - [JUnit 4.13.2](https://github.com/junit-team/junit4) — Eclipse Public License 1.0; test-only dependency, not packaged in the application.
 
 Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
