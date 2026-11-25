@@ -1,3 +1,5 @@
-# TAFA setup app — experimental
+# TAFA Home Assistant App 0.3.2 — release candidate
 
-An administrator-only Home Assistant Ingress interface for preparing the public TAFA integrations without the private kiosk dashboard. CPU/GPU speech services and Android Device Bridge are separate installations. See DOCS.md. This first app preview does not migrate or update existing integrations.
+The Ingress Control Center installs and safely upgrades one unified HA integration. A local Piper/Faster-Whisper CPU speech service is bundled; the Android Device Bridge stays unchanged. [English guide](../docs/en/app.md) · [Deutsche Anleitung](../docs/app.md).
+
+No private dashboard is shipped. A Home Assistant Core restart is required after first install or backend update. Clean HA OS and hardware tests are still pending.

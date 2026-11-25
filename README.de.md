@@ -1,110 +1,56 @@
-# TAFA · Tablet Assistant for Alexa
+# TAFA — Tablet Assistant for Alexa
 
-![TAFA – Architekturübersicht mit Android-Smartphone, Tablet, Home Assistant, KI-Rechner und Echo](docs/tafa-architecture.jpg)
+**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.0** auf dem Android-Gerät weiterverwenden. Die native Tablet-App wird **nicht verändert**.
 
 [English](README.md) | **Deutsch**
 
-**Dein lokaler KI-Sprachassistent für Home Assistant – mit Android-Tablet und Echo-Lautsprecher.**
-
-![Developer Preview](https://img.shields.io/badge/Status-Developer%20Preview-orange) ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Integration-03a9f4) ![Local AI](https://img.shields.io/badge/AI-Lokal-0f766e)
-
-TAFA verbindet lokale Spracherkennung, Home-Assistant-Daten, optionale KI-Modelle und natürliche Sprachausgabe. Ein Android-Tablet dient als Mikrofon und Oberfläche; der Echo behält seine gewohnten Bluetooth- und Alexa-Funktionen.
-
-## TAFA Home-Assistant-App (experimentell)
-
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-Unter Home Assistant OS: Einstellungen → Apps → App installieren, diese Repository-Adresse hinzufügen, **TAFA** installieren, starten und die Weboberfläche öffnen. Die experimentelle Einrichtungs-App (0.1.0) enthält die öffentlichen Basis- und Raum-Audio-Integrationen. Fehlende Backend-Dateien werden über die Administrator-Ingress-Oberfläche nach ausdrücklicher Bestätigung installiert; vorhandene Integrationen werden nie überschrieben. Externe Sprachserver und die Android Device Bridge bleiben separat. Nach der Dateiinstallation HA neu starten und beide Integrationen unter Geräte & Dienste konfigurieren. Siehe [App-Installation](docs/app.md).
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.2**, zusammengeführte HA-Integration **0.4.0**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
-Marketplace ist ein separater Installationsweg und installiert weiterhin nur die Basisintegration. Das private Dashboard ist bei beiden Wegen ausgeschlossen. Der Neuinstallationstest steht noch aus; dies ist noch kein produktionsreifer, zusammengeführter Backend-Release.
+## Schnellinstallation — Home Assistant OS
 
-## Marketplace-Umfang und Backend-Fahrplan
+1. Eine Home-Assistant-Sicherung anlegen. Zuerst möglichst auf einer Testinstallation prüfen.
+2. Einstellungen → Apps → App installieren → Repositories: `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen.
+3. **TAFA** installieren, starten und das integrierte Control Center öffnen (Ingress).
+4. TAFA stellt **eine** gemeinsame HA-Integration unter `custom_components/tablet_assist_for_alexa` bereit. Home Assistant einmal neu starten, damit die Integration erkannt wird.
+5. TAFA lädt eine deutsche Piper-Stimme und ein Faster-Whisper-CPU-Modell herunter und zeigt den tatsächlichen Status an. Sobald Sprachserver und HA bereit sind, versucht TAFA automatisch, die Integration einzurichten und eine separate Assist-Pipeline **TAFA Lokal** anzulegen, ohne bestehende Pipelines zu überschreiben.
+6. Die unveränderte [TAFA Device Bridge 1.0.0](android/README.de.md) mit HA verbinden und die TAFA-Lokal-Pipeline auswählen. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
 
-Der aktuelle Link installiert ausschließlich die Basisintegration `tablet_assist_for_alexa`. Das separate Backend `jarvis_tablet_audio` (Multiroom, Geräteregistrierung, native Rufwortweiterleitung und Kamera-/Vision-Schnittstellen) wird darüber nicht installiert. Marketplace unterstützt eine Integration pro Repository. Ziel ist eine einzige konfigurierbare Integration, in die diese Funktionen portiert und getestet werden, einschließlich dokumentierter Kompatibilität mit Device Bridge 1.0.0. Externe CPU-/GPU-Sprachserver und die Android-APK bleiben separate Installationen. Privates TAFA-Dashboard, dessen Ressourcen und Haushaltskonfiguration sind ausgeschlossen. Bestehende Systeme nicht überschreiben; keine automatische Migration voraussetzen. Siehe [Backend-Fahrplan](docs/backend-roadmap.md).
+[Vollständige Anleitung](docs/app.md) · [Multiroom](homeassistant/examples/MULTIROOM.de.md) · [Android-Einrichtung](android/README.de.md)
 
-## Funktionsübersicht
+## Was die einzige App enthält
 
-| Bereich | Funktionen |
+| Bestandteil | Funktion |
 |---|---|
-| Sprache | Whisper STT, Rufwort, Gesprächsführung, Anschlussfragen |
-| Audio | Piper als CPU-Basis, optional Qwen-Streaming, TAFA Device Bridge über Bluetooth |
-| Haussteuerung | Lokale HA-Intents, Wetter, Energie, Heizung, Bring!, Abfall, Erinnerungen |
-| KI | Optionales lokales Ollama-LLM, Modellwahl und Kontext-Einstellungen |
-| Native Android-App | Echo Relay, Bluetooth-Streaming, Front-/Rückkamera, optionale Bildbewegungserkennung für HA |
-| Vision | Lokale Einzelbildbeschreibung, Kameraansicht, optionale strukturierte Bewegungsauswertung |
-| HA-Automationen | Wiederverwendbare Sprachausgabe mit Bestätigung, Wetterhinweise, Begrüßung, Testtimer |
-| Familie | Drei optionale Namensfelder in HA-Helfern; keine Identitätserkennung |
-| Durchsagen | Optionale Alexa-MP3-Durchsagen über temporäre HTTPS-Links |
+| TAFA Control Center | Ingress-Oberfläche, echte Statusanzeigen und Einrichtungsführung |
+| Eine HA-Integration | STT/TTS/Gesprächsrouter, lokale HA-Befehle, optionale Durchsagen |
+| Native Kompatibilität | Authentifizierte `/api/jarvis_tablet_audio/wake_devices`-Schnittstelle und bisherige Wake-Ereignisse |
+| Multiroom | Getrennte Geräte, Raum-Audio, optionale freigegebene Kameras und Bewegungsdaten |
+| Vision-Schnittstellen | Optionaler externer GPU-Worker; keine automatische Kameraaktivierung |
+| Lokale CPU-Sprache | Deutsche Piper-Sprachausgabe und Faster-Whisper-Spracherkennung im TAFA-App-Container |
+| Automatische Einrichtung | HA-Konfigurationsdialog und eigene TAFA-Lokal-Pipeline ohne Änderung bestehender Pipelines |
+| Sichere Updates | Nur unveränderte, von TAFA installierte Dateien werden aktualisiert; vorherige Versionen werden gesichert |
 
-**In der bestehenden privaten Hauszentrale getestet:** native Bluetooth-Sprachausgabe, HA-Sprechaktion, personalisierte Begrüßung und Testtimer. Die universelle Infobox ist dort eingerichtet; Ring-Ablauf und öffentliche neue Karte benötigen noch einen vollständigen End-to-End-Test.
+GPU-Worker, Ollama und Alexa-MP3-Durchsagen sind **optional**. Das private Dashboard ist nicht enthalten. Die CPU-Sprachmodelle werden beim ersten Start heruntergeladen und im persistenten App-Datenverzeichnis gespeichert. Dafür wird einmalig Internet benötigt.
 
-> **Entwicklungsvorschau:** Basisintegration 0.3.1, Backend 1.7.1, GPU Worker 2.2.0 (aktualisiertes Schema), APK 1.0.0. Optionale Karte 1.3.0 und Automationsvorlagen sind noch kein vollständig geprüfter Neuinstallations-Release. Keine GPU für die CPU-Basis erforderlich.
+## Alternative: Home Assistant Marketplace
 
-## Neu: Native HA-Automationen
+[![Marketplace-Integration](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration)
 
-[Einrichtung der Automationsvorlagen und Familienfelder](docs/ha-automations.md). Das Dashboard bearbeitet die Namen, Home Assistant verwaltet Bedingungen, Wetter und Zeitfenster. Vision-Kategorien sind unsichere visuelle Schätzungen, keine Gesichtserkennung oder Identitätsfeststellung. Automatische Bildauswertung nur mit Zustimmung aller Betroffenen aktivieren.
+Marketplace installiert dieselbe **zusammengeführte TAFA-Integration 0.4.0**, einschließlich öffentlicher Geräte-/Multiroom-Funktionen. Im Unterschied zur Home-Assistant-App enthält Marketplace jedoch **keine laufenden Piper-/Whisper-Dienste**. Diese müssen dort separat bereitgestellt werden. **Nicht gleichzeitig beide Installationswege verwenden.** [Marketplace-Anleitung](docs/marketplace.md).
 
-## Architektur
+## Sicherheit, Updates und Altinstallation
 
-Home Assistant ist die zentrale Steuerung. Das Android-Gerät übernimmt Spracheingabe, Kamera und Bluetooth-Audioausgabe über die native TAFA Device Bridge-App.
+- Keine privaten Hosts, Passwörter, Tokens, Kamerabilder oder privaten Dashboard-Dateien im Release. Mikrofone und Kameras werden nur nach bewusstem Aktivieren und mit passenden Berechtigungen genutzt.
+- TAFA versieht neu installierte Komponenten mit einer Verwaltungskennung und aktualisiert ausschließlich eigene, unveränderte Installationen. HACS-, manuelle und veränderte Dateien bleiben unangetastet. Vorherige Versionen landen unter `.tafa/rollback` im HA-Konfigurationsverzeichnis.
+- Wenn die alte Integration `jarvis_tablet_audio` noch eingerichtet ist, vermeidet die neue Integration doppelte Relay-Schnittstellen. Eine automatische Altanlagenmigration erfolgt **nicht**.
+- Die TAFA-App und der Marketplace sind getrennte Installationswege. Die Android-App bleibt ein unabhängiger Client.
 
-**Sprache:** Android-Mikrofon → Home Assistant Assist → Whisper (STT) → Gesprächsrouter → lokale HA-Intents oder LLM → Piper oder Qwen (TTS) → TAFA Device Bridge auf Android → Bluetooth → Amazon Echo.
+## Anleitungen
 
-**Kamera & Bewegung:** Android-Front-/Rückkamera → Home Assistant (Kamera-Entität und Bewegungssensor) → optionaler Vision-Worker → Bildbeschreibung oder HA-Erkennungsereignis.
-
-**Automatisierungen:** HA-Ereignis → Bedingungen und Aktionen → optionale Sprachausgabe über Echo Relay.
-
-Die CPU-Basis nutzt Whisper und Piper ohne separate Grafikkarte. Ein optionaler GPU-Worker erweitert sie um beschleunigtes STT, Qwen Streaming-TTS, lokale Ollama-Sprachmodelle und Vision. Alternativ sind Alexa-Durchsagen über eine MP3-API und einen HTTPS-Proxy möglich.
-
-## Home Assistant Marketplace
-
-[![Open in Home Assistant Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration)
-
-**Home Assistant 2026.11+:** Einstellungen → Marketplace → Über Link hinzufügen → `https://github.com/michaelbudisch/tablet-assist-for-alexa` → Integration. Anschließend Tablet Assist for Alexa über den Integrationsdialog konfigurieren. Die Sprachserver werden separat installiert. [Einrichtung](docs/marketplace.md). Englische Bedienoberfläche und Dokumentation sind enthalten; Sprachbefehle und Modelle der enthaltenen Pipeline sind weiterhin deutsch.
-
-Die native Assist-Integration bündelt STT, TTS und Gesprächsrouter ohne manuelle YAML-Bearbeitung. Der optionale Nginx-Proxy stellt ausschließlich kurzlebige MP3-Dateien bereit. Timer und Benachrichtigungsmanager des bisherigen Dashboards bleiben als manuelle Vorlagen erhalten; sie werden nicht durch den Marketplace installiert. Entwickler-Vorschau: keine vollständige Neuinstallation bestätigt.
-
-## Native Android-App: Audio, Kamera und Bewegung
-
-**[TAFA Device Bridge 1.0.0](android/README.de.md)** bietet einen deutschen/englischen Android-Player mit HA-Suche, einmaligem Token-QR-Scan, bestätigter Bluetooth-Ausgabe und optionalem nativem Silent-Keepalive. [Signierte APK herunterladen](android/downloads/TAFA-Device-Bridge-1.0.0.apk). Die eigenständige [Echo Relay Assist Lovelace-Karte](docs/echo-relay-dashboard.md) verbindet die App ohne Hauszentrale mit einem beliebigen HA-Dashboard. Die Befehls-/Statushelfer werden separat eingerichtet; die Marketplace-Integration tut dies nicht automatisch.
-
-Die App ist nicht nur ein Audioplayer: Sie kann ein Android-Smartphone oder Tablet als zusätzliche Kamera für Home Assistant bereitstellen. Die vorhandene Front- oder Rückkamera liefert nach ausdrücklicher Freigabe regelmäßig aktualisierte Einzelbilder. HA erhält eine Kamera-Entität und optional einen Bildbewegungssensor. Der lokale Vision-Worker kann für freigegebene Sichtfragen und HA-Automationen eingesetzt werden. Die Kamera-Funktion ist unabhängig von der Audiowiedergabe und muss bewusst gestartet werden; sie startet nicht automatisch nach einem Geräte-Neustart. Die Bilder werden nicht archiviert. Es handelt sich um Einzelbilder, nicht um einen vollwertigen Video-Livestream. [Details zur Android-App](android/README.de.md#kamera-und-lokales-visionmodell).
-
-## Multiroom · Backend 1.7.0
-
-[**Vollständige Multiroom-Einrichtung mit TAFA-Kiosk-Audiofix**](homeassistant/examples/MULTIROOM.de.md) · [English](homeassistant/examples/MULTIROOM.md)
-
-Ein Home Assistant für mehrere Tablets, je Raum eigenes Nicht-Admin-Konto, getrennte Echo-Relay-Ausgabe, optionale Kamera-/Bewegungsentitäten und einstellbare Bildrate. Raumverwaltung mit Zuordnung, Ruhezeiten und gezielten Durchsagen. Die Raumkarte benötigt dasselbe Konto in App und HA-Dashboard sowie vertrauenswürdiges HTTPS für das Mikrofon. Keine alten Audiohelfer im Raum-Modus nötig. Ein echtes Tablet und automatisierte Zwei-Raum-Tests bestanden; gleichzeitiger Hardwaretest mit zwei Tablets und Neuinstallation noch offen. Die Marketplace-Basisintegration installiert dieses separate Backend nicht automatisch.
-
-## Lokales HTTPS für das Tablet-Mikrofon
-
-Mit einem vorhandenen NGINX-/Certbot-Proxy ermöglicht [optionales Split-DNS](docs/local-https.md) den direkten LAN-Zugriff über **denselben gültigen HTTPS-Hostnamen**, auch ohne Internet. Kein zweiter Proxy, keine neuen Router-Ports und keine festen privaten IPs im TAFA-Dashboard. Bestehende öffentliche Seiten werden dadurch nicht automatisch gesperrt.
-
-## Installation
-
-```bash
-git clone https://github.com/michaelbudisch/tablet-assist-for-alexa.git
-cd tablet-assist-for-alexa
-```
-
-| Anleitung | Beschreibung |
-|---|---|
-| [CPU-Sprachserver / Proxmox](docs/proxmox.md) | Lokale Sprachdienste |
-| [Marketplace und Konfiguration](docs/marketplace.md) | HA-Integration und Einrichtung |
-| [Android-Tablet / Bluetooth](docs/home-assistant.md) | Manuelle Altinstallation |
-| [Multiroom-Einrichtung](homeassistant/examples/MULTIROOM.de.md) | Raumkonten, Audio, Kamera, HTTPS und Fehlerbehebung |
-| [Echo Relay Dashboard](docs/echo-relay-dashboard.md) | Lovelace-Installation |
-| [HA-Automationen](docs/ha-automations.md) | Familienfelder und universelle Sprachausgabe |
-| [Optionaler GPU-Rechner](docs/worker.md) | Windows/Linux, STT, TTS und lokale KI |
-| [Optionaler Nginx-Proxy](docs/nginx-proxy.md) | DuckDNS und Certbot |
-| [Lokales HTTPS / Split-DNS](docs/local-https.md) | Vorhandener NGINX, Tablet-Mikrofon und lokale Verbindung ohne Internet |
-| [Lokale Datenquellen](docs/data-sources.md) | Sprachbefehle und unterstützte Entitäten |
-| [Sicherheit und Datenschutz](docs/security.md) | Netzwerk- und Datenschutzgrenzen |
-| [Tests und Release-Checkliste](docs/release.md) | Prüfstatus |
-| [Versionshistorie](CHANGELOG.de.md) | Änderungsverlauf |
-
-Die Skripte sind für **Neuinstallationen**, nicht für die Migration einer bestehenden Jarvis-Installation. Keine produktive Konfiguration überschreiben. Eigene Hosts, Gerätezuordnungen und Schlüssel ausschließlich lokal konfigurieren.
+[App-Installation DE](docs/app.md) · [App-Installation EN](docs/en/app.md) · [Marketplace](docs/marketplace.md) · [Backend](docs/backend-roadmap.md) · [Datenschutz](docs/security.md) · [GPU-Worker](docs/worker.md) · [Versionshistorie](CHANGELOG.de.md).
 
 ## Lizenz
 
-MIT für eigenen Projektcode; siehe [LICENSE](LICENSE). Abhängigkeiten und Modelle werden separat bezogen und unterliegen ihren jeweiligen Lizenzen: [Piper](https://github.com/OHF-Voice/piper1-gpl), [Wyoming Faster Whisper](https://github.com/OHF-Voice/wyoming-faster-whisper), [Home Assistant](https://www.home-assistant.io/), [Faster Qwen3 TTS](https://github.com/andimarafioti/faster-qwen3-tts), [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS), [FFmpeg](https://ffmpeg.org/), [Ollama](https://ollama.com/). Modelle und Stimmen sind nicht enthalten. Lizenzbedingungen und Modellkarten vor der Verwendung prüfen. Unabhängiges Community-Projekt; keine Verbindung zu oder Unterstützung durch Amazon. Alexa und Echo sind Marken ihrer jeweiligen Eigentümer.
+Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergeladene Sprach-/STT-Modelle unterliegen ihren jeweiligen Lizenzen (einschließlich Piper). Unabhängiges Community-Projekt ohne Verbindung zu Amazon oder Home Assistant.

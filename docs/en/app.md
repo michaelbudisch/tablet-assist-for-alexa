@@ -1,18 +1,30 @@
-# Install TAFA as a Home Assistant app
+# Install TAFA from Home Assistant Apps
 
-[Deutsch](../app.md)
+[Deutsch](../app.md) · [Project overview](../../README.md)
 
-**Experimental 0.1.0.** Home Assistant OS 2026.11+, amd64/aarch64. This is a setup app, not a replacement for the external speech services.
+**TAFA App 0.3.2 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
 
-1. [Add the TAFA app repository](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa) or open Settings → Apps → Install app → Repositories and add `https://github.com/michaelbudisch/tablet-assist-for-alexa`.
-2. Install and start TAFA; open Web UI. Keep protection enabled; no public port is required.
-3. Create a Home Assistant backup. Prepare the [CPU speech server](proxmox.md), add its Wyoming integration and optionally prepare the [GPU worker](worker.md).
-4. Enter the speech server host and STT entity. The optional GPU fields may be left blank. Install missing files with the button. Existing integration directories are skipped.
-5. Restart Home Assistant manually, add **Tablet Assist for Alexa** and **Jarvis Tablet Audio** in Devices & services and configure pipelines and worker options.
-6. Install [TAFA Device Bridge](../../android/README.md) and follow the [Multiroom guide](../../homeassistant/examples/MULTIROOM.md).
+## One-App setup
 
-## Boundaries and updates
+1. Create a Home Assistant backup. Prefer a clean test instance for the first deployment.
+2. Open **Settings → Apps → Install app → Repositories**, add `https://github.com/michaelbudisch/tablet-assist-for-alexa`, select **TAFA**, install and start.
+3. Open the **TAFA Control Center**. CPU models download on first launch (network access needed). The status tiles distinguish real Piper/Whisper readiness from pending or failed initialization.
+4. TAFA stages **one** component: `custom_components/tablet_assist_for_alexa`. Restart Home Assistant **once** using the normal Home Assistant settings. No YAML edits or second HA integration are needed on a fresh installation.
+5. The App attempts the HA integration config flow through the Supervisor Core API and then creates a **TAFA Lokal** Assist pipeline when STT, TTS and the conversation router are registered. Existing HA pipelines remain untouched. If automatic setup is unavailable, open **Settings → Devices & services → Add integration → TAFA**, then select the built-in Piper service and HA Assist pipeline from Control Center. Do not manually edit `.storage`.
+6. Install/connect the existing [TAFA Device Bridge 1.0.0](../../android/README.md); select TAFA Lokal. Optionally pair an Echo as the Android Bluetooth output. The app's audio, camera and wake-word permissions remain under Android user control.
 
-The app copies the bundled publicly committed components into `custom_components` only. It does not modify configuration.yaml, secrets, private dashboards or existing entries. Uninstalling TAFA does not remove installed integrations. Do not mix update routes or assume app upgrades automatically update Core components. The base integration can alternatively be installed using [Marketplace](marketplace.md), which does not install Apps.
+## What is bundled
 
-No automatic pairing, microphone/camera activation, worker deployment, or legacy migration. A fresh HA OS install, Ingress rendering, pipeline setup, real device audio and multiroom behavior remain unverified. Use a test instance first.
+- One HA integration provides STT, TTS, conversation, native wake-device registry, authenticated compatibility API, multiroom audio, optional cameras/motion and vision services.
+- The App contains **local German Piper and Faster-Whisper CPU engines**. Their downloaded models persist in the HA App's `/data` volume. They listen on the internal app network; no public port is mapped.
+- The GPU worker, Ollama and Alexa MP3/HTTPS notifications remain optional and must be configured separately.
+- This App does not install the private TAFA dashboard or modify Android/APK source.
+
+## Updates, safety and limitations
+
+- The App automatically stages the integration and updates it **only if TAFA originally installed it and its files are unchanged**. Before a managed update it saves the prior version under `<HA config>/.tafa/rollback`. HACS/manual installations and edited files are never overwritten. Restart HA after backend updates.
+- An older configured `jarvis_tablet_audio` can conflict with duplicate native endpoints. TAFA detects it and skips duplicate registration; it does not delete, overwrite or automatically migrate the old integration. Backup and migrate separately.
+- Microphones/cameras are opt-in. Audio/STT requests are processed in memory; the built-in speech API limits request sizes. Initial model downloads need internet; there is no guaranteed offline first install.
+- Known release gate: clean HA OS install, model download, end-to-end Assist/Device Bridge/Bluetooth and simultaneous physical Multiroom tests still need confirmation. See [release checklist](release.md).
+
+[Marketplace-only instructions](marketplace.md) · [Multiroom](../../homeassistant/examples/MULTIROOM.md) · [Optional GPU worker](worker.md)
