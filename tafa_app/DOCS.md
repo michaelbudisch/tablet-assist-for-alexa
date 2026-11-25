@@ -1,4 +1,4 @@
-# TAFA App 0.3.16 documentation
+# TAFA App 0.3.17 documentation
 
 [Deutsch](../docs/app.md) · [Project overview](../README.md)
 
@@ -70,3 +70,5 @@ For **Hey Jarvis → spoken question → Whisper → Qwen/Piper → Bluetooth**,
 
 Under **TAFA → Devices → Voice test** the UI reports whether a complete Assist pipeline is configured. This confirms configuration, **not** live Whisper availability. On Android 1.0.1, explicitly enable the optional mode under **Wakeword → Native voice conversation**. The existing paired room and non-admin HA account token remain in use. Native capture needs no browser microphone or browser HTTPS. Local HTTP transport remains unencrypted. The Android 1.0.1 APK still requires the original signing key.
 
+
+**Ollama first-question fix:** The normal initial `unknown` state of a new HA conversation entity is now accepted. In App Configuration select the exact Ollama `conversation.*` entity, restart HA Core after the component upgrade, then restart TAFA App to synchronize. App 0.3.17 / HA integration 0.4.9. No Android rebuild.
