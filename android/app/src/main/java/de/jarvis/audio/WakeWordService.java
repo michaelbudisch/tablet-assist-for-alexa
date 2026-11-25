@@ -16,6 +16,9 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Experimental, explicitly enabled, offline wakeword recognition.
@@ -27,10 +30,15 @@ public final class WakeWordService extends Service implements RecognitionListene
     static volatile boolean running=false;
     static volatile String status="off";
     private static final String CHANNEL="jarvis-wake",TAG="JarvisWake";
-    private static final long HOLD_MS=50000,COOLDOWN_MS=12000;
+    private static final long SYNC_INTERVAL_MS=2500;
     private final Handler main=new Handler(Looper.getMainLooper());
-    private boolean enabled=false,loading=false;
+    private boolean enabled=false,loading=false,muted=true;
     private String wordChoice="hey_jarvis";
+    private int strictness=1,cooldownSeconds=12,holdSeconds=50;
+    private String pendingHit=null;
+    private int pendingCount=0;
+    private ScheduledExecutorService settingsExecutor;
+    private long lastFullSync=0;
     private Model model;
     private Recognizer recognizer;
     private SpeechService speech;
@@ -82,8 +90,9 @@ public final class WakeWordService extends Service implements RecognitionListene
             status="foreground_error: "+e.getClass().getSimpleName();
             stopSelf();return START_NOT_STICKY;
         }
-        enabled=true;running=true;status="loading";
+        enabled=true;running=true;muted=true;status="loading";
         loading=true;
+        startSettingsSync();
         new Thread(()->{
             try{
                 Model newModel=new Model(WakeModelInstaller.modelDir(this).getAbsolutePath());
@@ -101,9 +110,62 @@ public final class WakeWordService extends Service implements RecognitionListene
         return START_NOT_STICKY;
     }
 
+    private void startSettingsSync(){
+        if(settingsExecutor!=null)return;
+        settingsExecutor=Executors.newSingleThreadScheduledExecutor(r->{
+            Thread t=new Thread(r,"JarvisWakeHASettings");
+            t.setDaemon(true);return t;
+        });
+        settingsExecutor.scheduleWithFixedDelay(()->{
+            if(!enabled)return;
+            try{
+                boolean full=SystemClock.elapsedRealtime()-lastFullSync>=12000;
+                if(full){
+                    WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
+                    lastFullSync=SystemClock.elapsedRealtime();
+                    main.post(()->{
+                        if(!enabled)return;
+                        wordChoice=settings.word;
+                        strictness=settings.strictness;
+                        cooldownSeconds=settings.cooldownSeconds;
+                        holdSeconds=settings.holdSeconds;
+                        setMuted(settings.muted);
+                    });
+                }else{
+                    boolean remoteMute=WakePilotSettings.readMute(this);
+                    main.post(()->{if(enabled)setMuted(remoteMute);});
+                }
+            }catch(Exception e){
+                // Fail closed: if HA is unreachable, the remote mute switch cannot
+                // be honored reliably, so release the microphone.
+                main.post(()->{
+                    if(!enabled)return;
+                    setMuted(true);
+                    status="ha_settings_error: "+e.getClass().getSimpleName();
+                });
+            }
+        },0,SYNC_INTERVAL_MS,TimeUnit.MILLISECONDS);
+    }
+
+    private void setMuted(boolean shouldMute){
+        if(!enabled)return;
+        if(shouldMute){
+            if(!muted||speech!=null){
+                muted=true;
+                releaseRecognizer();
+                pendingHit=null;pendingCount=0;
+            }
+            status="muted";
+        }else{
+            boolean wasMuted=muted;
+            muted=false;
+            if(wasMuted||speech==null)startRecognition();
+        }
+    }
+
     private void startRecognition(){
         main.removeCallbacks(rearm);
-        if(!enabled||model==null||loading)return;
+        if(!enabled||model==null||loading||muted)return;
         long remaining=holdUntil-SystemClock.elapsedRealtime();
         if(remaining>0){
             main.postDelayed(rearm,Math.max(500,remaining));
@@ -139,14 +201,18 @@ public final class WakeWordService extends Service implements RecognitionListene
     }
 
     private void candidate(String json,String key){
-        if(!enabled||speech==null)return;
+        if(!enabled||speech==null||muted)return;
         String transcript;
         try{transcript=new JSONObject(json).optString(key,"");}catch(Exception e){return;}
         String hit=WakeWordMatcher.matched(transcript,wordChoice);
-        if(hit==null)return;
+        if(hit==null){pendingHit=null;pendingCount=0;return;}
+        if(hit.equals(pendingHit))pendingCount++;
+        else{pendingHit=hit;pendingCount=1;}
+        if(pendingCount<strictness)return;
         long now=SystemClock.elapsedRealtime();
-        if(now-lastHit<COOLDOWN_MS)return;
-        lastHit=now;holdUntil=now+HOLD_MS;
+        if(now-lastHit<cooldownSeconds*1000L)return;
+        pendingHit=null;pendingCount=0;
+        lastHit=now;holdUntil=now+holdSeconds*1000L;
         // Release microphone BEFORE telling the browser to start its STT pipeline.
         releaseRecognizer();
         status="detected: "+hit;
@@ -205,8 +271,9 @@ public final class WakeWordService extends Service implements RecognitionListene
     }
 
     @Override public void onDestroy(){
-        enabled=false;running=false;
+        enabled=false;running=false;muted=true;
         main.removeCallbacks(rearm);
+        if(settingsExecutor!=null){settingsExecutor.shutdownNow();settingsExecutor=null;}
         releaseRecognizer();
         if(model!=null){try{model.close();}catch(Exception ignored){}model=null;}
         if(status.startsWith("listening")||status.startsWith("detected")||status.startsWith("sent"))
