@@ -136,54 +136,54 @@
   "options": {
     "step": {
       "init": {
-        "title": "Datenquellen und Erinnerungen",
-        "description": "Alle Datenquellen sind optional. Wähle vorhandene Entitäten; leere Felder bleiben deaktiviert. Erinnerungen sind gemeinsam sichtbar. Ein Echo-Raum ist optional.",
+        "title": "TAFA einrichten",
+        "description": "Wähle den Bereich, den du einrichten möchtest. Alle Funktionen außer der Sprachausgabe/-erkennung sind optional.",
+        "menu_options": {
+          "hardware": "1 · Sprachserver & GPU",
+          "announcements": "3 · Alexa-Durchsagen & HTTPS",
+          "sources": "Datenquellen & Erinnerungen"
+        }
+      },
+      "hardware": {
+        "title": "Sprachserver & GPU",
+        "description": "Piper läuft entweder in der TAFA-App (Standard) oder auf einem Proxmox-Sprachserver. Bei Proxmox: http://SERVER:5000 eintragen; CPU-Whisper über Wyoming :10300 hinzufügen. Optional den Qwen-Worker http://GPU-PC:10502 samt API-Schlüssel ergänzen. Bei ausgeschaltetem PC bleibt Piper als Reserve. Leere Passwortfelder ändern gespeicherte Schlüssel nicht.",
         "data": {
-          "weather": "Wetter-Entität",
-          "shopping": "Einkaufsliste (Bring! oder andere To-do-Liste)",
-          "restmuell": "Restmüll-Abholtermine",
-          "bioabfall": "Biomüll-Abholtermine",
-          "papier": "Papier-Abholtermine",
-          "wertstoff": "Wertstoff-Abholtermine",
-          "vorlauf": "Vorlauftemperatur (°C)",
-          "ruecklauf": "Rücklauftemperatur (°C)",
-          "spreizung": "Heizungsspreizung (K)",
-          "preis": "Aktueller Strompreis",
-          "guenstig": "Niedrigster Strompreis morgen",
-          "netz": "Netzleistung (+ Bezug, − Einspeisung)",
-          "solar": "Gesamte PV-Leistung",
-          "prognose": "PV-Ertragsprognose morgen",
-          "solarheute": "PV-Ertrag heute",
-          "netzheute": "Netzbezug heute",
-          "einspeisungheute": "Einspeisung heute",
-          "heizoel": "Heizölbestand",
-          "oelverbrauch": "Geschätzter Heizölverbrauch heute",
-          "waschmaschine": "Waschmaschinenleistung",
-          "waschkosten": "Waschmaschinenkosten heute",
-          "waschenergie": "Waschmaschinenverbrauch heute",
-          "waermepumpe": "Wärmepumpenleistung",
-          "wpheute": "Wärmepumpenverbrauch heute",
-          "wpkosten": "Wärmepumpenkosten heute",
-          "kuehlschrank": "Kühlschrankleistung",
-          "kuehlschrankheute": "Kühlschrankverbrauch heute",
-          "reminders_enabled": "Gemeinsame Erinnerungen aktivieren",
-          "reminder_room": "Optionaler Echo-Raum für Erinnerungen",
-          "learning_enabled": "Optionale Lernfunktion für allgemeine Hausdaten-Abfragen"
+          "piper_base": "Piper-Serveradresse (TAFA lokal oder Proxmox :5000)",
+          "cpu_stt": "Optional: Wyoming-Whisper CPU",
+          "hardware_profile": "Routing-Modus",
+          "gpu_base": "Optional: Qwen-Streaming-Adresse (:10502)",
+          "qwen_token": "Qwen-API-Schlüssel (leer = bisherigen behalten)",
+          "gpu_stt": "Optional: Wyoming GPU-Whisper (:10300)",
+          "gpu_stt_host": "GPU-Host für schnellen Erreichbarkeitstest",
+          "llm_agent": "Optional: KI-Konversationsagent"
         },
         "data_description": {
-          "restmuell": "ISO-Datum YYYY-MM-DD als Zustand oder als Datumsschlüssel in den Attributen.",
-          "netz": "Positive Werte = Netzbezug, negative Werte = Einspeisung.",
-          "preis": "ct/kWh oder EUR/kWh.",
-          "guenstig": "Preissensor mit timestamp-Attribut für morgen.",
-          "solar": "Nutze einen Gesamtsensor bei mehreren Anlagen.",
-          "reminders_enabled": "Maximal eine aktive Erinnerung. HA-Benachrichtigung; auch nach Neustart.",
-          "reminder_room": "Nur ein freigegebener Raum. Audio kann über öffentliche temporäre Links laufen; keine vertraulichen Inhalte.",
-          "learning_enabled": "Standardmäßig aus. Nur allgemeine, nicht erkannte Hausdaten-Fragen aus einer begrenzten Wortliste; Vorschläge 24 Stunden im RAM, Freigabe durch Administrator."
+          "piper_base": "Bei TAFA All-in-one den internen Standard beibehalten. Proxmox-Server: http://SERVER-IP:5000",
+          "cpu_stt": "Nur bei externem Wyoming-Whisper; ansonsten TAFA-internes Whisper verwenden.",
+          "hardware_profile": "Automatisch: GPU-Qwen bevorzugen und Piper als Reserve nutzen. CPU: immer Piper.",
+          "gpu_base": "Qwen-Stream des separaten GPU-Workers, Port 10502. Leerlassen deaktiviert GPU-TTS.",
+          "qwen_token": "Wird durch worker/Setup.ps1 oder setup-linux.sh in der lokalen .env erzeugt. Nicht in Chats oder Screenshots teilen."
+        }
+      },
+      "announcements": {
+        "title": "Alexa-Durchsagen & HTTPS (optional)",
+        "description": "Nur nötig, wenn Echo-Lautsprecher Alexa-Ankündigungen per MP3 abspielen sollen. Proxmox: Generator http://SERVER:5001; öffentlicher HTTPS-Audiohost über separaten Nginx-Proxy auf Port 8080 des Sprachservers. Für Tablet→Echo-Bluetooth nichts hier konfigurieren.",
+        "data": {
+          "mp3_base": "Interne MP3-Generator-URL (:5001)",
+          "mp3_token": "API-Schlüssel (leer = bisherigen behalten)",
+          "public_audio_base": "Öffentliche HTTPS-Audioadresse",
+          "rooms_json": "Optionale Raum-/Notify-Zuordnung (JSON)",
+          "mp3_profile": "Klangprofil",
+          "chime": "Signalton vor Durchsage"
+        },
+        "data_description": {
+          "mp3_token": "PIPER_API_TOKEN aus /etc/jarvis-local.env des Proxmox-Sprachservers. Nur lokal verwenden.",
+          "rooms_json": "Beispiel: {\"Wohnzimmer\":{\"notify\":\"notify.echo_wohnzimmer\"}}. Nur konfigurierte Räume werden verwendet."
         }
       }
     },
     "error": {
-      "invalid_configuration": "Bitte Entitäten und Raumzuordnung prüfen."
+      "invalid_configuration": "Eingaben prüfen: Serveradressen, bestehende Wyoming-Entitäten, GPU-Schlüssel oder Raumzuordnung."
     }
   }
 }

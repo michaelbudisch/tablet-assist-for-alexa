@@ -160,8 +160,172 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._form("reconfigure", user_input, self._get_reconfigure_entry())
 
 class TabletAssistSourcesFlow(config_entries.OptionsFlow):
-    """Independent data-source configuration, editable without server credentials."""
-    async def async_step_init(self,user_input=None):
+    """Separate everyday hardware, announcements and optional home-data sources.
+
+    Options override entry.data via settings(entry). This preserves existing
+    config entries and triggers their usual reload listener after saving.
+    """
+
+    def _values(self):
+        return {**self.config_entry.data, **self.config_entry.options}
+
+    def _save(self, changes):
+        return self.async_create_entry(
+            title="", data={**self.config_entry.options, **changes}
+        )
+
+    async def async_step_init(self, user_input=None):
+        # Returning visitors choose a focused section instead of seeing 25+ entities.
+        if user_input is not None:
+            return await self.async_step_sources(user_input)
+        return self.async_show_menu(
+            step_id="init", menu_options=["hardware", "announcements", "sources"]
+        )
+
+    async def async_step_hardware(self, user_input=None):
+        old = self._values()
+        errors = {}
+        if user_input is not None:
+            new = {}
+            try:
+                new["piper_base"] = origin(
+                    str(user_input.get("piper_base") or old.get("piper_base") or "")
+                )
+                new["cpu_stt"] = str(user_input.get("cpu_stt") or "").strip()
+                new["gpu_base"] = (
+                    origin(str(user_input["gpu_base"]))
+                    if user_input.get("gpu_base") else ""
+                )
+                # The password selector deliberately has no suggested value.
+                # An empty submission retains the previous key if GPU stays on.
+                new["qwen_token"] = (
+                    (str(user_input.get("qwen_token") or "").strip()
+                     or str(old.get("qwen_token") or ""))
+                    if new["gpu_base"] else ""
+                )
+                new["gpu_stt"] = str(user_input.get("gpu_stt") or "").strip()
+                new["gpu_stt_host"] = str(user_input.get("gpu_stt_host") or "").strip()
+                new["llm_agent"] = str(user_input.get("llm_agent") or "").strip()
+                slug = user_input.get("hardware_profile", "automatic")
+                if slug not in CHOICES["hardware_profile"]:
+                    raise ValueError("Invalid hardware profile")
+                new["hardware_profile"] = CHOICES["hardware_profile"][slug]
+                if new["gpu_base"] and len(new["qwen_token"]) < 32:
+                    raise ValueError("GPU key missing")
+                if new["gpu_stt_host"] and not re.fullmatch(
+                    r"[A-Za-z0-9.-]+", new["gpu_stt_host"]
+                ):
+                    raise ValueError("Invalid GPU STT host")
+                reg = er.async_get(self.hass)
+                for key in ("cpu_stt", "gpu_stt"):
+                    if new[key]:
+                        entity = reg.async_get(new[key])
+                        if entity is None or entity.platform != "wyoming":
+                            raise ValueError("Choose existing Wyoming STT entity")
+                if new["gpu_stt"] and new["gpu_stt"] == new["cpu_stt"]:
+                    raise ValueError("Choose separate CPU and GPU STT providers")
+                if new["llm_agent"]:
+                    entity = reg.async_get(new["llm_agent"])
+                    if entity and entity.platform == DOMAIN:
+                        raise ValueError("Recursive conversation agent")
+            except (ValueError, TypeError, KeyError):
+                errors["base"] = "invalid_configuration"
+            if not errors:
+                return self._save(new)
+
+        default_mode = next(
+            (k for k,v in CHOICES["hardware_profile"].items()
+             if v == old.get("hardware_profile")), "automatic"
+        )
+        password = selector.TextSelector(selector.TextSelectorConfig(
+            type=selector.TextSelectorType.PASSWORD
+        ))
+        fields = vol.Schema({
+            vol.Required("piper_base", default=old.get("piper_base", "http://speechserver.local:5000")): str,
+            vol.Optional("cpu_stt"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="stt")),
+            vol.Required("hardware_profile", default=default_mode):
+                translated_select("hardware_profile", list(CHOICES["hardware_profile"])),
+            vol.Optional("gpu_base"): str,
+            vol.Optional("qwen_token"): password,
+            vol.Optional("gpu_stt"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="stt")),
+            vol.Optional("gpu_stt_host"): str,
+            vol.Optional("llm_agent"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="conversation")),
+        })
+        defaults = {
+            k: old[k] for k in
+            ("cpu_stt", "gpu_base", "gpu_stt", "gpu_stt_host", "llm_agent")
+            if old.get(k)
+        }
+        return self.async_show_form(
+            step_id="hardware", data_schema=self.add_suggested_values_to_schema(
+                fields, defaults), errors=errors
+        )
+
+    async def async_step_announcements(self, user_input=None):
+        old = self._values()
+        errors = {}
+        if user_input is not None:
+            try:
+                data = {}
+                for key in ("mp3_base", "public_audio_base"):
+                    value = str(user_input.get(key) or "").strip()
+                    data[key] = origin(value, key == "public_audio_base") if value else ""
+                data["mp3_token"] = (
+                    str(user_input.get("mp3_token") or "").strip()
+                    or str(old.get("mp3_token") or "")
+                ) if data["mp3_base"] else ""
+                data["rooms_json"] = str(user_input.get("rooms_json") or "{}")
+                data["rooms"] = room_map(data["rooms_json"])
+                profile = user_input.get("mp3_profile", "natural")
+                if profile not in CHOICES["mp3_profile"]:
+                    raise ValueError("Invalid announcement profile")
+                data["mp3_profile"] = CHOICES["mp3_profile"][profile]
+                data["chime"] = bool(user_input.get("chime", False))
+                if data["rooms"] and not (
+                    data["mp3_base"] and data["public_audio_base"]
+                    and len(data["mp3_token"]) >= 32
+                ):
+                    raise ValueError("Missing MP3 generator or HTTPS proxy")
+            except (ValueError, KeyError, TypeError, json.JSONDecodeError):
+                errors["base"] = "invalid_configuration"
+            if not errors:
+                return self._save(data)
+
+        password = selector.TextSelector(selector.TextSelectorConfig(
+            type=selector.TextSelectorType.PASSWORD
+        ))
+        choice = next(
+            (k for k,v in CHOICES["mp3_profile"].items()
+             if v == old.get("mp3_profile")), "natural"
+        )
+        fields = vol.Schema({
+            vol.Optional("mp3_base"): str,
+            vol.Optional("mp3_token"): password,
+            vol.Optional("public_audio_base"): str,
+            vol.Optional("rooms_json"): selector.TextSelector(
+                selector.TextSelectorConfig(multiline=True)),
+            vol.Required("mp3_profile", default=choice):
+                translated_select("mp3_profile", list(CHOICES["mp3_profile"])),
+            vol.Required("chime", default=bool(old.get("chime",False))): bool,
+        })
+        suggested = {
+            k: old[k] for k in ("mp3_base", "public_audio_base")
+            if old.get(k)
+        }
+        suggested["rooms_json"] = (
+            old.get("rooms_json") or
+            json.dumps(old.get("rooms", {}), ensure_ascii=False)
+        )
+        return self.async_show_form(
+            step_id="announcements",
+            data_schema=self.add_suggested_values_to_schema(fields,suggested),
+            errors=errors
+        )
+
+    async def async_step_sources(self, user_input=None):
         errors={}
         if user_input is not None:
             sources={k:user_input[k] for k in SOURCES if user_input.get(k)}
@@ -169,16 +333,33 @@ class TabletAssistSourcesFlow(config_entries.OptionsFlow):
                 errors["base"]="invalid_configuration"
             else:
                 room=user_input.get("reminder_room","")
-                allowed=self.config_entry.data.get("rooms",{})
+                allowed=self._values().get("rooms",{})
                 if room and room not in allowed:
                     errors["base"]="invalid_configuration"
                 else:
-                    return self.async_create_entry(title="",data={**self.config_entry.options,"sources":sources,"learning_enabled":bool(user_input.get("learning_enabled")),"reminders_enabled":bool(user_input.get("reminders_enabled")),"reminder_room":room})
+                    return self._save({
+                        "sources": sources,
+                        "learning_enabled": bool(user_input.get("learning_enabled")),
+                        "reminders_enabled": bool(user_input.get("reminders_enabled")),
+                        "reminder_room": room
+                    })
         old=self.config_entry.options
-        values={**old.get("sources",{}),"learning_enabled":old.get("learning_enabled",False),"reminders_enabled":old.get("reminders_enabled",False),"reminder_room":old.get("reminder_room","")}
-        fields={vol.Optional(k):selector.EntitySelector(selector.EntitySelectorConfig(domain=domain)) for k,domain in SOURCES.items()}
+        values={**old.get("sources",{}),
+                "learning_enabled":old.get("learning_enabled",False),
+                "reminders_enabled":old.get("reminders_enabled",False),
+                "reminder_room":old.get("reminder_room","")}
+        fields={vol.Optional(k):selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=domain)) for k,domain in SOURCES.items()}
         fields[vol.Required("reminders_enabled",default=False)]=bool
         fields[vol.Required("learning_enabled",default=False)]=bool
-        rooms=self.config_entry.data.get("rooms",{})
-        fields[vol.Optional("reminder_room")]=selector.SelectSelector(selector.SelectSelectorConfig(options=list(rooms),mode=selector.SelectSelectorMode.DROPDOWN)) if rooms else str
-        return self.async_show_form(step_id="init",data_schema=self.add_suggested_values_to_schema(vol.Schema(fields),{k:v for k,v in values.items() if v!=""}),errors=errors)
+        rooms=self._values().get("rooms",{})
+        fields[vol.Optional("reminder_room")]=selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(rooms),mode=selector.SelectSelectorMode.DROPDOWN)
+        ) if rooms else str
+        return self.async_show_form(
+            step_id="sources",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(fields),{k:v for k,v in values.items() if v!=""}
+            ),errors=errors
+        )
