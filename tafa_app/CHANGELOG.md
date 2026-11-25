@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.4 — Release-candidate documentation correction
+- Clarifies that unchanged Device Bridge 1.0.0 emits wake events only; a separate microphone-capable Assist client must capture the spoken question.
+- Ingress guidance no longer asks users to select a pipeline inside Device Bridge.
+- No Android/APK modifications.
+
+
 ## 0.3.3 — Release-candidate hardening
 - Add Device Bridge configuration to the public TAFA sidebar (mute, wake words, room names).
 - Add real HA Core integration checks for native relay, multiroom, camera and motion.

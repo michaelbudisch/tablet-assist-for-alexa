@@ -2,7 +2,7 @@
 
 ## Zusammengeführte TAFA-Integration 0.4.1 — Release-Kandidat
 - Öffentliche TAFA-Oberfläche mit Geräteliste, Rufwortauswahl, Stummschaltung und Raumnamen.
-- Erweiterte reale HA-Laufzeit-, Pipeline- und Ingress-Tests; App 0.3.3 mit Wiederanlauf des CPU-Sprachprozesses.
+- Erweiterte reale HA-Laufzeit-, Pipeline- und Ingress-Tests; App 0.3.4 mit Wiederanlauf des CPU-Sprachprozesses.
 - Android Device Bridge 1.0.0 und privates Dashboard bleiben unverändert. Für stabilen Release fehlt der HA-OS-/Hardware-End-to-End-Test.
 
 

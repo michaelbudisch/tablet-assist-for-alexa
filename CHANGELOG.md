@@ -6,7 +6,7 @@
 
 ## TAFA unified integration 0.4.1 — release candidate
 - Unified native device and multiroom management in the public TAFA panel.
-- Enhanced HA runtime, automatic pipeline and Ingress regression checks; App 0.3.3 with CPU speech-process recovery.
+- Enhanced HA runtime, automatic pipeline and Ingress regression checks; App 0.3.4 with CPU speech-process recovery.
 - Device Bridge APK 1.0.0 and private household dashboard remain unchanged. Stable release pending clean HA OS/hardware confirmation.
 
 

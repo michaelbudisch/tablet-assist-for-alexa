@@ -2,7 +2,7 @@
 
 [Deutsch](../app.md) · [Project overview](../../README.md)
 
-**TAFA App 0.3.3 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
+**TAFA App 0.3.4 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
 
 ## One-App setup
 
