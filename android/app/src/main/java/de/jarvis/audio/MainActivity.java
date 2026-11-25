@@ -196,10 +196,37 @@ public class MainActivity extends Activity {
         });
     }
 
+    private boolean saveConnectionForWake(){
+        try{
+            String base=HaAddress.validate(urlInput.getText().toString(),
+                allowHttp.isChecked()&&normalizedInput().equals(consentForAddress));
+            var prefs=getSharedPreferences(PREF,0);
+            String token=tokenInput.getText().toString().trim();
+            if(token.isEmpty()&&!prefs.contains("secret"))
+                throw new IllegalArgumentException("token_required");
+            if(token.isEmpty()&&!base.equals(HaAddress.normalize(prefs.getString("base",""))))
+                throw new IllegalArgumentException("token_server_changed");
+            var editor=prefs.edit().putString("base",base);
+            if(HaAddress.isHttp(base))editor.putString(HTTP_CONSENT,base);
+            else editor.remove(HTTP_CONSENT);
+            if(!token.isEmpty())editor.putString("secret",encrypt(token));
+            editor.apply();
+            tokenInput.setText("");
+            ((TextView)findViewById(R.id.token_note)).setText(R.string.token_saved);
+            // Do NOT launch AudioService: the existing signed Relay instance
+            // remains the only Home Assistant/echo audio player.
+            return true;
+        }catch(Exception error){
+            wakeStatus.setText(AppLanguage.error(this,error));
+            return false;
+        }
+    }
+
     private void startNativeWake(){
         if(!WakeModelInstaller.installed(this)){
             wakeStatus.setText(R.string.wake_model_missing);return;
         }
+        if(!saveConnectionForWake())return;
         if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
             wakeStatus.setText(R.string.wake_permission);
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},WAKE_MICROPHONE_PERMISSION);
