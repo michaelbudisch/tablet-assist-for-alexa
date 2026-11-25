@@ -225,4 +225,14 @@
     <string name="wake_advanced_collapse">Hide recognition settings</string>
     <string name="brand_family" translatable="false">TAFA</string>
     <string name="brand_product" translatable="false">Device Bridge</string>
+    <string name="native_assist_eyebrow">OPTIONAL · NEW</string>
+    <string name="native_assist_title">Native voice conversation</string>
+    <string name="native_assist_description">After Hey Jarvis, record the next question inside this Android app and stream it directly to Home Assistant Whisper. Replies play through the existing Multiroom Bluetooth player. The original wakeword-only behavior remains available.</string>
+    <string name="native_assist_switch">After wakeword, listen for a full question</string>
+    <string name="native_followup_switch">Allow up to two short follow-up questions without wakeword</string>
+    <string name="native_pause_label">End-of-speech pause: %1$d ms</string>
+    <string name="native_assist_test">Test native question without wakeword</string>
+    <string name="native_assist_inactive">Native speech input off</string>
+    <string name="native_assist_requirements">Enable Multiroom audio in Connect, pair this tablet in TAFA, then start both the player and wakeword detection.</string>
+    <string name="native_assist_privacy">Off by default. Only after a detected wakeword (or manual test) the microphone streams 16 kHz PCM to your configured Home Assistant until speech ends. No recordings are stored. The microphone is released during AI processing and speaker playback. Switch off or mute to stop. LAN HTTP is unencrypted; use trusted HTTPS where possible.</string>
 </resources>
