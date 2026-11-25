@@ -2,17 +2,17 @@
 
 [English](en/app.md) · [Projektübersicht](../README.de.md)
 
-**TAFA App 0.3.9 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
+**TAFA App 0.3.10 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
 
 **Neu:** [Geführte Einrichtung für TAFA lokal, Proxmox, GPU-Worker und Alexa-MP3](setup-guide.md). Alle drei Bereiche sind über **TAFA → Optionen** getrennt erreichbar.
 
 ## Installation mit einer App
 
 1. Home-Assistant-Sicherung erstellen. Für die erste Bereitstellung möglichst eine frische Testinstallation nutzen.
-2. **Einstellungen → Apps → App installieren → Repositories** öffnen, `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen, **TAFA** auswählen, installieren und starten.
-3. Das **TAFA Control Center** öffnen. CPU-Sprachmodelle werden beim ersten Start heruntergeladen (Internet nötig). Die Statuskarten zeigen tatsächliche Bereitschaft oder Fehler von Piper und Whisper.
+2. **Einstellungen → Apps → App installieren → Repositories** öffnen, `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen und **TAFA** installieren. **Vor dem Start** im App-Reiter **Konfiguration** den Sprachmodus auswählen: `local` oder `external` mit `external_piper_base=http://PROXMOX-IP:5000`.
+3. App starten und das **TAFA Control Center** öffnen. Nur bei `local` werden CPU-Sprachmodelle heruntergeladen. Bei `external` bleibt die lokale CPU-Verarbeitung aus; die Proxmox-Piper-Verbindung wird geprüft.
 4. TAFA stellt **eine** Integration bereit: `custom_components/tablet_assist_for_alexa`. Home Assistant über die normalen Einstellungen **einmal neu starten**. Keine YAML-Bearbeitung und keine zweite HA-Integration bei einer Neuinstallation nötig.
-5. Die App versucht, den HA-Konfigurationsdialog über die Supervisor-Core-API automatisch abzuschließen, und erstellt anschließend eine **TAFA Lokal**-Assist-Pipeline, sobald STT, TTS und Gesprächsrouter registriert sind. Bestehende Pipelines bleiben unverändert. Wenn die automatische Einrichtung fehlschlägt, unter **Einstellungen → Geräte & Dienste → Integration hinzufügen → TAFA** wechseln und die verfügbaren Sprachdienste im Control Center prüfen. Nicht manuell in `.storage` eingreifen.
+5. Die App versucht den TAFA-Konfigurationsdialog automatisch abzuschließen. Bei `local` wird anschließend die **TAFA Lokal**-Pipeline eingerichtet. Bei `external` zuerst **Wyoming** für `PROXMOX-IP:10300` hinzufügen, unter **Geräte & Dienste → TAFA → Optionen → Sprachserver & GPU** als CPU-STT auswählen und eine Assist-Pipeline mit **TAFA STT-Router** und **Tablet Assist Stream** anlegen. Vorhandene Pipelines bleiben unverändert; keine `.storage`-Änderungen.
 6. Die vorhandene [TAFA Device Bridge 1.0.0](../android/README.de.md) für Rufwort und Audio verbinden. **TAFA Lokal** in Home Assistant Assist beziehungsweise in der HA Companion App wählen, nicht in der Device Bridge. Optional den Echo über Android-Bluetooth als Lautsprecher koppeln. Audio-, Kamera- und Rufwortberechtigungen bleiben unter Android-Kontrolle.
 
 ## Einschränkung bei der Rufwortübergabe
@@ -21,20 +21,20 @@ Device Bridge 1.0.0 sendet das erkannte Rufwort und gibt anschließend das Mikro
 
 ## Automatische Qwen-/Piper-Sprachausgabe
 
-Ab TAFA App 0.3.9 verwendet eine **neu erstellte** Assist-Pipeline `TAFA Lokal` standardmäßig den **Tablet Assist Stream**-TTS-Provider. Solange kein GPU-Worker konfiguriert oder erreichbar ist, erzeugt Piper die Sprache. Ist ein Qwen-Worker ohne zusätzlichen API-Schlüssel über die **TAFA-Integration unter Einstellungen → Geräte & Dienste** eingerichtet und bereit, wird Qwen verwendet. Bei Ausfall fällt der Router wieder auf Piper zurück. Ein GPU-Worker wird nicht automatisch im Netzwerk gesucht; Die Adresse muss bewusst eingerichtet werden.
+Ab TAFA App 0.3.10 verwendet eine **neu erstellte** Assist-Pipeline `TAFA Lokal` standardmäßig den **Tablet Assist Stream**-TTS-Provider. Solange kein GPU-Worker konfiguriert oder erreichbar ist, erzeugt Piper die Sprache. Ist ein Qwen-Worker ohne zusätzlichen API-Schlüssel über die **TAFA-Integration unter Einstellungen → Geräte & Dienste** eingerichtet und bereit, wird Qwen verwendet. Bei Ausfall fällt der Router wieder auf Piper zurück. Ein GPU-Worker wird nicht automatisch im Netzwerk gesucht; Die Adresse muss bewusst eingerichtet werden.
 
 **Bereits vorhandene TAFA-Lokal-Pipelines werden nicht automatisch geändert.** Wer die bisherige Piper-only-Engine verwendet, stellt in der Assist-Pipeline die Sprachausgabe auf **Tablet Assist Stream** um. Das gilt für die normale Assist-Sprachausgabe; Alexa-MP3-Durchsagen über den HTTPS-Proxy bleiben ein separater Pfad.
 
 ## Inhalt der App
 
 - Eine gemeinsame HA-Integration mit STT, TTS, Gesprächsrouter, nativem Wake-Geräteregister, authentifizierter Kompatibilitätsschnittstelle, Multiroom, optionalen Kamera-/Bewegungsdaten und Vision-Diensten.
-- **Deutsche CPU-Sprachdienste Piper und Faster-Whisper** laufen im App-Container. Heruntergeladene Modelle bleiben im persistenten App-Verzeichnis `/data`. Keine öffentlich freigegebenen Ports.
+- **Lokaler Modus:** deutsche CPU-Sprachdienste Piper und Faster-Whisper laufen im App-Container, Modelle bleiben in `/data`. **Externer Modus:** keine lokalen CPU-Prozesse oder Modell-Downloads; Piper und Wyoming-Whisper bleiben auf Proxmox. Keine öffentlich freigegebenen Ports.
 - GPU-Worker, Ollama und Alexa-MP3-/HTTPS-Durchsagen sind optional und werden separat eingerichtet.
 - Das private TAFA-Dashboard und der Android-APK-Quellcode bleiben unverändert.
 
 ## Fehlerbehebung: Update bricht beim Docker-Build ab
 
-Wenn das Supervisor-Protokoll meldet `NumPy was built with baseline optimizations: (X86_V2) but your machine doesn't support (X86_V2)`, wird das durch eine ältere CPU beziehungsweise ein generisches virtuelles CPU-Profil ausgelöst. **App 0.3.9 pinnt NumPy 1.26.4**, das die X86_V2-Baseline von NumPy ab 2.4 nicht voraussetzt. Zuerst das App-Repository aktualisieren und **TAFA 0.3.9** installieren; keine Neuinstallation und keine HA-Integration löschen. Bleibt ein anderer Fehler wie `illegal instruction`, im Virtualisierungshost die CPU-Kompatibilität prüfen; weitere native Bibliotheken haben eigene CPU-Anforderungen.
+Wenn das Supervisor-Protokoll meldet `NumPy was built with baseline optimizations: (X86_V2) but your machine doesn't support (X86_V2)`, wird das durch eine ältere CPU beziehungsweise ein generisches virtuelles CPU-Profil ausgelöst. **App 0.3.9 pinnt NumPy 1.26.4**, das die X86_V2-Baseline von NumPy ab 2.4 nicht voraussetzt. Zuerst das App-Repository aktualisieren und **TAFA 0.3.10** installieren; keine Neuinstallation und keine HA-Integration löschen. Bleibt ein anderer Fehler wie `illegal instruction`, im Virtualisierungshost die CPU-Kompatibilität prüfen; weitere native Bibliotheken haben eigene CPU-Anforderungen.
 
 ## Fehlerbehebung: Piper oder Whisper nicht bereit
 
