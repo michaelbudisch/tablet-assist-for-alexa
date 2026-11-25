@@ -81,10 +81,8 @@
 <TextView style="@style/Body" android:text="@string/wake_description"/>
 <TextView style="@style/Body" android:text="@string/wake_privacy" android:textSize="12sp"/>
 <TextView style="@style/Body" android:text="@string/wake_multiroom_help" android:textSize="12sp"/>
-<TextView style="@style/Body" android:text="@string/wake_slot_label"/>
-<Spinner android:id="@+id/wake_slot" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/wake_slot_label"/>
 <TextView style="@style/Body" android:text="@string/wake_room_label"/>
-<EditText android:id="@+id/wake_room_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:singleLine="true" android:inputType="textCapWords" android:maxLength="35" android:hint="@string/wake_room_hint" android:contentDescription="@string/wake_room_label"/>
+<EditText android:id="@+id/wake_room_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:singleLine="true" android:inputType="textCapWords" android:maxLength="48" android:hint="@string/wake_room_hint" android:contentDescription="@string/wake_room_label"/>
 <TextView android:id="@+id/wake_device_id" style="@style/Body" android:textIsSelectable="true" android:textSize="12sp"/>
 <Spinner android:id="@+id/wake_choice" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/wake_select"/>
 <TextView style="@style/Body" android:text="@string/wake_strict_help" android:textSize="12sp"/>
