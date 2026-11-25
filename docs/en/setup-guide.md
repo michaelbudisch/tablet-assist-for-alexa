@@ -29,6 +29,9 @@ Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has a 
 
 ## Where to configure
 
+**First:** Open **Settings → Apps → TAFA → Configuration** and configure Proxmox/Piper, GPU/Qwen, Alexa MP3, automatic Piper fallback, voice and sound profile. Restart the App. Live **Connection diagnostics** and safe TAFA-only CPU model cleanup are in **Apps → TAFA → Web UI**. Existing HA integration options are not silently replaced.
+
+
 1. Open **Apps → TAFA → Web UI** for status and guidance.
 2. Open **Settings → Devices & services → TAFA → Options** and select **Speech servers & GPU**, **Alexa announcements & HTTPS** or **Data sources & reminders**.
 3. Save to reload TAFA. No extra TAFA API key is needed for GPU/MP3 LAN services; clear GPU URL to disable GPU TTS.
