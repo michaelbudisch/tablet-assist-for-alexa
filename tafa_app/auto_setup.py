@@ -89,7 +89,7 @@ def sync_app_configuration(piper_base, preferences):
             return "changed" if reply.get("result", {}).get("changed") else "unchanged"
 
 
-def ensure_pipeline():
+def ensure_pipeline(external_wyoming=False, configured_stt=""):
     """Create one TAFA Assist pipeline only after all three HA entities exist.
 
     Never replace the preferred pipeline or alter another device's settings.
@@ -116,6 +116,21 @@ def ensure_pipeline():
                         raise RuntimeError("HA API rejected "+kind)
                     return reply.get("result")
         registry=rpc("config/entity_registry/list")
+        if external_wyoming:
+            # The HA integration automatically selects the single Wyoming STT
+            # provider when App cpu_stt is empty. Avoid falsely declaring
+            # native voice ready with zero providers or ambiguous choices.
+            wyoming = [
+                item.get("entity_id") for item in registry
+                if item.get("platform") == "wyoming"
+                and str(item.get("entity_id", "")).startswith("stt.")
+                and not item.get("disabled_by")
+            ]
+            if configured_stt:
+                if configured_stt not in wyoming:
+                    return "waiting_for_external_stt"
+            elif len(wyoming) != 1:
+                return "waiting_for_external_stt"
         def select(domain,suffix):
             matches=[item.get("entity_id") for item in registry
                      if item.get("platform")=="tablet_assist_for_alexa"
@@ -130,9 +145,17 @@ def ensure_pipeline():
         if not all((stt,tts,agent)):
             return "waiting_for_entities"
         pipelines=rpc("assist_pipeline/pipeline/list")
-        if any(str(row.get("name","")).casefold()=="tafa lokal"
-               for row in (pipelines or {}).get("pipelines",[])):
-            return "pipeline_exists"
+        existing = next(
+            (row for row in (pipelines or {}).get("pipelines",[])
+             if str(row.get("name", "")).casefold() == "tafa lokal"), None
+        )
+        if existing is not None:
+            # Do not overwrite user-configured pipelines, but do not claim
+            # a broken or half-configured one is voice-ready, either.
+            required = ("stt_engine", "tts_engine", "conversation_engine")
+            return ("pipeline_exists"
+                    if all(existing.get(key) for key in required)
+                    else "pipeline_needs_review")
         rpc("assist_pipeline/pipeline/create",
             name="TAFA Lokal",language="de",
             conversation_engine=agent,conversation_language="de",

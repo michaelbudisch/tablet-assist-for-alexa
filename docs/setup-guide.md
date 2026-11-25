@@ -94,6 +94,12 @@ Der Browser benötigt eine **vertrauenswürdige HTTPS-Adresse** (oder localhost)
 
 Der Sprachtest ist eine Funktion des **HA-Browsers/Dashboards**. Die Android **Device Bridge 1.0.0** überträgt weiterhin nur das Rufwort-Ereignis, nicht die nachfolgende Frage aus dem Hintergrund.
 
+### Neue Android-Sprachaufnahme (Device Bridge 1.0.1)
+
+Für **Hey Jarvis → Frage → Whisper → Qwen/Piper → Bluetooth** braucht Android die Home-Assistant-Assist-Pipeline **TAFA Lokal** mit drei Komponenten: TAFA-Sprachrouter (Whisper/STT), TAFA-Gesprächsrouter und TAFA-Stream (TTS). Die TAFA-App erstellt diese Pipeline automatisch, sobald alle drei HA-Entitäten vorhanden sind – auch bei **externem Proxmox-Sprachserver**. Vorher zeigt die App **waiting_for_entities** statt fälschlich **external_ready**. Voraussetzung im externen Modus: Wyoming-STT von deinem Sprachserver in Home Assistant einrichten. Ist genau eine Wyoming-STT-Entität vorhanden, wählt TAFA sie automatisch; bei mehreren die gewünschte Entität in **Einstellungen → Apps → TAFA → Konfiguration → cpu_stt** auswählen.
+
+Unter **TAFA → Geräte → Sprachtest** wird angezeigt, ob eine vollständige Assist-Pipeline konfiguriert ist. Das prüft die Konfiguration, **nicht** die Live-Erreichbarkeit von Whisper. Auf Android 1.0.1 dann unter **Rufwort → Native Sprachunterhaltung** den optionalen Modus einschalten; die bestehende Gerätezuordnung und der normale HA-Benutzer-Token bleiben erhalten. Für die native Aufnahme ist kein Browsermikrofon und kein Browser-HTTPS nötig. Lokales HTTP bleibt auf dem Transportweg unverschlüsselt. Die Android-App 1.0.1 muss weiterhin mit dem Original-Signierschlüssel erstellt werden.
+
 ## Wo sind die Einstellungen?
 
 **Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bestehende App-eigene HA-Einträge werden beim Neustart automatisch synchronisiert.

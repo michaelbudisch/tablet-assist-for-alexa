@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA App 0.3.16 / Integration 0.4.8 — Native Spracheingabe vorbereiten
+- Externer Proxmox-Sprachserver: Die App meldet erst dann `external_ready`, wenn eine vollständige Assist-Pipeline angelegt oder vorhanden ist; vorher wird die Einrichtung weiter geprüft.
+- Unvollständige vorhandene Pipeline wird nicht überschrieben, sondern als `pipeline_needs_review` angezeigt.
+- Unter **TAFA → Geräte → Sprachtest** sind die Voraussetzungen für native Android-Sprachaufnahmen (Device Bridge 1.0.1) in DE/EN beschrieben.
+
+
+
 ## TAFA App 0.3.15 / Integration 0.4.7 — Sprachausgabe-Test auch ohne HTTPS
 - Unter **TAFA → Geräte → Sprachtest** gibt es einen **Sprachausgabe testen**-Knopf. Der Testtext wird per Qwen/Piper erzeugt und über den gekoppelten Tablet-/Bluetooth-Player abgespielt. Der Status berücksichtigt die Rückmeldung des Players.
 - Funktioniert auch über HTTP im lokalen Netzwerk, ohne Browsermikrofon. Für **Einmal sprechen** mit Mikrofon bleibt HTTPS erforderlich; der nicht unterstützte Mikrofontest wird bei HTTP durch einen deutlichen Hinweis ersetzt.

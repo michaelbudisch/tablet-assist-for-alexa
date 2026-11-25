@@ -35,7 +35,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.15"
+APP_VERSION="0.3.16"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -95,16 +95,45 @@ def autoconfigure(address, mode="local"):
                     save_state("waiting_for_external_piper", "Check Proxmox Piper /health on the private LAN")
                     time.sleep(20)
                     continue
-                outcome=configure(address,setup_settings())
+                settings = setup_settings()
+                # Always install and synchronize the HA integration first.
+                # Missing STT must NOT prevent Device Bridge pairing or TTS.
+                outcome=configure(address,settings)
                 if outcome in ("configured", "already_configured"):
                     # App Configuration is authoritative even for already-existing
                     # HA entries. Do not require Devices & services options.
-                    sync_app_configuration(address, setup_settings())
-                    pipeline = ensure_pipeline()
-                    save_state("external_ready",
-                               "App settings synchronized; " + pipeline +
-                               ". Wyoming integration is a native HA prerequisite.")
-                    return
+                    sync_app_configuration(address, settings)
+                    # A single Wyoming STT entity can be automatically chosen by
+                    # TAFA's HA settings sync even if App cpu_stt was left blank.
+                    # Validate providers after sync, not raw App options.
+                    pipeline = ensure_pipeline(
+                        external_wyoming=True,
+                        configured_stt=(settings.get("cpu_stt") or
+                                        settings.get("gpu_stt") or ""))
+                    if pipeline in ("pipeline_created", "pipeline_exists"):
+                        save_state("external_ready",
+                                   "App settings synchronized; " + pipeline +
+                                   ". TAFA Lokal Assist pipeline available.")
+                        LOG.info("TAFA external speech / Assist pipeline ready: %s", pipeline)
+                        return
+                    if pipeline == "waiting_for_external_stt":
+                        save_state("waiting_for_external_stt",
+                                   "Connect Wyoming Whisper STT in HA first. TAFA can "
+                                   "auto-select one Wyoming provider, or select its entity "
+                                   "explicitly as cpu_stt under TAFA App Configuration.")
+                    elif pipeline == "waiting_for_entities":
+                        save_state("waiting_for_entities",
+                                   "External Proxmox: add Wyoming STT in Home Assistant, "
+                                   "select its entity in TAFA App Configuration "
+                                   "(cpu_stt), and restart HA if integration was just installed.")
+                    elif pipeline == "pipeline_needs_review":
+                        save_state("pipeline_needs_review",
+                                   "Existing TAFA Lokal pipeline has missing Assist stages; "
+                                   "open HA Settings -> Voice assistants and complete it.")
+                    else:
+                        save_state("waiting_for_pipeline", "Assist pipeline status: " + pipeline)
+                    time.sleep(20)
+                    continue
                 save_state(outcome)
                 time.sleep(20)
                 continue
@@ -221,6 +250,11 @@ def display(message="",lang="de"):
       (t("GPU-Worker / Qwen","GPU worker / Qwen"),
        translations.get(links["gpu"],links["gpu"])+
        (" · v"+links["gpu_version"] if links["gpu_version"] else "")),
+      (t("Lokale KI · Gesprächsassistent","Local AI · conversation agent"),
+       t("Kein KI-Agent ausgewählt; Ollama als HA-Integration hinzufügen und unter Apps → TAFA → Konfiguration bei llm_agent auswählen",
+         "No AI agent selected; add Ollama as an HA integration, then select it in Apps → TAFA → Configuration → llm_agent")
+       if not preferences.get("llm_agent") else
+       t("Ausgewählt (nicht live getestet): ","Selected (not live-tested): ")+preferences["llm_agent"]),
       (t("Piper-Fallback","Piper fallback"),
        translations.get(links["piper"],links["piper"])),
       (t("Sprachweg laut App-Einstellung","Expected App speech route"),
@@ -244,7 +278,7 @@ def display(message="",lang="de"):
         f'<button type="submit" name="action" value="cleanup">{t("TAFA-Sprachmodelle löschen","Delete TAFA speech models")}</button>'
         f'</form>' if mode == "external" and has_cache else "")
     guide = f"""
-<section><h2>{t("Einrichtung in drei Schritten", "Setup in three steps")}</h2>
+<section><h2>{t("Einrichtung in vier Schritten", "Setup in four steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
 <div class="tiles">
 <div class="tile"><strong>1 · {t("Sprachserver", "Speech server")}</strong>
@@ -259,7 +293,12 @@ def display(message="",lang="de"):
 <p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
 </div>
-<div class="tile"><strong>3 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
+<div class="tile"><strong>3 · {t("Text-KI für freie Fragen (Ollama)", "Text AI for open questions (Ollama)")}</strong>
+<p>{t("Qwen-TTS auf Port 10502 spricht nur die Antwort. Für Wissensfragen Ollama auf dem GPU-PC (meist Port 11434) als Home-Assistant-Integration hinzufügen. Dort ein Textmodell wie qwen3:4b-instruct wählen und in Apps → TAFA → Konfiguration bei llm_agent dessen conversation-Entität eintragen. Danach TAFA-App neu starten. Keine automatischen Modelldownloads.",
+"Qwen TTS on port 10502 only speaks the reply. For general questions, add Ollama from the GPU PC (usually port 11434) as a Home Assistant integration, select a text model such as qwen3:4b-instruct, and set llm_agent to its conversation entity in Apps → TAFA → Configuration. Restart TAFA App afterwards. No automatic model downloads.")}</p>
+<a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("Text-KI-Anleitung", "Text AI guide")}</a>
+</div>
+<div class="tile"><strong>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
 <p>{t("Nur für Alexa-MP3-Durchsagen: Generator 5001, temporäre Dateien 8080 und gesonderter öffentlicher HTTPS-Proxy. Bei Bluetooth-Ausgabe an den Echo nicht nötig.", "Only for Alexa MP3 announcements: generator 5001, temporary files 8080, and a separate public HTTPS proxy. Not needed for Echo Bluetooth output.")}</p>
 <p>{t("Einstellungen unter Optionen → Alexa-Durchsagen & HTTPS.", "Configure under Options → Alexa announcements & HTTPS.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}nginx-proxy.md" target="_blank" rel="noopener">{t("HTTPS-Anleitung", "HTTPS guide")}</a>
@@ -308,7 +347,7 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <ol class="steps">
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
 <li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
-<li>{t("Im lokalen Modus wird die TAFA-Lokal-Pipeline automatisch eingerichtet. Im externen Modus zuerst Wyoming-STT und TAFA-Optionen konfigurieren; anschließend die Assist-Pipeline manuell auswählen bzw. erstellen.","Local mode can auto-create the TAFA Lokal pipeline. In external mode configure Wyoming STT and TAFA options first, then create/select the Assist pipeline manually.")}</li>
+<li>{t("Im lokalen Modus wird die TAFA-Lokal-Pipeline automatisch eingerichtet. Im externen Modus Wyoming-STT einrichten; bei genau einer STT-Entität erfolgt die Auswahl automatisch, andernfalls cpu_stt in der TAFA-App wählen. Danach erstellt TAFA die Assist-Pipeline.","Local mode can auto-create the TAFA Lokal pipeline. In external mode configure Wyoming STT and its entity in the TAFA App; TAFA then automatically creates the complete Assist pipeline.")}</li>
 <li>{t("TAFA Device Bridge für Rufwort/Audio verbinden. Die Pipeline in Home Assistant Assist auswählen; die Bridge selbst überträgt keine anschließende Frage.","Connect Device Bridge for wake events/audio. Select the Assist pipeline in Home Assistant; the Bridge does not transmit the following spoken question.")}</li>
 </ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
  · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>

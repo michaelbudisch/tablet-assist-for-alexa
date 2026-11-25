@@ -1,4 +1,4 @@
-# TAFA App 0.3.15 documentation
+# TAFA App 0.3.16 documentation
 
 [Deutsch](../docs/app.md) · [Project overview](../README.md)
 
@@ -62,4 +62,11 @@ This microphone flow runs in the **Home Assistant browser/dashboard**. Android *
 Once the Android audio player shows connected under **TAFA → Devices**, open **Voice test** and click **“Test speech output”**. You can edit the sample phrase, then the selected **TAFA Lokal** Assist pipeline generates speech with Qwen/Piper and sends the result to the paired Android/Bluetooth player. Status shows synthesis, transfer, buffering, playback and final success/error, based on the actual tablet player report. **No browser microphone** is used, so this works on a private HTTP Home Assistant address.
 
 **“Speak once”** remains the full microphone/Assist test, which browsers restrict to trustworthy HTTPS (or localhost). On insecure HTTP the microphone control is replaced by a helpful explanation rather than a broken button. No new Android APK, HA helpers or tokens are required.
+
+
+### New native Android voice capture (Device Bridge 1.0.1)
+
+For **Hey Jarvis → spoken question → Whisper → Qwen/Piper → Bluetooth**, Android needs a complete Home Assistant Assist pipeline, **TAFA Lokal**, with the TAFA speech router (Whisper/STT), conversation router and TAFA stream (TTS). The TAFA App creates it automatically as soon as all three HA entities exist, **including with an external Proxmox speech server**. Until then, the App displays **waiting_for_entities** rather than incorrectly reporting **external_ready**. In external mode, register the speech server's Wyoming STT integration in Home Assistant. TAFA auto-selects one Wyoming STT provider; if multiple are installed, set **cpu_stt** under **Settings → Apps → TAFA → Configuration**.
+
+Under **TAFA → Devices → Voice test** the UI reports whether a complete Assist pipeline is configured. This confirms configuration, **not** live Whisper availability. On Android 1.0.1, explicitly enable the optional mode under **Wakeword → Native voice conversation**. The existing paired room and non-admin HA account token remain in use. Native capture needs no browser microphone or browser HTTPS. Local HTTP transport remains unencrypted. The Android 1.0.1 APK still requires the original signing key.
 

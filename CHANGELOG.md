@@ -1,3 +1,8 @@
+## TAFA App 0.3.16 / integration 0.4.8 — native Android Assist readiness
+- In external Proxmox mode, retain a pending setup status until TAFA Lokal Assist pipeline exists; never report ready before the required HA entities and pipeline are registered.
+- Incomplete existing TAFA Lokal pipelines are preserved and identified as needing review.
+- TAFA Devices guides the optional Android 1.0.1 native microphone setup, clarifying full STT, conversation and TTS requirements.
+
 ## Integration 0.4.0 — unified backend candidate
 - Guided Proxmox installer, recovery wizard and CT console are fully English. Users can choose a validated container hostname (default `tafa-voice`); existing/running CT hostnames are unchanged.
 - Single TAFA integration with native Device Bridge API compatibility, multiroom services, camera/motion and opt-in vision. CPU STT can use the local TAFA App. The existing Android APK is unchanged.

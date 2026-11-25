@@ -79,3 +79,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **New: integrated voice test.** Under **TAFA → Devices → Voice test**, speak through the browser microphone and listen to the Qwen/Piper response on the paired tablet. Requires trusted HTTPS and a full Assist pipeline; Android app unchanged. [Instructions](docs/en/setup-guide.md).
 
 **New in App 0.3.15 / integration 0.4.7:** **TAFA → Devices → Voice test** includes audio-only Qwen/Piper to Android playback verification that works on local HTTP. The full microphone test still requires HTTPS. [Guide](docs/en/setup-guide.md).
+
+**New in TAFA 0.3.16 / integration 0.4.8:** External Proxmox setup checks for Wyoming STT and a complete Assist pipeline before reporting ready. A single Wyoming STT provider is selected automatically; with multiple providers, choose `cpu_stt` in TAFA App Configuration. See the optional native Android 1.0.1 microphone setup under **TAFA → Devices**. [Setup](docs/en/setup-guide.md).

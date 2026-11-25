@@ -79,3 +79,5 @@ Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergelad
 **Neu: Sprachtest ohne YAML.** Unter **TAFA → Geräte → Sprachtest** lässt sich eine Frage über das Browser-Mikrofon stellen und die Qwen/Piper-Antwort auf dem verbundenen Tablet hören. Benötigt HTTPS und die vollständige TAFA Lokal-Pipeline. Die Android-App bleibt unverändert. [Anleitung](docs/setup-guide.md).
 
 **Neu in App 0.3.15 / Integration 0.4.7:** Unter **TAFA → Geräte → Sprachtest** kannst du die Sprachausgabe auf dem verbundenen Tablet auch ohne HTTPS testen. Der separate Mikrofontest benötigt weiterhin HTTPS. [Anleitung](docs/setup-guide.md).
+
+**Neu in TAFA 0.3.16 / Integration 0.4.8:** Bei externen Proxmox-Sprachservern prüft TAFA die Wyoming-STT-Anbindung und die vollständige Assist-Pipeline, bevor die Einrichtung als bereit gilt. Eine einzelne Wyoming-STT-Entität wird automatisch gewählt, bei mehreren `cpu_stt` konfigurieren. Die optionale native Android-1.0.1-Sprachaufnahme wird unter **TAFA → Geräte** erklärt. [Einrichtung](docs/setup-guide.md).
