@@ -26,7 +26,8 @@ import java.util.concurrent.TimeUnit;
  * Raw microphone audio and ordinary speech are never uploaded or saved.
  */
 public final class WakeWordService extends Service implements RecognitionListener {
-    static final String START="de.jarvis.audio.WAKE_START",STOP="de.jarvis.audio.WAKE_STOP";
+    static final String START="de.jarvis.audio.WAKE_START",STOP="de.jarvis.audio.WAKE_STOP",
+        NATIVE_SETTINGS="de.jarvis.audio.NATIVE_SETTINGS";
     static volatile boolean running=false;
     static volatile String status="off";
     private static final String CHANNEL="jarvis-wake",TAG="JarvisWake";
@@ -44,6 +45,10 @@ public final class WakeWordService extends Service implements RecognitionListene
     private SpeechService speech;
     private long holdUntil=0,lastHit=0;
     private final Runnable rearm=this::startRecognition;
+    private NativeAssistSession nativeSession;
+    private String nativeConversationId="";
+    private int nativeFollowupCount=0;
+    private final Runnable followup=()->beginNativeAssist("",true);
 
     @Override public IBinder onBind(Intent intent){return null;}
 
@@ -72,6 +77,15 @@ public final class WakeWordService extends Service implements RecognitionListene
         if(intent!=null&&STOP.equals(intent.getAction())){
             enabled=false;
             stopSelf();
+            return START_NOT_STICKY;
+        }
+        if(intent!=null&&NATIVE_SETTINGS.equals(intent.getAction())){
+            if(nativeSession!=null){
+                nativeSession.close();nativeSession=null;
+                main.removeCallbacks(followup);nativeConversationId="";
+                holdUntil=0;
+                if(!muted)main.postDelayed(rearm,350);
+            }
             return START_NOT_STICKY;
         }
         if(enabled)return START_NOT_STICKY;
@@ -154,19 +168,22 @@ public final class WakeWordService extends Service implements RecognitionListene
             if(!muted||speech!=null){
                 muted=true;
                 releaseRecognizer();
+                if(nativeSession!=null){nativeSession.close();nativeSession=null;}
+                main.removeCallbacks(followup);
+                nativeConversationId="";nativeFollowupCount=0;
                 triggerGate.reset();
             }
             status="muted";
         }else{
             boolean wasMuted=muted;
             muted=false;
-            if(wasMuted||speech==null)startRecognition();
+            if(nativeSession==null&&(wasMuted||speech==null))startRecognition();
         }
     }
 
     private void startRecognition(){
         main.removeCallbacks(rearm);
-        if(!enabled||model==null||loading||muted)return;
+        if(!enabled||model==null||loading||muted||nativeSession!=null)return;
         long remaining=holdUntil-SystemClock.elapsedRealtime();
         if(remaining>0){
             main.postDelayed(rearm,Math.max(500,remaining));
@@ -211,12 +228,74 @@ public final class WakeWordService extends Service implements RecognitionListene
         long now=SystemClock.elapsedRealtime();
         if(now-lastHit<cooldownSeconds*1000L)return;
         triggerGate.reset();
-        lastHit=now;holdUntil=now+holdSeconds*1000L;
-        // Release microphone BEFORE telling the browser to start its STT pipeline.
+        lastHit=now;
+        // Release the Vosk recorder before opening a separate native recorder.
         releaseRecognizer();
         status="detected: "+hit;
-        sendWakeEvent(hit);
-        main.postDelayed(rearm,holdSeconds*1000L);
+        var prefs=getSharedPreferences(MainActivity.PREF,0);
+        boolean nativeEnabled=prefs.getBoolean("native_assist_enabled",false)
+            &&prefs.getBoolean("room_audio_enabled",false);
+        if(nativeEnabled){
+            holdUntil=0;
+            nativeConversationId="";nativeFollowupCount=0;
+            // Native mode owns the entire turn. Do not wake the browser as well.
+            main.postDelayed(()->beginNativeAssist(hit,false),250);
+        }else{
+            holdUntil=now+holdSeconds*1000L;
+            sendWakeEvent(hit);
+            main.postDelayed(rearm,holdSeconds*1000L);
+        }
+    }
+
+    /** Launch only while the explicitly started foreground wake service runs. */
+    private void beginNativeAssist(String hit,boolean nextQuestion){
+        if(!enabled||muted||nativeSession!=null)return;
+        var prefs=getSharedPreferences(MainActivity.PREF,0);
+        if(!prefs.getBoolean("native_assist_enabled",false)||
+                !prefs.getBoolean("room_audio_enabled",false)){
+            holdUntil=0;main.postDelayed(rearm,300);return;
+        }
+        status=nextQuestion?"native_followup":"native_connecting";
+        NativeAssistSession session=new NativeAssistSession(this,hit,
+            nextQuestion?nativeConversationId:"",
+            prefs.getInt("native_pause_ms",1700),nextQuestion,
+            new NativeAssistSession.Listener(){
+                @Override public void state(String stage){
+                    main.post(()->{
+                        if(enabled&&nativeSession==session){
+                            status="native_"+stage;
+                            NotificationManager manager=getSystemService(NotificationManager.class);
+                            if(manager!=null)manager.notify(43,notification());
+                        }
+                    });
+                }
+                @Override public void finished(boolean answered,String conversationId){
+                    main.post(()->{
+                        if(nativeSession!=session)return;
+                        nativeSession=null;
+                        if(!enabled||muted)return;
+                        if(answered){
+                            nativeConversationId=conversationId;
+                            status="native_answer_completed";
+                        }else {
+                            nativeConversationId="";
+                            status="native_no_reply";
+                        }
+                        if(answered&&prefs.getBoolean("native_followup_enabled",false)
+                                &&nativeFollowupCount<2){
+                            nativeFollowupCount++;
+                            main.removeCallbacks(followup);
+                            main.postDelayed(followup,850);
+                        }else {
+                            nativeFollowupCount=0;
+                            holdUntil=0;
+                            main.postDelayed(rearm,650);
+                        }
+                    });
+                }
+            });
+        nativeSession=session;
+        session.start();
     }
 
     @Override public void onPartialResult(String text){candidate(text,"partial");}
@@ -252,6 +331,8 @@ public final class WakeWordService extends Service implements RecognitionListene
     @Override public void onDestroy(){
         enabled=false;running=false;muted=true;
         main.removeCallbacks(rearm);
+        main.removeCallbacks(followup);
+        if(nativeSession!=null){nativeSession.close();nativeSession=null;}
         if(settingsExecutor!=null){settingsExecutor.shutdownNow();settingsExecutor=null;}
         releaseRecognizer();
         if(model!=null){try{model.close();}catch(Exception ignored){}model=null;}
