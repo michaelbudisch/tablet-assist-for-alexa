@@ -25,6 +25,7 @@ Device Bridge 1.0.0 sends the recognized wake word and releases its microphone b
 - One HA integration provides STT, TTS, conversation, native wake-device registry, authenticated compatibility API, multiroom audio, optional cameras/motion and vision services.
 - The App contains **local German Piper and Faster-Whisper CPU engines**. Their downloaded models persist in the HA App's `/data` volume. They listen on the internal app network; no public port is mapped.
 - The GPU worker, Ollama and Alexa MP3/HTTPS notifications remain optional and must be configured separately.
+- **Alexa Devices MP3 tip (confirmed in a real TAFA test):** For Qwen MP3 audio, map `Alexa rooms (JSON)` to the **Speak** Notify entity (`notify.…_sprechen`), not **Announce** (`notify.…_durchsagen`). The latter can play only the Alexa chime even when ordinary text works. Example: `{"Büro":{"notify":"notify.buro_dot_sprechen"}}`. Verify your Echo's actual entity ID in Home Assistant. See [Alexa MP3 setup and troubleshooting](../docs/en/setup-guide.md#3-optional-alexa-mp3-announcements-over-https).
 - This App does not install the private TAFA dashboard or modify Android/APK source.
 
 ## Updates, safety and limitations
