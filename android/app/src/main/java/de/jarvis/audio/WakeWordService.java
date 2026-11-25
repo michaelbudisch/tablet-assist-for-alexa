@@ -35,8 +35,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     private boolean enabled=false,loading=false,muted=true;
     private String wordChoice="hey_jarvis";
     private int strictness=1,cooldownSeconds=12,holdSeconds=50;
-    private String pendingHit=null;
-    private int pendingCount=0;
+    private final WakeTriggerGate triggerGate=new WakeTriggerGate();
     private ScheduledExecutorService settingsExecutor;
     private long lastFullSync=0;
     private Model model;
@@ -153,7 +152,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             if(!muted||speech!=null){
                 muted=true;
                 releaseRecognizer();
-                pendingHit=null;pendingCount=0;
+                triggerGate.reset();
             }
             status="muted";
         }else{
@@ -205,13 +204,11 @@ public final class WakeWordService extends Service implements RecognitionListene
         String transcript;
         try{transcript=new JSONObject(json).optString(key,"");}catch(Exception e){return;}
         String hit=WakeWordMatcher.matched(transcript,wordChoice);
-        if(hit==null){pendingHit=null;pendingCount=0;return;}
-        if(hit.equals(pendingHit))pendingCount++;
-        else{pendingHit=hit;pendingCount=1;}
-        if(pendingCount<strictness)return;
+        if(hit==null){triggerGate.reset();return;}
+        if(!triggerGate.confirm(hit,strictness))return;
         long now=SystemClock.elapsedRealtime();
         if(now-lastHit<cooldownSeconds*1000L)return;
-        pendingHit=null;pendingCount=0;
+        triggerGate.reset();
         lastHit=now;holdUntil=now+holdSeconds*1000L;
         // Release microphone BEFORE telling the browser to start its STT pipeline.
         releaseRecognizer();
