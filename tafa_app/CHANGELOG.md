@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.17 — first Ollama question no longer blocked
+- Fix TAFA conversation router incorrectly rejecting Home Assistant ConversationEntity state `unknown` (the normal state before its first message). The first voice question now reaches the selected Ollama agent.
+- Hardware profile `cpu` selects Piper TTS and must not independently disable an otherwise configured Ollama text agent.
+- A missing/self-referencing agent and `unavailable` state continue to report setup/unavailability; no silent network probing or automatic model downloads.
+- App 0.3.17 bundles integration 0.4.9; Android Device Bridge APK remains unchanged. Tested with isolated availability regressions.
+
+
+
 ## 0.3.16 — complete native Assist pipeline readiness for Proxmox users
 - External Proxmox mode no longer reports `external_ready` when the `TAFA Lokal` Assist pipeline is missing; it retries configuration after Wyoming STT/entities become available (with automatic selection of a single Wyoming STT provider).
 - Existing `TAFA Lokal` pipeline is preserved; an incomplete STT/conversation/TTS configuration shows `pipeline_needs_review` rather than false success.
