@@ -16,9 +16,10 @@ CT_HOSTNAME="${CT_HOSTNAME:-jarvis-speechserver}"
 }
 [[ "$CT_HOSTNAME" != localhost ]] || { echo 'Hostname localhost is reserved.' >&2; exit 2; }
 printf 'New CT %s (%s; 4 vCPU, 4 GiB RAM, 20 GiB disk, DHCP) on %s. Type the CT ID to confirm: ' "$ID" "$CT_HOSTNAME" "$BRIDGE"
+printf 'Proxmox will securely prompt for the new CT root password during creation.\n'
 read -r confirm </dev/tty
 [[ "$confirm" == "$ID" ]] || exit 1
-pct create "$ID" "$TEMPLATE" --hostname "$CT_HOSTNAME" --unprivileged 1 --cores 4 --memory 4096 --swap 1024 --rootfs "$STORE:20" --net0 "name=eth0,bridge=$BRIDGE,ip=dhcp" --onboot 1
+pct create "$ID" "$TEMPLATE" --hostname "$CT_HOSTNAME" --unprivileged 1 --cores 4 --memory 4096 --swap 1024 --rootfs "$STORE:20" --net0 "name=eth0,bridge=$BRIDGE,ip=dhcp" --onboot 1 --password
 pct start "$ID"
 ARCHIVE=$(mktemp --suffix=.tar.gz)
 trap 'rm -f "$ARCHIVE"' EXIT
