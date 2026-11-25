@@ -162,3 +162,82 @@ export function renderAudioPairing({container,hass,device,audio,language,onChang
   };
   wrap.append(btn);container.append(wrap);
 }
+
+
+/** The proven room Assist flow, now exposed as a self-test in TAFA → Devices.
+ * Works with the current HA room-account token, or through a scoped
+ * administrator test of the exact room shown on the registered tablet.
+ */
+export function renderSpeechTest({container,hass,device,audio,pipelines,language}){
+  const de=language==="de";
+  const title=de?"Sprachtest · Einmal sprechen":"Voice test · Speak once";
+  const wrap=el("details");
+  wrap.style.cssText="margin:16px 0;padding:12px;border:1px solid var(--divider-color);border-radius:12px";
+  const summary=el("summary",title);
+  summary.style.cssText="font-weight:600;cursor:pointer;padding:8px 0";
+  wrap.append(summary);
+  const body=el("div");
+  body.style.cssText="display:grid;gap:10px;padding:10px 0";
+  wrap.append(body);
+  const choices=Array.isArray(pipelines)?pipelines.filter(p=>p?.id&&p?.stt_engine&&p?.tts_engine):[];
+  const devices=Array.isArray(audio?.devices)?audio.devices:[];
+  const rooms=Array.isArray(audio?.rooms)?audio.rooms:[];
+  const owner=devices.find(d=>d.device_id===device.device_id)?.owner_user_id||"";
+  const ownerDevices=devices.filter(d=>d.owner_user_id===owner);
+  const current=rooms.find(r=>r.wake_device_id===device.device_id)||
+    (owner&&ownerDevices.length===1?rooms.find(r=>r.user_id===owner&&!r.wake_device_id):null);
+  const admin=Boolean(hass.user?.is_admin);
+  if(admin&&!current){
+    body.append(el("p",de?
+      "Bitte zuerst unter Multiroom-Audio einen Raum mit diesem Tablet verbinden.":
+      "First connect this tablet to a room under Multiroom audio."));
+    container.append(wrap);return;
+  }
+  if(!choices.length){
+    body.append(el("p",de?
+      "Keine vollständige Assist-Pipeline (Whisper + TTS) gefunden. Richte zuerst TAFA Lokal unter Sprachassistenten ein.":
+      "No complete Assist pipeline (speech recognition + TTS) found. Configure TAFA Lokal in Voice assistants first."));
+    const link=el("a",de?"Sprachassistenten öffnen":"Open Voice assistants");
+    link.href="/config/voice-assistants";body.append(link);container.append(wrap);return;
+  }
+  const help=el("p",de?
+    "Wie im bisherigen Dashboard: Mikrofon aktivieren, Frage sprechen, Whisper erkennt sie und Qwen/Piper antwortet über den gekoppelten Tablet-Player.":
+    "Same as the original dashboard: activate the mic, ask a question, Whisper transcribes it and Qwen/Piper responds on the paired tablet player.");
+  body.append(help);
+  if(typeof window!=="undefined"&&!window.isSecureContext){
+    body.append(el("p",de?
+      "Mikrofontest benötigt eine vertrauenswürdige HTTPS-Adresse (oder localhost).":
+      "Microphone test requires trusted HTTPS (or localhost)."));
+  }
+  const label=el("label",de?"Assist-Pipeline":"Assist pipeline");
+  label.style.cssText="display:grid;gap:6px";
+  const select=el("select");
+  const preferred=choices.find(p=>/tafa lokal/i.test(p.name||"")&&/tablet_assist.*stream/.test(p.tts_engine||""))
+    ||choices.find(p=>/tafa/i.test(p.name||"")&&/tablet_assist.*stream/.test(p.tts_engine||""))
+    ||choices.find(p=>/tablet_assist.*stream/.test(p.tts_engine||""))
+    ||choices[0];
+  for(const p of choices){
+    const opt=el("option",p.name||p.id);
+    opt.value=p.id;select.append(opt);
+  }
+  select.value=preferred.id;label.append(select);body.append(label);
+  const holder=el("div");body.append(holder);
+  const mount=()=>{
+    holder.replaceChildren();
+    if(!wrap.open)return;
+    const card=el("tafa-room-assist-test");
+    holder.append(card);
+    card.setConfig({
+      title: de?"TAFA · Sprachtest":"TAFA · Voice test",
+      instance_id:"tafa-test-"+device.device_id,
+      pipeline_id:select.value,
+      admin_room:admin?current.room:undefined,
+      device_id:device.device_id,
+      output:"native_audio"
+    });
+    card.hass=hass;
+  };
+  select.onchange=mount;
+  wrap.addEventListener("toggle",()=>{if(wrap.open)mount();else holder.replaceChildren();});
+  container.append(wrap);
+}
