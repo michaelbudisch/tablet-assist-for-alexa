@@ -1,4 +1,4 @@
-# Optional AI computer — GPU worker 1.9.0
+# Optional AI computer — GPU worker 2.2.0
 
 **English** | [Deutsch](../worker.md) · [Project overview](../../README.md)
 

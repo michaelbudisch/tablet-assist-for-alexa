@@ -4,6 +4,8 @@
 
 **TAFA App 0.3.7 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
 
+**Neu:** [Geführte Einrichtung für TAFA lokal, Proxmox, GPU-Worker und Alexa-MP3](setup-guide.md). Alle drei Bereiche sind über **TAFA → Optionen** getrennt erreichbar.
+
 ## Installation mit einer App
 
 1. Home-Assistant-Sicherung erstellen. Für die erste Bereitstellung möglichst eine frische Testinstallation nutzen.

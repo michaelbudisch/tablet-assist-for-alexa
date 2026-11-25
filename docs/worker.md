@@ -1,4 +1,4 @@
-# Optionaler KI-Zusatzrechner – Original-Worker v1.9.0
+# Optionaler KI-Zusatzrechner – GPU Worker 2.2.0
 
 [English](en/worker.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 

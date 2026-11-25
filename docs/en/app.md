@@ -4,6 +4,8 @@
 
 **TAFA App 0.3.7 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
 
+**New:** [Guided setup for TAFA local, Proxmox, GPU worker and Alexa MP3](setup-guide.md). All three areas now have separate **TAFA → Options** screens.
+
 ## One-App setup
 
 1. Create a Home Assistant backup. Prefer a clean test instance for the first deployment.

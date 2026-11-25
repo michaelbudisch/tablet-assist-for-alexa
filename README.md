@@ -8,6 +8,8 @@
 
 > **Release candidate / developer preview:** TAFA Home Assistant App **0.3.7**, integrated HA component **0.4.1**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
+**[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
+
 ## Quick start — Home Assistant OS
 
 1. Create a Home Assistant backup. Use a test installation first.
