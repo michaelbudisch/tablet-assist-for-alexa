@@ -1,10 +1,10 @@
-# Optionaler KI-Zusatzrechner – GPU Worker 2.2.1
+# Optionaler KI-Zusatzrechner – GPU Worker 2.2.2
 
 [English](en/worker.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 > **Schema-Update zu Worker 1.9.0:** Der lokale `/detect`-Endpunkt liefert zusätzlich `genders` mit den groben, unsicheren Erscheinungskategorien `man`, `woman`, `unknown`. Keine tatsächliche Geschlechts- oder Identitätsfeststellung. Vorhandene `.env` und Modellvolumes beibehalten, nur Vision neu bauen; HA-Backend gemeinsam aktualisieren. [HA-Automationen](ha-automations.md).
 
-Enthalten ist der Jarvis GPU Worker 2.2.1 mit tokenfreier LAN-Kommunikation und vereinfachter Windows-Einrichtung. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
+Enthalten ist der Jarvis GPU Worker 2.2.2 mit tokenfreier LAN-Kommunikation und vereinfachter Windows-Einrichtung. Modelle sind nicht enthalten; beim ersten Build/Start werden sie separat geladen. Windows: Docker Desktop mit WSL2 und NVIDIA-Treiber. Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Genügend SSD-Speicher für Modelle einplanen. Zugriff nur im vertrauenswürdigen privaten Netz; Ports nicht ins Internet freigeben. GPU-Inferenz und Linux-Setup sind in dieser Vorschau nicht Ende-zu-Ende getestet.
 
 ## 1. Konfiguration
 
