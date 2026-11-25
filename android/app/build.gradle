@@ -2,7 +2,7 @@ plugins { id 'com.android.application' }
 android {
     namespace 'de.jarvis.audio'
     compileSdk 35
-    defaultConfig { applicationId 'de.jarvis.audio'; minSdk 28; targetSdk 34; versionCode 12; versionName '0.9.0' }
+    defaultConfig { applicationId 'de.jarvis.audio'; minSdk 28; targetSdk 34; versionCode 13; versionName '1.0.0' }
     buildFeatures { buildConfig true }
     defaultConfig { testInstrumentationRunner 'de.jarvis.audio.UiSmokeInstrumentation' }
     buildTypes {

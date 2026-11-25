@@ -1,9 +1,12 @@
-# HA Jarvis Echo Relay 0.9.0 · Dynamic multiroom
+# TAFA Device Bridge 1.0.0
 
-Unlimited Android Wake Pilot installations can now register with a persistent random device ID and a friendly room name. Home Assistant maintains independent settings for every enrolled device without manually creating helpers or reserving fixed slots.
+Based on Android 0.9.0, source 9cf27e7691a7340f98424ef044583f26528f2546.
 
-In TAFA → Jarvis → Voice & Audio, refresh the registered-device list, select and pair the desired tablet with the dashboard, then edit its mute state, wakeword, sensitivity confirmations, cooldown and microphone handoff. The central HA API selects the first arriving simultaneous wakeword within a three-second window; this is not acoustic localization.
+- New product name, approved cyan/mint identity, adaptive and monochrome app icon, and notification symbol.
+- Status, Connect, Wakeword and Help navigation. Grouped camera controls, expandable advanced settings and consistently themed dropdowns.
+- German/English setup guidance; language changes retain the selected section and expanded options. Unsaved tokens remain in memory only.
+- Dynamic device identity and per-device HA settings from 0.9.0 retained.
 
-**Experimental test branch:** Validate on real Android devices. Existing Echo Relay audio routing is unaffected, and the separate debug APK is named **HA Jarvis Echo Relay (Test)** and does not replace the signed, regularly released app.
+Install TAFA-Device-Bridge-1.0.0.apk over the existing signed app. Original app ID de.jarvis.audio, certificate, encryption alias, device ID and preferences remain; version code 13.
 
-The Android package ID remains `de.jarvis.audio`. A directly installable update must be signed with the original 0.7.1 signing key; the release process checks the signing certificate.
+Local validation covers build, JVM tests, lint, phone/tablet UI and signing/package checks. Physical Bluetooth and multi-tablet testing remain outstanding. Matching HA backend and TAFA dashboard are still required.

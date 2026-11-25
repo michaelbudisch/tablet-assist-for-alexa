@@ -1,4 +1,4 @@
-name: HA Jarvis Echo Relay 0.9.0 Android Update
+name: TAFA Device Bridge Android Build
 on:
   push:
     branches: ['feature/native-wakeword-0.7.0']
@@ -22,7 +22,7 @@ jobs:
           packages: platform-tools
           log-accepted-android-sdk-licenses: false
       - name: Android SDK
-        run: sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
+        run: sdkmanager 'platforms;android-35' 'build-tools;36.0.0'
       - name: Build release, unit tests and lint
         working-directory: android
         run: ./gradlew :app:assembleRelease :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest --no-daemon --no-problems-report
@@ -32,10 +32,10 @@ jobs:
           set -euo pipefail
           apk=android/app/build/outputs/apk/release/app-release-unsigned.apk
           test -f "$apk"
-          pkg="$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$apk" | grep '^package:')"
+          pkg="$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep '^package:')"
           echo "$pkg"
           [[ "$pkg" == *"name='de.jarvis.audio'"* ]]
-          [[ "$pkg" == *"versionName='0.9.0'"* ]]
+          [[ "$pkg" == *"versionName='1.0.0'"* ]]
       - name: Sign only with original 0.7.1 certificate
         shell: bash
         env:
@@ -53,35 +53,33 @@ jobs:
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
           printf '%s' "$HA_JARVIS_ANDROID_KEYSTORE_BASE64" | base64 -d > "$tmp/original.jks"
-          tools="$ANDROID_HOME/build-tools/34.0.0"
-          old="android/downloads/HA-Jarvis-Echo-Relay-0.7.1.apk"
+          tools="$ANDROID_HOME/build-tools/36.0.0"
           unsigned="android/app/build/outputs/apk/release/app-release-unsigned.apk"
-          target="android/dist/HA-Jarvis-Echo-Relay-0.9.0.apk"
-          test -f "$old"
-          "$tools/zipalign" -f -p 4 "$unsigned" "$tmp/aligned.apk"
+          target="android/dist/TAFA-Device-Bridge-1.0.0.apk"
+          "$tools/zipalign" -P 16 -f 4 "$unsigned" "$tmp/aligned.apk"
           "$tools/apksigner" sign --ks "$tmp/original.jks" --ks-key-alias "$HA_JARVIS_ANDROID_KEY_ALIAS" \
              --ks-pass env:HA_JARVIS_ANDROID_STORE_PASSWORD --key-pass env:HA_JARVIS_ANDROID_KEY_PASSWORD \
              --out "$target" "$tmp/aligned.apk"
           "$tools/apksigner" verify --verbose "$target"
-          old_cert="$("$tools/apksigner" verify --print-certs "$old" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | tr -d '\r')"
+          old_cert="3f3949b442ccda37ca1b779a14c1161b5a0f6139f35f3808780e607862b58281"
           new_cert="$("$tools/apksigner" verify --print-certs "$target" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | tr -d '\r')"
           if [[ -z "$old_cert" || "$old_cert" != "$new_cert" ]]; then
             rm -f "$target"
             echo "::error::Wrong signing certificate. Refusing incompatible Android update."
             exit 1
           fi
-          (cd android/dist && sha256sum HA-Jarvis-Echo-Relay-0.9.0.apk > SHA256SUMS)
+          (cd android/dist && sha256sum TAFA-Device-Bridge-1.0.0.apk > SHA256SUMS)
           echo "::notice::Verified same signing certificate as 0.7.1; direct update supported."
       - name: Upload compatible signed APK
-        if: ${{ hashFiles('android/dist/HA-Jarvis-Echo-Relay-0.9.0.apk') != '' }}
+        if: ${{ hashFiles('android/dist/TAFA-Device-Bridge-1.0.0.apk') != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: HA-Jarvis-Echo-Relay-0.9.0-signed
+          name: TAFA-Device-Bridge-1.0.0-signed
           path: |
-            android/dist/HA-Jarvis-Echo-Relay-0.9.0.apk
+            android/dist/TAFA-Device-Bridge-1.0.0.apk
             android/dist/SHA256SUMS
       - name: Upload unsigned candidate for existing private signer
         uses: actions/upload-artifact@v4
         with:
-          name: HA-Jarvis-Echo-Relay-0.9.0-unsigned
+          name: TAFA-Device-Bridge-1.0.0-unsigned
           path: android/app/build/outputs/apk/release/app-release-unsigned.apk

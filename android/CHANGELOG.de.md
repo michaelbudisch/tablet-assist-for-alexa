@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 1.0.0 · TAFA Device Bridge
+
+- Neuer Name und freigegebenes Cyan-/Mint-Design mit adaptiven App-Icons.
+- Status, Verbinden, Rufwort und Hilfe; gegliederte Kamera und aufklappbare Feineinstellungen.
+- Einheitliche Auswahlmenüs, lokalisierte Hilfe und Erhalt des UI-Zustands beim Sprachwechsel.
+- Bisherige App-ID und Signatur; Versionscode 13. Dynamisches Multiroom aus 0.9.0 erhalten.
+
 ## 0.9.0 · Unbegrenzte dynamische Multiroom-Geräte
 
 - App-Name **HA Jarvis Echo Relay**, bisherige App-ID `de.jarvis.audio` und Versionsfolge `0.7.1 → 0.8.0 → 0.9.0`. Die aktualisierbare Release-APK wird mit dem originalen Zertifikat von 0.7.1 geprüft.

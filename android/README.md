@@ -1,122 +1,60 @@
-# HA Jarvis Echo Relay · Android 0.9.0 (experimental)
+# TAFA Device Bridge · Android 1.0.0
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-A native audio bridge from Home Assistant through an Android device to a Bluetooth speaker, including Amazon Echo. Android 9+. Native wakeword recognition is optional, switched off by default, and requires explicit microphone consent. No automatic startup after reboot.
+The Android companion for TAFA: Home Assistant audio through Bluetooth, optional offline wakeword recognition and camera transmission. Android 9+.
 
-![English tablet interface](docs/ui-en-tablet.png)
+![TAFA Device Bridge](docs/branding/tafa-device-bridge-logo.png)
 
 ## Download and update
 
-[Download the last regular 0.7.1 release](downloads/HA-Jarvis-Echo-Relay-0.7.1.apk). Verify it with [downloads/SHA256SUMS](downloads/SHA256SUMS).
+Signed build: **TAFA-Device-Bridge-1.0.0.apk**, with accompanying SHA256SUMS. Install over the existing signed **HA Jarvis Echo Relay** app.
 
-**Install the signed regular release over the existing app** to keep its address and encrypted token. The application ID `de.jarvis.audio`, encryption alias and preference format remain unchanged; the regular app keeps the name **HA Jarvis Echo Relay**.
+The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Version code increases to **13**. Do not uninstall before updating. The Home Assistant backend continues using its existing Echo Relay / Jarvis Tablet Audio identifiers.
 
-Only an APK signed with the **original 0.7.1 keystore** can update the existing installation without uninstalling. Before publishing, the 0.9.0 signing certificate must be checked against the signed 0.7.1 APK. Unsigned and differently signed CI builds are not installable updates.
+## Find your settings
 
-## Experimental offline wakeword (0.7.0 branch)
+- **Status:** audio connection, player controls, microphone state and camera shortcut.
+- **Connect:** HA address, token QR scan, Bluetooth and room audio; keepalive is inside the expandable Bluetooth options.
+- **Wakeword:** offline model, recognition controls, device/room name and expandable fine-tuning.
+- **Help:** setup tips, background operation, diagnostics and credential removal.
 
-Enable **Native wakeword recognition** in the Echo Relay app only after downloading the optional German speech model (~45 MB) and granting microphone permission. Select **Hey Jarvis**, **Jarvis**, **Alexa**, or **All three** and press **Start native wakeword**. Android displays an ongoing foreground-service notification with a **Stop** control; you can also stop it in the app. The model is downloaded from Alpha Cephei over HTTPS to private app storage.
-
-The app recognizes wakewords locally, publishes only the recognized phrase using the configured authenticated Home Assistant connection as a `jarvis_android_wakeword` event, releases its microphone, and pauses detection for 50 seconds. The Home Assistant dashboard listens to the event and starts its existing Whisper STT capture. Keep the dashboard visible and turn off its own wakeword mode for the first tests; speech immediately following the wakeword may be cut off until the browser microphone is ready. There is no guarantee of working hands-free operation while the dashboard is closed. **Alexa** may simultaneously activate a real Echo.
-
-This is an experimental source branch, not a signed downloadable 0.7.0 APK. The GitHub Actions **debug APK** uses a separate application ID (`de.jarvis.audio.wakepilot`) and is labeled **HA Jarvis Echo Relay**, allowing installation alongside the stable signed Echo Relay app. It has separate settings and needs its own Home Assistant connection. **In the pilot, enter the HA address/token and press only “Start native wakeword”**; that button saves the encrypted connection itself. Do not start a second Echo Relay player alongside the stable app. Detection reliability, processing time and Android microphone coexistence are unverified.
-
-### Native microphone and wakeword settings (0.7.1)
-
-All controls are available in the pilot app and through Home Assistant helpers. In TAFA settings, the top-right microphone icon may optionally be switched to **Native App** mode, where clicking it toggles actual Android microphone mute/unmute. Mute releases `AudioRecord`; it does not merely suppress incoming wakeword events.
-
-- `input_boolean.jarvis_native_wake_stumm`: on = microphone muted/off
-- `input_select.jarvis_native_wake_rufwort`: Hey Jarvis / Jarvis / Alexa / All three
-- `input_number.jarvis_native_wake_erkennungsstrenge`: 1–3 consecutive Vosk hypothesis confirmations
-- `input_number.jarvis_native_wake_sperrzeit`: 3–30 seconds
-- `input_number.jarvis_native_wake_aufnahmeubergabe`: 10–90 seconds after-detection pause to yield the microphone to Whisper
-
-Values synchronize with Home Assistant; remote mute normally takes effect within three seconds. If HA settings cannot be reached, the microphone fails closed. This Vosk integration does not provide a calibrated acoustic volume (dB) threshold. Debug APK signing can change between CI runs, potentially requiring uninstall/reinstall, fresh login and model download.
-
-### Unlimited tablets · Dynamic multiroom (0.9.0)
-
-1. Install **HA Jarvis Echo Relay 0.9.0** on each Android tablet. Optionally set a room name; a stable random installation ID is created automatically.
-2. Configure the HA connection, install the offline model and choose **Start native wakeword**. The app automatically enrolls in Home Assistant. There are no numbered slots or manually created helper entities.
-3. In **TAFA → Jarvis → Voice & Audio → Native wakeword**, click **Refresh devices**, select the tablet, then **Pair selected tablet to this dashboard** (or pair by speaking the wakeword).
-4. Each tablet has independent mute, phrase, strictness, cooldown and handoff settings. The top-right microphone controls only the dashboard-paired tablet. Rooms/devices can be renamed and removed from TAFA.
-5. If two tablets hear the same wakeword, HA accepts only the first arriving event and suppresses further candidates for three seconds. This does not measure acoustic distance. Keep Room Audio or appropriate room accounts for separate playback targets.
-6. Removing a device causes its microphone to fail closed until the user explicitly starts and enrolls the app again.
-
-**Note:** Requires the updated Jarvis Tablet Audio integration and Wake Pilot 0.9.0. Earlier experimental 0.7.x and 0.8.0 clients use older routing; unused fixed-slot helpers can be cleaned up after successful migration.
+Choose German or English in the header. Section changes retain unsaved input; a language change retains an unsaved token in memory only.
 
 ## Setup
 
-1. **Connect the Echo.** Pair it in Android Bluetooth settings and enable media audio. Test ordinary music playback on the tablet first.
-2. **Find Home Assistant.** Discovery starts automatically when the address is empty. Keep HA and the tablet on the same local network; guest Wi-Fi and VLAN isolation may block discovery. You can also enter the base URL without `/lovelace` or other paths.
-3. **Scan the token directly from HA.** Open **Profile → Security → Long-lived access tokens → Create token**. Name it and select **Generate QR code** in the creation dialog. In this app, tap **Scan token QR code**. The token and QR code are shown only during creation: scan before closing the dialog, or create a new token if it is already closed. No external QR generator is needed. Manual paste is also available.
-4. **Start the player.** Allow notifications so you can stop it from the notification shade. The token is stored encrypted. Return to your already compatible HA dashboard, choose **Echo Relay** as output if your dashboard has an output selector, and test a short answer.
+1. Open **Connect**. Keep Android and HA on the same network. Select a discovered server or enter its base URL without /lovelace or dashboard paths.
+2. In HA, open **Profile → Security → Long-lived access tokens → Create token**. Name it **TAFA Device Bridge**, choose **Generate QR code** and scan it with the app. HA displays the token and QR code only once; scan before closing. Manual pasting is also available.
+3. Pair the Echo or Bluetooth speaker in Android, enable media audio and test normal playback.
+4. Press **Save & start player**. Allow notifications and keep the service notification active.
+5. Return to the compatible TAFA / Echo Relay dashboard for voice requests. The APK does not configure HA automatically.
 
-The interface initially follows the device language. Use **Deutsch / English** at the top to switch it. Unsaved tokens survive a language switch in memory only, never in Android saved instance state.
+HTTPS validates the server certificate. Local HTTP needs explicit permission for the precise local IP and port; token, audio and enabled camera images then travel unencrypted on the LAN. Changing the address resets permission.
 
-### Multiroom
+## Optional voice and dynamic multiroom
 
-[Complete room setup](../homeassistant/examples/MULTIROOM.md). Requires backend 1.7.0, a dedicated non-admin user per room, the room assistant card and **Room audio (experimental)** enabled before restarting the player. Use the same account in both app and dashboard. The dashboard microphone needs trusted HTTPS even if the app connects locally. Room audio does not use the legacy global helpers. Camera permission is off by default; enable only in consenting shared rooms and start locally. The old admin-token error may mean room camera permission is missing; do not use an admin token.
+Open **Wakeword**, explicitly download the approximately 45 MB German Vosk model and allow microphone access when starting recognition. Choose Hey Jarvis, Jarvis, Alexa or all three. The notification offers Stop. Recognition audio stays local; only a wakeword event is sent to HA.
 
-### Local HTTP
+The dynamic API from 0.9.0 is preserved: each installation has a persistent random ID. Enter a room name, start recognition, then select/pair the device in TAFA under **Voice & Audio**. There are no fixed numbered slots. Matching HA integration and TAFA dashboard are required separately.
 
-HTTPS certificate validation remains enabled. HTTP requires explicit consent for the exact local IP address and port. Tokens and audio then travel unencrypted on the LAN. Editing the address resets consent. Public HTTP and HTTP DNS names are rejected; use discovery for a numeric LAN address. Redirects are never followed automatically.
+Fine-tuning controls confirmations (1–3), cooldown (3–30 s) and microphone handoff (10–90 s). Settings and mute synchronize per device with HA; lost HA settings connectivity releases the recorder. No dB threshold is provided.
 
-### Streaming audio
+Keep the compatible dashboard open for Whisper STT and turn off its competing wakeword detector. Words immediately after the wakeword can be lost during handoff. Alexa may also trigger a physical Echo. Fully hands-free operation with a closed dashboard is not guaranteed.
 
-MP3 and 16-bit PCM/WAV now play progressively while the HTTP response is still arriving. Android MediaCodec decodes MPEG Layer III frames incrementally; AudioTrack plays the decoded PCM. Streaming WAV with an unknown data length is supported. No full-file download is required for these formats.
+## Camera and Bluetooth keepalive
 
-The startup and rebuffer target is **600 ms of audio**, with a bounded **two-second PCM queue** and producer backpressure. This is audio duration, not a guaranteed wall-clock startup delay. The real A2DP route is initialized with zeros before any speech samples are submitted, so the beginning of an answer is retained. Output routing is checked during playback, rebuffering and drain, with immediate mute on routing-change notifications.
+Open the camera from **Status**. Selection, HA relay and local preview have separate cards. Leaving preview clears local images; an explicitly started foreground camera relay can continue until stopped. Permissions are requested when required. Image intervals 1/2/3/5/10 seconds and optional motion detection remain available.
 
-The response is also spooled to app-private cache, capped at 24 MiB, for the file reserve. Unsupported formats/decoders can use that **same response** as a completed file only before any speech has been submitted. No second TTS request is made for fallback. If a stream fails after playback begins, it stops with an error instead of replaying the answer. Cached audio is deleted after completion, cancellation or failure. Requests are limited to two minutes.
+Keepalive defaults off. Its silent loop while the player runs may reduce Echo idle announcements, but can affect Alexa music and battery use. Use one keepalive source at a time. Nothing starts automatically after reboot.
 
-Diagnostics show the mode (`mp3`, `wav_pcm`, `file_fallback`), first network byte, first decoded PCM and first PCM submission times, received bytes and rebuffer count. Submission time does not include the Echo’s physical playback latency. The single-device helper contract is unchanged; Multiroom uses an authenticated room API.
+## Build and signing
 
-The existing dashboard remains compatible in legacy single-device mode. Multiroom requires a room-aware card/controller. An upstream server/proxy that buffers the whole response can still delay the first byte, and answer-text generation is outside the audio player’s control. Device-specific Bluetooth performance still requires testing on the target tablet.
+Use JDK 17, Android Platform 35 and Build Tools 36.0.0. Run build.ps1 -Configuration Release -Check, then sign-release.ps1 with -KeystorePath and -Alias. The default output is **dist/TAFA-Device-Bridge-1.0.0.apk**. The script checks the original 0.7.1 certificate; no private signing keys are included.
 
-### Camera and local vision
+Build, JVM tests, lint and phone/tablet UI instrumentation are validated locally. Physical Bluetooth and multi-device testing remain necessary. See [release notes](RELEASE_NOTES.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Open **Open camera settings**, choose front/rear camera and tap **Start camera for HA**. The explicitly started camera foreground service sends bounded JPEGs at a locally configurable interval (1, 2, 3, 5 or 10 seconds, default 2 seconds) and continues outside the app. Changes apply in the next capture cycle; capture and upload may limit the actual rate. Stop it here or from its separate notification. Audio/keepalive remain independent; nothing starts automatically after reboot.
+## Interface
 
-Requires **Jarvis Tablet Audio 1.7.0** in Multiroom (legacy camera receiver 1.4.0 or newer) and existing local GPU Worker vision service. HA exposes the tablet camera and optional coarse image-motion sensor. Select outdoor/door cameras in integration options and ask explicit camera questions through the Jarvis router. Images stay in memory and expire after 15 seconds without delivery. This is periodically refreshed still imagery, not full-rate video or person detection. See [setup and camera questions](docs/camera-preparation.md).
+![Tablet](docs/tafa-device-bridge-tablet.png)
 
-### Native Bluetooth keepalive
-
-**Off by default.** While the player is running, the optional keepalive plays a completely silent, locally bundled PCM loop independently of the HA page. Stopping the player or using its notification stop action also stops keepalive.
-
-This may reduce idle gaps and Echo’s “Playing from…” prompts. The Echo generates those prompts, so suppression is not guaranteed. The loop does not request exclusive audio focus, change system volume or reconnect Bluetooth devices. It waits when Bluetooth is absent, stops on a wrong output route and pauses after errors; restart the player or toggle the option to retry. Audio focus loss during a spoken answer also pauses keepalive.
-
-**Use one keepalive:** either this app or the HA dashboard loop. Test normal Alexa music, calls, long idle periods and battery usage on your actual device. Disable it if playback is affected. Continuous operation may require power and appropriate Android background/battery settings. Nothing starts automatically after reboot.
-
-## Required Home Assistant connection
-
-This optional bridge implements the existing native audio helper contract. It does not replace the Companion App or configure an Assist pipeline. The public Marketplace integration does not automatically provision this transport: a compatible dashboard/controller is required. The repository includes a [standalone Echo Relay Assist card](../docs/en/echo-relay-dashboard.md).
-
-- `input_text.jarvis_native_audio_command`: JSON `{id,path,ts}` or `{id,stop:true,ts}`. IDs contain 1–40 letters/digits/hyphens; timestamps are Unix milliseconds. Only same-origin `/api/tts_proxy/…` paths are accepted. Commands older than 15 seconds and the command present at player startup are ignored.
-- `input_text.jarvis_native_audio_status`: `ready|timestamp`, `no_bluetooth|timestamp`, or `id|buffering`, `id|playing|bluetooth`, `id|done`, `id|error_…`.
-- Both helpers need up to 255 characters and appropriate HA user permissions. Never place tokens in helpers, logs or Git.
-- MP3 and PCM/WAV use progressive streaming. The app-private file reserve is limited to 24 MiB and deleted after the request.
-- Spoken audio remains muted until the actual A2DP output is confirmed. Output changes are checked periodically; system routing changes cannot always be detected without delay.
-
-## Build and verification
-
-Install JDK 17, Android SDK Platform 35 and Build Tools 34.0.0. From this Android directory:
-
-```powershell
-./build.ps1 -Check
-./build.ps1 -Configuration Release -Check
-```
-
-Linux/macOS: `./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest --no-problems-report` with JDK 17. Release outputs are unsigned until you sign them privately with the intended update key. Do not commit keystores.
-
-`UiSmokeInstrumentation` checks DE/EN, phone/tablet layouts, HTTP consent, token retention during language changes, bundled WAV decoding and keepalive cleanup without Bluetooth on an isolated emulator. The `stream_only=true` mode additionally runs a real delayed, chunked HTTP server with the Android MP3 decoder, verifies playback before response EOF and compares every decoded PCM byte against complete decoding. It also tests cancellation during a blocked native HTTP read and the no-Bluetooth guard. Synthetic fixtures contain no speech or private data; their generator is in `tools/generate_stream_fixtures.py` (development-only `lameenc` dependency).
-
-JVM tests cover framing, fragmented/unknown-length WAV, bounded buffering, cache cleanup, cancellation, fallback and prevention of replay after speech. Camera scanning, physical Echo routing and idle prompt suppression require hardware tests.
-
-## License
-
-Original code and vector icon: repository MIT license. ZXing Android Embedded, ZXing Core and AndroidX: Apache 2.0. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Independent community project, not an official Home Assistant or Amazon application.
-
-## Room-specific mode · 0.6.0
-
-Room audio and dedicated room cameras require **Jarvis Tablet Audio 1.7.0**. Existing single-device mode remains available. Use a separately authorized non-admin HA account and room assignment per tablet. Camera sharing starts explicitly on the tablet, with 1/2/3/5/10-second refresh choices. The matching HA extension must be installed separately; updating the APK alone does not enable room endpoints.
+[Phone](docs/tafa-device-bridge-phone.png) · [Camera](docs/tafa-device-bridge-camera.png)

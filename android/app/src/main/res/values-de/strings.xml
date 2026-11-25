@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">HA Jarvis Echo Relay</string>
-    <string name="app_tagline">Home-Assistant-Audio über deinen Echo.</string>
-    <string name="intro_title">Deine Stimme. Dein Zuhause.\nDein Echo.</string>
-    <string name="intro_body">Einmal verbinden. Danach den Player laufen lassen und zu deinem Home-Assistant-Dashboard zurückkehren.</string>
-    <string name="step_bluetooth">01  /  LAUTSPRECHER VERBINDEN</string>
+    <string name="app_name">TAFA Device Bridge</string>
+    <string name="app_tagline">Audio, Sprache und Kamera. Mit deinem Zuhause verbunden.</string>
+    <string name="intro_title">Deine Geräte. Eine Verbindung.</string>
+    <string name="intro_body">Home Assistant einmal verbinden und die gewünschten Funktionen auswählen.</string>
+    <string name="step_bluetooth">03 / BLUETOOTH</string>
     <string name="bluetooth_title">Echo als Bluetooth-Lautsprecher</string>
     <string name="bluetooth_help">Kopple deinen Echo in den Android-Bluetooth-Einstellungen und aktiviere Medienaudio. Teste zuerst normale Musikwiedergabe auf dem Tablet.</string>
     <string name="bluetooth_settings">Bluetooth-Einstellungen öffnen</string>
-    <string name="step_server">02  /  ZUHAUSE FINDEN</string>
+    <string name="step_server">01 / HOME ASSISTANT</string>
     <string name="server_title">Home Assistant verbinden</string>
     <string name="server_help">Dieses Gerät und Home Assistant müssen im selben lokalen Netzwerk sein. Wähle eine gefundene Adresse oder trage sie selbst ein.</string>
     <string name="server_label">Home-Assistant-Adresse</string>
@@ -28,9 +28,9 @@
     <string name="http_consent">Unverschlüsseltes HTTP für diese lokale Adresse erlauben</string>
     <string name="http_help">Bei HTTP werden Token, Audio und aktivierte Kamerabilder im lokalen Netzwerk unverschlüsselt übertragen. Die Freigabe gilt nur für die oben eingetragene Adresse einschließlich Port.</string>
     <string name="http_required">HTTP · Freigabe erforderlich</string>
-    <string name="step_token">03  /  PLAYER BERECHTIGEN</string>
+    <string name="step_token">02 / ZUGRIFFSTOKEN</string>
     <string name="token_title">Home-Assistant-Token scannen</string>
-    <string name="token_help">In Home Assistant: Profil → Sicherheit → Langlebige Zugriffstoken → Token erstellen. Als Namen HA Jarvis Echo Relay vergeben und im Erstellungsdialog QR-Code generieren wählen.</string>
+    <string name="token_help">In Home Assistant: Profil → Sicherheit → Langlebige Zugriffstoken → Token erstellen. Als Namen TAFA Device Bridge vergeben und im Erstellungsdialog QR-Code generieren wählen.</string>
     <string name="token_once">Token und QR-Code werden nur beim Erstellen angezeigt. Scanne ihn vor dem Schließen des Dialogs. Ist er bereits geschlossen, erstelle einen neuen Token.</string>
     <string name="scan_token">Token-QR-Code scannen</string>
     <string name="token_hint">Oder den Token hier einfügen</string>
@@ -76,7 +76,7 @@
     <string name="help_title">Einrichtung &amp; Hilfe</string>
     <string name="help_expand">Einrichtungstipps anzeigen</string>
     <string name="help_collapse">Einrichtungstipps ausblenden</string>
-    <string name="help_text">1. Echo mit diesem Android-Gerät koppeln und Medienaudio testen.\n\n2. Home Assistant auswählen und unter Profil → Sicherheit einen langlebigen Token erstellen. Den einmaligen QR-Code direkt im Erstellungsdialog scannen.\n\n3. Diesen Player starten. Benachrichtigungen erlauben, damit du ihn auch über die Android-Benachrichtigung stoppen kannst.\n\n4. Im Echo-Relay-Dashboard in Home Assistant eine Sprachanfrage starten. Die Player-Benachrichtigung aktiv lassen.\n\nDiese App ist eine Audiobrücke, keine Mikrofon- oder Wakeword-App. Sie benötigt die in der Projektdokumentation beschriebenen Audio-Befehls- und Statushelfer. Ihre Installation richtet die HA-Integration nicht automatisch ein.</string>
+    <string name="help_text">1. Unter Verbinden Home Assistant auswählen und den einmaligen Token-QR-Code aus deinem HA-Profil scannen.\n\n2. Bluetooth-Lautsprecher koppeln und Medienwiedergabe in Android testen.\n\n3. Den Player für die Audioausgabe starten oder unter Rufwort die optionale lokale Mikrofonerkennung einrichten. Die Kamera ist unter Status erreichbar.\n\n4. Für Sprachanfragen zum kompatiblen TAFA-Dashboard zurückkehren. Die jeweilige Android-Dienstbenachrichtigung aktiv lassen.\n\nTAFA Device Bridge nutzt die vorhandene Echo-Relay-Audiointegration. Das passende HA-Backend und Dashboard werden separat eingerichtet. Jedes Tablet behält seine eigene Gerätekennung für die Multiroom-Rufworteinstellungen.</string>
     <string name="help_idle">Echo-Ansagen nach Ruhezeiten</string>
     <string name="help_idle_text">Die Ansage kommt vom Echo selbst. Keepalive kann Ruhepausen überbrücken, unterdrückt Echo-Ansagen aber nicht garantiert. Player stoppen beendet auch dessen Keepalive. Nach einem Neustart wird nichts automatisch gestartet.</string>
     <string name="help_battery">Android-Hintergrundbetrieb</string>
@@ -100,7 +100,7 @@
     <string name="camera_title">Kamera und Vision</string>
     <string name="camera_intro">Stelle Front- oder Rückkamera in HA bereit, melde optional Bildbewegung oder führe einen lokalen Kameratest aus.</string>
     <string name="camera_open">Kameraeinstellungen öffnen</string>
-    <string name="camera_back">Zurück zur Audioeinrichtung</string>
+    <string name="camera_back">Zurück zum Gerätestatus</string>
     <string name="camera_local_help">Wähle eine Kamera und tippe auf Starten. Erst dann wird der Zugriff angefragt. Vorschau und Testbild bleiben auf dieser Seite. Beim Verlassen wird die Kamera ausgeschaltet und das Bild gelöscht.</string>
     <string name="camera_select">Kamera</string>
     <string name="camera_front">Frontkamera</string>
@@ -128,9 +128,9 @@
     <string name="notification_channel">Audiowiedergabe</string>
     <string name="notification_text">Bluetooth-Audiobrücke · zum Öffnen antippen</string>
     <string name="notification_stop">Player stoppen</string>
-    <string name="language_de">Deutsch</string>
-    <string name="language_en">English</string>
-    <string name="footer">Community-Projekt · Android 9+ · v%1$s</string>
+    <string name="language_de">DE</string>
+    <string name="language_en">EN</string>
+    <string name="footer">TAFA Device Bridge · %1$s</string>
     <string name="camera_relay_title">Kamera für Home Assistant</string>
     <string name="camera_relay_help">Übertrage die gewählte Kamera im gewählten Aktualisierungsintervall mit deiner gespeicherten HA-Anmeldung. Die Übertragung läuft auch im Dashboard und bei ausgeschaltetem Display. Starte ausdrücklich und stoppe hier oder über die eigene Kamera-Benachrichtigung. Bilder werden nicht aufgezeichnet. Der passende Kamera-Empfänger von Jarvis Tablet Audio muss zuvor in HA installiert sein.</string>
     <string name="camera_relay_start">Kamera für HA starten</string>
@@ -160,8 +160,8 @@
     <string name="app_version">Version %1$s · Build %2$d</string>
     <string name="wake_label">OPTIONAL / SPRACH-EXPERIMENT</string>
     <string name="wake_title">Native Rufworterkennung</string>
-    <string name="wake_description">Alexa, Jarvis oder Hey Jarvis werden lokal über das Mikrofon erkannt. Nur das Rufwort-Ereignis geht an Home Assistant; die Frage verarbeitet das Dashboard. Nach einem Treffer pausiert das App-Mikrofon 50 Sekunden.</string>
-    <string name="wake_privacy">Standardmäßig aus. Das deutsche Sprachmodell (~45 MB) wird nur auf Knopfdruck geladen und bleibt lokal. Keine Audio- oder Gesprächsaufzeichnungen werden übertragen. Vor dem Start die Rufworterkennung im Dashboard abschalten. Alexa kann gleichzeitig deinen Echo aktivieren.</string>
+    <string name="wake_description">Erkennt Alexa, Jarvis oder Hey Jarvis lokal. Home Assistant erhält ein Rufwort-Ereignis; die Frage verarbeitet das Dashboard. Die eingestellte Übergabepause gibt das Mikrofon für Whisper frei.</string>
+    <string name="wake_privacy">Optionales deutsches Modell (~45 MB). Einmal auf diesem Gerät herunterladen. Die Erkennungs-Audiodaten bleiben lokal. Vorher die Rufworterkennung im Dashboard abschalten; Alexa kann zugleich einen Echo auslösen.</string>
     <string name="wake_select">Rufwort wählen</string>
     <string name="wake_install">Deutsches Offline-Modell laden (~45 MB)</string>
     <string name="wake_start">Native Erkennung starten</string>
@@ -172,19 +172,55 @@
     <string name="wake_permission">Bitte den Mikrofonzugriff für die Rufworterkennung erlauben.</string>
     <string name="wake_download_failed">Modell-Download fehlgeschlagen: %1$s</string>
     <string name="wake_running">Mikrofon aktiv · Rufworterkennung</string>
-    <string-array name="wake_choices"><item>Hey Jarvis</item><item>Jarvis</item><item>Alexa</item><item>Alle drei</item></string-array>
+    <string-array name="wake_choices">
+        <item>Hey Jarvis</item>
+        <item>Jarvis</item>
+        <item>Alexa</item>
+        <item>Alle drei</item>
+    </string-array>
     <string name="wake_strict_label">Erkennungsstrenge · 1 von 3</string>
     <string name="wake_strict_help">Anzahl der bestätigten Erkennungsergebnisse, KEIN Lautstärke- oder Dezibel-Schwellwert. 1 = empfindlicher, 3 = weniger Fehlalarme, aber eventuell übersehene Rufwörter.</string>
     <string name="wake_cooldown_label">Auslösesperre · 12 Sekunden</string>
     <string name="wake_hold_label">Mikrofon-Übergabe · 50 Sekunden</string>
     <string name="wake_mute_button">Natives Mikrofon stumm schalten</string>
     <string name="wake_unmute_button">Natives Mikrofon wieder freigeben</string>
-    <string name="wake_remote_help">Die Einstellungen werden mit Home Assistant synchronisiert. Stumm gibt das Android-Mikrofon wirklich frei, der Dienst bleibt aktiv. Änderungen im TAFA-Dashboard gelten normalerweise innerhalb von drei Sekunden.</string>
+    <string name="wake_remote_help">Die Einstellungen werden pro Gerät mit Home Assistant abgeglichen. Stumm gibt das Android-Mikrofon frei, während der Dienst weiterläuft. Änderungen gelten nach der nächsten Synchronisierung.</string>
     <string name="wake_save_error">Wakeword-Einstellung konnte nicht an Home Assistant gesendet werden: %1$s</string>
     <string name="wake_multiroom_help">Beliebig viele Tablets: Jede Installation hat eine eigene zufällige Gerätekennung. Einen Raumnamen vergeben, die native Erkennung starten und das Tablet im TAFA-Dashboard unter Sprache &amp; Audio auswählen und zuordnen. Keine begrenzten oder doppelten Slots mehr.</string>
-
     <string name="wake_room_label">Raumname (für die Anzeige)</string>
     <string name="wake_room_hint">z. B. Wohnzimmer</string>
     <string name="wake_device_id">Diese Installation: %1$s</string>
-
+    <string name="nav_status">Status</string>
+    <string name="nav_connection">Verbinden</string>
+    <string name="nav_voice">Rufwort</string>
+    <string name="nav_help">Hilfe</string>
+    <string name="section_status_title">Dein Gerät im Überblick</string>
+    <string name="section_status_description">Audiowiedergabe, natives Mikrofon und Kamera an einem Ort.</string>
+    <string name="section_connection_title">Dein Zuhause verbinden</string>
+    <string name="section_connection_description">Home Assistant, Zugriffstoken und Bluetooth. Einmal auf diesem Gerät einrichten.</string>
+    <string name="section_voice_title">Ein Rufwort für deinen Raum</string>
+    <string name="section_voice_description">Optionale lokale Erkennung. Du entscheidest, wann das Mikrofon aktiv ist.</string>
+    <string name="section_help_title">Hilfe &amp; Diagnose</string>
+    <string name="section_help_description">Einrichtung, Hintergrundbetrieb und Details zur Verbindung.</string>
+    <string name="edit_connection">Verbindung bearbeiten</string>
+    <string name="open_voice">Rufwort einrichten</string>
+    <string name="voice_overview_eyebrow">MIKROFON</string>
+    <string name="voice_overview_help">Das Rufwort wird auf diesem Gerät erkannt. Die eigentliche Frage übernimmt dein TAFA-Dashboard.</string>
+    <string name="connection_start">Speichern &amp; Player starten</string>
+    <string name="connection_start_help">Du nutzt nur die Rufworterkennung? Unter Rufwort starten; dabei wird dieselbe Verbindung gespeichert.</string>
+    <string name="bluetooth_advanced_title">Bluetooth-Optionen</string>
+    <string name="room_settings_title">Raum-Audio</string>
+    <string name="wake_model_eyebrow">01 / VORBEREITEN</string>
+    <string name="wake_model_title">Offline-Sprachmodell</string>
+    <string name="wake_device_title">Gerät &amp; Raum</string>
+    <string name="wake_advanced_title">Erkennung fein abstimmen</string>
+    <string name="diagnostics_help">Aktueller Zustand des Audiodienstes. Hilfreich zur Fehlersuche mit der Projektdokumentation.</string>
+    <string name="camera_privacy_note">Die Kamera ist optional. Lokale Vorschau und Übertragung starten jeweils erst auf deine Aktion.</string>
+    <string name="wake_listening">Bereit für dein Rufwort</string>
+    <string name="wake_muted_state">Mikrofon stumm</string>
+    <string name="wake_handoff_state">Mikrofonpause für deine Frage</string>
+    <string name="wake_loading_state">Offline-Modell wird geladen…</string>
+    <string name="wake_error_state">Mikrofon benötigt Aufmerksamkeit</string>
+    <string name="bluetooth_advanced_collapse">Bluetooth-Optionen schließen</string>
+    <string name="wake_advanced_collapse">Feineinstellungen schließen</string>
 </resources>

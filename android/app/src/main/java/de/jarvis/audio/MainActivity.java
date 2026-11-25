@@ -42,6 +42,7 @@ public class MainActivity extends Activity {
     private HaDiscovery discovery;
     private boolean didAutoSearch;
     private int resultCount;
+    private String selectedSection = "connection";
 
     @Override protected void attachBaseContext(Context base) { super.attachBaseContext(AppLanguage.wrap(base)); }
 
@@ -145,6 +146,107 @@ public class MainActivity extends Activity {
         languageButton(R.id.language_de, "de");
         languageButton(R.id.language_en, "en");
         didAutoSearch = state != null && state.getBoolean("did_auto_search", false);
+        initializeNavigation(state);
+    }
+
+
+    private void initializeNavigation(Bundle state) {
+        String initial = getSharedPreferences(PREF, 0).contains("secret") ? "status" : "connection";
+        for (String section : new String[]{"status", "connection", "voice", "help"}) {
+            int id = section.equals("status") ? R.id.nav_status : section.equals("connection")
+                    ? R.id.nav_connection : section.equals("voice") ? R.id.nav_voice : R.id.nav_help;
+            findViewById(id).setOnClickListener(v -> showSection(section, true));
+        }
+        findViewById(R.id.edit_connection).setOnClickListener(v -> showSection("connection", true));
+        findViewById(R.id.open_voice).setOnClickListener(v -> showSection("voice", true));
+        findViewById(R.id.connection_start).setOnClickListener(v -> {
+            startPlayer();
+            showSection("status", true);
+        });
+        bindDisclosure(R.id.bluetooth_advanced_toggle, R.id.bluetooth_advanced,
+                R.string.bluetooth_advanced_title, R.string.bluetooth_advanced_collapse,
+                state != null && state.getBoolean("bluetooth_advanced_open", false));
+        bindDisclosure(R.id.wake_advanced_toggle, R.id.wake_advanced,
+                R.string.wake_advanced_title, R.string.wake_advanced_collapse,
+                state != null && state.getBoolean("wake_advanced_open", false));
+        if (state != null) {
+            findViewById(R.id.diagnostics_text).setVisibility(
+                    state.getBoolean("diagnostics_open", false) ? View.VISIBLE : View.GONE);
+            boolean helpOpen = state.getBoolean("help_open", false);
+            findViewById(R.id.help_details).setVisibility(helpOpen ? View.VISIBLE : View.GONE);
+            ((Button)findViewById(R.id.help_toggle)).setText(helpOpen ? R.string.help_collapse : R.string.help_expand);
+        }
+        showSection(state == null ? initial : state.getString("visible_section", initial), false);
+    }
+
+    private void bindDisclosure(int buttonId, int panelId, int closedText, int openText, boolean open) {
+        Button button = findViewById(buttonId);
+        findViewById(panelId).setVisibility(open ? View.VISIBLE : View.GONE);
+        button.setText(open ? openText : closedText);
+        button.setOnClickListener(v -> {
+            boolean expanded = toggle(panelId);
+            button.setText(expanded ? openText : closedText);
+        });
+    }
+
+    private void showSection(String section, boolean scrollToTop) {
+        if (!section.equals("status") && !section.equals("connection")
+                && !section.equals("voice") && !section.equals("help")) section = "status";
+        selectedSection = section;
+        int[] panels = {R.id.section_status, R.id.section_connection, R.id.section_voice, R.id.section_help};
+        int[] tabs = {R.id.nav_status, R.id.nav_connection, R.id.nav_voice, R.id.nav_help};
+        int[] titles = {R.string.section_status_title, R.string.section_connection_title,
+                R.string.section_voice_title, R.string.section_help_title};
+        int[] descriptions = {R.string.section_status_description, R.string.section_connection_description,
+                R.string.section_voice_description, R.string.section_help_description};
+        String[] keys = {"status", "connection", "voice", "help"};
+        for (int i = 0; i < keys.length; i++) {
+            boolean active = keys[i].equals(section);
+            findViewById(panels[i]).setVisibility(active ? View.VISIBLE : View.GONE);
+            findViewById(tabs[i]).setSelected(active);
+            if (active) {
+                ((TextView)findViewById(R.id.section_heading)).setText(titles[i]);
+                ((TextView)findViewById(R.id.section_description)).setText(descriptions[i]);
+            }
+        }
+        if (scrollToTop) {
+            View focused = getCurrentFocus();
+            if (focused != null) {
+                android.view.inputmethod.InputMethodManager keyboard =
+                        getSystemService(android.view.inputmethod.InputMethodManager.class);
+                if (keyboard != null) keyboard.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                focused.clearFocus();
+            }
+            findViewById(R.id.page_content).requestFocus();
+            findViewById(R.id.main_scroll).post(() -> ((ScrollView)findViewById(R.id.main_scroll)).scrollTo(0, 0));
+        }
+    }
+
+    private void refreshBridgeOverview() {
+        String state = WakeWordService.status;
+        int label = R.string.wake_stopped;
+        int color = R.color.muted;
+        if (state.contains("error")) { label = R.string.wake_error_state; color = R.color.warn; }
+        else if (WakeWordService.running) {
+            color = R.color.secondary;
+            if (state.equals("loading")) label = R.string.wake_loading_state;
+            else if (state.equals("muted")) label = R.string.wake_muted_state;
+            else if (state.startsWith("listening:")) label = R.string.wake_listening;
+            else label = R.string.wake_handoff_state;
+        }
+        for (int id : new int[]{R.id.overview_wake_status, R.id.wake_runtime_status}) {
+            TextView view = findViewById(id);
+            view.setText(label);
+            view.setTextColor(getColor(color));
+        }
+        if (!wakeDownloading) {
+            ((TextView)findViewById(R.id.wake_model_status)).setText(
+                    WakeModelInstaller.installed(this) ? R.string.wake_ready : R.string.wake_model_missing);
+        }
+        wakeInstall.setEnabled(!wakeDownloading && !WakeWordService.running);
+        findViewById(R.id.wake_start).setEnabled(!WakeWordService.running && !wakeDownloading);
+        findViewById(R.id.wake_stop).setEnabled(WakeWordService.running);
+        findViewById(R.id.wake_mute_toggle).setEnabled(WakeWordService.running);
     }
 
     private static final int WAKE_MICROPHONE_PERMISSION = 120;
@@ -241,7 +343,8 @@ public class MainActivity extends Activity {
         wakeInstall=findViewById(R.id.wake_model_install);
         wakeStatus=findViewById(R.id.wake_status);
         ArrayAdapter<CharSequence> adapter=ArrayAdapter.createFromResource(this,R.array.wake_choices,
-                android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_selected);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown);
         wakeChoice.setAdapter(adapter);
         String saved=preferences.getString("wake_choice","hey_jarvis");
         for(int i=0;i<WAKE_KEYS.length;i++)if(WAKE_KEYS[i].equals(saved))wakeChoice.setSelection(i);
@@ -263,7 +366,10 @@ public class MainActivity extends Activity {
             wakeStatus.setText(R.string.wake_model_missing);
             new Thread(()->{
                 try{
-                    WakeModelInstaller.install(this,progress->runOnUiThread(()->wakeStatus.setText(progress)));
+                    WakeModelInstaller.install(this,progress->runOnUiThread(()->{
+                        wakeStatus.setText(progress);
+                        ((TextView)findViewById(R.id.wake_model_status)).setText(progress);
+                    }));
                     runOnUiThread(()->wakeStatus.setText(R.string.wake_ready));
                 }catch(Exception e){
                     runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_download_failed,
@@ -290,7 +396,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.wake_start).setOnClickListener(v->startNativeWake());
         findViewById(R.id.wake_stop).setOnClickListener(v->{
             stopService(new Intent(this,WakeWordService.class));
-            wakeStatus.setText(R.string.wake_stopped);
+            wakeStatus.setText("");
         });
     }
 
@@ -311,8 +417,7 @@ public class MainActivity extends Activity {
             editor.apply();
             tokenInput.setText("");
             ((TextView)findViewById(R.id.token_note)).setText(R.string.token_saved);
-            // Do NOT launch AudioService: the existing signed Relay instance
-            // remains the only Home Assistant/echo audio player.
+            // Saving the wakeword connection does not opt into audio playback.
             return true;
         }catch(Exception error){
             wakeStatus.setText(AppLanguage.error(this,error));
@@ -333,7 +438,7 @@ public class MainActivity extends Activity {
         try{
             stopService(new Intent(this,WakeWordService.class));
             startForegroundService(new Intent(this,WakeWordService.class).setAction(WakeWordService.START));
-            wakeStatus.setText(R.string.wake_running);
+            wakeStatus.setText("");
         }catch(Exception error){
             wakeStatus.setText(getString(R.string.wake_download_failed,
                 error.getMessage()==null?error.getClass().getSimpleName():error.getMessage()));
@@ -349,6 +454,30 @@ public class MainActivity extends Activity {
 
     private void configureColumns() {
         int width = getResources().getConfiguration().screenWidthDp;
+        int tabColumns = getResources().getConfiguration().fontScale >= 1.3f || width < 360 ? 2 : 4;
+        GridLayout navigation = findViewById(R.id.section_tabs);
+        navigation.setColumnCount(tabColumns);
+        int[] tabIds = {R.id.nav_status, R.id.nav_connection, R.id.nav_voice, R.id.nav_help};
+        for (int i = 0; i < tabIds.length; i++) {
+            GridLayout.LayoutParams tab = new GridLayout.LayoutParams(
+                    GridLayout.spec(i / tabColumns), GridLayout.spec(i % tabColumns, 1f));
+            tab.width = 0;
+            tab.height = dp(tabColumns == 2 ? 56 : 48);
+            tab.setMargins(dp(2), dp(2), dp(2), dp(2));
+            findViewById(tabIds[i]).setLayoutParams(tab);
+        }
+        if (width < 380 || getResources().getConfiguration().fontScale >= 1.3f) {
+            ((LinearLayout)findViewById(R.id.brand_header)).setOrientation(LinearLayout.VERTICAL);
+            findViewById(R.id.brand_logo).setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(80)));
+            LinearLayout tools = findViewById(R.id.brand_tools);
+            tools.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            tools.setOrientation(LinearLayout.HORIZONTAL);
+            tools.setGravity(Gravity.CENTER_VERTICAL);
+            findViewById(R.id.app_version).setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        }
         if (width >= 840 && getResources().getConfiguration().fontScale < 1.4f) {
             ((LinearLayout) findViewById(R.id.columns)).setOrientation(LinearLayout.HORIZONTAL);
             findViewById(R.id.setup_column).setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.15f));
@@ -450,6 +579,7 @@ public class MainActivity extends Activity {
 
     private void refreshStatus() {
         refreshWakeConfigUi();
+        refreshBridgeOverview();
         ((TextView)findViewById(R.id.camera_main_status)).setText(CameraActivity.relayMessage(this));
         findViewById(R.id.camera_main_stop).setVisibility(CameraRelayService.running?View.VISIBLE:View.GONE);
         String raw = AudioService.ui;
@@ -511,6 +641,7 @@ public class MainActivity extends Activity {
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode != SCAN_TOKEN) return;
+        showSection("connection", true);
         if (resultCode != RESULT_OK || data == null) { setupMessage.setText(R.string.scan_cancelled); return; }
         try {
             tokenInput.setText(TokenQr.parse(data.getStringExtra(Intents.Scan.RESULT)));
@@ -533,6 +664,11 @@ public class MainActivity extends Activity {
         state.putString("setup_base", urlInput.getText().toString());
         state.putString(HTTP_CONSENT, allowHttp.isChecked() ? consentForAddress : "");
         state.putBoolean("did_auto_search", didAutoSearch);
+        state.putString("visible_section", selectedSection);
+        state.putBoolean("wake_advanced_open", findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE);
+        state.putBoolean("bluetooth_advanced_open", findViewById(R.id.bluetooth_advanced).getVisibility() == View.VISIBLE);
+        state.putBoolean("help_open", findViewById(R.id.help_details).getVisibility() == View.VISIBLE);
+        state.putBoolean("diagnostics_open", findViewById(R.id.diagnostics_text).getVisibility() == View.VISIBLE);
         super.onSaveInstanceState(state);
     }
 

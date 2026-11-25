@@ -1,11 +1,12 @@
-# HA Jarvis Echo Relay 0.9.0 · Dynamisches Multiroom
+# TAFA Device Bridge 1.0.0
 
-Diese Testversion ersetzt die bisherige Begrenzung auf vier Plätze durch eine dynamische Geräteverwaltung in Home Assistant. Jedes Tablet erhält eine dauerhaft gespeicherte Gerätekennung und einen frei wählbaren Raumnamen. Sobald die native Erkennung gestartet wird, registriert es sich selbst.
+Basis: Android 0.9.0, Quellstand 9cf27e7691a7340f98424ef044583f26528f2546.
 
-Im TAFA-Dashboard unter Jarvis → Sprache & Audio kannst du die Geräteliste aktualisieren, ein Tablet auswählen und diesem Dashboard zuordnen. Für jedes Gerät lassen sich Rufwort, Empfindlichkeit, Sperrzeit, Übergabezeit und Mikrofonstummschaltung separat einstellen. Weitere Tablets sind ohne Slot-Anlage möglich. Die zuletzt zugewiesene Gerätekennung wird auf dem Dashboard gespeichert.
+- Neuer Name, freigegebenes Cyan-/Mint-Design, adaptives und monochromes App-Icon sowie Benachrichtigungssymbol.
+- Vier Bereiche: Status, Verbinden, Rufwort und Hilfe. Gegliederte Kamera, aufklappbare Bluetooth-/Rufwort-Optionen und einheitliche Auswahlmenüs.
+- Deutsche/englische Einrichtungshilfe. Bereich und aufgeklappte Optionen bleiben beim Sprachwechsel erhalten; ungespeicherte Token ausschließlich im Arbeitsspeicher.
+- Dynamische Gerätekennung und gerätebezogene HA-Einstellungen aus 0.9.0 erhalten.
 
-Bei fast gleichzeitig erkannten Rufwörtern wird nur das zuerst beim Server eingehende Gerät für drei Sekunden freigegeben. Es gibt noch keine Schallortung. Die bestehende Echo-Relay-Ausgabe bleibt unverändert.
+TAFA-Device-Bridge-1.0.0.apk über die vorhandene signierte App installieren. App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Gerätekennung und Einstellungen bleiben erhalten; Versionscode 13.
 
-**Experimenteller Testzweig:** Die neue Version muss auf echten Android-Tablets geprüft werden. Der bisherige Wake Pilot bleibt bis zur Installation unverändert.  Sie ist keine signierte Update-APK der regulären App.
-
-Die APK bleibt bei der bisherigen App-ID `de.jarvis.audio`. Für die direkte Aktualisierung muss sie mit dem originalen Signaturschlüssel aus Version 0.7.1 signiert sein. Der Release-Prozess prüft die Zertifikatsgleichheit.
+Lokale Validierung: Build, JVM-Tests, Lint, Handy-/Tablet-UI und Signatur-/Paketprüfung. Physische Bluetooth- und Mehrtablet-Tests stehen aus. Passendes HA-Backend und TAFA-Dashboard bleiben erforderlich.
