@@ -122,7 +122,7 @@ class PairingTests(unittest.IsolatedAsyncioTestCase):
         cls.view = load_view()
 
     async def call(self, hass, payload, admin=True):
-        return await self.view.post(FakeRequest(hass, payload, admin))
+        return await self.view().post(FakeRequest(hass, payload, admin))
 
     async def test_list_only_returns_admin_safe_information(self):
         hass = FakeHass()
