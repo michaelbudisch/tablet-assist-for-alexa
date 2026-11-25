@@ -86,7 +86,11 @@ def _associated_entry(hass, domain, host, tracked_id, port=None):
     if tracked_id:
         owned=next((entry for entry in entries if entry.entry_id==tracked_id),None)
         if owned is None:
-            raise ValueError("Previously mapped integration missing; review first")
+            # A previously imported Wyoming/Ollama entry can have been
+            # deleted through HA's normal Devices & Services UI. It is safe
+            # to create the configured endpoint again. The new config entry
+            # replaces the stale ID in TAFA's stored manifest mapping.
+            return None,False
         # Never use a mapped ID belonging to a different domain.
         if owned.domain!=domain:
             raise ValueError("Mismatched integration domain")
@@ -253,6 +257,8 @@ async def provision_manifest(hass,connection,msg):
     try:
         result=await provision(hass,msg["manifest"],msg["tracked"])
     except (ValueError,TypeError,KeyError,RuntimeError,ConnectionError,TimeoutError) as exc:
+        # Return a bounded explanation, not just the generic error code.
+        # The App displays this in its import preview for troubleshooting.
         connection.send_error(msg["id"],"provision_failed",str(exc)[:180])
         return
     connection.send_result(msg["id"],result)

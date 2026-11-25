@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.25 — recover deleted Wyoming and explain JSON setup errors
+- Re-importing a previously approved GPU/Proxmox JSON now recreates a Wyoming integration that was explicitly deleted in Home Assistant; a stale mapped config-entry ID no longer blocks provisioning.
+- Also recover deleted previously linked Ollama integration entries when an enabled server is reachable; never overwrite or delete unrelated integrations.
+- Display bounded Home Assistant provisioning error details (for example, Wyoming cannot_connect) instead of only provision_failed, so connection issues can be diagnosed without server logs.
+- Keep the same private manifest validation and device-ID mapping; no worker JSON update required.
+
+
 ## 0.3.24 — import-first setup, resumable HA provisioning and Android-brand UI
 - Fresh installations start in setup mode without loading or downloading local CPU speech models. Existing installs keep their saved local/external source; importing GPU JSON enables CPU fallback, while Proxmox JSON selects external speech.
 - Administrator-approved JSON import provisions Wyoming/Ollama when possible. If HA Core needs to load the newly staged custom integration, the approved import is queued and can optionally trigger an explicitly authorized Core restart; provisioning and delayed entity mapping resume afterwards.

@@ -201,7 +201,12 @@ def provision_worker_manifest(manifest, tracked):
                         "TAFA HA backend not loaded yet. Restart Home Assistant Core once, "
                         "then reimport JSON / TAFA-Backend noch nicht geladen. "
                         "Home Assistant Core einmal neu starten, dann JSON erneut importieren.")
-                raise RuntimeError("TAFA HA provisioning unavailable: "+code)
+                detail=str(error.get("message") or "").strip()
+                # HA sends a bounded, plain-text flow explanation. Display
+                # only printable characters, without newlines or markup.
+                detail=" ".join(detail.split())[:150]
+                raise RuntimeError("TAFA HA provisioning unavailable: "+code+
+                                   (" — "+detail if detail else ""))
             return reply.get("result",{})
     raise RuntimeError("HA provisioning did not answer")
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA-App 0.3.25 / HA-Integration 0.4.12 — gelöschte Wyoming-Integration erneut einrichten
+- Beim erneuten JSON-Import blockiert eine veraltete Zuordnung nach Löschen von Wyoming/Ollama in Home Assistant nicht mehr. Der passende Dienst wird neu angelegt, wenn verfügbar; fremde Integrationen bleiben unverändert.
+- Statt nur »provision_failed« erscheinen die konkreten HA-Fehlergründe, beispielsweise »cannot_connect«. Die GPU-Worker-JSON muss nicht geändert werden.
+
+
 ## TAFA App 0.3.24 / Integration 0.4.11 — vollständigere Ersteinrichtung und gemeinsames Logo
 - Frische App-Installationen starten im JSON-Einrichtungsmodus ohne Piper-/Whisper-Modelldownload. Nach Import verarbeitet TAFA verspätet registrierte Wyoming-/Ollama-Entitäten und führt die Erstellung der Assist-Pipeline „TAFA Lokal“ fort.
 - Control Center und HA-Sprachzentrale nutzen den originalen zweifarbigen Android-App-Vektor. Eine Abschlusskarte zeigt den tatsächlichen Assist-Status und bietet den Link zur Standard-Auswahl, ohne bestehende Defaults zu überschreiben.

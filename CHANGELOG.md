@@ -1,3 +1,6 @@
+## TAFA App 0.3.25 / integration 0.4.12 — deleted integration recovery
+- Re-importing an approved manifest now recreates explicitly removed Wyoming/Ollama config entries instead of failing on their stale stored IDs; only the approved endpoint is used. Show HA flow errors when setup cannot reach a service; no worker re-installation required.
+
 ## TAFA App 0.3.24 / integration 0.4.11 — import-first and shared Android branding
 - Fresh installations wait for confirmed worker/CT JSON before starting local model downloads; existing deployments retain their selected mode. Automatic entity resolution and Assist-pipeline continuation after import.
 - Add read-only TAFA Lokal readiness diagnostics and direct voice assistant selection link; never overwrite HA defaults. Both Control Center and Voice Center display the shared Android two-color launcher vector.
