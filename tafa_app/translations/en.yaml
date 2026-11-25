@@ -1,0 +1,31 @@
+configuration:
+  speech_mode:
+    name: Speech server
+    description: "local runs Piper/Whisper in TAFA; external uses your existing Proxmox speech server without starting local models."
+  external_piper_base:
+    name: Proxmox speech server – Piper URL
+    description: "For external mode. Private Piper endpoint, for example http://192.168.1.50:5000. Configure Wyoming STT in Home Assistant separately (usually port 10300)."
+  gpu_base:
+    name: GPU computer – Qwen URL
+    description: "Optional Windows GPU worker for Qwen speech, e.g. http://192.168.1.100:10502. Leave empty if unavailable."
+  hardware_profile:
+    name: Preferred speech engine
+    description: "automatic uses Qwen when ready and Piper as fallback; cpu always uses Piper. Connection checks are in TAFA Control Center."
+  voice_variant:
+    name: Qwen voice
+    description: "Default GPU worker voice or saved voice variant 1 through 9."
+  live_profile:
+    name: Audio sound profile
+    description: "natural, studio or clear processing."
+  mp3_base:
+    name: Proxmox – Alexa MP3 generator
+    description: "Optional private generator, e.g. http://192.168.1.50:5001; LAN only and no additional token."
+  public_audio_base:
+    name: Alexa – public HTTPS audio URL
+    description: "Optional public Nginx proxy, e.g. https://audio.example.org; serves short-lived MP3 files only, never the generator API."
+  mp3_profile:
+    name: Alexa announcement sound profile
+    description: "natural, studio or announcement."
+  chime:
+    name: Announcement chime
+    description: "Play a short sound before an Alexa MP3 announcement."
