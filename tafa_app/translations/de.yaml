@@ -1,0 +1,31 @@
+configuration:
+  speech_mode:
+    name: Sprachserver auswählen
+    description: "local = Piper und Whisper in TAFA; external = bestehenden Proxmox-Sprachserver nutzen und lokale Modelle nicht starten."
+  external_piper_base:
+    name: Proxmox-Sprachserver – Piper-Adresse
+    description: "Nur bei external. Interne Adresse zur Piper-Sprachausgabe, z. B. http://192.168.1.50:5000. Wyoming-STT wird in Home Assistant separat eingerichtet (meist Port 10300)."
+  gpu_base:
+    name: GPU-Hauptrechner – Qwen-Adresse
+    description: "Optionaler Windows-GPU-Worker für schnelle Qwen-Stimme, z. B. http://192.168.1.100:10502. Leer lassen, wenn kein GPU-Worker vorhanden ist."
+  hardware_profile:
+    name: Sprachausgabe bevorzugen
+    description: "automatic = Qwen verwenden, wenn bereit, sonst Piper-Fallback; cpu = immer Piper. Verbindungsstatus und Test im TAFA Control Center."
+  voice_variant:
+    name: Qwen-Stimme
+    description: "Standardstimme aus dem GPU-Worker oder gespeicherte Variante 1 bis 9."
+  live_profile:
+    name: Klangprofil
+    description: "natural = Natürlich, studio = Studio, clear = Klar."
+  mp3_base:
+    name: Proxmox – MP3-Generator für Alexa
+    description: "Optionaler interner Generator, z. B. http://192.168.1.50:5001. Nur im privaten LAN; keine Tokens."
+  public_audio_base:
+    name: Alexa – öffentliche HTTPS-Audioadresse
+    description: "Optionaler öffentlicher Nginx-Proxy, z. B. https://audio.example.org; nur kurzlebige MP3-Dateien, niemals die Generierungs-API."
+  mp3_profile:
+    name: Klangprofil für Alexa-Durchsagen
+    description: "natural = Natürlich, studio = Studio, announcement = Durchsage."
+  chime:
+    name: Signalton vor Durchsagen
+    description: "Vor Alexa-MP3-Ansagen einen kurzen Signalton aktivieren."
