@@ -6,6 +6,14 @@
 
 **Neu:** [Geführte Einrichtung für TAFA lokal, Proxmox, GPU-Worker und Alexa-MP3](setup-guide.md). Alle drei Bereiche sind über **TAFA → Optionen** getrennt erreichbar.
 
+## App-Konfiguration und Verbindungsdiagnose
+
+Nutze **Apps → TAFA → Konfiguration** als erste Anlaufstelle: Sprachserver (lokal/Proxmox), GPU-Qwen-Adresse, Automatik mit Piper-Fallback, Stimmvariante, Klangprofil und optionale Alexa-MP3-/HTTPS-Adressen. Die Felder sind auf Deutsch/Englisch beschrieben. Nach dem Speichern die TAFA-App neu starten. Bei einer **neuen** HA-Integration werden diese Werte zur Ersteinrichtung übernommen; bestehende HA-Einträge bleiben unverändert und können bei Bedarf über TAFA → Optionen geändert werden.
+
+Im **Control Center → Verbindungsdiagnose** zeigt **Verbindungen jetzt erneut prüfen**, ob Qwen bereit, beschäftigt oder nicht erreichbar ist, ob Piper als Reserve verfügbar ist und ob der MP3-Generator antwortet. Es wird weder Audio erzeugt noch eine Durchsage gesendet. Die Vorhersage des Sprachwegs basiert auf den App-Optionen.
+
+Im **Control Center → Lokale Sprachmodelle verwalten** siehst du die Größe der heruntergeladenen TAFA-Modelle. Zum Entfernen zuerst in der App-Konfiguration **external** wählen, App neu starten und die Löschung mit **ENTFERNEN** bestätigen. Andere HA-Apps, Wyoming und Proxmox werden nicht bereinigt.
+
 ## Installation mit einer App
 
 1. Home-Assistant-Sicherung erstellen. Für die erste Bereitstellung möglichst eine frische Testinstallation nutzen.
