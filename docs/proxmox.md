@@ -16,6 +16,8 @@ Auf dem **Proxmox-Host**, in der interaktiven PVE-Shell als `root`, folgende Zei
 curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
 ```
 
+**Sprache und CT-Name:** Alle Dialoge des Installers, Wiederaufnahme-Assistenten und der späteren CT-Konsole sind auf **Englisch**. Nach der Auswahl der CT-ID fragt der Installer `Container hostname [tafa-voice]` ab. Hier kannst du einen eigenen Namen eingeben (1–63 Zeichen, Kleinbuchstaben, Ziffern und Bindestriche, z. B. `jarvis-speech`, ohne führenden oder abschließenden Bindestrich). Dieser Name wird bei der Erstellung als echter Proxmox-Hostname verwendet. Eine bereits laufende Installation wird dadurch nicht nachträglich umbenannt.
+
 Das Skript kommt aus diesem Repository. Wer es vorab ansehen möchte, öffnet `/root/tafa-pve-install.sh` vor dem Ausführen. Es führt durch die Auswahl von **freier CT-ID, Rootfs-/Template-Speicher, Netzwerk-Bridge, DHCP/statischer IP, CPU, RAM, Festplattengröße, optionalem Qwen-GPU-Worker und optionalem Alexa-Audio-Hostnamen**. Erst nach Bestätigung durch Eingabe der CT-ID wird der neue unprivilegierte Container erstellt. Standard: 4 vCPU, 4 GiB RAM, 32 GiB Disk.
 
 Im Gast laufen Piper HTTP (5000), die interne tokenfreie MP3-API (5001), Wyoming-Whisper (10300), der temporäre MP3-Dateiserver nur auf **127.0.0.1:8080** und Nginx (80/443; HTTPS erst nach Zertifikatseinrichtung). Die bestehenden Proxmox-/Nginx-/Home-Assistant-Installationen bleiben unberührt. Das Skript installiert keine Router-Portweiterleitungen und stellt keine Zertifikate aus, bevor DNS und Erreichbarkeit vorbereitet wurden.
