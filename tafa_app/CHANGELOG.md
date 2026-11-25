@@ -1,7 +1,7 @@
 # TAFA App changelog
 
 ## 0.3.16 — complete native Assist pipeline readiness for Proxmox users
-- External Proxmox mode no longer reports `external_ready` when the `TAFA Lokal` Assist pipeline is missing; it retries configuration after Wyoming STT/entities become available.
+- External Proxmox mode no longer reports `external_ready` when the `TAFA Lokal` Assist pipeline is missing; it retries configuration after Wyoming STT/entities become available (with automatic selection of a single Wyoming STT provider).
 - Existing `TAFA Lokal` pipeline is preserved; an incomplete STT/conversation/TTS configuration shows `pipeline_needs_review` rather than false success.
 - Under TAFA → Devices → Voice test, the setup checks the full Assist pipeline and guides enabling the optional native Android 1.0.1 capture mode (DE/EN).
 - App 0.3.16 / integration 0.4.8; Android APK signing/version unchanged by this Home Assistant change.
