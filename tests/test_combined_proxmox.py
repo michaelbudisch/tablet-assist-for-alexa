@@ -54,7 +54,7 @@ class CombinedCTTests(unittest.TestCase):
         creation=HOST[begin:end]
         self.assertIn('--onboot 1 --password',creation)
         self.assertIn('Set the CT root password when Proxmox prompts',HOST)
-        self.assertNotIn('--password "
+        self.assertNotIn('--password "$', creation)
         self.assertIn('ask "Container hostname" "tafa-voice"', HOST)
         self.assertIn('CT_HOSTNAME="$REPLY_VALUE"', HOST)
         self.assertIn('--hostname "$CT_HOSTNAME"', HOST)
