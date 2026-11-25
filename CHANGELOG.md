@@ -1,3 +1,8 @@
+## TAFA App 0.3.17 / integration 0.4.9 — first Ollama conversation fix
+- `unknown` is the normal HA ConversationEntity state until its first message, not proof of a disconnected LLM. Allow the first voice turn to reach the configured agent.
+- CPU/Homeserver hardware profile controls TTS routing, not whether a configured HA conversation agent may respond.
+- Preserve missing/unavailable/self-reference checks, update bundled integration and add isolated regression tests; no Android APK changes.
+
 ## TAFA App 0.3.16 / integration 0.4.8 — native Android Assist readiness
 - In external Proxmox mode, retain a pending setup status until TAFA Lokal Assist pipeline exists; never report ready before the required HA entities and pipeline are registered.
 - Incomplete existing TAFA Lokal pipelines are preserved and identified as needing review.
