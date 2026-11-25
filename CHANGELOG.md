@@ -4,6 +4,13 @@
 
 # Changelog
 
+## TAFA unified integration 0.4.2 / App 0.3.8 — guided onboarding
+- Focused integration options for local/Proxmox speech servers, optional Qwen GPU routing and Alexa MP3/HTTPS.
+- App Control Center now provides clear three-step setup with port hints; concise DE/EN guides.
+- Data-source settings and existing credentials preserved, Android Device Bridge unchanged.
+- Automated tests and HA OS hardware verification required before stable release.
+
+
 ## TAFA unified integration 0.4.1 — release candidate
 - Unified native device and multiroom management in the public TAFA panel.
 - Enhanced HA runtime, automatic pipeline and Ingress regression checks; App 0.3.4 with CPU speech-process recovery.
