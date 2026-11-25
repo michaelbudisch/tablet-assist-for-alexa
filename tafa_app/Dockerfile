@@ -7,7 +7,7 @@ RUN python -m pip install --no-cache-dir "numpy==1.26.4" "piper-tts==1.8.0" "fas
 # Generic virtual-machine CPU profiles may lack this baseline.
 RUN python -c "import numpy; assert numpy.__version__ == '1.26.4', numpy.__version__; from piper import PiperVoice; from faster_whisper import WhisperModel; print('TAFA CPU speech imports OK', numpy.__version__)"
 WORKDIR /opt/tafa
-COPY server.py installer.py speech_proxy.py auto_setup.py speech_source.py ./
+COPY server.py installer.py speech_proxy.py auto_setup.py speech_source.py model_store.py ./
 COPY bundle ./bundle
 EXPOSE 8099 5000
 CMD ["python", "server.py"]
