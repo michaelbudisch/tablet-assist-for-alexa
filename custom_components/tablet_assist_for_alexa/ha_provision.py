@@ -20,8 +20,9 @@ from .const import DOMAIN
 from pathlib import Path
 
 COMMAND=DOMAIN+"/provision_manifest"
-NETWORKS=tuple(ipaddress.ip_network(net) for net in
-               ("10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"))
+NETWORKS=(ipaddress.ip_network("10.0.0.0/8"),
+          ipaddress.ip_network("172.16.0.0/12"),
+          ipaddress.ip_network((3232235520,16)))
 TYPES=("gpu_worker","speech_server")
 
 
