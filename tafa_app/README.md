@@ -1,4 +1,4 @@
-# TAFA Home Assistant App 0.3.16 — release candidate
+# TAFA Home Assistant App 0.3.17 — release candidate
 
 The Ingress Control Center installs and safely upgrades one unified HA integration. Choose local Piper/Faster-Whisper (default), or external Proxmox Piper/Whisper with `speech_mode=external` and `external_piper_base=http://PROXMOX-IP:5000` in the App Configuration before starting. External mode skips local model processes and downloads. the Android Device Bridge stays unchanged. [English guide](../docs/en/app.md) · [Deutsche Anleitung](../docs/app.md).
 
@@ -13,3 +13,5 @@ All App-managed HA integration settings are now maintained in **Apps → TAFA �
 **App 0.3.15:** **TAFA → Devices → Voice test → Test speech output** now works from private HTTP with the selected Qwen/Piper TTS engine and confirmed Android room playback. Browser microphone questions still need HTTPS.
 
 **New in 0.3.16:** External Proxmox mode now checks the complete Home Assistant Assist pipeline before reporting ready. When Wyoming STT is missing, configure it in HA. A single Wyoming STT provider is chosen automatically; with multiple providers, set `cpu_stt` in TAFA App options. The App retries automatically. See [native Android setup](../docs/en/setup-guide.md).
+
+**Fix in 0.3.17 / integration 0.4.9:** A freshly configured Ollama conversation entity initially has HA state `unknown`, which previously caused TAFA to refuse its first question. Update the App, restart Home Assistant Core once for the integration update, and restart the App to sync your selected `llm_agent`. No new Android APK is needed.
