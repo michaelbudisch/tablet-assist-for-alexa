@@ -2,6 +2,14 @@
 
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
+## 0.9.0 · Unlimited dynamic multiroom devices
+
+- No numbered tablet slots. Each Android installation enrolls with a persistent random ID; Home Assistant creates device records and all five settings dynamically.
+- TAFA device manager can list, choose, pair, rename, mute and remove devices without manual helper creation.
+- Authenticated HA API handles wake events and accepts only the earliest arriving device within a three-second arbitration window.
+- Settings are isolated by device ID. Legacy 0.8.0 fixed-slot helpers and routing are no longer used.
+- Existing Echo Relay/Room Audio output is unchanged. Real multi-device hardware testing is still required.
+
 ## 0.8.0 · Multiroom native wakeword detection
 
 - Each Android tablet gets a persistent random installation ID, its own selectable device slot (1–4) and a user-editable room label.

@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
+## 0.9.0 · Unbegrenzte dynamische Multiroom-Geräte
+
+- Keine vordefinierten Tablet-Plätze mehr. Jedes Android-Gerät meldet sich über eine zufällige, eindeutige Installationskennung beim HA-Modul an.
+- Home Assistant legt die Gerätedatensätze und alle fünf Einstellungen dynamisch in seiner Speicherdatei an; manuelles Anlegen einzelner Helfer entfällt. Neue Geräte sind direkt in der TAFA-Geräteliste sichtbar.
+- Geräte in der Dashboard-Geräteverwaltung auswählen, zuordnen, benennen, separat stummschalten oder bewusst löschen. Ein beliebig neues Tablet kann jederzeit hinzugefügt werden.
+- Authentifizierte HA-Schnittstelle verarbeitet Rufwörter und lässt innerhalb von drei Sekunden nur das erste eingehende Ereignis zu. Andere Tablets bleiben still. Die Gerätezuteilung erfolgt pro Dashboard.
+- Die alten vier Tablet-Platz-Helfer und das alte Routing der 0.8.0-Testversion werden nicht länger verwendet. Bestehende Echo-Relay-/Room-Audio-Routen bleiben unverändert.
+- Noch experimentell: Mehrgeräte-Erkennung und Verhalten auf echten Tablets prüfen.
+
 ## 0.8.0 · Native Rufworterkennung mit Multiroom
 
 - Jedes Android-Tablet erhält eine dauerhaft gespeicherte, zufällige Gerätekennung, einen auswählbaren eigenen Tablet-Platz (1–4) und einen frei wählbaren Raumnamen.

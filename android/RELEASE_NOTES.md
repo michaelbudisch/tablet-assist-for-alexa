@@ -1,9 +1,7 @@
-# HA Jarvis Echo Relay 0.8.0 · experimental
+# Jarvis Wake Pilot 0.9.0 · Dynamic multiroom
 
-This branch adds opt-in German Vosk wakeword detection with four selectable modes: Hey Jarvis, Jarvis, Alexa or all three. The app requests microphone permission only when starting the detector, installs the ~45 MB offline model only on explicit user action, and forwards recognized wakewords (no audio) to Home Assistant. A matching dashboard listener launches the existing STT pipeline. A foreground notification provides a Stop control.
+Unlimited Android Wake Pilot installations can now register with a persistent random device ID and a friendly room name. Home Assistant maintains independent settings for every enrolled device without manually creating helpers or reserving fixed slots.
 
-**Test branch, not a published signed APK.** Model loading, recognition quality, background operation, audio handoff and device compatibility still require real Android testing. The already published 0.6.0 update remains the stable downloadable APK.
+In TAFA → Jarvis → Voice & Audio, refresh the registered-device list, select and pair the desired tablet with the dashboard, then edit its mute state, wakeword, sensitivity confirmations, cooldown and microphone handoff. The central HA API selects the first arriving simultaneous wakeword within a three-second window; this is not acoustic localization.
 
-0.7.1 also adds app/HA controls for microphone mute, phrase selection, recognition confirmation count, cooldown and handoff time. Mute releases the microphone and an HA outage fails closed. A calibrated dB trigger threshold is not available.
-
-**Multiroom in 0.8.0:** Each Wake Pilot chooses its own HA slot (1–4), installs a random persistent device ID and optionally shows a room label. Select the same slot in TAFA, click Pair and say the wakeword; only that installation's event can start the dashboard. Central arbitration suppresses duplicates for three seconds. Wake settings are per slot. Existing Echo Relay output remains separate. Pairing and multi-device operation still require real-tablet testing.
+**Experimental test branch:** Validate on real Android devices. Existing Echo Relay audio routing is unaffected, and the separate debug APK will not replace the signed Echo Relay app.

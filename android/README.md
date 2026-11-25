@@ -1,4 +1,4 @@
-# HA Jarvis Echo Relay · Android 0.8.0 (experimental)
+# HA Jarvis Echo Relay · Android 0.9.0 (experimental)
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -34,16 +34,16 @@ All controls are available in the pilot app and through Home Assistant helpers. 
 
 Values synchronize with Home Assistant; remote mute normally takes effect within three seconds. If HA settings cannot be reached, the microphone fails closed. This Vosk integration does not provide a calibrated acoustic volume (dB) threshold. Debug APK signing can change between CI runs, potentially requiring uninstall/reinstall, fresh login and model download.
 
-### Multiple tablets and rooms (0.8.0)
+### Unlimited tablets · Dynamic multiroom (0.9.0)
 
-1. In each **Jarvis Wake Pilot 0.8.0** app choose a different **tablet slot** (1–4), and optionally set a friendly room name. A persistent random device ID is generated automatically.
-2. In that tablet's TAFA dashboard open **Jarvis → Voice & Audio → Native wakeword · multiroom**. Choose the same slot, press **Pair this tablet**, then say **Hey Jarvis** on the tablet within 45 seconds. Only that installation's events will start speech capture on this dashboard.
-3. Mute, wakeword, strictness, cooldown and handoff settings are now per slot. The top-right microphone button can still be assigned to native mic mute.
-4. If two tablets hear the same phrase at nearly the same time, Home Assistant accepts the **first arriving** event, suppressing subsequent candidates for three seconds. This is not microphone distance estimation.
-5. If a device already occupies a slot, another installation using it cannot activate recognition. Verify `input_text.jarvis_wake_tablet_N_geratekennung` in HA before intentionally releasing an old assignment.
-6. Continue to use separate HA room users / Room Audio when replies must play on different Echo speakers. Wakeword routing does not replace the existing audio transport.
+1. Install **Jarvis Wake Pilot 0.9.0** on each Android tablet. Optionally set a room name; a stable random installation ID is created automatically.
+2. Configure the HA connection, install the offline model and choose **Start native wakeword**. The app automatically enrolls in Home Assistant. There are no numbered slots or manually created helper entities.
+3. In **TAFA → Jarvis → Voice & Audio → Native wakeword**, click **Refresh devices**, select the tablet, then **Pair selected tablet to this dashboard** (or pair by speaking the wakeword).
+4. Each tablet has independent mute, phrase, strictness, cooldown and handoff settings. The top-right microphone controls only the dashboard-paired tablet. Rooms/devices can be renamed and removed from TAFA.
+5. If two tablets hear the same wakeword, HA accepts only the first arriving event and suppresses further candidates for three seconds. This does not measure acoustic distance. Keep Room Audio or appropriate room accounts for separate playback targets.
+6. Removing a device causes its microphone to fail closed until the user explicitly starts and enrolls the app again.
 
-**Safety:** If HA becomes unavailable or the device-slot assignment is invalid, the pilot releases its microphone. TAFA must be open and visible for microphone handoff; Android background STT is not included. Legacy v0.7.1 clients still use shared HA helpers and require an app update for isolation.
+**Note:** Requires the updated Jarvis Tablet Audio integration and Wake Pilot 0.9.0. Legacy 0.7.x and 0.8.0 clients use older routing; unused fixed-slot helpers can be cleaned up after successful migration.
 
 ## Setup
 
