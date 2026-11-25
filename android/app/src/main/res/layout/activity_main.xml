@@ -152,6 +152,18 @@
                     <TextView style="@style/Body" android:text="@string/wake_remote_help" android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
+            <LinearLayout style="@style/Card">
+                <TextView style="@style/Eyebrow" android:text="@string/native_assist_eyebrow" />
+                <TextView style="@style/Heading" android:text="@string/native_assist_title" />
+                <TextView style="@style/Body" android:text="@string/native_assist_description" />
+                <CheckBox android:id="@+id/native_assist_enabled" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/native_assist_switch" />
+                <CheckBox android:id="@+id/native_followup_enabled" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/native_followup_switch" />
+                <TextView android:id="@+id/native_pause_label" style="@style/Body" android:text="@string/native_pause_label" />
+                <SeekBar android:id="@+id/native_pause_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="23" android:progress="8" />
+                <Button android:id="@+id/native_assist_test" style="@style/Action" android:text="@string/native_assist_test" />
+                <TextView android:id="@+id/native_assist_status" style="@style/Body" android:text="@string/native_assist_inactive" android:textSize="12sp" android:accessibilityLiveRegion="polite" />
+                <TextView style="@style/Body" android:text="@string/native_assist_privacy" android:textSize="12sp" />
+            </LinearLayout>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_help">
             <LinearLayout style="@style/Card">
