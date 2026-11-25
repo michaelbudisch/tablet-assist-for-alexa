@@ -1,5 +1,8 @@
 # Home Assistant und Android-Tablet (manuelle Altinstallation)
 
+> **Hinweis zu TAFA 0.3.10 / Integration 0.4.3:** Diese Seite beschreibt die ältere, manuelle Jarvis-Installation. Für eine Neuinstallation **nicht** die alten Schritte zur Tokenanlage oder zu zwei getrennten Integrationen verwenden. Aktuell: [TAFA-App mit optionalem externem Proxmox-Sprachserver](app.md) und [Einrichtungsleitfaden](setup-guide.md). Die internen GPU-/MP3-Dienste benötigen keine zusätzlichen TAFA-API-Tokens; nur die normalen HA-Zugriffsrechte bleiben bestehen.
+
+
 [English](en/home-assistant.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 Für Neuinstallationen ist die [Marketplace-Integration](marketplace.md) empfohlen. Die folgenden Schritte sind nur der alternative Altinstallationsweg; seine Oberfläche und Sprachbefehle bleiben deutsch.
