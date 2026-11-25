@@ -10,6 +10,23 @@ Run **00-Konfiguration.bat** to create `.env` with LAN address and model default
 
 
 
+## 2.2.2 — Generated connection TXT includes full Home Assistant onboarding
+
+**New:** `04-Verbindungsdaten.bat` creates `GPU-Worker-Verbindungsdaten.txt` from your existing `.env` / `LAN_IP` and opens it in Notepad. The TXT contains full **German and English** guidance from first setup to a real spoken test; no API tokens or credentials. It is also generated during Prepare, Install and Start. Report generation does not start any Docker services.
+
+| Service | Home Assistant integration | TAFA App Configuration |
+|---|---|---|
+| **GPU Whisper** `GPU-IP:10300` | Add **Wyoming Protocol** under Devices & services (GPU LAN host and TCP port 10300); find the actual new `stt.*` entity ID | `gpu_stt` = GPU entity, `gpu_stt_host` = bare GPU IP |
+| **CPU Whisper** `PROXMOX-IP:10300` | Add a **separate Wyoming Protocol** integration for the CPU speech server; use its actual STT entity | `cpu_stt` = CPU entity, different from GPU STT |
+| **Qwen streaming TTS** `http://GPU-IP:10502` | Choose **Tablet Assist Stream** as TTS in the Assist pipeline | `gpu_base` = full URL, `hardware_profile=automatic` |
+| **Ollama text inference** `http://GPU-IP:11434` | Add **Ollama** integration and a conversation agent using an installed text model such as `qwen3:4b-instruct`; copy the real `conversation.*` ID | `llm_agent` = Ollama HA entity ID, **not** device name |
+
+**Important:** Supplying the Qwen GPU URL alone **does not enable GPU Whisper**. Wyoming Protocol creates the HA STT entity required by `gpu_stt`. TAFA can auto-select one Wyoming STT provider; with CPU and GPU, explicitly set both distinct entity IDs. External Proxmox requires `speech_mode=external` and `external_piper_base=http://PROXMOX-IP:5000`; the GPU worker cannot infer the separate CPU server IP.
+
+The **TAFA Lokal** Assist pipeline should use **Tablet Assist Sprachrouter** for STT (GPU to CPU fallback), **Tablet Assist Gespraechsrouter** for conversation (Ollama), and **Tablet Assist Stream** for TTS (Qwen to Piper fallback). After a question, `letztes_backend=zusatzrechner` means GPU recognition and `homeserver` CPU/fallback. Android's ~1700 ms end-of-speech pause and Ollama response time are separate.
+
+Default worker BAT install does **not** launch Ollama. Optionally run `docker compose --profile llm up -d ollama ollama-gateway` and select or deliberately install a local text model. Never expose LAN API ports to the Internet.
+
 ## 2.2.1 — Structured production Ring sequence
 
 New private-LAN `POST /describe/sequence` on the existing Vision service. Standard: 12 chronological JPEGs (768 px max edge); detail: 4 selected higher-resolution JPEGs (1024 px max edge). Both use a bounded internal 16384-token context and the same vision gate. JSON includes a concise German description, tri-state evidence (yes/no/uncertain), delivery_assessment (likely/uncertain/no_evidence) and timing. A clothing hint alone is uncertain. Invalid or contradictory model output is rejected or downgraded. This is not proof of delivery. Existing /describe, /detect and /benchmark/sequence remain compatible.
