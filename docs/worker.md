@@ -43,15 +43,24 @@ Ollama verwendet dieselbe GPU. Bei knappem VRAM die Dienste einzeln testen. Das 
 
 Visionprofil über vorhandenes Ollama, Port 10503 nur für HA. [Installation und API](../worker/README.de.md). Kameraauswahl in HA folgt separat.
 
-## 3. Home Assistant und CPU-Sprachserver verbinden
+## 3. GPU-Whisper, CPU-Fallback und Ollama in Home Assistant einrichten
 
-GPU-Wyoming in HA über die Host-IP und Port 10300 hinzufügen; Entity-ID in der HA-Konfigurationsvorlage als `gpu_stt` eintragen. GPU-Host ohne zusätzlichen Token im Integrationsdialog ergänzen; bei Altinstallation die Vorlagen verwenden. Für MP3-Durchsagen in `/etc/jarvis-local.env` die eigenen Werte einstellen:
+**Windows:** `04-Verbindungsdaten.bat` erstellt jetzt eine vollstaendige **deutsche und englische** Einrichtungs-TXT und oeffnet sie direkt in Notepad. Sie verwendet automatisch die GPU-LAN-IP aus der vorhandenen `.env`. Die GPU- und Proxmox-Adressen muessen getrennt eingegeben werden; die Proxmox-IP wird nicht erraten.
+
+1. **Wyoming Protocol fuer GPU-Whisper installieren:** HA → **Einstellungen → Geraete & Dienste → Integration hinzufuegen → Wyoming Protocol**. Host = `GPU-IP`, Port = `10300`. Danach die neue `stt.*`-Entitaets-ID aus HA kopieren. In **Apps → TAFA → Konfiguration** als `gpu_stt` hinterlegen; `gpu_stt_host` = reine GPU-IP (kein Protokoll, kein Port).
+2. **Wyoming Protocol fuer CPU-Whisper installieren:** Auch den Proxmox-CPU-Sprachserver ueber **Wyoming Protocol** an seiner eigenen IP, Port `10300` verbinden. Dessen separate STT-Entitaets-ID als `cpu_stt` eintragen. **Beide STT-Entitaets-IDs muessen verschieden sein**. Eine einzelne Wyoming-STT-Entitaet kann auto-ausgewaehlt werden; sobald CPU+GPU vorhanden sind, beide IDs explizit waehlen.
+3. **Qwen-TTS konfigurieren:** `gpu_base=http://GPU-IP:10502` und `hardware_profile=automatic` in **Apps → TAFA → Konfiguration**. **GPU-Whisper wird dadurch nicht automatisch aktiviert.**
+4. **Ollama-Integration fuer freie KI-Fragen:** Optional zuerst `docker compose --profile llm up -d ollama ollama-gateway` auf dem GPU-Rechner starten. Danach HA → **Geraete & Dienste → Integration hinzufuegen → Ollama** mit URL `http://GPU-IP:11434`. Ein bereits installiertes Textmodell (z. B. `qwen3:4b-instruct`) als Konversationsagent einrichten. **Die echte** `conversation.*`-Entitaets-ID aus HA in TAFA als `llm_agent` eintragen; nicht den Geraetenamen verwenden. **Ollama (Text-KI) ist ein anderer Dienst als Qwen (Sprachausgabe).**
+5. **Assist-Pipeline TAFA Lokal pruefen:** STT = **Tablet Assist Sprachrouter** (GPU mit CPU-Fallback), Gespraech = **Tablet Assist Gespraechsrouter** (Ollama), TTS = **Tablet Assist Stream** (Qwen mit Piper-Fallback). Nach dem Speichern TAFA App neu starten, bei einer HA-Integrationsaktualisierung einmal HA Core neu starten.
+6. **Laufzeit diagnostizieren:** Nach einer Frage unter Entwicklerwerkzeuge → Zustaende die `stt.*`-Entitaet **Tablet Assist Sprachrouter** anschauen: `letztes_backend=zusatzrechner` bedeutet GPU-Whisper; `homeserver` CPU/Fallback; `letzte_dauer_ms` misst inklusive Audioempfang. Die Android-Sprechpause und die Ollama-Antwortzeit beeinflussen die wahrgenommene Dauer ebenfalls.
+
+Bei externem CPU-Sprachserver `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000` einstellen. Fuer die alte dedizierte MP3-Durchsagen-Installation kann weiterhin in der **lokalen** `/etc/jarvis-local.env` die eigene GPU-Adresse stehen, z. B.:
 
 ```ini
 JARVIS_GPU_BASE=http://gpu.example.invalid:10502
 ```
 
-Datei nur lokal, root-only. `systemctl restart jarvis-mp3`. Im Dashboard Automatisch wählen. Ohne GPU oder bei einem Fehler vor Audiobeginn bleibt Piper als Reserve. Der alte `worker/proxmox/tts_router.py` ist nur eine Referenz des Originalarchivs, nicht zusätzlich zum Hauptinstaller installieren.
+Datei nur lokal (root-only) halten; gegebenenfalls `systemctl restart jarvis-mp3`. Nicht zusaetzlich `worker/proxmox/tts_router.py` neben dem Hauptinstaller installieren. **Keine oeffentlichen Ports und keine Tokens fuer die Worker-LAN-Schnittstellen.**
 
 ## 4. Testen
 
