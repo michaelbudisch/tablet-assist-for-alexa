@@ -4,7 +4,7 @@ from pathlib import Path
 from urllib.parse import parse_qs
 from html import escape
 from secrets import token_urlsafe, compare_digest
-from installer import install, status
+from installer import install, status, bootstrap
 
 CONFIG = Path("/homeassistant")
 BUNDLE = Path(__file__).parent / "bundle"
@@ -17,7 +17,7 @@ def page(message=""):
     return f"""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TAFA</title><style>
     :root{{color-scheme:light dark;font:16px system-ui}}body{{max-width:850px;margin:24px auto;padding:0 16px}}section{{border:1px solid #8886;border-radius:14px;padding:18px;margin:16px 0}}label{{display:block;margin:12px 0}}input{{display:block;width:100%;box-sizing:border-box;padding:10px;font:inherit}}button,a{{font:inherit}}button{{padding:12px 18px;border-radius:8px;cursor:pointer}}a{{color:inherit}}small{{opacity:.8}}h1{{margin-bottom:4px}}li{{margin:8px 0}}
     </style><h1>TAFA</h1><p>Local voice assistant · Einrichtungszentrale · Experimental 0.1.0</p>
-    <section><h2>1 · Backend status / Backend-Status</h2><ul>{rows}</ul><p role="status">{escape(message)}</p><small>Installed means files are present, not that the integration is loaded. / Installiert bedeutet: Dateien vorhanden, nicht zwingend geladen.</small></section>
+    <section><h2>1 · Backend status / Backend-Status</h2><p>The base integration is provisioned automatically on first app startup if absent. A Home Assistant restart is required before the integration can be configured. / Die Basisintegration wird beim ersten App-Start automatisch bereitgestellt, sofern sie fehlt. Zur Aktivierung ist ein HA-Neustart erforderlich.</p><ul>{rows}</ul><p role="status">{escape(message)}</p><small>Installed means files are present, not that the integration is loaded. / Installiert bedeutet: Dateien vorhanden, nicht zwingend geladen.</small></section>
     <section><h2>2 · Speech servers / Sprachserver</h2><p>Prepare your external CPU speech server and optional GPU worker. / Externe Sprachserver zuerst einrichten.</p><p><a href="{REPO}/blob/main/docs/proxmox.md" target="_blank" rel="noopener">CPU DE</a> · <a href="{REPO}/blob/main/docs/en/proxmox.md" target="_blank" rel="noopener">CPU EN</a> · <a href="{REPO}/blob/main/docs/worker.md" target="_blank" rel="noopener">GPU DE</a> · <a href="{REPO}/blob/main/docs/en/worker.md" target="_blank" rel="noopener">GPU EN</a></p></section>
     <section><h2>3 · Install missing integrations / Fehlende Integrationen installieren</h2><p>New installations only. Existing files are never overwritten. Create a Home Assistant backup first. / Nur Neuinstallation; vorhandene Dateien bleiben unverändert. Vorher HA-Sicherung erstellen.</p>
     <form method="post" action="./"><input type="hidden" name="csrf" value="{CSRF}">
@@ -70,4 +70,12 @@ class Handler(BaseHTTPRequestHandler):
             self.send_page("Installation stopped / Installation abgebrochen: " + str(exc), 400)
 
 if __name__ == "__main__":
+    try:
+        installed = bootstrap(CONFIG, BUNDLE)
+        if installed:
+            print("TAFA: base integration provisioned; restart Home Assistant to load it.", flush=True)
+        else:
+            print("TAFA: existing base integration preserved.", flush=True)
+    except (ValueError, OSError, SyntaxError) as exc:
+        print("TAFA: automatic base provisioning skipped: " + str(exc), flush=True)
     HTTPServer(("0.0.0.0",8099), Handler).serve_forever()

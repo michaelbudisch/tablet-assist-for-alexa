@@ -4,7 +4,7 @@
 
 1. Create a Home Assistant backup / HA-Sicherung erstellen.
 2. Prepare CPU speech services and optional GPU worker / Sprachserver vorbereiten.
-3. Start TAFA and open its Web UI / TAFA starten und Weboberfläche öffnen.
+3. Start TAFA and open its Web UI / TAFA starten und Weboberfläche öffnen. The base Marketplace integration is now staged automatically on first start if absent; HA still needs a manual restart to load it. / Die Basisintegration wird beim ersten Start automatisch bereitgestellt, sofern sie fehlt; zum Laden ist weiterhin ein HA-Neustart nötig.
 4. Enter local hostnames and entity IDs. Install missing backend files. Existing components are skipped, never overwritten.
 5. Restart Home Assistant manually. Configure Tablet Assist for Alexa and Jarvis Tablet Audio in Devices & services.
 6. Install Device Bridge 1.0.0 and configure devices using the linked Multiroom guide.

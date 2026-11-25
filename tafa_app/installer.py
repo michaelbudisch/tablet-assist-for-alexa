@@ -39,8 +39,10 @@ def status(config):
                 result[domain] = "existing (version unknown)"
     return result
 
-def install(config, bundle, values):
-    repl = replacements(values)
+def install(config, bundle, values, domains=DOMAINS):
+    """Stage validated components. Install new ones only; never update existing folders."""
+    if not domains or any(d not in DOMAINS for d in domains):
+        raise ValueError("Invalid component selection")
     root = config / "custom_components"
     if root.is_symlink():
         raise ValueError("Refusing symbolic-link destination.")
@@ -49,9 +51,11 @@ def install(config, bundle, values):
     root.mkdir(exist_ok=True)
     if not root.is_dir():
         raise ValueError("Invalid custom_components directory.")
-    pending = [d for d in DOMAINS if not (root / d).exists() and not (root / d).is_symlink()]
+    pending = [d for d in domains if not (root / d).exists() and not (root / d).is_symlink()]
     if not pending:
         return []
+    # The base integration is host-independent. Legacy audio needs explicit validated hosts.
+    repl = replacements(values) if "jarvis_tablet_audio" in pending else {}
     # Build and validate every new component before publishing any directory.
     with tempfile.TemporaryDirectory(prefix=".tafa-stage-", dir=root) as tmp:
         stage = Path(tmp)
@@ -101,3 +105,12 @@ def install(config, bundle, values):
                 raise
             installed.append(domain)
         return installed
+
+
+def bootstrap(config, bundle):
+    """Provision the standalone base integration when the TAFA App first starts.
+
+    Never overwrite an existing Marketplace-managed or manually installed integration.
+    The optional legacy backend remains an explicit configuration choice until merged.
+    """
+    return install(config, bundle, {}, domains=("tablet_assist_for_alexa",))
