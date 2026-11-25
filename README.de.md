@@ -77,3 +77,5 @@ Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergelad
 **Tablet-Multiroom (neu):** Unter **TAFA → Geräte** kann ein Administrator jetzt den registrierten Tablet-Geräten einen bestehenden, nicht-administrativen HA-Benutzer und Audio-Raum zuordnen und den Verbindungsstatus sehen. Keine YAML-Aktionen erforderlich; die bestehende Android-App 1.0.0 bleibt unverändert. [Schrittfolge](docs/setup-guide.md).
 
 **Neu: Sprachtest ohne YAML.** Unter **TAFA → Geräte → Sprachtest** lässt sich eine Frage über das Browser-Mikrofon stellen und die Qwen/Piper-Antwort auf dem verbundenen Tablet hören. Benötigt HTTPS und die vollständige TAFA Lokal-Pipeline. Die Android-App bleibt unverändert. [Anleitung](docs/setup-guide.md).
+
+**Neu in App 0.3.15 / Integration 0.4.7:** Unter **TAFA → Geräte → Sprachtest** kannst du die Sprachausgabe auf dem verbundenen Tablet auch ohne HTTPS testen. Der separate Mikrofontest benötigt weiterhin HTTPS. [Anleitung](docs/setup-guide.md).

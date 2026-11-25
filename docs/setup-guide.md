@@ -79,6 +79,13 @@ Bei **Gong ohne Sprache** zuerst die verwendete Notify-Entität prüfen und dana
 **Wichtig:** Die Rufwort-Geräteliste und die Audio-Räume sind getrennte Dienste. „Tablet registriert“ beweist nicht, dass der Audio-Player verbunden ist. Der Audio-Raum benötigt einen **eigenen aktiven HA-Benutzer ohne Administratorrechte**; der Administrator ordnet diesen über das TAFA-Dashboard zu, statt über Entwicklerwerkzeuge. Ein Token wird nie im Dashboard angezeigt oder hinterlegt. Der alte Helfer `input_text.jarvis_native_audio_command` ist im Multiroom-Modus nicht erforderlich.
 
 
+
+### Sprachausgabe über die lokale HTTP-Adresse testen
+
+Ist die Tablet-Audioverbindung unter **TAFA → Geräte** grün, lässt sich dort unter **Sprachtest** die neue Schaltfläche **„Sprachausgabe testen“** verwenden. Du kannst den Testtext ändern und mit einem Klick Qwen/Piper über die gewählte **TAFA Lokal**-Assist-Pipeline sprechen lassen. Die Testansage wird ausschließlich an den zugeordneten Android-/Bluetooth-Player gesendet. TAFA zeigt **Erzeugung → Übertragung → Wiedergabe → bestätigt/fehlgeschlagen** an. Diese Funktion benötigt **kein Browser-Mikrofon** und funktioniert auch bei lokaler HTTP-Nutzung.
+
+**„Einmal sprechen“** bleibt der vollständige Mikrofon- und Assist-Test; hierfür verlangt der Browser eine vertrauenswürdige HTTPS-Adresse (oder localhost). Auf einer reinen HTTP-Adresse wird der Mikrofontest daher nicht eingeblendet und es erscheint eine Erklärung statt eines irreführenden Fehlers. Die HTTP-Audio-Testfunktion erfordert einen verbundenen, bereiten Tablet-Player und einen gültigen HA-Benutzer, keine neuen Tokens oder Android-App-Updates.
+
 ### Sprachtest nach der Tablet-Einrichtung
 
 **TAFA → Geräte → [Tablet] → Sprachtest · Einmal sprechen** aufrufen und den Abschnitt aufklappen. TAFA wählt die vorhandene **TAFA Lokal**-Assist-Pipeline mit Whisper und **Tablet Assist Stream** automatisch; andere vollständige Pipelines lassen sich auswählen. Tippe auf **Einmal sprechen**, erlaube dem Browser das Mikrofon, stelle eine kurze Frage und höre die Antwort über den verbundenen Tablet-/Bluetooth-Player. Das verwendet den bereits getesteten Assist- und Multiroom-Audioweg, keine zusätzlichen HA-Helfer oder Scripts.

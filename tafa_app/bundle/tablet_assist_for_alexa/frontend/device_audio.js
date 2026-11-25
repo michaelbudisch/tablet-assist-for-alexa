@@ -204,11 +204,6 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
     "Wie im bisherigen Dashboard: Mikrofon aktivieren, Frage sprechen, Whisper erkennt sie und Qwen/Piper antwortet über den gekoppelten Tablet-Player.":
     "Same as the original dashboard: activate the mic, ask a question, Whisper transcribes it and Qwen/Piper responds on the paired tablet player.");
   body.append(help);
-  if(typeof window!=="undefined"&&!window.isSecureContext){
-    body.append(el("p",de?
-      "Mikrofontest benötigt eine vertrauenswürdige HTTPS-Adresse (oder localhost).":
-      "Microphone test requires trusted HTTPS (or localhost)."));
-  }
   const label=el("label",de?"Assist-Pipeline":"Assist pipeline");
   label.style.cssText="display:grid;gap:6px";
   const select=el("select");
@@ -221,6 +216,100 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
     opt.value=p.id;select.append(opt);
   }
   select.value=preferred.id;label.append(select);body.append(label);
+  // A speech synthesis and Android playback check does not access the
+  // browser microphone and therefore also works on a private HTTP HA URL.
+  // Reuse HA's existing TTS proxy and the exact authenticated room transport.
+  const playback=el("div");
+  playback.style.cssText="display:grid;gap:8px;padding:12px;border:1px solid var(--divider-color);border-radius:10px";
+  playback.append(el("strong",de?"Sprachausgabe testen (ohne Mikrofon)":"Test speech output (no microphone)"));
+  const phrase=el("input");
+  phrase.type="text";phrase.maxLength=200;
+  phrase.value=de?"Hallo, hier ist TAFA. Die Sprachausgabe auf deinem Tablet funktioniert.":
+    "Hello, this is TAFA. Speech playback on your tablet is working.";
+  phrase.setAttribute("aria-label",de?"Gesprochener Testtext":"Spoken test message");
+  playback.append(phrase);
+  const send=el("button",de?"Sprachausgabe testen":"Test speech output");
+  send.className="primary";playback.append(send);
+  const progress=el("p");
+  progress.setAttribute("role","status");progress.setAttribute("aria-live","polite");playback.append(progress);
+  body.append(playback);
+
+  send.onclick=async()=>{
+    const message=phrase.value.trim();
+    if(!message)return;
+    if(!admin&&!current&&!hass.user){
+      progress.textContent=de?"Melde dich mit dem Tablet-Benutzer an.":"Sign in with the tablet user.";
+      return;
+    }
+    const pipeline=choices.find(p=>p.id===select.value);
+    if(!pipeline?.tts_engine){
+      progress.textContent=de?"Die Assist-Pipeline besitzt keine Sprachausgabe.":"Assist pipeline has no TTS engine.";
+      return;
+    }
+    send.disabled=true;let id="";
+    const rpc=async(operation,params={})=>hass.callApi("POST",admin?
+      "jarvis_tablet_audio/room_admin":"jarvis_echo_relay/room_audio",
+      admin?{action:"test",room:current.room,device_id:device.device_id,operation,...params}:
+        {action:operation,...params});
+    try{
+      const check=await rpc("status");
+      if(!check?.ready){
+        throw Error(de?"Tablet-Player ist offline, beschäftigt oder noch nicht bereit.":
+          "Tablet player is offline, busy, or not yet ready.");
+      }
+      progress.textContent=de?"Qwen/Piper erzeugt die Testansage …":"Generating the test voice with Qwen/Piper …";
+      const created=await hass.callApi("POST","tts_get_url",{
+        engine_id:pipeline.tts_engine,message,cache:false
+      });
+      const raw=created?.path||created?.url;
+      if(typeof raw!=="string")throw Error(de?"TTS hat keine Audio-Adresse geliefert.":"TTS did not return an audio URL.");
+      const link=new URL(raw,window.location.origin);
+      if(link.origin!==window.location.origin||link.search||link.hash||
+        !/^\/api\/tts_proxy\/[A-Za-z0-9_.~-]{1,200}$/.test(link.pathname))
+        throw Error(de?"Die erzeugte Audio-Adresse ist ungültig.":"Invalid generated audio path.");
+      const result=await rpc("submit",{path:link.pathname});
+      if(!result?.accepted||!(/^[a-f0-9]{32}$/).test(result.id||"")){
+        throw Error(de?"Tablet-Player nimmt gerade keine Ansage an.":"Tablet player cannot accept an audio job now.");
+      }
+      id=result.id;
+      progress.textContent=de?"Ansage gesendet · Warte auf Wiedergabe …":
+        "Audio sent · Waiting for playback …";
+      let stage="";
+      // Status is reported by the Android room player (not just TTS HTTP success).
+      for(let attempt=0;attempt<120;attempt++){
+        if(!wrap.isConnected)break;
+        const result=await rpc("status",{id});
+        stage=result?.stage||"unknown";
+        if(stage==="done"){
+          progress.textContent=de?"Erfolgreich: Tablet hat die Wiedergabe bestätigt.":
+            "Success: tablet confirmed playback.";
+          id="";return;
+        }
+        if(["error","cancelled","expired","unknown"].includes(stage)){
+          throw Error(de?"Audio-Wiedergabe fehlgeschlagen ("+stage+").":
+            "Audio playback failed ("+stage+").");
+        }
+        if(stage==="buffering")progress.textContent=de?"Tablet lädt die Audiodatei …":
+          "Tablet is buffering audio …";
+        if(stage==="playing")progress.textContent=de?"Tablet spielt die Testansage ab …":
+          "Tablet is playing test audio …";
+        await new Promise(resolve=>setTimeout(resolve,700));
+      }
+      throw Error(de?"Keine Wiedergabebestätigung vom Tablet.":"Tablet did not confirm playback.");
+    }catch(error){
+      if(wrap.isConnected)progress.textContent=String(error?.message||error||
+        (de?"Sprachausgabe fehlgeschlagen.":"Speech output failed.")).slice(0,260);
+    }finally{
+      if(id)void rpc("cancel",{id}).catch(()=>{});
+      if(wrap.isConnected)send.disabled=false;
+    }
+  };
+  if(typeof window!=="undefined"&&!window.isSecureContext){
+    body.append(el("p",de?
+      "Der Mikrofontest ist hier gesperrt, weil Home Assistant über HTTP geöffnet wurde. Der Sprachausgabe-Test oben funktioniert trotzdem. Für Fragen per Mikrofon Home Assistant über vertrauenswürdiges HTTPS öffnen.":
+      "Microphone testing is blocked because Home Assistant is using HTTP. The speech-output test above still works. To ask spoken questions, open Home Assistant over trusted HTTPS."));
+    container.append(wrap);return;
+  }
   const holder=el("div");body.append(holder);
   const mount=()=>{
     holder.replaceChildren();
