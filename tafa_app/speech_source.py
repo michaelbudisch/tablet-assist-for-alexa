@@ -91,7 +91,7 @@ ROOMS = {"Büro", "Wohnzimmer", "Badezimmer", "Schlafzimmer", "Kinderzimmer"}
 
 def _entity(value, domain):
     if not isinstance(value, str) or (
-        value and not re.fullmatch(domain + r"\\.[a-z0-9_]+", value)
+        value and not re.fullmatch(domain + r"\.[a-z0-9_]+", value)
     ):
         raise ValueError("Invalid " + domain + " entity ID")
     return value
