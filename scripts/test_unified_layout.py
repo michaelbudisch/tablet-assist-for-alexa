@@ -8,11 +8,11 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"custom_components"/"tablet_assist_for_alexa"
 BUNDLE=ROOT/"tafa_app"/"bundle"/"tablet_assist_for_alexa"
 assert not (ROOT/"tafa_app"/"bundle"/"jarvis_tablet_audio").exists()
-assert set(p.relative_to(BASE) for p in BASE.rglob("*") if p.is_file()) == set(
-    p.relative_to(BUNDLE) for p in BUNDLE.rglob("*") if p.is_file()
+assert set(p.relative_to(BASE) for p in BASE.rglob("*") if p.is_file() and p.suffix!=".pyc" and "__pycache__" not in p.parts) == set(
+    p.relative_to(BUNDLE) for p in BUNDLE.rglob("*") if p.is_file() and p.suffix!=".pyc" and "__pycache__" not in p.parts
 ), "App bundle and Marketplace component must have matching files"
 for p in BASE.rglob("*"):
-    if not p.is_file():continue
+    if not p.is_file() or p.suffix==".pyc" or "__pycache__" in p.parts:continue
     mirror=BUNDLE/p.relative_to(BASE)
     assert p.read_bytes()==mirror.read_bytes(),f"Out of date bundle: {p}"
     if p.suffix==".py":
