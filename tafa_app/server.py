@@ -23,6 +23,7 @@ from urllib.parse import urlsplit,parse_qs
 
 from auto_setup import configure, ensure_pipeline, save_state, STATE as SETUP_STATE
 from installer import bootstrap, status
+from speech_source import choose as choose_speech_source, piper_ready as external_piper_ready
 
 LOG=logging.getLogger("tafa.app")
 CONFIG=Path("/homeassistant")
@@ -31,7 +32,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.9"
+APP_VERSION="0.3.10"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -82,10 +83,25 @@ def setup_status():
     except (OSError,ValueError):
         return {"status":"pending","detail":""}
 
-def autoconfigure(address):
+def autoconfigure(address, mode="local"):
     # Reattempt after HA Core restarts and discovers newly installed files.
     while True:
         try:
+            if mode == "external":
+                if not external_piper_ready(address):
+                    save_state("waiting_for_external_piper", "Check Proxmox Piper /health on the private LAN")
+                    time.sleep(20)
+                    continue
+                outcome=configure(address)
+                if outcome in ("configured", "already_configured"):
+                    # Proxmox Piper does not implement POST /stt. Wyoming STT
+                    # must be selected explicitly in Home Assistant.
+                    save_state("external_ready_select_wyoming",
+                               "Add Proxmox Wyoming STT port 10300 in HA, select it under TAFA options, then create/select your Assist pipeline")
+                    return
+                save_state(outcome)
+                time.sleep(20)
+                continue
             speech=speech_status()
             if not (speech.get("piper_ready") and speech.get("whisper_ready")):
                 failed = "piper" if not speech.get("piper_ready") else "whisper"
@@ -126,21 +142,40 @@ def startup():
         else: LOG.info("Existing TAFA installation preserved.")
     except (OSError,ValueError,SyntaxError) as exc:
         LOG.error("Backend installation could not complete: %s",type(exc).__name__)
-    threading.Thread(target=monitor_speech,daemon=True).start()
     try:
-        address=_internal_address()
+        mode, external_base = choose_speech_source()
+        if mode == "local":
+            threading.Thread(target=monitor_speech,daemon=True).start()
+            address=_internal_address()
+            LOG.info("Bundled CPU Piper and Whisper enabled")
+        else:
+            address=external_base
+            LOG.info("External Proxmox Piper selected; bundled CPU speech disabled")
         publish_service_address(address)
-        threading.Thread(target=autoconfigure,args=(address,),daemon=True).start()
-        LOG.info("Internal CPU service endpoint registered")
+        threading.Thread(target=autoconfigure,args=(address,mode),daemon=True).start()
     except (OSError,RuntimeError,ValueError) as exc:
         LOG.error("Automatic HA setup unavailable: %s",type(exc).__name__)
-        save_state("needs_attention",type(exc).__name__)
+        save_state("needs_attention",str(exc)[:150])
 
 def display(message="",lang="de"):
     en=lang=="en"
     t=lambda de,eng:eng if en else de
     state=status(CONFIG)
-    runtime=speech_status()
+    try:
+        mode, external_base = choose_speech_source()
+        source_error=""
+    except (OSError, ValueError) as exc:
+        mode, external_base, source_error = "invalid", "", str(exc)
+    if mode == "local":
+        runtime=speech_status()
+    elif mode == "external":
+        runtime={"piper_ready":external_piper_ready(external_base),
+                 "whisper_ready":False, "piper_phase":"external",
+                 "whisper_phase":"external"}
+    else:
+        runtime={"piper_ready":False,"whisper_ready":False,
+                 "piper_phase":"error","piper_error":source_error,
+                 "whisper_phase":"external"}
     setup=setup_status()
     def model_state(prefix):
         if runtime.get(prefix+"_ready"):
@@ -154,8 +189,10 @@ def display(message="",lang="de"):
         return stages.get(phase,t("Noch nicht bereit","Not ready")) + (": "+detail if detail else "")
     cards=[
       (t("Home-Assistant-Backend","Home Assistant backend"),state.get("tablet_assist_for_alexa","not installed")),
-      ("Piper · TTS",model_state("piper")),
-      ("Whisper · STT",model_state("whisper")),
+      (t("Piper · extern (Proxmox)","Piper · external (Proxmox)") if mode == "external" else "Piper · TTS",
+       model_state("piper")),
+      ("Whisper · STT", t("Über Wyoming in HA einrichten","Configure Wyoming in HA")
+       if mode == "external" else model_state("whisper")),
       (t("HA-Einrichtung","HA setup"),setup.get("status","pending"))
     ]
     panels="".join('<div class="tile"><strong>'+html.escape(a)+'</strong><span>'+html.escape(str(b))+'</span></div>' for a,b in cards)
@@ -163,19 +200,21 @@ def display(message="",lang="de"):
       "New components are staged at app startup. Home Assistant needs one restart afterwards.")
     install=t("Backend erneut prüfen","Check backend installation")
     retry=t("Sprachmodelle erneut laden","Retry speech models")
+    retry_button=(f'<button type="submit" name="action" value="models">{retry}</button>'
+                  if mode == "local" else "")
     guide = f"""
 <section><h2>{t("Einrichtung in drei Schritten", "Setup in three steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
 <div class="tiles">
 <div class="tile"><strong>1 · {t("Sprachserver", "Speech server")}</strong>
 <p><b>{t("A: Alles in TAFA (Standard)", "A: Everything in TAFA (default)")}</b></p>
-<p>{t("Piper und Whisper laufen lokal in dieser App. Keine weitere VM nötig.", "Piper and Whisper run locally in this App. No extra VM needed.")}</p>
+<p>{t("Piper und Whisper laufen lokal in dieser App, wenn als App-Option speech_mode=local gewählt ist. Keine weitere VM nötig.", "Piper and Whisper run locally with App option speech_mode=local. No additional VM required.")}</p>
 <p><b>{t("B: Proxmox-Sprachserver", "B: Proxmox speech server")}</b></p>
-<p>{t("Debian-CT: Piper Port 5000, Wyoming-Whisper 10300. Den Server anschließend in TAFA unter Optionen → Sprachserver & GPU eintragen.", "Debian container: Piper port 5000, Wyoming Whisper 10300. Configure them under TAFA Options → Speech servers & GPU.")}</p>
+<p>{t("Bei Apps → TAFA → Konfiguration speech_mode=external und external_piper_base=http://SERVER:5000 setzen, danach App neu starten. Dann in HA Wyoming-STT von SERVER:10300 ergänzen und unter TAFA-Optionen als CPU-STT wählen. Es werden keine lokalen Sprachmodelle geladen.", "In Apps → TAFA → Configuration choose speech_mode=external and external_piper_base=http://SERVER:5000, then restart the App. Add Wyoming STT from SERVER:10300 in HA and select it under TAFA Options. No local CPU models are loaded.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}proxmox.md" target="_blank" rel="noopener">{t("Proxmox-Anleitung", "Proxmox guide")}</a>
 </div>
 <div class="tile"><strong>2 · {t("GPU-Hauptrechner (optional)", "GPU computer (optional)")}</strong>
-<p>{t("Qwen-Streaming auf Port 10502. Auf dem GPU-PC erstellt das Setup-Skript einen API-Schlüssel in der privaten .env. Die Adresse unter Optionen → Sprachserver & GPU hinterlegen.", "Qwen streaming uses port 10502. The setup script creates a private API key in the GPU PC's .env. Enter both in Options → Speech servers & GPU.")}</p>
+<p>{t("Qwen-Streaming auf Port 10502. Die Windows-BAT-Dateien erzeugen bei Bedarf eine .env ohne API-Token. Die GPU-Adresse unter Optionen → Sprachserver & GPU eintragen.", "Qwen streaming uses port 10502. The Windows BAT files create an optional .env without API tokens. Configure the GPU URL under Options → Speech servers & GPU.")}</p>
 <p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
 </div>
@@ -211,12 +250,12 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
 <form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
 <button type="submit" name="action" value="backend">{install}</button>
-<button type="submit" name="action" value="models">{retry}</button></form></section>
+{retry_button}</form></section>
 <section><h2>{t("Inbetriebnahme","Getting started")}</h2>
 <ol class="steps">
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
 <li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
-<li>{t("Die TAFA-Integration und eine eigene Assist-Pipeline werden eingerichtet, sobald Piper verfügbar ist und Home Assistant die Komponenten erkennt.","The TAFA integration and its Assist pipeline are configured when Piper is ready and Home Assistant discovers the components.")}</li>
+<li>{t("Im lokalen Modus wird die TAFA-Lokal-Pipeline automatisch eingerichtet. Im externen Modus zuerst Wyoming-STT und TAFA-Optionen konfigurieren; anschließend die Assist-Pipeline manuell auswählen bzw. erstellen.","Local mode can auto-create the TAFA Lokal pipeline. In external mode configure Wyoming STT and TAFA options first, then create/select the Assist pipeline manually.")}</li>
 <li>{t("TAFA Device Bridge für Rufwort/Audio verbinden. Die Pipeline in Home Assistant Assist auswählen; die Bridge selbst überträgt keine anschließende Frage.","Connect Device Bridge for wake events/audio. Select the Assist pipeline in Home Assistant; the Bridge does not transmit the following spoken question.")}</li>
 </ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
  · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>
@@ -262,6 +301,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             action=fields.get("action",["backend"])[0]
             if action=="models":
+                if choose_speech_source()[0] != "local":
+                    return self.send_error(400, "Bundled speech disabled in external mode")
                 accepted=retry_models()
                 msg=("Speech model retry requested / Sprachmodelle erneut gestartet."
                      if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
