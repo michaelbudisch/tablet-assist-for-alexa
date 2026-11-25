@@ -1,5 +1,10 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.3
+
+- `04-Verbindungsdaten.bat` schreibt nun nur noch eine kurze DE/EN-Liste der GPU-Endpunkte (Wyoming 10300, Qwen 10502, optional Ollama 11434) und ihrer genauen Eintragungsorte in Home Assistant oder TAFA. Keine langen Installationshinweise oder erfundenen Proxmox-IPs.
+- `.env` und Docker-Volumes bleiben unverändert; Versionskennungen in allen Worker-Images konsistent aktualisiert.
+
 ## 2.2.2
 
 - GPU-Worker-Verbindungsdaten sind jetzt ein **vollständiger DE/EN-Ersteinrichtungsleitfaden** mit der erkannten GPU-LAN-IP und konkreten Home-Assistant-/TAFA-Eingabefeldern, nicht nur eine Portliste.

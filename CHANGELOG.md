@@ -1,3 +1,7 @@
+## TAFA App 0.3.21 / GPU Worker 2.2.3 — endpoint status and concise connection TXT
+- The unified Control Center now shows read-only reachability for configured Piper, Qwen, GPU-Whisper Wyoming TCP and MP3 endpoints and the last HA STT backend when available. It suggests GPU Whisper IP from Qwen URL when both run on the same LAN computer.
+- GPU Worker TXT lists only its own known IP endpoints and exact Home Assistant/TAFA destinations (DE/EN); no extra instructions. Public HTTPS addresses are not automatically probed.
+
 ## TAFA App 0.3.20 — unified settings interface
 - Settings are now configured from one grouped, bilingual TAFA Control Center form. Native HA App Configuration is an advanced fallback on the same Supervisor-managed options, not another store.
 - Existing configurations preserved, validated and stored; restart TAFA to apply. CPU/GPU Wyoming selection is included in the central form.

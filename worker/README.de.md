@@ -1,14 +1,18 @@
-# Jarvis GPU Worker 2.2.2
+# Jarvis GPU Worker 2.2.3
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 ## Installation ohne Tokens (Windows)
 
-Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erstellen; mit **01-Installieren.bat** die Whisper- und Qwen-Streaming-Container bauen und starten. **02-Starten.bat** startet die Standarddienste, **03-Neustarten.bat** startet bereits laufende Dienste neu; **04-Verbindungsdaten.bat** erzeugt `GPU-Worker-Verbindungsdaten.txt` mit IP, Ports und Home-Assistant-Einstellungen, **ohne Tokens**. `Setup.ps1` bleibt als kompatibler Einstieg verfügbar. Vorhandene `.env` und Modell-Volumes bleiben unangetastet. Kein Eingriff in Android-App oder Dashboard.
+Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erstellen; mit **01-Installieren.bat** die Whisper- und Qwen-Streaming-Container bauen und starten. **02-Starten.bat** startet die Standarddienste, **03-Neustarten.bat** startet bereits laufende Dienste neu; **04-Verbindungsdaten.bat** erzeugt eine kurze `GPU-Worker-Verbindungsdaten.txt` mit IP-Endpunkten und den zugehörigen Eingabestellen, **ohne Tokens**. `Setup.ps1` bleibt als kompatibler Einstieg verfügbar. Vorhandene `.env` und Modell-Volumes bleiben unangetastet. Kein Eingriff in Android-App oder Dashboard.
 
 **Sicherheit:** Diese HTTP-Schnittstellen akzeptieren Anfragen ohne zusätzlichen Worker-Schlüssel. Die Docker-Ports werden an die konfigurierte private `LAN_IP` gebunden. In der Windows-Firewall ausschließlich den Home-Assistant- und gegebenenfalls Proxmox-Server zulassen; keine Gastnetze, VPN-Weiterleitung, Reverse-Proxies auf Generator-Ports oder Router-Portfreigaben. Ein öffentlicher HTTPS-Proxy darf ausschließlich kurze, zufällig benannte MP3-Dateien per GET anbieten.
 
 
+
+## 2.2.3 – Kurze Endpunktliste
+
+**Neu:** `GPU-Worker-Verbindungsdaten.txt` zeigt ausschließlich die GPU-PC-Adressen für Wyoming-Whisper (`GPU-IP:10300`), Qwen-TTS (`http://GPU-IP:10502`) und optional Ollama (`http://GPU-IP:11434`) mit ihrem Eintragungsort in Home Assistant beziehungsweise TAFA (DE/EN). Keine langen Erstinstallationsschritte mehr. Proxmox-IP-Adressen werden nicht geraten. TAFA 0.3.21 zeigt zusätzlich die Erreichbarkeit der gespeicherten Endpunkte und den zuletzt verwendeten STT-Rechner.
 
 ## 2.2.2 – Vollstaendige GPU-Worker-Verbindungsdaten statt reiner Portliste
 

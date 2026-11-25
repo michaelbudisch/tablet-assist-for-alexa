@@ -9,7 +9,7 @@
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.20**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.21**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
@@ -85,3 +85,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **New:** TAFA Control Center lets you assign discovered Wyoming STT entities to CPU/GPU dropdowns. **GPU Worker 2.2.2** provides a complete DE/EN setup and connection TXT (`04-Verbindungsdaten.bat`), including the separate Ollama conversation integration. [Setup guide](docs/en/setup-guide.md).
 
 **TAFA App 0.3.19 hotfix:** Add the missing Wyoming picker to the Docker build. Update/rebuild the TAFA App; the existing configuration and Android app remain unchanged.
+
+**TAFA 0.3.21 / GPU Worker 2.2.3:** TAFA now shows safe private endpoint reachability and the last observed STT routing backend where available. The worker-generated TXT contains only the three relevant GPU PC endpoints and their exact configuration destinations; Proxmox IP addresses are not assumed.

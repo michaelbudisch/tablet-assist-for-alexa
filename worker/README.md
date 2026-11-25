@@ -1,4 +1,4 @@
-# Jarvis GPU Worker 2.2.2
+# Jarvis GPU Worker 2.2.3
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -9,6 +9,10 @@ Run **00-Konfiguration.bat** to create `.env` with LAN address and model default
 **Security:** Extra TAFA worker API keys are no longer required. Bind services to your private `LAN_IP` and restrict inbound Windows firewall traffic to Home Assistant and the speech server. No public port forwarding, guest Wi-Fi access or proxying of the generator/control routes. A public HTTPS audio proxy must only serve short-lived opaque MP3 GET URLs.
 
 
+
+## 2.2.3 — Compact endpoint TXT
+
+**New:** `GPU-Worker-Verbindungsdaten.txt` now lists only GPU PC URLs/IPs for Wyoming Whisper (10300), Qwen TTS (10502) and optional Ollama (11434), with the exact Home Assistant or TAFA destination for each value in DE/EN. No onboarding wall of text or invented Proxmox IPs. TAFA 0.3.21 adds connection status beside configured addresses and last actual STT route.
 
 ## 2.2.2 — Generated connection TXT includes full Home Assistant onboarding
 

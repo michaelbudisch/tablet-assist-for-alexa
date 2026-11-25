@@ -1,5 +1,10 @@
 # GPU worker changelog
 
+## 2.2.3
+
+- Make `04-Verbindungsdaten.bat` generate a concise bilingual endpoint-to-field list, including Wyoming GPU 10300, Qwen TTS 10502 and optional Ollama 11434. Only known local GPU addresses are included; no long instructions or invented Proxmox IPs.
+- Existing `.env`, models, volumes and network access remain unchanged; align the worker image metadata and tags.
+
 ## 2.2.2
 
 - GPU-Worker connection report now includes a bilingual (DE/EN) **first-run Home Assistant integration checklist** with the detected GPU LAN IP and exact TAFA App field mappings, rather than ports alone.

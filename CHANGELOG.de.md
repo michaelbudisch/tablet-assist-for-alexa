@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA App 0.3.21 / GPU-Worker 2.2.3 — Endpunktstatus und kurze IP-Datei
+- Für konfigurierte Piper-, Qwen-, GPU-Wyoming- und MP3-Adressen erscheint ein Live-Erreichbarkeitsstatus. TAFA zeigt den zuletzt gemeldeten STT-Rechner (GPU oder CPU) und schlägt die GPU-Whisper-IP aus der Qwen-IP vor, sofern beide auf demselben Rechner laufen.
+- Die GPU-Worker-TXT enthält nur die bekannten GPU-Endpunkte mit den jeweiligen Eintragungsorten (DE/EN). Öffentliches HTTPS-Audio wird nicht automatisch aufgerufen.
+
+
 ## TAFA App 0.3.20 — Zentrale Einstellungsoberfläche
 - Sprachserver, Wyoming CPU/GPU, Qwen, Ollama, Stimmen und Alexa werden an einer Stelle im TAFA Control Center verwaltet. Die native Home-Assistant-App-Konfiguration ist eine erweiterte Ansicht derselben gespeicherten Werte und kein zweiter Speicher.
 - Einstellungen werden vor dem Speichern validiert; nach dem Speichern TAFA neu starten. Bei einer frischen Proxmox-Einrichtung kann `external` weiterhin vor dem allerersten Start über die native Konfiguration gewählt werden, damit keine lokalen Modelle geladen werden.

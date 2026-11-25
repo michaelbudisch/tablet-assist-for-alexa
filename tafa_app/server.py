@@ -29,6 +29,7 @@ from speech_source import (choose as choose_speech_source,
 from model_store import inventory as local_model_inventory, remove_local_models
 from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
+from endpoint_checks import assess_endpoints, recent_stt_backend
 from speech_source import load_options
 
 LOG=logging.getLogger("tafa.app")
@@ -38,7 +39,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.20"
+APP_VERSION="0.3.21"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -310,7 +311,9 @@ def display(message="",lang="de"):
                            if not wyoming_entries else t("Erkannte Entitaeten: ","Discovered entities: ")+str(len(wyoming_entries)))
     # The Control Center edits the same persisted Supervisor options as the
     # advanced HA App Configuration screen (never a second settings store).
-    picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note)
+    checks=assess_endpoints({**load_options(),**preferences},mode,runtime,links,wyoming_entries)
+    latest=recent_stt_backend(TOKEN) if TOKEN else None
+    picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     guide = f"""
 <section><h2>{t("Einrichtung in vier Schritten", "Setup in four steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>

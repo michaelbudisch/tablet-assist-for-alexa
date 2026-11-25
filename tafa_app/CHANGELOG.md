@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.21 — endpoint-aware setup diagnostics
+- Show safe read-only connection status beside configured private Piper, Qwen, MP3 and GPU-Whisper TCP addresses; do not confuse an open Wyoming port with successful GPU transcription.
+- Display the last actual Home Assistant STT router backend (GPU versus CPU) when available; show an optional GPU Whisper host suggestion derived from the configured private Qwen IP.
+- Explain that Ollama URL belongs in HA Devices & services while TAFA only selects its conversation entity. Public HTTPS audio links are never probed by the App.
+- Existing Supervisor option storage, integration and Android application unchanged.
+
 ## 0.3.20 — one guided Control Center settings page
 - TAFA Control Center now provides one bilingual settings form for speech mode, Piper/Whisper, GPU Qwen, Ollama agent, speech routing, Alexa and optional advanced mappings. The previous separate Wyoming picker becomes part of this page.
 - Saving writes only validated changes to the existing Supervisor-managed App options; no second configuration store or changes to user Assist pipelines. Restart TAFA to apply. The native Home Assistant App Configuration stays as an advanced recovery editor.

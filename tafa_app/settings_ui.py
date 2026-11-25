@@ -8,6 +8,7 @@ import json
 import urllib.request
 
 from speech_source import load_options, private_http_origin, setup_settings_values
+from endpoint_checks import suggested_gpu_stt_host
 from wyoming_picker import SUPERVISOR_OPTIONS
 
 CHOICES = {
@@ -32,28 +33,60 @@ def _value(options, key):
     return str(value or "") if key not in ("rooms_json", "sources_json") else str(value or "{}")
 
 
-def render_settings_form(options, wyoming, lang, csrf, note):
+def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest=None):
     """Display one clear DE/EN settings page; all existing HA App options remain editable."""
     en = lang == "en"
     t = lambda de, eng: eng if en else de
     esc = lambda val: html.escape(str(val), quote=True)
+    checks = checks or {}
+    status_text = {
+        'reachable': t('Erreichbar', 'Reachable'),
+        'ready': t('Bereit', 'Ready'),
+        'busy': t('Beschäftigt', 'Busy'),
+        'offline': t('Nicht erreichbar', 'Unreachable'),
+        'not_ready': t('Erreichbar, nicht bereit', 'Reachable, not ready'),
+        'not_configured': t('Nicht eingerichtet', 'Not configured'),
+        'missing': t('Nicht eingerichtet', 'Not configured'),
+        'invalid': t('Ungültige private LAN-Adresse', 'Invalid private LAN address'),
+        'configured_unchecked': t('Eingetragen – nicht live geprüft', 'Configured – not checked live'),
+        'selected': t('In Home Assistant gefunden', 'Found in Home Assistant'),
+        'unverified': t('Entität momentan nicht gefunden', 'Entity currently not found'),
+        'unused': t('Bei lokalem Piper nicht verwendet', 'Unused with local Piper'),
+    }
+    def status_line(name):
+        state = checks.get(name)
+        if not state:
+            return ''
+        label = status_text.get(state, str(state))
+        detail = ''
+        if name == 'gpu_stt_host' and state == 'reachable':
+            detail = t(' (TCP 10300, kein Spracherkennungstest)', ' (TCP 10300, not a recognition test)')
+        if name in ('gpu_stt', 'cpu_stt') and state == 'selected':
+            detail = t(' (keine Live-Audio-Prüfung)', ' (not a live audio test)')
+        return f'<p class="muted endpoint-check">{t("Status", "Status")}: {esc(label+detail)}</p>'
 
     def field(name, label, hint="", placeholder=""):
         maximum = 4096 if name.endswith("_json") else 256
         current = esc(_value(options, name))
+        if name == 'gpu_stt_host' and not _value(options, name):
+            suggested = suggested_gpu_stt_host(options.get('gpu_base', ''))
+            if suggested:
+                current = esc(suggested)
+                hint = (hint + ' ' + t('Aus der Qwen-IP vorgeschlagen; nur korrekt, wenn Whisper auf demselben Rechner läuft.',
+                                     'Suggested from Qwen IP; use only if Whisper runs on the same computer.')).strip()
         if name.endswith("_json"):
             control = f'<textarea id="{name}" name="{name}" maxlength="{maximum}">{current}</textarea>'
         else:
             control = (f'<input id="{name}" name="{name}" type="text" '
                        f'value="{current}" maxlength="{maximum}" placeholder="{esc(placeholder)}">')
-        return f'<label for="{name}">{label}</label>{control}' + (f'<p class="muted">{hint}</p>' if hint else "")
+        return f'<label for="{name}">{label}</label>{control}' + (f'<p class="muted">{hint}</p>' if hint else "") + status_line(name)
 
     def select(name, label, entries, selected=None):
         selected = _value(options, name) if selected is None else selected
         choices = []
         for value, title in entries:
             choices.append(f'<option value="{esc(value)}"{" selected" if selected == value else ""}>{esc(title)}</option>')
-        return f'<label for="{name}">{label}</label><select name="{name}" id="{name}">{"".join(choices)}</select>'
+        return f'<label for="{name}">{label}</label><select name="{name}" id="{name}">{"".join(choices)}</select>' + status_line(name)
 
     def check(name, label):
         return (f'<label><input type="checkbox" name="{name}" value="1"'
@@ -70,6 +103,13 @@ def render_settings_form(options, wyoming, lang, csrf, note):
             entries.append((selected, selected + " · " + t("momentan nicht gefunden", "currently unavailable")))
         return select(name, label, entries, selected)
 
+    recent = ""
+    if latest and latest.get("backend") in ("zusatzrechner", "homeserver"):
+        label = t("GPU-Whisper", "GPU Whisper") if latest["backend"] == "zusatzrechner" else t("CPU-/Homeserver", "CPU/homeserver")
+        duration = latest.get("duration_ms")
+        duration_label = (" · " + str(round(duration)) + " ms") if isinstance(duration, (int, float)) else ""
+        recent = '<p class="muted">' + t("Letzte Spracherkennung: ", "Last speech recognition: ") + esc(label + duration_label) + '</p>'
+
     return f"""
 <section id="tafa-settings">
 <h2>{t("Einstellungen – zentral verwalten", "Settings – one place")}</h2>
@@ -82,17 +122,17 @@ def render_settings_form(options, wyoming, lang, csrf, note):
 {select("speech_mode",t("Wo läuft Piper?", "Where does Piper run?"),
  [("local",t("In der TAFA-App (einfach)", "Inside TAFA (simple)")),
   ("external",t("Extern auf Proxmox", "External Proxmox server"))])}
-{field("external_piper_base",t("Piper-Adresse (nur bei Proxmox)", "Piper URL (Proxmox only)"),
+{field("external_piper_base",t("Proxmox-Piper (Adresse samt Port 5000)", "Proxmox Piper (URL with port 5000)"),
  t("Im lokalen Modus ignoriert.", "Ignored in local mode."),"http://192.168.1.50:5000")}
-<div id="wyoming-picker"><p class="muted">{esc(note)}</p>
+<div id="wyoming-picker"><p class="muted">{esc(note)}</p>{recent}
 {stt_picker("cpu_stt",t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox"))}
 {stt_picker("gpu_stt",t("GPU-Whisper / Windows (optional)", "GPU Whisper / Windows (optional)"))}
 <p class="muted">{t("Wyoming einmal in Home Assistant unter Geräte & Dienste hinzufügen. Anschließend hier auswählen.", "Add Wyoming once under Home Assistant Devices & services, then select it here.")}</p>
 <p><a href="/config/integrations" target="_top">{t("Wyoming in Home Assistant hinzufügen", "Add Wyoming in Home Assistant")}</a></p></div>
 </details>
 <details open><summary>2 · {t("GPU, KI und Gesprächssteuerung", "GPU, AI and conversation")}</summary>
-{field("gpu_base",t("GPU-Worker (Qwen-Sprachausgabe)", "GPU Worker (Qwen speech)"),"","http://192.168.1.60:10502")}
-{field("gpu_stt_host",t("GPU-Whisper-Rechnername/IP (optional)", "GPU Whisper hostname/IP (optional)"))}
+{field("gpu_base",t("Qwen-Sprachausgabe (Adresse samt Port 10502)", "Qwen speech (URL with port 10502)"),"","http://192.168.1.60:10502")}
+{field("gpu_stt_host",t("GPU-Whisper-IP (nur IP, ohne Port)", "GPU Whisper IP (IP only, no port)"))}
 {field("llm_agent",t("Text-KI: Home-Assistant-Gesprächsentität", "Text AI: Home Assistant conversation entity"),
  t("Ollama zuerst unter Geräte & Dienste hinzufügen. Beispiel: conversation.ollama.", "Add Ollama in Devices & services first. Example: conversation.ollama."),"conversation.ollama")}
 {select("hardware_profile",t("Sprachausgabe", "Speech output"),
@@ -109,8 +149,8 @@ def render_settings_form(options, wyoming, lang, csrf, note):
  [(i,i.title()) for i in CHOICES["live_profile"]])}
 </details>
 <details><summary>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</summary>
-{field("mp3_base",t("MP3-Generator (privates LAN)", "MP3 generator (private LAN)"),"","http://192.168.1.50:5001")}
-{field("public_audio_base",t("Öffentliche HTTPS-Audioadresse", "Public HTTPS audio URL"),"","https://audio.example.org")}
+{field("mp3_base",t("MP3-Generator (Adresse samt Port 5001)", "MP3 generator (URL with port 5001)"),"","http://192.168.1.50:5001")}
+{field("public_audio_base",t("Öffentliche Audio-HTTPS-Adresse (keine LAN-IP)", "Public audio HTTPS URL (not a LAN IP)"),"","https://audio.example.org")}
 {select("mp3_profile",t("Durchsage-Klang", "Announcement sound"),[(i,i.title()) for i in CHOICES["mp3_profile"]])}
 {check("chime",t("Hinweiston verwenden", "Use chime"))}
 {field("rooms_json",t("Alexa-Raumzuordnung (JSON, erweitert)", "Alexa room mapping (JSON, advanced)"))}
