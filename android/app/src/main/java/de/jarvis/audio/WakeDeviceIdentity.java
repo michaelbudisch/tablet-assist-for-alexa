@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import java.util.UUID;
 
-/** Random per-installation ID. It is routing metadata, not an authentication token. */
+/** Random and persistent installation ID; no fixed tablet count. */
 final class WakeDeviceIdentity {
     private WakeDeviceIdentity(){}
     static synchronized String get(Context ctx){
@@ -15,12 +15,8 @@ final class WakeDeviceIdentity {
         prefs.edit().putString("wake_device_id",id).apply();
         return id;
     }
-    static int slot(Context ctx){
-        return Math.max(1,Math.min(4,ctx.getSharedPreferences(MainActivity.PREF,0)
-            .getInt("wake_slot",1)));
-    }
     static String room(Context ctx){
         String text=ctx.getSharedPreferences(MainActivity.PREF,0).getString("wake_room_name","").trim();
-        return text.length()>35?text.substring(0,35):text.isEmpty()?"Tablet "+slot(ctx):text;
+        return text.length()>48?text.substring(0,48):text.isEmpty()?"Jarvis Tablet":text;
     }
 }
