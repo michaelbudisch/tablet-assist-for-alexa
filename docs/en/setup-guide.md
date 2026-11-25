@@ -2,7 +2,7 @@
 
 [Deutsch](../setup-guide.md) · [Install the App](app.md)
 
-TAFA App **0.3.10** can use bundled CPU Piper/Whisper or a trusted **Proxmox-only speech server**. Choose under **Settings → Apps → TAFA → Configuration** before starting. There are three independent choices.
+TAFA App **0.3.11** can use bundled CPU Piper/Whisper or a trusted **Proxmox-only speech server**. Choose under **Settings → Apps → TAFA → Configuration** before starting. There are three independent choices.
 
 **Existing speech server:** To update only the MP3 generator from an older token-based version, use the source checkout inside the dedicated Debian guest and run `sudo bash proxmox/update-mp3-generator.sh`. It backs up the existing `api.py` and restarts only `jarvis-mp3.service`, rolling back if health checks fail. This does not replace Piper, Whisper, data or your proxy. Update the matching TAFA integration to 0.4.3. Never run this script on the Proxmox host. No public forwarding for port 5001.
 
