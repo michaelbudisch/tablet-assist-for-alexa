@@ -10,6 +10,16 @@
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
+## Proxmox: one combined speech and Nginx CT
+
+A guided **one-line Proxmox host installer** creates one **new** unprivileged Debian LXC with Piper, Wyoming-Whisper, a private token-free MP3 generator, and an Nginx frontend. Existing containers and VMs remain untouched.
+
+```bash
+curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
+```
+
+Run as root in an interactive **Proxmox host shell**. Choose the CT ID, storage, network, resources and optional GPU worker/HTTPS hostname, then explicitly confirm the CT ID. The guest console provides a persistent address/status banner. Use `tafa-info` for diagnostics and `tafa-setup` to complete Alexa HTTPS once DNS and routing are ready. [Complete guide](docs/en/proxmox.md).
+
 ## Quick start — Home Assistant OS
 
 1. Create a Home Assistant backup. Use a test installation first.
