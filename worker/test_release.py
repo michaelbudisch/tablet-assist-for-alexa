@@ -7,6 +7,28 @@ import check_release
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_no_required_gpu_or_mp3_api_tokens(self):
+        root = Path(__file__).resolve().parents[1]
+        public = (
+            "worker/compose.yaml",
+            "worker/qwen/server.py",
+            "worker/qwen-stream/server.py",
+            "worker/vision/server.py",
+            "worker/ops/server.py",
+            "speechserver/api.py",
+            "custom_components/tablet_assist_for_alexa/config_flow.py",
+        )
+        for relative in public:
+            with self.subTest(path=relative):
+                source = (root / relative).read_text(encoding="utf-8")
+                self.assertNotIn("JARVIS_TTS_TOKEN", source)
+                self.assertNotIn("PIPER_API_TOKEN", source)
+                self.assertNotIn("X-API-Key", source)
+        for name in ("00-Konfiguration.bat", "01-Installieren.bat",
+                     "02-Starten.bat", "03-Neustarten.bat",
+                     "04-Verbindungsdaten.bat", "Worker-Windows.ps1"):
+            self.assertTrue((check_release.ROOT / name).is_file(), name)
+
     def test_version_and_changelog(self):
         self.assertRegex(check_release.validate(), r"^\d+\.\d+\.\d+$")
 
