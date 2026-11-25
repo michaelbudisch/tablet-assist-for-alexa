@@ -9,6 +9,8 @@ async def async_setup_entry(hass, entry):
     await async_setup(hass, entry)
     from .relay_room_adapter import setup_room_audio
     await setup_room_audio(hass, entry)
+    from .relay_wake_devices import setup_wake_devices
+    await setup_wake_devices(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     options = dict(entry.options)
     from .relay_models import MODEL_OPTIONS
@@ -27,4 +29,6 @@ async def async_unload_entry(hass, entry):
         async_unload(hass)
         from .relay_room_adapter import unload_room_audio
         unload_room_audio(hass)
+        from .relay_wake_devices import unload_wake_devices
+        unload_wake_devices(hass)
     return unloaded
