@@ -166,7 +166,7 @@ class SequenceBenchmarkTests(unittest.TestCase):
 
     def test_endpoint_advertised_without_changing_existing_contract(self):
         info = self.client.get("/capabilities", headers=AUTH)
-        self.assertEqual(info.json["worker_version"], "2.2.1")
+        self.assertEqual(info.json["worker_version"], "2.2.2")
         self.assertEqual(info.json["benchmark_api"], 1)
         self.assertIn("/benchmark/sequence", info.json["endpoints"])
         self.assertIn("/describe", info.json["endpoints"])
