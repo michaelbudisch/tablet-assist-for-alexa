@@ -110,6 +110,19 @@ class Tests(unittest.TestCase):
                     model_store.remove_local_models("external")
             self.assertTrue((outside/"data.bin").exists())
 
+    def test_huggingface_snapshot_symlink_does_not_block_deletion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/"tafa_speech"
+            snapshot=root/"models"/"snapshots"
+            snapshot.mkdir(parents=True)
+            outside=Path(tmp)/"external.bin"
+            outside.write_bytes(b"unmodified")
+            (snapshot/"pointer").symlink_to(outside)
+            with patch.object(model_store,"ROOT",root):
+                model_store.remove_local_models("external")
+            self.assertTrue(outside.exists())
+            self.assertFalse((root/"models").exists())
+
     def test_initial_entry_prefilled_without_extra_tokens(self):
         calls=[]
         def request(path,data=None,method="POST"):
