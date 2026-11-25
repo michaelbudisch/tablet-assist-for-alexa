@@ -1,6 +1,6 @@
 name: TAFA
 slug: tafa
-version: "0.3.9"
+version: "0.3.10"
 description: Unified voice assistant backend and setup control center
 url: https://github.com/michaelbudisch/tablet-assist-for-alexa/tree/main/tafa_app
 arch:
@@ -20,5 +20,11 @@ panel_icon: mdi:microphone-message
 map:
   - type: homeassistant_config
     read_only: false
-options: {}
-schema: {}
+# Local mode remains the default for fresh users and existing installations.
+# External mode reuses an existing private Proxmox Piper service; models are not downloaded.
+options:
+  speech_mode: local
+  external_piper_base: ""
+schema:
+  speech_mode: list(local|external)
+  external_piper_base: str
