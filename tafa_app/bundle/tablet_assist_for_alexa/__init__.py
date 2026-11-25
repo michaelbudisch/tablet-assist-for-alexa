@@ -95,8 +95,8 @@ async def async_setup_entry(hass, entry):
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
-        sidebar_title="Tablet Assist", sidebar_icon="mdi:microphone-message",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.0",
+        sidebar_title="TAFA", sidebar_icon="mdi:microphone-message",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.0-device-ui1",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()
