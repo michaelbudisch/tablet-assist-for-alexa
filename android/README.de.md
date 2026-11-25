@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.0.0
+# TAFA Device Bridge · Android 1.0.1 Quellcode-Vorschau
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -8,9 +8,9 @@ Die Android-Geräteanbindung für TAFA: Home-Assistant-Audio über Bluetooth, op
 
 ## Download und Update
 
-Signierter Build: **TAFA-Device-Bridge-1.0.0.apk**, mit zugehöriger SHA256SUMS. Über die vorhandene signierte **HA Jarvis Echo Relay**-App installieren.
+Bisher signierter stabiler Build: **TAFA-Device-Bridge-1.0.0.apk**. **Android 1.0.1 liegt noch nicht als signierte Installationsdatei vor. Das CI-Debug-APK darf nicht über die bestehende App installiert werden.**
 
-App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Einstellungen, heruntergeladenes Modell und dauerhafte Multiroom-Gerätekennung bleiben erhalten. Der Versionscode steigt auf **13**. Vor dem Update nicht deinstallieren. Home Assistant verwendet weiterhin die vorhandenen Echo-Relay-/Jarvis-Tablet-Audio-Kennungen.
+App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Einstellungen, heruntergeladenes Modell und dauerhafte Multiroom-Gerätekennung bleiben erhalten. Der Android 1.0.1 verwendet nach der Signierung Versionscode **14**. Vor dem Update nicht deinstallieren. Home Assistant verwendet weiterhin die vorhandenen Echo-Relay-/Jarvis-Tablet-Audio-Kennungen.
 
 ## Einstellungen finden
 
@@ -40,6 +40,19 @@ Die dynamische API aus 0.9.0 bleibt erhalten: Jede Installation hat eine dauerha
 Feineinstellungen steuern Bestätigungen (1–3), Sperrzeit (3–30 s) und Mikrofon-Übergabe (10–90 s). Werte und Stummschaltung werden pro Gerät abgeglichen; bei nicht erreichbaren HA-Einstellungen wird das Mikrofon freigegeben. Ein dB-Schwellwert ist nicht vorhanden.
 
 Für Whisper STT das kompatible Dashboard geöffnet lassen und dessen konkurrierende Rufworterkennung abschalten. Direkt angehängte Wörter können bei der Übergabe verloren gehen. Alexa kann zugleich einen echten Echo aktivieren. Freihändiger Betrieb bei geschlossenem Dashboard ist nicht gewährleistet.
+
+## Experimentelle native Spracheingabe (1.0.1, optional)
+
+**Die bisherige reine Rufworterkennung bleibt die Voreinstellung.** Für native Sprachunterhaltung:
+
+1. Unter **Verbinden** Multiroom-Audio aktivieren, mit dem bestehenden HA-Benutzer ohne Adminrechte verbinden und den Player starten. Unter **TAFA → Geräte** diesen Benutzer dem Tablet-Audioraum zuweisen; **Sprachausgabe testen** sollte funktionieren.
+2. Unter **Rufwort** das lokale Vosk-Modell installieren und die Rufworterkennung starten (Mikrofonberechtigung erforderlich).
+3. Im neuen Abschnitt **Native Sprachunterhaltung** die Option **Nach Rufwort vollständige Frage aufnehmen** aktivieren. Wahlweise bis zu zwei Anschlussfragen erlauben und die Sprechpause (900–3200 ms, Standard 1700 ms) anpassen.
+4. Über **Native Frage ohne Rufwort testen** den Ablauf Mikrofon → Assist → Antwort testen. Danach „Hey Jarvis“, eine kurze Pause und eine Frage sprechen. Der vorhandene Tablet-/Bluetooth-Player gibt die Antwort aus. TAFA wählt die vollständige Assist-Pipeline **TAFA Lokal** beziehungsweise eine passende STT-/TTS-Pipeline.
+
+Die Android-App sendet 16-kHz-PCM-Audio über den authentifizierten Home-Assistant-WebSocket **erst nach Rufwort oder manuellem Test**. Vor der Antwort ist das Mikrofon aus; es werden keine Tonaufnahmen gespeichert. Aktivierte Anschlussfragen dürfen das Mikrofon nach einer Antwort bis zu zweimal erneut öffnen und enden bei Stille. Stummschaltung und Stop beenden die Übertragung. Ist die neue Funktion ausgeschaltet, wird wie bisher nur das Rufwort übermittelt. Ein geöffnetes Browser-Dashboard ist für den nativen Modus nicht nötig. Lokales HTTP überträgt Token und Audio unverschlüsselt im LAN; vertrauenswürdiges HTTPS ist vorzuziehen.
+
+**Release-Status:** Erst Quellcode/CI-Kandidat; eine installierbare Android-1.0.1-APK benötigt die **ursprüngliche Signatur** und Hardwaretests. Die App-ID \`de.jarvis.audio\` bleibt gleich, Versionscode 14. Eine unsignierte APK oder das GitHub-CI-Debug-APK **kann die installierte signierte App nicht aktualisieren**. Die vorhandene App nicht deinstallieren und keine Anmeldedaten löschen. Für die Produktion \`build.ps1 -Configuration Release -Check\` nutzen und anschließend \`sign-release.ps1\` mit dem privaten Original-Keystore ausführen.
 
 ## Kamera und Bluetooth-Keepalive
 
