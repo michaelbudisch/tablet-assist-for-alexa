@@ -25,13 +25,12 @@ Auf dem GPU-Rechner im Ordner `worker/`:
 - Linux: `bash setup-linux.sh`
 - Danach `docker compose --profile stream up -d --build qwen-stream`
 
-Die Skripte legen die `.env` mit dem geheimen `JARVIS_TTS_TOKEN` an, sofern noch keine existiert. Im TAFA-Menü **Sprachserver & GPU** folgende Angaben vornehmen:
+Die Skripte legen eine `.env` ausschließlich mit LAN-IP und Modelloptionen an. **Kein API-Token erforderlich.** Im TAFA-Menü **Sprachserver & GPU** folgende Angaben vornehmen:
 
 | Feld | Angabe |
 |---|---|
 | Routing-Modus | **Automatisch** |
 | GPU-Streaming-Adresse | `http://GPU-PC:10502` |
-| Qwen-API-Schlüssel | Wert von `JARVIS_TTS_TOKEN` aus der lokalen `.env` |
 | GPU-Wyoming-STT | Optional, falls GPU-Whisper auf Port `10300` eingerichtet wurde |
 
 **Wichtig:** Die Assist-Pipeline muss als Sprachausgabe **Tablet Assist Stream** auswählen, sonst bleibt die Qwen/Piper-Umschaltung trotz korrekter Zugangsdaten ungenutzt. Vorhandene Pipelines werden nicht automatisch geändert. Einzelheiten und optionale LLM-/Vision-Dienste: [GPU-Worker](worker.md).
@@ -47,7 +46,7 @@ Der [Proxmox-Sprachserver](proxmox.md) enthält zusätzlich:
 | `5001` | Authentifizierte MP3-Erzeugung (`/generate`) |
 | `8080` | Kurzlebige MP3-Dateien, nur für den internen Nginx-Proxy |
 
-Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen. Der [Nginx-Proxy-Leitfaden](nginx-proxy.md) beschreibt einen neuen CT oder das sichere Ergänzen eines bestehenden Proxy-CT. In **TAFA → Optionen → Alexa-Durchsagen & HTTPS** anschließend MP3-Generator, `PIPER_API_TOKEN` aus `/etc/jarvis-local.env`, öffentliche HTTPS-Adresse und Raum-/Notify-Zuordnung angeben. Keine Ports 5000/5001/10300/10502 öffentlich freigeben. Niemals Tokens in Chat, Screenshots oder GitHub veröffentlichen.
+Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen. Der [Nginx-Proxy-Leitfaden](nginx-proxy.md) beschreibt einen neuen CT oder das sichere Ergänzen eines bestehenden Proxy-CT. In **TAFA → Optionen → Alexa-Durchsagen & HTTPS** anschließend MP3-Generator und öffentliche HTTPS-Adresse und Raum-/Notify-Zuordnung angeben. Keine Ports 5000/5001/10300/10502 öffentlich freigeben. Die internen Generator-Ports niemals aus dem Internet erreichbar machen.
 
 ## Wo sind die Einstellungen?
 
@@ -66,4 +65,4 @@ Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen.
 
 Die unveränderte **TAFA Device Bridge 1.0.0** meldet Rufwörter, überträgt aber nicht die folgende Frage. Ein aktiver Assist-Client mit Mikrofon ist dafür weiterhin notwendig. Das private TAFA-Dashboard wird nicht installiert.
 
-Die Geräte-/Worker-Konfiguration ist nicht automatisch: Qwen-Host und Token sowie DNS-/Router-/HTTPS-Einrichtung werden bewusst nicht durchs Netz ermittelt oder ungefragt verändert.
+Die Geräte-/Worker-Konfiguration ist nicht automatisch: Qwen-Host sowie DNS-/Router-/HTTPS-Einrichtung werden bewusst nicht durchs Netz ermittelt oder ungefragt verändert.

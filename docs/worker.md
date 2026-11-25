@@ -20,7 +20,7 @@ Linux aus `worker/`:
 bash setup-linux.sh
 ```
 
-Beide Skripte erzeugen eine lokale `.env` mit zufälligem API-Token; bestehende Dateien werden nicht überschrieben. Den Schlüssel niemals veröffentlichen. Firewall: den Wyoming-Port 10300 auf HA, TTS-Port 10502 auf HA und den CPU-Sprachserver begrenzen; bei Ollama Port 11434 auf HA beschränken.
+Die Skripte erzeugen eine lokale `.env` nur mit LAN-IP und Modelloptionen, **ohne API-Token**. Bestehende Dateien werden nicht überschrieben. Firewall: den Wyoming-Port 10300 auf HA, TTS-Port 10502 auf HA und den CPU-Sprachserver begrenzen; bei Ollama Port 11434 auf HA beschränken.
 
 ## 2. Dienste starten
 
@@ -49,18 +49,17 @@ Visionprofil über vorhandenes Ollama, Port 10503 nur für HA. [Installation und
 
 ## 3. Home Assistant und CPU-Sprachserver verbinden
 
-GPU-Wyoming in HA über die Host-IP und Port 10300 hinzufügen; Entity-ID in der HA-Konfigurationsvorlage als `gpu_stt` eintragen. GPU-Host und API-Token im Integrationsdialog ergänzen; bei Altinstallation die Vorlagen verwenden. Für MP3-Durchsagen in `/etc/jarvis-local.env` die eigenen Werte einstellen:
+GPU-Wyoming in HA über die Host-IP und Port 10300 hinzufügen; Entity-ID in der HA-Konfigurationsvorlage als `gpu_stt` eintragen. GPU-Host ohne zusätzlichen Token im Integrationsdialog ergänzen; bei Altinstallation die Vorlagen verwenden. Für MP3-Durchsagen in `/etc/jarvis-local.env` die eigenen Werte einstellen:
 
 ```ini
 JARVIS_GPU_BASE=http://gpu.example.invalid:10502
-JARVIS_TTS_TOKEN=REPLACE_WITH_WORKER_TOKEN
 ```
 
 Datei nur lokal, root-only. `systemctl restart jarvis-mp3`. Im Dashboard Automatisch wählen. Ohne GPU oder bei einem Fehler vor Audiobeginn bleibt Piper als Reserve. Der alte `worker/proxmox/tts_router.py` ist nur eine Referenz des Originalarchivs, nicht zusätzlich zum Hauptinstaller installieren.
 
 ## 4. Testen
 
-Windows: `Test-Stream.ps1`, `Test-Voice.ps1` aus dem Worker-Verzeichnis. Linux: mit eigenen lokalen Werten und API-Token `/health`, `/synthesize` und `/stream` prüfen. Keine Token in Screenshots, Logs oder Commit-Verlauf. Anschließend native Assist-Ausgabe und MP3 bei ausgeschaltetem GPU-Rechner prüfen.
+Windows: `Test-Stream.ps1`, `Test-Voice.ps1` aus dem Worker-Verzeichnis. Linux: mit eigenen lokalen Werten ohne API-Token `/health`, `/synthesize` und `/stream` prüfen. Keine Konfigurationsdateien mit privaten Netzwerkdaten veröffentlichen. Anschließend native Assist-Ausgabe und MP3 bei ausgeschaltetem GPU-Rechner prüfen.
 
 ## Jarvis-Modelleinstellungen (1.8.0)
 

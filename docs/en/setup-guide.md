@@ -19,11 +19,11 @@ In **Settings → Devices & services → TAFA → Options → Speech servers & G
 
 On the GPU computer, from `worker/` run `.\Setup.ps1` (Windows PowerShell) or `bash setup-linux.sh` (Linux). These create a local secret `.env` if none exists. Then run `docker compose --profile stream up -d --build qwen-stream`.
 
-Under **TAFA Options → Speech servers & GPU**, set **Automatic**, streaming URL `http://GPU-PC:10502`, and the `JARVIS_TTS_TOKEN` from the private `.env`. GPU Wyoming STT on port `10300` is optional. Select **Tablet Assist Stream** as the Assist pipeline's TTS engine. Qwen takes over when healthy; Piper falls back when the GPU fails **before audio playback starts**. Existing Assist pipelines are not silently changed. [GPU worker guide](worker.md).
+Under **TAFA Options → Speech servers & GPU**, set **Automatic**, streaming URL `http://GPU-PC:10502`, (no API token needed). GPU Wyoming STT on port `10300` is optional. Select **Tablet Assist Stream** as the Assist pipeline's TTS engine. Qwen takes over when healthy; Piper falls back when the GPU fails **before audio playback starts**. Existing Assist pipelines are not silently changed. [GPU worker guide](worker.md).
 
 ## 3. Optional Alexa MP3 announcements over HTTPS
 
-Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has an authenticated MP3 generator on `5001` and temporary audio files on `8080`. Follow the [Nginx HTTPS proxy guide](nginx-proxy.md) for a valid public HTTPS hostname. In **TAFA Options → Alexa announcements & HTTPS**, set MP3 generator address, `PIPER_API_TOKEN` from the private `/etc/jarvis-local.env`, public HTTPS origin and room/notify mapping. Never open internal speech/GPU ports publicly; keep tokens private.
+Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has a LAN-only MP3 generator on `5001` and temporary audio files on `8080`. Follow the [Nginx HTTPS proxy guide](nginx-proxy.md) for a valid public HTTPS hostname. In **TAFA Options → Alexa announcements & HTTPS**, set MP3 generator address, public HTTPS origin and room/notify mapping. Never open internal speech/GPU ports publicly; never expose internal generator ports.
 
 ## Where to configure
 
@@ -34,4 +34,4 @@ Not needed for tablet-to-Echo Bluetooth output. The Proxmox speech server has an
 
 Test local Assist, external Piper health at `http://SERVER:5000/health`, optional GPU-on/GPU-off fallback, and finally an optional harmless Alexa announcement over HTTPS.
 
-The unchanged Device Bridge 1.0.0 emits wake events only; another active Assist client needs to record the following question. The private dashboard is excluded. GPU hosts, API keys, DNS, proxy and routers are deliberately not auto-discovered or changed.
+The unchanged Device Bridge 1.0.0 emits wake events only; another active Assist client needs to record the following question. The private dashboard is excluded. GPU hosts, DNS, proxy and routers are deliberately not auto-discovered or changed.

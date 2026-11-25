@@ -48,7 +48,7 @@ Marketplace installs the **same unified TAFA integration 0.4.2**, including the 
 
 ## Safety and migration
 
-- No household-specific hostnames, passwords, tokens, images or private dashboard code are distributed. No microphone or camera is activated without the device owner's action and permissions.
+- No household-specific hostnames, passwords, images or private dashboard code are distributed. No microphone or camera is activated without the device owner's action and permissions.
 - On a new installation, TAFA maintains a manifest of its installed files and only upgrades copies it owns which have not been edited. It leaves HACS, manual and modified installations untouched. Backups are stored in the HA config's `.tafa/rollback` folder.
 - When an older `jarvis_tablet_audio` integration remains configured, the unified component avoids registering duplicate relay endpoints. Legacy setup is **not automatically migrated**; back up first and migrate separately.
 - The App and Marketplace use distinct installation mechanisms; the Android APK remains a separate client.

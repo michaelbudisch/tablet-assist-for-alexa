@@ -27,7 +27,7 @@ Marketplace kann keine laufenden CPU-Sprachdienste installieren. Bei alleiniger 
 |---|---|
 | Piper-Adresse | Kompatible lokale Piper-HTTP-API, z. B. `http://speechserver.local:5000` |
 | CPU-STT-Entität | Optionale Wyoming-STT-Entität; ohne diese wird `/stt` am Piper-Server verwendet |
-| GPU-Streaming-Adresse/Token | Optionales externes Qwen-Streaming und API-Schlüssel |
+| GPU-Streaming-Adresse | Optionales externes Qwen-Streaming im privaten LAN; kein zusätzlicher API-Schlüssel |
 | GPU-STT-Entität/Host | Optionale Beschleunigung mit CPU-Reserve |
 | Konversationsagent | Optionaler bestehender HA-Agent für allgemeines Wissen |
 | Klangprofil und Stimme | Optionale Einstellungen |

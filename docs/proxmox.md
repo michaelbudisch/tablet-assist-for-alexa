@@ -28,12 +28,12 @@ curl -fsS http://127.0.0.1:5001/health
 journalctl -u jarvis-whisper -n 50 --no-pager
 ```
 
-Die lokale Konfiguration liegt unter `/etc/jarvis-local.env` (nur root). Den darin generierten `PIPER_API_TOKEN` im Marketplace-Integrationsdialog als MP3-API-Schlüssel eintragen (bei manueller Altinstallation stattdessen als `piper_api_token` in `secrets.yaml`). Nicht in Git oder Chat posten. CPU-Host-Adresse und Port 10300 beim Wyoming-Setup angeben.
+Die lokale Konfiguration liegt unter `/etc/jarvis-local.env` (nur root). Ab dem neuen Installer ist **kein MP3-API-Token erforderlich**. Im TAFA-Optionsbereich nur Generator-URL `http://SERVER:5001` und öffentliche HTTPS-Adresse eintragen. CPU-Host-Adresse und Port 10300 beim Wyoming-Setup angeben. Port 5001 darf ausschließlich im privaten LAN erreichbar sein.
 
 | Port | Dienst | Zugriff |
 |---|---|---|
 | 5000 | Piper HTTP (WAV) | nur interne vertrauenswürdige Clients |
-| 5001 | MP3-API | intern, API-Schlüssel |
+| 5001 | MP3-Generator | ausschließlich privates LAN, kein Token |
 | 10300 | Wyoming STT | intern, kein öffentliches Netzwerk |
 | 8080 | temporäre Audio-Dateien | intern; optional streng begrenzter HTTPS-Proxy |
 

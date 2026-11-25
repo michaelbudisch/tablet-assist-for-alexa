@@ -48,7 +48,7 @@ Marketplace installiert dieselbe **zusammengeführte TAFA-Integration 0.4.2**, e
 
 ## Sicherheit, Updates und Altinstallation
 
-- Keine privaten Hosts, Passwörter, Tokens, Kamerabilder oder privaten Dashboard-Dateien im Release. Mikrofone und Kameras werden nur nach bewusstem Aktivieren und mit passenden Berechtigungen genutzt.
+- Keine privaten Hosts, Passwörter, Kamerabilder oder privaten Dashboard-Dateien im Release. Mikrofone und Kameras werden nur nach bewusstem Aktivieren und mit passenden Berechtigungen genutzt.
 - TAFA versieht neu installierte Komponenten mit einer Verwaltungskennung und aktualisiert ausschließlich eigene, unveränderte Installationen. HACS-, manuelle und veränderte Dateien bleiben unangetastet. Vorherige Versionen landen unter `.tafa/rollback` im HA-Konfigurationsverzeichnis.
 - Wenn die alte Integration `jarvis_tablet_audio` noch eingerichtet ist, vermeidet die neue Integration doppelte Relay-Schnittstellen. Eine automatische Altanlagenmigration erfolgt **nicht**.
 - Die TAFA-App und der Marketplace sind getrennte Installationswege. Die Android-App bleibt ein unabhängiger Client.

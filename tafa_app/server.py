@@ -175,7 +175,7 @@ def display(message="",lang="de"):
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}proxmox.md" target="_blank" rel="noopener">{t("Proxmox-Anleitung", "Proxmox guide")}</a>
 </div>
 <div class="tile"><strong>2 · {t("GPU-Hauptrechner (optional)", "GPU computer (optional)")}</strong>
-<p>{t("Qwen-Streaming auf Port 10502. Auf dem GPU-PC erstellt das Setup-Skript einen API-Schlüssel in der privaten .env. Beides unter Optionen → Sprachserver & GPU hinterlegen.", "Qwen streaming uses port 10502. The setup script creates a private API key in the GPU PC's .env. Enter both in Options → Speech servers & GPU.")}</p>
+<p>{t("Qwen-Streaming auf Port 10502. Auf dem GPU-PC erstellt das Setup-Skript einen API-Schlüssel in der privaten .env. Die Adresse unter Optionen → Sprachserver & GPU hinterlegen.", "Qwen streaming uses port 10502. The setup script creates a private API key in the GPU PC's .env. Enter both in Options → Speech servers & GPU.")}</p>
 <p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
 </div>

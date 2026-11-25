@@ -21,7 +21,7 @@ Device Bridge 1.0.0 sendet das erkannte Rufwort und gibt anschließend das Mikro
 
 ## Automatische Qwen-/Piper-Sprachausgabe
 
-Ab TAFA App 0.3.8 verwendet eine **neu erstellte** Assist-Pipeline `TAFA Lokal` standardmäßig den **Tablet Assist Stream**-TTS-Provider. Solange kein GPU-Worker konfiguriert oder erreichbar ist, erzeugt Piper die Sprache. Ist ein Qwen-Worker mit API-Schlüssel über die **TAFA-Integration unter Einstellungen → Geräte & Dienste** eingerichtet und bereit, wird Qwen verwendet. Bei Ausfall fällt der Router wieder auf Piper zurück. Ein GPU-Worker wird nicht automatisch im Netzwerk gesucht; Adresse und Schlüssel müssen bewusst eingerichtet werden.
+Ab TAFA App 0.3.8 verwendet eine **neu erstellte** Assist-Pipeline `TAFA Lokal` standardmäßig den **Tablet Assist Stream**-TTS-Provider. Solange kein GPU-Worker konfiguriert oder erreichbar ist, erzeugt Piper die Sprache. Ist ein Qwen-Worker ohne zusätzlichen API-Schlüssel über die **TAFA-Integration unter Einstellungen → Geräte & Dienste** eingerichtet und bereit, wird Qwen verwendet. Bei Ausfall fällt der Router wieder auf Piper zurück. Ein GPU-Worker wird nicht automatisch im Netzwerk gesucht; Die Adresse muss bewusst eingerichtet werden.
 
 **Bereits vorhandene TAFA-Lokal-Pipelines werden nicht automatisch geändert.** Wer die bisherige Piper-only-Engine verwendet, stellt in der Assist-Pipeline die Sprachausgabe auf **Tablet Assist Stream** um. Das gilt für die normale Assist-Sprachausgabe; Alexa-MP3-Durchsagen über den HTTPS-Proxy bleiben ein separater Pfad.
 

@@ -21,7 +21,7 @@ Device Bridge 1.0.0 sends the recognized wake word and releases its microphone b
 
 ## Automatic Qwen/Piper speech output
 
-Starting with TAFA App 0.3.8, a **newly created** `TAFA Lokal` Assist pipeline selects the **Tablet Assist Stream** TTS provider by default. Without a configured or reachable GPU worker it uses Piper. Once the Qwen worker URL and API token are explicitly configured in the **TAFA integration under Settings → Devices & services**, the router prefers Qwen when healthy and falls back to Piper if unavailable. TAFA does not scan for GPU hosts.
+Starting with TAFA App 0.3.8, a **newly created** `TAFA Lokal` Assist pipeline selects the **Tablet Assist Stream** TTS provider by default. Without a configured or reachable GPU worker it uses Piper. Once the Qwen worker URL is explicitly configured in the **TAFA integration under Settings → Devices & services**, the router prefers Qwen when healthy and falls back to Piper if unavailable. TAFA does not scan for GPU hosts.
 
 **Existing TAFA Lokal pipelines are not changed automatically.** For an existing Piper-only pipeline, select **Tablet Assist Stream** as the TTS engine in the Assist pipeline settings. The Qwen/Piper router applies to native Assist speech output; Alexa MP3 announcements via the HTTPS proxy are separate.
 

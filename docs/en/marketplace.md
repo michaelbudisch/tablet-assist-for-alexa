@@ -27,7 +27,7 @@ Marketplace cannot deploy the running CPU processes. If you install via Marketpl
 |---|---|
 | Piper origin | Compatible local Piper HTTP API, e.g. `http://speechserver.local:5000` |
 | CPU STT entity | Optional Wyoming STT entity; without it, TAFA uses `/stt` on the Piper origin |
-| GPU streaming origin/token | Optional external Qwen streaming backend and key |
+| GPU streaming URL | Optional private-LAN Qwen streaming service; no extra API token |
 | GPU STT entity / host | Optional acceleration, with fallback to CPU |
 | Conversation agent | Optional existing HA agent for general knowledge |
 | Audio profile and voice | Optional preferences |
