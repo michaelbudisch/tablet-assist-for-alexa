@@ -35,7 +35,7 @@
     <string name="scan_token">Token-QR-Code scannen</string>
     <string name="token_hint">Oder den Token hier einfügen</string>
     <string name="token_saved">Ein Token ist gespeichert. Feld leer lassen, um ihn weiterzuverwenden.</string>
-    <string name="token_storage">Wird beim Player-Start verschlüsselt gespeichert. Diese App verwendet kein Mikrofon.</string>
+    <string name="token_storage">Wird beim Player-Start verschlüsselt gespeichert. Der optionale Rufwort-Dienst nutzt das Mikrofon nur nach ausdrücklichem Start.</string>
     <string name="player_section">DEINE AUDIOVERBINDUNG</string>
     <string name="player_start">Player starten</string>
     <string name="player_stop">Stoppen</string>
@@ -158,4 +158,19 @@
         <item quantity="other">Alle %d Sekunden</item>
     </plurals>
     <string name="app_version">Version %1$s · Build %2$d</string>
+    <string name="wake_label">OPTIONAL / SPRACH-EXPERIMENT</string>
+    <string name="wake_title">Native Rufworterkennung</string>
+    <string name="wake_description">Alexa, Jarvis oder Hey Jarvis werden lokal über das Mikrofon erkannt. Nur das Rufwort-Ereignis geht an Home Assistant; die Frage verarbeitet das Dashboard. Nach einem Treffer pausiert das App-Mikrofon 50 Sekunden.</string>
+    <string name="wake_privacy">Standardmäßig aus. Das deutsche Sprachmodell (~45 MB) wird nur auf Knopfdruck geladen und bleibt lokal. Keine Audio- oder Gesprächsaufzeichnungen werden übertragen. Vor dem Start die Rufworterkennung im Dashboard abschalten. Alexa kann gleichzeitig deinen Echo aktivieren.</string>
+    <string name="wake_select">Rufwort wählen</string>
+    <string name="wake_install">Deutsches Offline-Modell laden (~45 MB)</string>
+    <string name="wake_start">Native Erkennung starten</string>
+    <string name="wake_stop">Native Erkennung stoppen</string>
+    <string name="wake_stopped">Mikrofon aus</string>
+    <string name="wake_ready">Offline-Modell installiert</string>
+    <string name="wake_model_missing">Zuerst das Offline-Modell herunterladen</string>
+    <string name="wake_permission">Bitte den Mikrofonzugriff für die Rufworterkennung erlauben.</string>
+    <string name="wake_download_failed">Modell-Download fehlgeschlagen: %1$s</string>
+    <string name="wake_running">Mikrofon aktiv · Rufworterkennung</string>
+    <string-array name="wake_choices"><item>Hey Jarvis</item><item>Jarvis</item><item>Alexa</item><item>Alle drei</item></string-array>
 </resources>
