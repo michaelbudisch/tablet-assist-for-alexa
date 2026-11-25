@@ -1,4 +1,4 @@
-# TAFA Home Assistant App 0.3.7 — release candidate
+# TAFA Home Assistant App 0.3.8 — release candidate
 
 The Ingress Control Center installs and safely upgrades one unified HA integration. A local Piper/Faster-Whisper CPU speech service is bundled; the Android Device Bridge stays unchanged. [English guide](../docs/en/app.md) · [Deutsche Anleitung](../docs/app.md).
 
