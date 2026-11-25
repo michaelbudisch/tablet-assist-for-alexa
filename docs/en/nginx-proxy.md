@@ -6,6 +6,10 @@
 
 For an existing NGINX/Certbot proxy that already serves Home Assistant, see the separate [local HTTPS / split DNS tablet microphone guide](local-https.md). No existing virtual host is modified.
 
+## Combined single-CT installation
+
+For a fresh system, the guided [one-line Proxmox installer](proxmox.md) can install Piper, Whisper, MP3 and Nginx **together in one new Debian CT**. Nginx serves temporary MP3 URLs from loopback `127.0.0.1:8080`. Activate HTTPS later using `tafa-setup` once DNS and the intended external routing are ready. This page otherwise documents separate proxy CTs and existing Nginx sites; it never silently changes the forwarding of another proxy.
+
 ## Requirements
 
 A new Debian CT on Proxmox, an unused CT ID, the CPU speech server with internal port 8080, a public DNS hostname and a publicly trusted TLS certificate. Let's Encrypt HTTP-01 requires public DNS resolution and TCP 80; Alexa needs TCP 443. For CGNAT, DS-Lite or an existing reverse proxy, check the actual network architecture before proceeding. Do not create conflicting port forwards. Internally, allow only the proxy's required access to port 8080. HA and other speech/GPU services stay on the trusted LAN. The scripts do not change DNS or router settings.
