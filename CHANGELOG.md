@@ -5,6 +5,13 @@
 
 # Changelog
 
+## TAFA App 0.3.13 / integration 0.4.5 — tablet room pairing
+- TAFA → Devices now combines wake-device controls and admin-only Multiroom audio room pairing, selectable non-admin HA user, room ID and live online/ready state.
+- Secure, explicit ownership transfer with confirmed account reassignment; existing player sessions, quiet-hours and audio room settings remain intact when unchanged.
+- No YAML, duplicate installation or new token handling in the HA dashboard. Android app 1.0.0 unchanged.
+
+
+
 ## TAFA App 0.3.12 / integration 0.4.4 — single configuration source
 - Apps → TAFA → Configuration is the source of truth for App-managed installations; all integration options and optional data source/room mappings are represented there.
 - Admin-only WebSocket sync updates existing App-managed integration entries, avoiding duplicate setup under Devices & services. First migration preserves advanced options when newly added App fields are blank.
