@@ -1,4 +1,4 @@
-# TAFA App 0.3.14 documentation
+# TAFA App 0.3.15 documentation
 
 [Deutsch](../docs/app.md) · [Project overview](../README.md)
 
@@ -55,4 +55,11 @@ Open **TAFA → Devices → [tablet] → Voice test · Speak once** and expand t
 The browser requires **trusted HTTPS** (or localhost) for microphone access. A logged-in HA administrator may also run the test against an explicitly paired tablet shown in the Devices list; normal tablet accounts test only their own room. TTS uses Qwen with Piper fallback as usual. Closing the test or leaving the Devices view stops microphone capture. If no complete STT+TTS pipeline exists, TAFA links to Voice assistants setup.
 
 This microphone flow runs in the **Home Assistant browser/dashboard**. Android **Device Bridge 1.0.0** still sends wake-word events only and does not record the subsequent question in the background.
+
+
+### Test speech playback from a private HTTP address
+
+Once the Android audio player shows connected under **TAFA → Devices**, open **Voice test** and click **“Test speech output”**. You can edit the sample phrase, then the selected **TAFA Lokal** Assist pipeline generates speech with Qwen/Piper and sends the result to the paired Android/Bluetooth player. Status shows synthesis, transfer, buffering, playback and final success/error, based on the actual tablet player report. **No browser microphone** is used, so this works on a private HTTP Home Assistant address.
+
+**“Speak once”** remains the full microphone/Assist test, which browsers restrict to trustworthy HTTPS (or localhost). On insecure HTTP the microphone control is replaced by a helpful explanation rather than a broken button. No new Android APK, HA helpers or tokens are required.
 
