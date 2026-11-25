@@ -132,7 +132,7 @@ case "$PUBLIC_MODE" in
     [[ "$PROXY_CT" =~ ^[1-9][0-9]{2,7}$ && "$PROXY_CT" != "$CTID" ]] || die "Ungueltige Proxy-ID."
     [[ "$(pct status "$PROXY_CT" 2>/dev/null)" == *running* ]] || die "Proxy CT laeuft nicht."
     pct exec "$PROXY_CT" -- nginx -t || die "Vorhandener Nginx hat Konfigurationsfehler."
-    pct exec "$PROXY_CT" -- command -v certbot >/dev/null || die "Certbot fehlt auf Proxy-CT."
+    pct exec "$PROXY_CT" -- bash -lc 'command -v certbot >/dev/null' || die "Certbot fehlt auf Proxy-CT."
     if pct exec "$PROXY_CT" -- test -e /etc/nginx/sites-available/tablet-assist-audio; then
       die "Ein TAFA Audio-vHost existiert bereits auf dem Proxy; nicht ueberschreiben."
     fi
