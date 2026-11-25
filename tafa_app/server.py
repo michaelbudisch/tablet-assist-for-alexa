@@ -441,7 +441,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_error(400)
             self.respond(display(msg,lang=lang,default_tab=tab))
         except (OSError,ValueError,RuntimeError,SyntaxError) as exc:
-            reason=str(exc)[:160] if isinstance(exc,ValueError) else type(exc).__name__
+            reason=(str(exc)[:180] if isinstance(exc,ValueError) or action in ("manifest_preview","manifest_apply") else type(exc).__name__)
             self.respond(display("TAFA configuration: "+reason,lang=lang,default_tab=tab),400)
 
 if __name__=="__main__":

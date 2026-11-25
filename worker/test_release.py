@@ -26,7 +26,7 @@ class ReleaseTests(unittest.TestCase):
                 self.assertNotIn("X-API-Key", source)
         for name in ("00-Konfiguration.bat", "01-Installieren.bat",
                      "02-Starten.bat", "03-Neustarten.bat",
-                     "04-Verbindungsdaten.bat", "Worker-Windows.ps1"):
+                     "04-Verbindungsdaten.bat", "05-Ollama-Einrichten.bat", "Worker-Windows.ps1"):
             self.assertTrue((check_release.ROOT / name).is_file(), name)
 
     def test_version_and_changelog(self):

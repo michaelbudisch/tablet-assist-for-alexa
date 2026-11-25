@@ -197,10 +197,22 @@ def render_panel(lang,csrf,notice="",review=None):
         service_list="".join(
             f'<li>{esc(k)}: {t("aktiv","enabled") if v["enabled"] else t("nicht aktiv","not running")}</li>'
             for k,v in manifest["services"].items())
+        prior=previous.get("entries",{}) if previous else {}
+        intents=[]
+        if manifest["services"]["wyoming_stt"]["enabled"]:
+            intents.append(t("Wyoming-STT automatisch anlegen oder wiederverwenden; bei bekannter Geräte-ID den Host aktualisieren.",
+                             "Set up/reuse Wyoming STT and update mapped entry host when its IP changes."))
+        if manifest["kind"]=="gpu_worker" and manifest["services"]["ollama"]["enabled"]:
+            intents.append(t("Ollama-Anbindung und vorhandenen Gesprächsagenten prüfen oder ergänzen (kein automatischer Modelldownload).",
+                             "Set up/reuse Ollama and its conversation agent (no automatic model download)."))
+        action_items="".join("<li>"+esc(item)+"</li>" for item in intents)
+        mapping_note=(", "+t("Zugeordnete HA-Integrationen: ","Mapped HA integrations: ")+
+                      ", ".join(esc(key) for key in prior)) if prior else ""
         confirmation=f"""<div class="import-review" role="region">
 <h4>{t("Änderungen vor der Übernahme prüfen","Review before applying")}</h4>
-<p><strong>{esc(status)}</strong> · {esc(manifest["kind"])} · {esc(manifest["host"])}</p>
+<p><strong>{esc(status)}</strong> · {esc(manifest["kind"])} · {esc(manifest["host"])}{mapping_note}</p>
 <p>{t("Erkannte Dienste","Detected services")}:</p><ul>{service_list}</ul>
+<p>{t("Geplante Home-Assistant-Aktionen","Planned Home Assistant actions")}:</p><ul>{action_items}</ul>
 <p>{t("TAFA-Optionen werden angepasst","TAFA options to update")}:</p><ul>{changes_html}</ul>
 <p class="subtle">{t("Wyoming und Ollama werden erst nach deiner Bestätigung eingerichtet. Bestehende, nicht zugeordnete Integrationen bleiben unverändert.","Wyoming and Ollama are provisioned only after confirmation. Unrelated existing integrations remain unchanged.")}</p>
 <form action="./" method="post">
