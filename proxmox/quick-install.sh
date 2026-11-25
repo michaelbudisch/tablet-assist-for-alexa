@@ -188,7 +188,7 @@ pct push "$CTID" "$WORK/installer.tar.gz" /tmp/tafa-installer.tar.gz
 pct exec "$CTID" -- mkdir -p /opt/tafa-installer
 pct exec "$CTID" -- tar -xzf /tmp/tafa-installer.tar.gz -C /opt/tafa-installer
 if [[ "$PUBLIC_MODE" == shared ]]; then
-  pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE" shared "$PROXY_IP"
+  pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE" shared "$PROXY_IP" "$PROXY_CT" "$CTID"
   NEW_CT_IP="$(pct exec "$CTID" -- hostname -I | tr ' ' '\n' | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -n1)"
   [[ -n "$NEW_CT_IP" ]] || die "Neuer CT hat noch keine private IPv4."
   PROXY_SETUP="/opt/tafa-audio-setup-$CTID"
