@@ -57,6 +57,14 @@ jobs:
           set -euo pipefail
           tag="audio-v$(tr -d '\r\n' < android/VERSION)"
           version="$(tr -d '\r\n' < android/VERSION)"
+          apk="android/downloads/TAFA-Device-Bridge-$version.apk"
+          # Never publish a stale 1.0.0 APK under a new version tag.
+          # A compatible update must be locally signed with the original key.
+          if [ ! -f "$apk" ]; then
+            echo "Signed $version APK not committed; skipping release, leaving CI debug artifact only."
+            exit 0
+          fi
+          (cd android/downloads && sha256sum --check SHA256SUMS)
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'Release already exists; keep existing release unchanged.'
             exit 0
