@@ -132,7 +132,7 @@ function Write-Report {
     '  speech_mode          = external     [wenn Proxmox CPU-Piper nutzt]',
     '  external_piper_base  = http://<PROXMOX-SPRACHSERVER-IP>:5000',
     '  cpu_stt              = <CPU-WYOMING-STT-ENTITAETS-ID AUS HA>',
-    '  gpu_base             = http://'+$ip+':10502',
+    ('  gpu_base             = http://'+$ip+':10502'),
     '  gpu_stt              = <GPU-WYOMING-STT-ENTITAETS-ID AUS HA>',
     '  gpu_stt_host         = '+$ip,
     '  hardware_profile     = automatic',
@@ -276,6 +276,9 @@ try {
     'Info' { Write-Host 'Aktualisiere Verbindungsdaten.' }
   }
   Write-Report
+  if($Action -in @('Prepare','Install','Start')){
+    Write-Host 'Naechster Schritt: 04-Verbindungsdaten.bat oeffnet die Wyoming/Ollama/TAFA-Anleitung.' -ForegroundColor Cyan
+  }
   Write-Host 'Fertig.' -ForegroundColor Green
   exit 0
 }catch{
