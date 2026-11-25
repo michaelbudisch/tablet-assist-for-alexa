@@ -1,18 +1,26 @@
-# HA Jarvis Echo Relay · Android 0.6.0
+# HA Jarvis Echo Relay · Android 0.7.0 (experimentell)
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetooth-Lautsprecher, zum Beispiel einem Amazon Echo. Android 9 oder neuer. Kein Mikrofonzugriff, kein Wakeword und kein automatischer Start nach dem Booten.
+Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetooth-Lautsprecher, zum Beispiel einem Amazon Echo. Android 9 oder neuer. Optionale Rufworterkennung mit ausdrücklich erteiltem Mikrofonzugriff; standardmäßig ausgeschaltet. Kein automatischer Start nach dem Booten.
 
 ![Deutsche Tablet-Oberfläche](docs/ui-de-tablet.png)
 
 ## Download und Update
 
-[Fertige Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Bisherige stabile 0.6.0-Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
 Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Der sichtbare Name und das Icon ändern sich.
 
 Die Vorschau verwendet denselben lokalen Android-Testsignaturschlüssel wie die vorherigen Builds, damit Updates funktionieren. Die veröffentlichte APK ist ein signierter, nicht debuggbarer Release-Build; Signaturschlüssel werden nicht veröffentlicht. CI-Debug-APKs verwenden einen anderen Testschlüssel und sind kein Ersatz für dieses Update.
+
+## Experimentelle native Rufworterkennung (0.7.0-Testzweig)
+
+In der Echo-Relay-App unter **Native Rufworterkennung** das optionale deutsche Sprachmodell (~45 MB) auf Knopfdruck laden und den Mikrofonzugriff erlauben. **Hey Jarvis**, **Jarvis**, **Alexa** oder **Alle drei** auswählen und **Native Erkennung starten** antippen. Eine dauerhafte Android-Benachrichtigung zeigt den aktiven Mikrofon-Dienst und bietet **Stoppen**. Die Erkennung kann auch in der App beendet werden. Das Sprachmodell stammt von Alpha Cephei, wird über HTTPS geladen und bleibt im privaten App-Speicher.
+
+Die App erkennt die Rufwörter lokal und sendet nur das erkannte Rufwort über die hinterlegte Home-Assistant-Verbindung als `jarvis_android_wakeword`-Ereignis. Sie gibt das Mikrofon anschließend frei und pausiert 50 Sekunden. Das HA-Dashboard empfängt das Ereignis und startet seine vorhandene Whisper-STT-Aufnahme. Für die ersten Tests das Dashboard geöffnet lassen und dessen eigene Rufworterkennung ausschalten; direkt angehängte Wörter können vor der Übernahme durch das Browsermikrofon verloren gehen. Bei geschlossenem Dashboard ist ein vollständig freihändiger Betrieb noch nicht gewährleistet. **Alexa** kann zugleich einen echten Echo aktivieren.
+
+Das ist ein experimenteller Quellcode-Zweig, noch keine signierte herunterladbare 0.7.0-APK. Erkennungsqualität, Latenz und Mikrofon-Koexistenz auf Android müssen geprüft werden.
 
 ## Einrichten
 
