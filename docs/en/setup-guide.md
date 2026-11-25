@@ -2,7 +2,10 @@
 
 [Deutsch](../setup-guide.md) · [Install the App](app.md)
 
-TAFA App **0.3.11** can use bundled CPU Piper/Whisper or a trusted **Proxmox-only speech server**. Choose under **Settings → Apps → TAFA → Configuration** before starting. There are three independent choices.
+> **New in App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
+
+
+TAFA App **0.3.12** can use bundled CPU Piper/Whisper or a trusted **Proxmox-only speech server**. Choose under **Settings → Apps → TAFA → Configuration** before starting. There are three independent choices.
 
 **Existing speech server:** To update only the MP3 generator from an older token-based version, use the source checkout inside the dedicated Debian guest and run `sudo bash proxmox/update-mp3-generator.sh`. It backs up the existing `api.py` and restarts only `jarvis-mp3.service`, rolling back if health checks fail. This does not replace Piper, Whisper, data or your proxy. Update the matching TAFA integration to 0.4.3. Never run this script on the Proxmox host. No public forwarding for port 5001.
 
@@ -15,7 +18,7 @@ TAFA App **0.3.11** can use bundled CPU Piper/Whisper or a trusted **Proxmox-onl
 
 Follow the [CPU speech server guide](proxmox.md). Run `install-speechserver.sh` only inside a **new Debian guest**, never on the Proxmox host or over an existing Jarvis installation. `create-ct.sh` creates a dedicated guest after confirmation (4 vCPU, 4 GiB RAM, 20 GiB disk, DHCP). It also supplies the optional MP3 generation services.
 
-External mode checks private Proxmox Piper `/health` and can prepare the TAFA integration without downloading built-in models. In **Settings → Devices & services → TAFA → Options → Speech servers & GPU**, verify Piper and select the separately configured Wyoming STT entity for `SERVER:10300` as CPU STT. Then create/select an Assist pipeline using the TAFA STT router and **Tablet Assist Stream**. Proxmox Piper has no `/stt` endpoint, so the Wyoming integration is required.
+External mode checks private Proxmox Piper `/health` and can prepare the TAFA integration without downloading built-in models. In **Settings → Apps → TAFA → Configuration**, verify Piper and select the separately configured Wyoming STT entity for `SERVER:10300` as CPU STT. Then create/select an Assist pipeline using the TAFA STT router and **Tablet Assist Stream**. Proxmox Piper has no `/stt` endpoint, so the Wyoming integration is required.
 
 ## 2. Optional Qwen GPU voice
 
