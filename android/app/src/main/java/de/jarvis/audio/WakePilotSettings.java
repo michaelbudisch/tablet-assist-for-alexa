@@ -73,7 +73,13 @@ final class WakePilotSettings {
             if(code<200||code>=300)throw new java.io.IOException("HA HTTP "+code);
             if(body!=null)return new JSONObject();
             try(java.io.InputStream stream=conn.getInputStream()){
-                return new JSONObject(new String(stream.readAllBytes(),StandardCharsets.UTF_8));
+                java.io.ByteArrayOutputStream buffer=new java.io.ByteArrayOutputStream();
+                byte[] chunk=new byte[4096];int n;int total=0;
+                while((n=stream.read(chunk))!=-1){
+                    total+=n;if(total>1024*1024)throw new java.io.IOException("HA settings response too large");
+                    buffer.write(chunk,0,n);
+                }
+                return new JSONObject(new String(buffer.toByteArray(),StandardCharsets.UTF_8));
             }
         }finally{if(conn!=null)conn.disconnect();}
     }
