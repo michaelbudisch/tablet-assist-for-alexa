@@ -65,13 +65,13 @@ def private_http_origin(value):
 
 
 def choose(path=OPTIONS_FILE):
-    """Return ('local', '') or ('external', validated private Piper origin)."""
+    """Return setup/local/external without waking bundled models in setup mode."""
     values = load_options(path)
     mode = values.get("speech_mode", "local")
-    if mode not in ("local", "external"):
-        raise ValueError("Choose local or external speech mode")
-    if mode == "local":
-        return "local", ""
+    if mode not in ("setup", "local", "external"):
+        raise ValueError("Choose setup, local or external speech mode")
+    if mode in ("setup", "local"):
+        return mode, ""
     return "external", private_http_origin(values.get("external_piper_base", ""))
 
 

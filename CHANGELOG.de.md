@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA App 0.3.24 / Integration 0.4.11 — vollständigere Ersteinrichtung und gemeinsames Logo
+- Frische App-Installationen starten im JSON-Einrichtungsmodus ohne Piper-/Whisper-Modelldownload. Nach Import verarbeitet TAFA verspätet registrierte Wyoming-/Ollama-Entitäten und führt die Erstellung der Assist-Pipeline „TAFA Lokal“ fort.
+- Control Center und HA-Sprachzentrale nutzen den originalen zweifarbigen Android-App-Vektor. Eine Abschlusskarte zeigt den tatsächlichen Assist-Status und bietet den Link zur Standard-Auswahl, ohne bestehende Defaults zu überschreiben.
+
+
 ## TAFA-Integration 0.4.10 — Gerätezuordnung per bestätigtem JSON-Import
 - Neue Admin-Schnittstelle für Wyoming-/Ollama-Einrichtung nach ausdrücklicher Freigabe im Control Center. Bestehende, nicht zugeordnete HA-Integrationen und Assist-Pipelines bleiben erhalten. Fehlende KI-Modelle werden nicht automatisch geladen.
 

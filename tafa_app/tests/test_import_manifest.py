@@ -87,6 +87,21 @@ class ImportTests(unittest.TestCase):
             self.assertEqual(record["entries"]["wyoming_stt"],"existing_wyo")
             self.assertEqual(path.stat().st_mode&0o777,0o600)
 
+    def test_confirmed_import_can_resume_after_ha_core_restart(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/"records.json"
+            first=imp.validate(json.dumps(gpu()))
+            imp.save_record(first,{},path,pending=True)
+            record=imp.load_records(path)[ID]
+            self.assertTrue(record["provision_pending"])
+            self.assertEqual(record["manifest"]["schema"],"tafa-connection-v1")
+            self.assertEqual(record["manifest"]["device_id"],ID)
+            imp.save_record(first,{"wyoming_stt":"ready_entry"},path)
+            record=imp.load_records(path)[ID]
+            self.assertFalse(record["provision_pending"])
+            self.assertIsNone(record["manifest"])
+            self.assertEqual(record["entries"]["wyoming_stt"],"ready_entry")
+
     def test_preview_needs_confirmation_and_expires(self):
         with patch.object(imp,"RECORD",Path("/this/never-exists")):
             ticket,manifest,changes,prior=imp.preview(json.dumps(gpu()),{})
@@ -102,6 +117,7 @@ class ImportTests(unittest.TestCase):
         self.assertIn('name="action" value="manifest_apply"',panel)
         self.assertIn('name="ticket"',panel)
         self.assertIn('type="file"',panel)
+        self.assertIn('name="restart_core_if_needed"',panel)
 
 
 if __name__=="__main__":

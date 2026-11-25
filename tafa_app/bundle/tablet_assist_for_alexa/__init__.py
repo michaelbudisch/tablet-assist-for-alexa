@@ -43,6 +43,7 @@ async def async_setup(hass: HomeAssistant, config):
         StaticPathConfig("/tablet_assist_for_alexa/room_assist_test.js", str(Path(__file__).parent / "frontend" / "room_assist_test.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/device_audio.js", str(Path(__file__).parent / "frontend" / "device_audio.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/panel.js", str(Path(__file__).parent / "frontend" / "panel.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/brand.svg", str(Path(__file__).parent / "frontend" / "brand.svg"), False),
     ])
     return True
 

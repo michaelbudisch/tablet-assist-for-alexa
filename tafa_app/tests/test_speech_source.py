@@ -18,6 +18,9 @@ class SpeechSourceTests(unittest.TestCase):
             p.write_text(json.dumps(settings), encoding="utf-8")
             return choose(p)
 
+    def test_setup_mode_is_not_local_model_mode(self):
+        self.assertEqual(self.selection({"speech_mode":"setup"}),("setup",""))
+
     def test_default_and_explicit_local(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(choose(Path(tmp) / "missing.json"), ("local", ""))

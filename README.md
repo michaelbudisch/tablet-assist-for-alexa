@@ -4,12 +4,12 @@
 
 **English** | [Deutsch](README.de.md)
 
-> **From App 0.3.20:** Open the **TAFA Control Center → Settings** to configure speech servers, GPU, Wyoming, Ollama and Alexa in one place. Save and restart TAFA once to apply. Both the Control Center and Home Assistant's technical **Apps → TAFA → Configuration** editor write the same persistent options; the latter is for troubleshooting or pre-start external mode selection. Add Wyoming/Ollama providers once in **Devices & services**. Existing pipelines are preserved; Marketplace-only installations retain their native HA options flow.
+> **From App 0.3.24:** Fresh installations start in **setup mode without speech-model downloads**. Install the GPU Worker or Proxmox speech server, export its JSON, then preview and confirm it in **TAFA Control Center → Settings**. TAFA configures supported integrations and completes the TAFA Lokal Assist pipeline when its components are ready. A newly staged HA integration may need a separately authorized one-time Core restart; the approved import resumes afterwards.
 
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.22**, HA integration **0.4.10**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.24**, HA integration **0.4.11**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 

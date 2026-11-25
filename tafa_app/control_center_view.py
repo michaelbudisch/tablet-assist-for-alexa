@@ -7,7 +7,7 @@ import html
 
 
 def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
-                     cards, picker, import_panel, checks, options, setup, links, latest,
+                     cards, picker, import_panel, checks, options, setup, pipeline, links, latest,
                      cache_info, note, install, retry_button, remove_button, mode):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
@@ -18,6 +18,8 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 
     def status(key):
         names = {
+            "needs_review":t("Prüfung nötig","Needs review"),
+            "waiting":t("Einrichtung läuft","Setting up"),
             "ready":t("Bereit","Ready"), "reachable":t("Erreichbar","Reachable"),
             "selected":t("Eingerichtet","Configured"),
             "offline":t("Offline","Offline"),
@@ -47,6 +49,10 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
         summary_card(cards[2][0],cards[2][1],"neutral"),
         summary_card(cards[3][0],cards[3][1],"neutral"),
         summary_card(cards[4][0],cards[4][1],links.get("gpu")),
+        summary_card("TAFA Lokal",t("Einsatzbereit","Ready") if pipeline.get("status")=="ready"
+                     else t("Überprüfung erforderlich","Needs review") if pipeline.get("status")=="needs_review"
+                     else t("Wird eingerichtet","Setting up"),
+                     "ready" if pipeline.get("status")=="ready" else "not_ready"),
     ))
     expected_route = cards[7][1]
     last_backend = (
@@ -148,6 +154,17 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
       <small>{t("Aus dem Home-Assistant-Sprachrouter, falls verfügbar.","From the Home Assistant speech router, if available.")}</small></div>
   </div>
   <div class="metric-grid">{summary}</div>
+  <div class="assist-readiness" role="status">
+    <div class="readiness-marker" aria-hidden="true">{"✓" if pipeline.get("status")=="ready" else "…"}</div>
+    <div>
+      <strong>{t("TAFA Lokal ist einsatzbereit","TAFA Lokal is ready") if pipeline.get("status")=="ready"
+        else t("TAFA Lokal benötigt eine Prüfung","TAFA Lokal needs review") if pipeline.get("status")=="needs_review"
+        else t("TAFA Lokal wird automatisch eingerichtet","TAFA Lokal is being configured")}</strong>
+      <p>{esc(pipeline.get("detail",""))}</p>
+      <p class="subtle">{t("Bestehende Standard-Sprachassistenten bleiben unverändert.","Existing default voice assistants are not changed.")}</p>
+    </div>
+    <a class="btn btn-outline" href="/config/voice-assistants" target="_top">{t("Sprachassistent auswählen","Select voice assistant")}</a>
+  </div>
   <div class="shortcut-grid">
     <a href="#setup" class="shortcut"><span class="shortcut-icon" aria-hidden="true">01</span><strong>{t("TAFA einrichten","Configure TAFA")}</strong><small>{t("Sprachserver, GPU und Alexa","Speech server, GPU and Alexa")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
     <a href="#connections" class="shortcut"><span class="shortcut-icon" aria-hidden="true">02</span><strong>{t("Verbindungen prüfen","Check connections")}</strong><small>{t("Endpunkte und Erreichbarkeit","Endpoints and reachability")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
@@ -183,6 +200,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <h2>{t("Wartung & Hilfe","Maintenance & help")}</h2>
     <p>{t("Selten benötigte Funktionen sind bewusst hier gebündelt.","Less-frequent tasks live here, away from everyday settings.")}</p>
   </div>
+  {('<div class="work-card"><h3>'+t("Einrichtung fortsetzen","Resume setup")+'</h3><p class="subtle">'+t("Die neue TAFA-Integration wurde gespeichert, aber Home Assistant Core muss sie einmal laden. Dein bestätigter JSON-Import wird anschließend automatisch abgeschlossen.","The new TAFA backend has been staged and HA Core needs one restart to load it. Your approved JSON import resumes automatically afterwards.")+'</p><form action="./" method="post"><input type="hidden" name="csrf" value="'+esc(csrf)+'"><input type="hidden" name="lang" value="'+lang+'"><input type="hidden" name="tab" value="maintenance"><label>'+t("Zur Bestätigung RESTART eingeben","Type RESTART to confirm")+'<input type="text" name="confirmation" required maxlength="7" pattern="RESTART"></label><button class="btn btn-primary" type="submit" name="action" value="restart_core">'+t("Home Assistant Core neu starten","Restart Home Assistant Core")+'</button></form></div>' if setup.get("status")=="awaiting_core_restart" else "")}
   <div class="maintenance-grid">
     <section class="work-card">
       <h3>{t("Einrichtungsstatus","Setup status")}</h3>
@@ -207,7 +225,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <div class="support-body"><ol class="steps">
       <li>{t("TAFA installiert das Backend beim Start automatisch.","TAFA stages its backend automatically on startup.")}</li>
       <li>{t("Nach einem Backend-Update Home Assistant Core einmal neu starten.","Restart Home Assistant Core once after a backend update.")}</li>
-      <li>{t("Wyoming und optional Ollama unter Geräte & Dienste einrichten; dann in TAFA zuweisen.","Add Wyoming and optional Ollama under Devices & services; then assign them in TAFA.")}</li>
+      <li>{t("GPU-/Proxmox-JSON unter Einrichtung importieren. TAFA verbindet Wyoming und Ollama automatisch, soweit die Dienste verfügbar sind.","Import GPU/Proxmox JSON under Settings. TAFA connects Wyoming and Ollama automatically when the services are available.")}</li>
       <li>{t("TAFA Device Bridge für Rufwort und Audio verbinden.","Connect TAFA Device Bridge for wake words and audio.")}</li>
     </ol><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open Devices & services")}</a>
     <span aria-hidden="true"> · </span><a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></div>

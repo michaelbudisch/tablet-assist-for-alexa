@@ -161,9 +161,9 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 {check("reminders_enabled",t("Erinnerungen aktivieren", "Enable reminders"))}
 {field("reminder_room",t("Erinnerungsraum (wenn eingerichtet)", "Reminder room (if configured)"))}
 </details>
-<p class="muted">{t("Die Felder werden vor dem Speichern geprüft. Andere TAFA-Einstellungen bleiben erhalten. Nach dem Speichern die TAFA-App einmal neu starten.",
-"Fields are validated before saving; unrelated options remain intact. Restart the TAFA App once after saving.")}</p>
-<div class="form-actions"><span class="form-actions-note">{t("Neustart der TAFA-App nach dem Speichern erforderlich", "Restart TAFA App after saving")}</span><button class="btn btn-primary" type="submit" name="action" value="settings">{t("Einstellungen speichern", "Save settings")}</button></div>
+<p class="muted">{t("Die Felder werden geprüft und andere TAFA-Einstellungen bleiben erhalten. Änderungen werden automatisch übernommen; ein neu installiertes HA-Backend kann einen Core-Neustart erfordern.",
+"Fields are checked and unrelated TAFA settings are preserved. Changes apply automatically; a new HA backend may require a Core restart.")}</p>
+<div class="form-actions"><span class="form-actions-note">{t("Änderungen werden automatisch übernommen", "Changes are applied automatically")}</span><button class="btn btn-primary" type="submit" name="action" value="settings">{t("Einstellungen speichern", "Save settings")}</button></div>
 </form></section>
 """
 

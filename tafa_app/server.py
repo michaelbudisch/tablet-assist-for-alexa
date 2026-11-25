@@ -32,7 +32,7 @@ from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from control_center_view import render_dashboard
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, load_records, save_record, render_panel
-from auto_setup import provision_worker_manifest
+from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
 from speech_source import load_options
 
@@ -43,7 +43,13 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.23"
+SETUP_LOCK=threading.Lock()
+CPU_LOCK=threading.Lock()
+FINALIZER_LOCK=threading.Lock()
+SETUP_GENERATION=0
+CPU_THREAD=None
+FINALIZER_THREAD=None
+APP_VERSION="0.3.24"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -96,7 +102,10 @@ def setup_status():
 
 def autoconfigure(address, mode="local"):
     # Reattempt after HA Core restarts and discovers newly installed files.
+    generation=SETUP_GENERATION
     while True:
+        if generation!=SETUP_GENERATION:
+            return
         try:
             if mode == "external":
                 if not external_piper_ready(address):
@@ -172,12 +181,179 @@ def monitor_speech():
     worker = str(Path(__file__).parent / "speech_proxy.py")
     while True:
         try:
+            if choose_speech_source()[0] != "local":
+                return
             child = subprocess.Popen([sys.executable,worker])
-            code = child.wait()
-            LOG.error("CPU speech process exited with code %s; restarting in 10 s",code)
+            # End the local speech subprocess when imported Proxmox mode takes
+            # over. A service does not keep downloading models after switching.
+            while child.poll() is None:
+                try:
+                    active=choose_speech_source()[0] == "local"
+                except (OSError,ValueError):
+                    active=False
+                if not active:
+                    child.terminate()
+                    try:
+                        child.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        child.kill()
+                        child.wait(timeout=5)
+                    LOG.info("Bundled CPU speech stopped after mode switch")
+                    return
+                time.sleep(2)
+            LOG.error("CPU speech process exited with code %s; restarting in 10 s",child.returncode)
         except OSError as exc:
             LOG.error("CPU speech process could not start: %s",type(exc).__name__)
         time.sleep(10)
+
+def _cpu_monitor():
+    global CPU_THREAD
+    with CPU_LOCK:
+        if CPU_THREAD and CPU_THREAD.is_alive():
+            return
+        CPU_THREAD=threading.Thread(target=monitor_speech,daemon=True)
+        CPU_THREAD.start()
+
+
+def _launch_autoconfigure(address,mode):
+    global SETUP_GENERATION
+    with SETUP_LOCK:
+        SETUP_GENERATION+=1
+        threading.Thread(target=autoconfigure,args=(address,mode),daemon=True).start()
+
+
+def _tracked_profiles():
+    """Resolve only the import-approved Home Assistant device mappings."""
+    tracked={}
+    duplicates=set()
+    for device in load_records().values():
+        if not isinstance(device,dict):
+            continue
+        kind=device.get("kind")
+        if kind not in ("gpu_worker","speech_server"):
+            continue
+        if kind in tracked:
+            duplicates.add(kind)
+            continue
+        entries=device.get("entries") or {}
+        expected=device.get("expected") or {}
+        if not isinstance(entries,dict) or not isinstance(expected,dict):
+            continue
+        tracked[kind]={
+            **{key:entry for key,entry in entries.items()
+               if key in ("wyoming_stt","ollama") and isinstance(entry,str)},
+            "expected":{key:expected.get(key) is True for key in ("wyoming_stt","ollama")},
+        }
+    for kind in duplicates:
+        tracked.pop(kind,None)
+    return tracked
+
+
+def _complete_imports():
+    """Resume confirmed provisioning after HA reload, then map delayed entities."""
+    while True:
+        records=load_records()
+        if not records:
+            return
+        still_pending=False
+        for rec in records.values():
+            if not isinstance(rec,dict) or not rec.get("provision_pending"):
+                continue
+            manifest=rec.get("manifest")
+            if not isinstance(manifest,dict):
+                continue
+            try:
+                results=provision_worker_manifest(manifest,rec.get("entries") or {})
+                assigned=results.get("entries") or {}
+                entities=results.get("entities") or {}
+                changes={}
+                role="gpu_stt" if manifest["kind"]=="gpu_worker" else "cpu_stt"
+                if isinstance(entities.get("stt"),str):
+                    changes[role]=entities["stt"]
+                if manifest["kind"]=="gpu_worker" and isinstance(entities.get("llm_agent"),str):
+                    changes["llm_agent"]=entities["llm_agent"]
+                if changes:
+                    save_app_changes(TOKEN,changes)
+                save_record(manifest,assigned)
+            except (OSError,RuntimeError,ValueError,TimeoutError) as exc:
+                still_pending=True
+                LOG.warning("TAFA approved HA setup pending: %s",str(exc)[:110])
+        if still_pending:
+            save_state("awaiting_core_restart",
+                       "HA backend not yet available; approved JSON is saved for automatic resume")
+            time.sleep(10)
+            continue
+        mappings=_tracked_profiles()
+        if not mappings:
+            return
+        try:
+            outcome=resolve_import_entities(mappings)
+            assigned=outcome.get("entities",{})
+            pending=outcome.get("pending",[])
+            if not isinstance(assigned,dict) or not isinstance(pending,list):
+                raise RuntimeError("Unexpected HA entity mapping")
+            current=load_options()
+            changes={k:v for k,v in assigned.items()
+                     if k in ("gpu_stt","cpu_stt","llm_agent")
+                     and isinstance(v,str) and current.get(k)!=v}
+            if changes:
+                save_app_changes(TOKEN,changes)
+                mode,base=choose_speech_source()
+                if mode!="setup":
+                    service=_internal_address() if mode=="local" else base
+                    sync_app_configuration(service,setup_settings())
+            if not pending:
+                LOG.info("TAFA imported entity mappings complete")
+                return
+            LOG.info("TAFA waiting for imported entities: %s",", ".join(str(p)[:70] for p in pending))
+        except (OSError,ValueError,RuntimeError,TimeoutError) as exc:
+            LOG.warning("TAFA entity mapping retry: %s",str(exc)[:120])
+        time.sleep(10)
+
+
+def _start_import_finalizer():
+    global FINALIZER_THREAD
+    if not load_records():
+        return
+    with FINALIZER_LOCK:
+        if FINALIZER_THREAD and FINALIZER_THREAD.is_alive():
+            return
+        FINALIZER_THREAD=threading.Thread(target=_complete_imports,daemon=True)
+        FINALIZER_THREAD.start()
+
+
+def restart_home_assistant_core():
+    """Disruptive HA restart, invoked only with an explicit import checkbox/button."""
+    if not TOKEN:
+        raise RuntimeError("Supervisor API unavailable")
+    request=urllib.request.Request(
+        "http://supervisor/core/restart",data=b"{}",method="POST",
+        headers={"Authorization":"Bearer "+TOKEN,"Content-Type":"application/json"})
+    with urllib.request.urlopen(request,timeout=8) as response:
+        if response.status not in (200,202):
+            raise RuntimeError("Supervisor refused Home Assistant Core restart")
+        raw=response.read(16384)
+        if raw:
+            result=json.loads(raw.decode("utf-8"))
+            if not isinstance(result,dict) or result.get("result")!="ok":
+                raise RuntimeError("Supervisor did not accept Home Assistant Core restart")
+
+
+def activate_configured_services():
+    """Apply confirmed App options immediately; no blind extra restart."""
+    mode,external_base=choose_speech_source()
+    if mode=="setup":
+        save_state("awaiting_import","Import GPU/Proxmox JSON or select the built-in CPU server")
+        return
+    if mode=="local":
+        _cpu_monitor()
+        address=_internal_address()
+    else:
+        address=external_base
+    publish_service_address(address)
+    _launch_autoconfigure(address,mode)
+    _start_import_finalizer()
+
 
 def startup():
     try:
@@ -187,16 +363,14 @@ def startup():
     except (OSError,ValueError,SyntaxError) as exc:
         LOG.error("Backend installation could not complete: %s",type(exc).__name__)
     try:
-        mode, external_base = choose_speech_source()
-        if mode == "local":
-            threading.Thread(target=monitor_speech,daemon=True).start()
-            address=_internal_address()
-            LOG.info("Bundled CPU Piper and Whisper enabled")
+        mode, external_base=choose_speech_source()
+        if mode=="setup":
+            save_state("awaiting_import","Select GPU/Proxmox JSON before starting CPU model downloads")
+            LOG.info("TAFA first-run setup: awaiting confirmed JSON, CPU model downloads disabled")
         else:
-            address=external_base
-            LOG.info("External Proxmox Piper selected; bundled CPU speech disabled")
-        publish_service_address(address)
-        threading.Thread(target=autoconfigure,args=(address,mode),daemon=True).start()
+            activate_configured_services()
+            LOG.info("TAFA speech mode: %s",mode)
+
     except (OSError,RuntimeError,ValueError) as exc:
         LOG.error("Automatic HA setup unavailable: %s",type(exc).__name__)
         save_state("needs_attention",str(exc)[:150])
@@ -223,7 +397,15 @@ def display(message="",lang="de",default_tab="overview",review=None):
                  "piper_phase":"error","piper_error":source_error,
                  "whisper_phase":"external"}
     setup=setup_status()
+    if any(isinstance(rec,dict) and rec.get("provision_pending")
+           for rec in load_records().values()):
+        setup={"status":"awaiting_core_restart",
+               "detail":"Approved JSON queued until HA has loaded the new TAFA backend"}
+    if mode=="setup":
+        runtime={"piper_ready":False,"whisper_ready":False,
+                 "piper_phase":"setup","whisper_phase":"setup"}
     links=connection_status(preferences, runtime.get("piper_ready") is True)
+    pipeline=inspect_tafa_pipeline()
     cache=local_model_inventory()
     translations={
       "not_configured":t("Nicht eingerichtet","Not configured"),
@@ -320,6 +502,7 @@ def display(message="",lang="de",default_tab="overview",review=None):
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     import_panel=render_panel(lang,CSRF,review=review)
     return render_dashboard(
+        pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
         cards=cards, picker=picker, import_panel=import_panel, checks=checks,
@@ -392,7 +575,39 @@ class Handler(BaseHTTPRequestHandler):
                 known=load_records().get(manifest["device_id"],{})
                 if known and known.get("kind")!=manifest["kind"]:
                     raise ValueError("Device identity was previously used for a different server type")
-                results=provision_worker_manifest(manifest,known.get("entries",{}))
+                pending=False
+                # New installations have the integration files staged but HA
+                # Core may not have loaded the custom config flow yet.
+                proposed={**current,**changes}
+                mode=proposed.get("speech_mode","setup")
+                if mode=="external":
+                    piper=proposed.get("external_piper_base","")
+                else:
+                    piper=_internal_address()
+                ready=False
+                try:
+                    configured=configure(piper,{**setup_settings(),**changes})
+                    ready=configured in ("configured","already_configured")
+                    if not ready:
+                        pending=True
+                except (urllib.error.URLError,RuntimeError) as exc:
+                    if ("flow not available" in str(exc)
+                            or isinstance(exc,urllib.error.HTTPError)
+                            and exc.code in (404,503)):
+                        pending=True
+                    else:
+                        raise
+                if ready:
+                    try:
+                        results=provision_worker_manifest(manifest,known.get("entries",{}))
+                    except RuntimeError as exc:
+                        if not ("TAFA HA backend not loaded yet" in str(exc)
+                                or "not_configured" in str(exc)):
+                            raise
+                        results={"entries":{},"entities":{},"messages":["HA Core restart required"]}
+                        pending=True
+                else:
+                    results={"entries":{},"entities":{},"messages":["HA Core restart required"]}
                 entries=results.get("entries",{})
                 entities=results.get("entities",{})
                 if not isinstance(entries,dict) or not isinstance(entities,dict):
@@ -404,13 +619,30 @@ class Handler(BaseHTTPRequestHandler):
                     changes["llm_agent"]=entities["llm_agent"]
                 if changes:
                     save_app_changes(TOKEN,changes)
-                save_record(manifest,entries)
+                save_record(manifest,entries,pending=pending)
+                activate_configured_services()
                 notes=results.get("messages",[])
-                msg=("JSON imported. Restart TAFA App to apply settings. / "
-                     "JSON importiert. TAFA-App neu starten. ")
+                msg=("JSON importiert; TAFA führt die Einrichtung automatisch fort. / "
+                     "JSON imported; TAFA is completing setup automatically. ")
+                if pending:
+                    if fields.get("restart_core_if_needed",[""])[0]=="1":
+                        try:
+                            restart_home_assistant_core()
+                            msg+=(" Home Assistant Core startet neu; TAFA setzt danach fort. / HA Core restarting; TAFA will resume.")
+                        except (OSError,RuntimeError,ValueError) as exc:
+                            msg+=(" Core-Neustart fehlgeschlagen: "+str(exc)[:90]+
+                                  ". Bitte über Home Assistant einmal Core neu starten.")
+                    else:
+                        msg+=(" Home Assistant Core muss die neue Integration einmal laden. Ein Neustart ist unter Wartung möglich."
+                    )
                 if isinstance(notes,list):
                     msg+=" | ".join(str(item)[:160] for item in notes[:4])
                 tab="setup"
+            elif action=="restart_core":
+                if fields.get("confirmation",[""])[0]!="RESTART":
+                    raise ValueError("Core restart requires confirmation RESTART")
+                restart_home_assistant_core()
+                msg="Home Assistant Core startet neu; TAFA setzt vorgemerkte JSON-Importe fort. / HA Core restarting; TAFA will resume pending imports."
             elif action=="models":
                 if choose_speech_source()[0] != "local":
                     return self.send_error(400, "Bundled speech disabled in external mode")
@@ -419,7 +651,8 @@ class Handler(BaseHTTPRequestHandler):
                      if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
             elif action=="settings":
                 changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
-                msg="Einstellungen gespeichert. TAFA-App jetzt neu starten, um sie zu übernehmen. / Settings saved. Restart TAFA App to apply."
+                activate_configured_services()
+                msg="Einstellungen gespeichert. TAFA übernimmt die Änderung automatisch. / Settings saved; TAFA is applying changes automatically."
             elif action=="wyoming":
                 choices=discover_wyoming_stt(TOKEN)
                 selection=save_wyoming_selection(TOKEN,

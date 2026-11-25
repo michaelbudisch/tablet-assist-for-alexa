@@ -4,12 +4,12 @@
 
 [English](README.md) | **Deutsch**
 
-> **Ab App 0.3.20:** Nutze das **TAFA Control Center → Einstellungen** für Sprachserver, GPU, Wyoming, Ollama und Alexa an einer Stelle. Nach dem Speichern TAFA einmal neu starten. Die technische Seite **Apps → TAFA → Konfiguration** schreibt dieselben Daten und ist nur für Fehlerbehebung oder die Auswahl des externen Sprachservers *vor dem ersten Start* nötig. Wyoming/Ollama werden einmalig unter **Geräte & Dienste** eingebunden. Bestehende Assist-Pipelines bleiben erhalten.
+> **Ab App 0.3.24:** Neue Installationen starten im **Einrichtungsmodus ohne automatische Sprachmodell-Downloads**. Zuerst GPU-Worker oder Proxmox-Sprachserver installieren, JSON exportieren, dann unter **TAFA Control Center → Einrichtung** importieren, prüfen und bestätigen. TAFA übernimmt Verbindungen und erstellt den Sprachassistenten „TAFA Lokal“, sobald die Komponenten bereitstehen. Neu installierte HA-Integrationen können einen ausdrücklich erlaubten einmaligen HA-Core-Neustart benötigen; der bestätigte Import wird danach fortgesetzt.
 
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.22**, HA-Integration **0.4.10**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.24**, HA-Integration **0.4.11**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 

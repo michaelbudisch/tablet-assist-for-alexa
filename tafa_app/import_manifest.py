@@ -140,7 +140,7 @@ def load_records(path=RECORD):
         return {}
 
 
-def save_record(manifest, entry_ids, path=RECORD):
+def save_record(manifest, entry_ids, path=RECORD, pending=False):
     """Only track an imported device's identity, host, and assigned HA entries."""
     with LOCK:
         rows=load_records(path)
@@ -150,7 +150,16 @@ def save_record(manifest, entry_ids, path=RECORD):
         kept.update({k:v for k,v in entry_ids.items()
                      if k in ("wyoming_stt","ollama") and isinstance(v,str)})
         rows[manifest["device_id"]]={
-            "kind":manifest["kind"],"host":manifest["host"],"entries":kept}
+            "kind":manifest["kind"],"host":manifest["host"],"entries":kept,
+            "expected":{
+                "wyoming_stt":manifest["services"]["wyoming_stt"]["enabled"],
+                "ollama":(manifest["kind"]=="gpu_worker"
+                          and manifest["services"]["ollama"]["enabled"]),
+            },
+            "provision_pending":bool(pending),
+            # A validated, admin-approved manifest is retained only until
+            # its first provisioning succeeds. No credentials or model data.
+            "manifest":manifest if pending else None}
         path.parent.mkdir(parents=True,exist_ok=True)
         draft=path.with_suffix(".json.tmp")
         draft.write_text(json.dumps(rows,sort_keys=True),encoding="utf-8")
@@ -220,6 +229,7 @@ def render_panel(lang,csrf,notice="",review=None):
 <input type="hidden" name="lang" value="{esc(lang)}">
 <input type="hidden" name="tab" value="setup">
 <input type="hidden" name="ticket" value="{esc(ticket)}">
+<label class="restart-opt-in"><input type="checkbox" name="restart_core_if_needed" value="1"> {t("Falls für eine neu installierte Integration nötig: Home Assistant Core nach dem Import neu starten und Einrichtung fortsetzen.","If required for a newly installed backend: restart Home Assistant Core after import and continue setup.")}</label>
 <button class="btn btn-primary" type="submit" name="action" value="manifest_apply">{t("Änderungen übernehmen","Apply reviewed changes")}</button>
 </form></div>"""
     return f"""<section class="import-card" id="manifest-import">

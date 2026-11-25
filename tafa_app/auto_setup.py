@@ -204,3 +204,82 @@ def provision_worker_manifest(manifest, tracked):
                 raise RuntimeError("TAFA HA provisioning unavailable: "+code)
             return reply.get("result",{})
     raise RuntimeError("HA provisioning did not answer")
+
+
+
+def resolve_import_entities(tracked):
+    """Read back Home Assistant entities for previously confirmed device entries.
+
+    This never adds or edits HA config entries. It is safe to retry while
+    Wyoming/Ollama entity registration finishes in Home Assistant.
+    """
+    if not TOKEN:
+        raise RuntimeError("Supervisor API access unavailable")
+    from websockets.sync.client import connect
+    with connect("ws://supervisor/core/websocket",open_timeout=4,close_timeout=2) as ws:
+        first=json.loads(ws.recv(timeout=5))
+        if first.get("type")=="auth_required":
+            ws.send(json.dumps({"type":"auth","access_token":TOKEN}))
+            first=json.loads(ws.recv(timeout=5))
+        if first.get("type")!="auth_ok":
+            raise RuntimeError("Home Assistant authentication unavailable")
+        ws.send(json.dumps({"id":1,"type":"tablet_assist_for_alexa/resolve_manifest_entities",
+                            "tracked":tracked}))
+        for _ in range(10):
+            reply=json.loads(ws.recv(timeout=8))
+            if reply.get("id")!=1:
+                continue
+            if not reply.get("success"):
+                raise RuntimeError("TAFA backend entity resolution unavailable: "+
+                                   str((reply.get("error") or {}).get("code","unknown")))
+            result=reply.get("result")
+            if not isinstance(result,dict):
+                raise RuntimeError("Invalid entity resolution response")
+            return result
+    raise RuntimeError("HA did not return entity assignments")
+
+
+def inspect_tafa_pipeline():
+    """Read-only readiness check: no pipeline creation or default changes."""
+    if not TOKEN:
+        return {"status":"not_available","detail":"Supervisor authentication unavailable"}
+    from websockets.sync.client import connect
+    try:
+        with connect("ws://supervisor/core/websocket",open_timeout=3,close_timeout=2) as ws:
+            first=json.loads(ws.recv(timeout=4))
+            if first.get("type")=="auth_required":
+                ws.send(json.dumps({"type":"auth","access_token":TOKEN}))
+                first=json.loads(ws.recv(timeout=4))
+            if first.get("type")!="auth_ok":
+                return {"status":"not_available","detail":"HA authentication unavailable"}
+            def query(identifier,command):
+                ws.send(json.dumps({"id":identifier,"type":command}))
+                for _ in range(8):
+                    reply=json.loads(ws.recv(timeout=4))
+                    if reply.get("id")==identifier:
+                        return reply.get("result") if reply.get("success") else None
+                return None
+            data=query(1,"assist_pipeline/pipeline/list")
+            registry=query(2,"config/entity_registry/list")
+            if not isinstance(data,dict) or not isinstance(registry,list):
+                return {"status":"not_available","detail":"HA Assist API not ready"}
+            pipeline=next((p for p in (data.get("pipelines") or [])
+                          if isinstance(p,dict) and str(p.get("name","")).casefold()=="tafa lokal"),None)
+            if pipeline is None:
+                return {"status":"waiting","detail":"TAFA Lokal is being configured"}
+            required={"stt_engine":"_stt_router","tts_engine":"_stream",
+                      "conversation_engine":"_conversation_router"}
+            found={}
+            for field,unique_suffix in required.items():
+                candidates=[item.get("entity_id") for item in registry
+                            if item.get("platform")=="tablet_assist_for_alexa"
+                            and str(item.get("unique_id","")).endswith(unique_suffix)
+                            and not item.get("disabled_by")]
+                found[field]=candidates[0] if len(candidates)==1 else None
+            if not all(found.values()):
+                return {"status":"waiting","detail":"TAFA Assist entities still registering"}
+            if any(pipeline.get(field)!=entity for field,entity in found.items()):
+                return {"status":"needs_review","detail":"Existing pipeline differs from TAFA router"}
+            return {"status":"ready","detail":"TAFA Lokal pipeline and all three routers are registered"}
+    except (OSError,TimeoutError,ValueError,TypeError,KeyError):
+        return {"status":"not_available","detail":"HA Assist API temporarily unavailable"}

@@ -1,3 +1,7 @@
+## TAFA App 0.3.24 / integration 0.4.11 — import-first and shared Android branding
+- Fresh installations wait for confirmed worker/CT JSON before starting local model downloads; existing deployments retain their selected mode. Automatic entity resolution and Assist-pipeline continuation after import.
+- Add read-only TAFA Lokal readiness diagnostics and direct voice assistant selection link; never overwrite HA defaults. Both Control Center and Voice Center display the shared Android two-color launcher vector.
+
 ## TAFA integration 0.4.10 — approved device manifest provisioning
 - Adds admin-only HA setup for imported GPU/Proxmox manifests: matches/reconfigures Wyoming and provisions compatible Ollama connections and existing-model conversation agents while preserving unrelated entries and existing Assist pipelines.
 

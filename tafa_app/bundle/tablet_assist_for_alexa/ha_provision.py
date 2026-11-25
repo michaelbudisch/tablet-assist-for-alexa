@@ -256,3 +256,77 @@ async def provision_manifest(hass,connection,msg):
         connection.send_error(msg["id"],"provision_failed",str(exc)[:180])
         return
     connection.send_result(msg["id"],result)
+
+
+RESOLVE_COMMAND=DOMAIN+"/resolve_manifest_entities"
+
+
+def locate_assigned_entities(hass, tracked):
+    """Report only entities belonging to previously approved HA config entries."""
+    if not isinstance(tracked,dict) or set(tracked)-{"gpu_worker","speech_server"}:
+        raise ValueError("Unknown tracked device roles")
+    found={}
+    pending=[]
+    registry=er.async_get(hass)
+    for kind, profile in tracked.items():
+        if not isinstance(profile,dict) or set(profile)-{"wyoming_stt","ollama","expected"}:
+            raise ValueError("Invalid mapped entry profile")
+        expected=profile.get("expected") or {}
+        if not isinstance(expected,dict) or set(expected)-{"wyoming_stt","ollama"}:
+            raise ValueError("Invalid expected services")
+        for key in ("wyoming_stt","ollama"):
+            entry_id=profile.get(key)
+            if not expected.get(key):
+                continue
+            if not isinstance(entry_id,str) or len(entry_id)>100:
+                pending.append(kind+"."+key+": not registered")
+                continue
+            domain="wyoming" if key=="wyoming_stt" else "ollama"
+            entry=hass.config_entries.async_get_entry(entry_id)
+            if entry is None or entry.domain!=domain:
+                pending.append(kind+"."+key+": unavailable")
+                continue
+            candidates=[
+                row for row in er.async_entries_for_config_entry(registry,entry_id)
+                if not row.disabled_by and row.platform==domain
+            ]
+            if key=="wyoming_stt":
+                stts=[row.entity_id for row in candidates if row.entity_id.startswith("stt.")]
+                if len(stts)==1:
+                    found["gpu_stt" if kind=="gpu_worker" else "cpu_stt"]=stts[0]
+                else:
+                    pending.append(kind+".wyoming_stt: STT entity pending")
+            else:
+                conversations=[sub for sub in entry.subentries.values()
+                               if sub.subentry_type=="conversation"]
+                selected=([sub for sub in conversations if sub.title=="TAFA Ollama"]
+                          or conversations if len(conversations)==1 else [])
+                if len(selected)!=1:
+                    pending.append("gpu_worker.ollama: choose a conversation agent")
+                    continue
+                entities=[row.entity_id for row in candidates
+                          if row.config_subentry_id==selected[0].subentry_id
+                          and row.entity_id.startswith("conversation.")]
+                if len(entities)==1:
+                    found["llm_agent"]=entities[0]
+                else:
+                    pending.append("gpu_worker.ollama: conversation entity pending")
+    return {"entities":found,"pending":pending}
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"):RESOLVE_COMMAND,
+    vol.Required("tracked"):dict,
+})
+@websocket_api.async_response
+async def resolve_manifest_entities(hass,connection,msg):
+    if not (Path(__file__).parent / APP_MANAGED_MARKER).is_file():
+        connection.send_error(msg["id"],"not_managed","TAFA App required")
+        return
+    try:
+        result=locate_assigned_entities(hass,msg["tracked"])
+    except (ValueError,TypeError,KeyError,AttributeError) as exc:
+        connection.send_error(msg["id"],"invalid_mapping",str(exc)[:160])
+        return
+    connection.send_result(msg["id"],result)
