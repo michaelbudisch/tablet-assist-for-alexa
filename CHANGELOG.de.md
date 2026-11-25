@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA App 0.3.13 / Integration 0.4.5 — Tablet-Raumzuordnung
+- Unter TAFA → Geräte kann ein Administrator jetzt direkt einen Audio-Raum und einen bestehenden HA-Benutzer ohne Adminrechte auswählen, speichern und den Verbindungsstatus prüfen.
+- Bestehende Audio-Sitzungen und Raum-Einstellungen bleiben bei unveränderter Zuordnung erhalten. Benutzerwechsel erfordern eine ausdrückliche Bestätigung.
+- Keine Entwicklerwerkzeuge/YAML mehr für die Gerätezuordnung. Android-App 1.0.0 unverändert.
+
+
+
 ## TAFA App 0.3.12 / Integration 0.4.4 — zentrale Konfiguration
 - Für App-Installationen werden Sprachserver, GPU, Alexa, Entitäten und Erinnerungen zentral unter Apps → TAFA → Konfiguration verwaltet.
 - Die App überträgt Änderungen an bestehende App-eigene HA-Integrationen. Erweiterte Alt-Einstellungen bleiben bei der ersten Übernahme erhalten.
