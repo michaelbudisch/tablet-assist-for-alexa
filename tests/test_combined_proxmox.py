@@ -45,6 +45,40 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn("--rootfs", HOST)
         self.assertIn("pveam download", HOST)
 
+    def test_custom_container_hostname_used_and_validated(self):
+        self.assertIn('ask "Container hostname" "tafa-voice"', HOST)
+        self.assertIn('CT_HOSTNAME="$REPLY_VALUE"', HOST)
+        self.assertIn('--hostname "$CT_HOSTNAME"', HOST)
+        self.assertNotIn('--hostname tafa-voice', HOST)
+        self.assertIn('Hostname: %s', HOST)
+        self.assertIn('${#CT_HOSTNAME} -le 63', HOST)
+        self.assertIn('^[[a-z0-9]', HOST) if False else self.assertIn('^[a-z0-9](', HOST)
+        self.assertLess(HOST.index('ask "Container hostname"'),
+                        HOST.index('pct create "$CTID"'))
+
+        # Exercise the exact bash validation expression, including length and
+        # invalid leading/trailing hyphens or shell metacharacters.
+        check='[[ ${#CT_HOSTNAME} -le 63 && "$CT_HOSTNAME" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]'
+        for hostname, accepted in (
+            ("tafa-voice", True), ("jarvis-2", True),
+            ("a", True), ("a" * 63, True),
+            ("", False), ("A-Test", False), ("hello world", False),
+            ("-bad", False), ("bad-", False), ("my_server", False),
+            ("a" * 64, False), ("name;id", False),
+        ):
+            with self.subTest(hostname=hostname):
+                result=subprocess.run(["bash","-c",check],env={"CT_HOSTNAME":hostname})
+                self.assertEqual(result.returncode==0, accepted)
+
+    def test_all_entry_points_present_english_prompts(self):
+        self.assertIn('Type YES:', HOST)
+        self.assertIn('Type YES:', CONSOLE)
+        self.assertIn('Type RESUME', RESUME_INSTALL)
+        self.assertIn('Type YES:', DUCKDNS)
+        for token in ('FEHLER:', 'Ungueltig', 'Oeffentlicher',
+                      'Installationsfortsetzung', 'Konsole aktualisiert'):
+            self.assertNotIn(token, HOST + CONSOLE + RESUME_INSTALL + GUEST)
+
     def test_proxmox_bug_8295_unprivileged_create_umask(self):
         # PVE 9 before upstream bugfix creates the rootfs dir as 0700 when
         # pct create inherits the installer's restrictive umask 0077.
@@ -80,14 +114,14 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn("tafa-setup", CONSOLE)
         self.assertIn('certbot certonly --webroot', CONSOLE)
         self.assertIn('bash "$INSTALLER" enable "$HOST" 127.0.0.1', CONSOLE)
-        self.assertIn('[[ "$ANSWER" == "JA" ]]', CONSOLE)
+        self.assertIn('[[ "$ANSWER" == "YES" ]]', CONSOLE)
         self.assertIn('tafa-console-info.timer', GUEST)
         self.assertIn("OnUnitActiveSec=5min", GUEST)
         self.assertNotIn("iptables -A", HOST + GUEST + CONSOLE)
 
     def test_shared_proxy_does_not_move_public_port_forwarding(self):
-        self.assertIn('ask "HTTPS-Modus (dedicated/shared/none)"', HOST)
-        self.assertIn('[[ "$PROXY_CONFIRM" == JA ]]', HOST)
+        self.assertIn('ask "HTTPS mode (dedicated/shared/none)"', HOST)
+        self.assertIn('[[ "$PROXY_CONFIRM" == YES ]]', HOST)
         self.assertIn('install-nginx-proxy.sh" prepare', HOST)
         self.assertIn('--shared', HOST)
         self.assertIn('pct exec "$PROXY_CT" -- nginx -t', HOST)
@@ -152,7 +186,7 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn('pct exec "$CTID" -- test ! -e /etc/jarvis-local.env', RESUME_INSTALL)
         self.assertIn('pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh', RESUME_INSTALL)
         self.assertIn('--resume "$HOST" "$GPU" shared', RESUME_INSTALL)
-        self.assertIn('[[ "$REPLY_VALUE" == FORTSETZEN ]]', RESUME_INSTALL)
+        self.assertIn('[[ "$REPLY_VALUE" == RESUME ]]', RESUME_INSTALL)
         self.assertIn('prepare "$HOST" "$NEW_IP" --shared', RESUME_INSTALL)
         self.assertNotIn('pct destroy', RESUME_INSTALL)
         self.assertNotIn('pct stop', RESUME_INSTALL)
