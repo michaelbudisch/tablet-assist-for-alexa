@@ -25,20 +25,20 @@ map:
 options:
   speech_mode: local
   external_piper_base: ""
+  cpu_stt: ""
   gpu_base: ""
+  gpu_stt: ""
+  gpu_stt_host: ""
   hardware_profile: automatic
   voice_variant: default
   live_profile: natural
-  mp3_base: ""
-  public_audio_base: ""
-  mp3_profile: natural
-  chime: false
-  cpu_stt: ""
-  gpu_stt: ""
-  gpu_stt_host: ""
   llm_agent: ""
   conversation_mode: intelligent
+  mp3_base: ""
+  public_audio_base: ""
   rooms_json: "{}"
+  mp3_profile: natural
+  chime: false
   sources_json: "{}"
   learning_enabled: false
   reminders_enabled: false
@@ -46,20 +46,20 @@ options:
 schema:
   speech_mode: list(local|external)
   external_piper_base: str
+  cpu_stt: str
   gpu_base: str
+  gpu_stt: str
+  gpu_stt_host: str
   hardware_profile: list(automatic|cpu)
   voice_variant: list(default|1|2|3|4|5|6|7|8|9)
   live_profile: list(natural|studio|clear)
-  mp3_base: str
-  public_audio_base: str
-  mp3_profile: list(natural|studio|announcement)
-  chime: bool
-  cpu_stt: str
-  gpu_stt: str
-  gpu_stt_host: str
   llm_agent: str
   conversation_mode: list(manual|intelligent|automatic)
+  mp3_base: str
+  public_audio_base: str
   rooms_json: str
+  mp3_profile: list(natural|studio|announcement)
+  chime: bool
   sources_json: str
   learning_enabled: bool
   reminders_enabled: bool
