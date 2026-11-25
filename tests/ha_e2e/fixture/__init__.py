@@ -75,6 +75,14 @@ async def phase_one(hass):
         check(entry.data["hardware_profile"]=="Homeserver","translated config value compatible")
         check(DOMAIN in hass.data[frontend.DATA_PANELS],"independent sidebar panel registered")
         check(hass.services.has_service(DOMAIN,"announce"),"service registered")
+        relay=hass.data.get("jarvis_tablet_audio",{})
+        check(bool(relay.get("relay_camera")),"unified native camera relay registered")
+        check(bool(relay.get("wake_devices_dynamic")),"native wake-device registry registered")
+        check(bool(relay.get("room_audio")),"multiroom audio transport registered")
+        check(hass.services.has_service("jarvis_tablet_audio","room_audio"),"legacy-compatible room audio service")
+        check(hass.services.has_service("jarvis_tablet_audio","model_settings"),"unified AI model settings service")
+        check(bool(entity(hass,entry,"camera")),"native camera entity registered")
+        check(bool(entity(hass,entry,"binary_sensor")),"native motion entity registered")
         agent=entity(hass,entry,"conversation")
         check(bool(entity(hass,entry,"stt")) and bool(entity(hass,entry,"tts")),"STT and TTS entities registered")
         # Real HA state machine, synthetic state readings.
@@ -130,6 +138,8 @@ async def phase_two(hass):
     entry=entries[0]
     await entry_loaded(hass,entry)
     check(DOMAIN in hass.data[frontend.DATA_PANELS],"sidebar restored")
+    check(hass.services.has_service("jarvis_tablet_audio","room_audio"),"multiroom registered after restart")
+    check(hass.data.get("jarvis_tablet_audio",{}).get("wake_devices_dynamic") is not None,"native wake registry after restart")
     data=hass.data[DOMAIN][entry.entry_id]
     check(data.learning.lookup("wir haben welche artikel auf der einkaufsliste")=="bring_list","approved alias survives restart")
     done=asyncio.Event()
