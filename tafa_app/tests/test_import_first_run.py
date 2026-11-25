@@ -105,6 +105,7 @@ class SetupAndBrandTests(unittest.TestCase):
         self.assertIn("/tablet_assist_for_alexa/brand.svg",
                       (ROOT/"custom_components/tablet_assist_for_alexa/frontend/panel.js").read_text())
         self.assertIn("assets/brand.svg",(APP/"control_center_view.py").read_text())
+        self.assertIn("img-src 'self'",(APP/"server.py").read_text())
 
 
 if __name__=="__main__":
