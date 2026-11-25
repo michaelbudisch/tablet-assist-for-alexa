@@ -3,21 +3,12 @@
     "step": {
       "user": {
         "title": "Jarvis Tablet Audio",
-        "description": "Lokale Piper-Ausgabe; optional Qwen-Token des eigenen GPU-Workers eintragen. Ohne Token bleibt Piper aktiv.",
-        "data": {
-          "qwen_token": "Qwen API-Schlüssel (optional)"
-        }
+        "description": "Lokale Piper-Ausgabe und optional Qwen. Der Worker wird nur im vertrauenswürdigen LAN ohne zusätzlichen TAFA-API-Schlüssel genutzt."
       },
       "reconfigure": {
         "title": "Tablet-Audio-Einstellungen",
-        "description": "Qwen-Schlüssel erneut eintragen. Ohne Schlüssel wird Piper genutzt.",
-        "data": {
-          "qwen_token": "Qwen API-Schlüssel (optional)"
-        }
+        "description": "Der lokale Qwen-Worker wird über die konfigurierte LAN-Adresse angesprochen. Kein zusätzlicher Token erforderlich."
       }
-    },
-    "error": {
-      "invalid_token": "Der Schlüssel muss mindestens 32 Zeichen lang sein."
     },
     "abort": {
       "already_configured": "Bereits eingerichtet",
@@ -28,7 +19,7 @@
     "step": {
       "init": {
         "title": "Kamera und lokales Visionmodell",
-        "description": "Worker-Token bleibt im bestehenden Qwen-Feld. Leere Worker-Adresse nutzt den GPU-Host auf Port 10503.",
+        "description": "Der Vision-Worker darf nur im vertrauenswürdigen LAN erreichbar sein. Eine leere URL verwendet den GPU-Host auf Port 10503.",
         "data": {
           "vision_url": "Vision-Worker URL (optional)",
           "vision_outside_camera": "Außenkamera",
