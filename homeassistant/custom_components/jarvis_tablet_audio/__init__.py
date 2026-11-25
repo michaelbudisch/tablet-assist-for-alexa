@@ -5,6 +5,11 @@ PLATFORMS = [Platform.TTS, Platform.CONVERSATION, Platform.CAMERA, Platform.BINA
 
 
 async def async_setup_entry(hass, entry):
+    # Purge obsolete credentials from existing legacy configuration entries.
+    if "qwen_token" in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={k: v for k, v in entry.data.items() if k != "qwen_token"}
+        )
     from .relay_camera import async_setup
     await async_setup(hass, entry)
     from .relay_room_adapter import setup_room_audio
