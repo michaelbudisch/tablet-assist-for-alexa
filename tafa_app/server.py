@@ -1,81 +1,206 @@
-"""Admin-only Ingress setup page; no external port or HA API token."""
-from http.server import BaseHTTPRequestHandler, HTTPServer
+"""TAFA Home Assistant App: administrator-only Ingress Control Center.
+
+Installs one unified HA integration, starts private CPU speech and offers a
+read-only status page. No dashboard assets, secrets or household data shipped.
+"""
+import html
+import ipaddress
+import json
+import logging
+import os
 from pathlib import Path
-from urllib.parse import parse_qs
-from html import escape
-from secrets import token_urlsafe, compare_digest
-from installer import install, status, bootstrap
+import re
+import secrets
+import socket
+import subprocess
+import sys
+import threading
+import time
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit,parse_qs
 
-CONFIG = Path("/homeassistant")
-BUNDLE = Path(__file__).parent / "bundle"
-CSRF = token_urlsafe(32)
-REPO = "https://github.com/michaelbudisch/tablet-assist-for-alexa"
-MARKET = "https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration"
+from auto_setup import configure, save_state, STATE as SETUP_STATE
+from installer import bootstrap, status
 
-def page(message=""):
-    rows = "".join("<li><strong>" + escape(k) + "</strong> — " + escape(v) + "</li>" for k,v in status(CONFIG).items())
-    return f"""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TAFA</title><style>
-    :root{{color-scheme:light dark;font:16px system-ui}}body{{max-width:850px;margin:24px auto;padding:0 16px}}section{{border:1px solid #8886;border-radius:14px;padding:18px;margin:16px 0}}label{{display:block;margin:12px 0}}input{{display:block;width:100%;box-sizing:border-box;padding:10px;font:inherit}}button,a{{font:inherit}}button{{padding:12px 18px;border-radius:8px;cursor:pointer}}a{{color:inherit}}small{{opacity:.8}}h1{{margin-bottom:4px}}li{{margin:8px 0}}
-    </style><h1>TAFA</h1><p>Local voice assistant · Einrichtungszentrale · Experimental 0.1.0</p>
-    <section><h2>1 · Backend status / Backend-Status</h2><p>The base integration is provisioned automatically on first app startup if absent. A Home Assistant restart is required before the integration can be configured. / Die Basisintegration wird beim ersten App-Start automatisch bereitgestellt, sofern sie fehlt. Zur Aktivierung ist ein HA-Neustart erforderlich.</p><ul>{rows}</ul><p role="status">{escape(message)}</p><small>Installed means files are present, not that the integration is loaded. / Installiert bedeutet: Dateien vorhanden, nicht zwingend geladen.</small></section>
-    <section><h2>2 · Speech servers / Sprachserver</h2><p>Prepare your external CPU speech server and optional GPU worker. / Externe Sprachserver zuerst einrichten.</p><p><a href="{REPO}/blob/main/docs/proxmox.md" target="_blank" rel="noopener">CPU DE</a> · <a href="{REPO}/blob/main/docs/en/proxmox.md" target="_blank" rel="noopener">CPU EN</a> · <a href="{REPO}/blob/main/docs/worker.md" target="_blank" rel="noopener">GPU DE</a> · <a href="{REPO}/blob/main/docs/en/worker.md" target="_blank" rel="noopener">GPU EN</a></p></section>
-    <section><h2>3 · Install missing integrations / Fehlende Integrationen installieren</h2><p>New installations only. Existing files are never overwritten. Create a Home Assistant backup first. / Nur Neuinstallation; vorhandene Dateien bleiben unverändert. Vorher HA-Sicherung erstellen.</p>
-    <form method="post" action="./"><input type="hidden" name="csrf" value="{CSRF}">
-    <label>CPU host / CPU-Host<input name="cpu_host" required placeholder="speechserver.local" maxlength="253"></label>
-    <label>GPU host (optional) / GPU-Host (optional)<input name="gpu_host" placeholder="gpu.local" maxlength="253"></label>
-    <label>CPU Wyoming STT entity / STT-Entität<input name="cpu_stt" required placeholder="stt.faster_whisper" maxlength="160"></label>
-    <label>GPU STT entity (optional)<input name="gpu_stt" placeholder="stt.gpu_whisper" maxlength="160"></label>
-    <label>Conversation agent (optional) / Konversationsagent<input name="llm_agent" placeholder="conversation.home_assistant" maxlength="160"></label>
-    <button type="submit">Install missing backend files / Fehlende Backend-Dateien installieren</button></form>
-    <p><small>No dashboard files, credentials, YAML configuration or existing integrations are modified. / Keine Dashboard-Dateien, Zugangsdaten, YAML-Konfiguration oder vorhandenen Integrationen werden verändert.</small></p></section>
-    <section><h2>4 · Home Assistant setup / HA-Einrichtung</h2><p>After copying new integration files, restart HA manually, then add and configure both integrations in Devices &amp; services. / Nach der Dateiinstallation HA manuell neu starten und beide Integrationen unter Geräte &amp; Dienste einrichten.</p>
-    <p><a href="/config/integrations" target="_top">Devices &amp; services / Geräte &amp; Dienste</a> · <a href="/tablet_assist_for_alexa" target="_top">Tablet Assist voice center / Sprachzentrale</a></p>
-    <p>Alternatively install only the base integration through <a href="{escape(MARKET)}" target="_blank" rel="noopener">Marketplace</a>. Do not install it twice.</p></section>
-    <section><h2>5 · Android Device Bridge &amp; Multiroom</h2><p><a href="{REPO}/blob/main/android/README.de.md" target="_blank" rel="noopener">Android DE</a> · <a href="{REPO}/blob/main/android/README.md" target="_blank" rel="noopener">Android EN</a> · <a href="{REPO}/blob/main/homeassistant/examples/MULTIROOM.de.md" target="_blank" rel="noopener">Multiroom DE</a> · <a href="{REPO}/blob/main/homeassistant/examples/MULTIROOM.md" target="_blank" rel="noopener">Multiroom EN</a></p><p>Use native HA setup and explicit device permissions. This preview does not automatically configure rooms or start microphones or cameras.</p></section></html>"""
+LOG=logging.getLogger("tafa.app")
+CONFIG=Path("/homeassistant")
+BUNDLE=Path(__file__).parent/"bundle"
+CSRF=secrets.token_urlsafe(32)
+REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
+TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
+STATUS_URL="http://127.0.0.1:5000/status"
+APP_VERSION="0.3.0"
+
+def _json_url(url,token="",timeout=2):
+    hdr={"Authorization":"Bearer "+token} if token else {}
+    with urllib.request.urlopen(urllib.request.Request(url,headers=hdr),timeout=timeout) as res:
+        return json.loads(res.read(65536).decode("utf-8"))
+
+def _internal_address():
+    hostname=None
+    if TOKEN:
+        try:
+            info=_json_url("http://supervisor/addons/self/info",TOKEN)
+            hostname=info.get("data",{}).get("hostname")
+        except (OSError,ValueError,KeyError,TypeError):
+            pass
+    if isinstance(hostname,str) and re.fullmatch(r"[a-z0-9][a-z0-9-]{1,70}",hostname):
+        return "http://"+hostname+":5000"
+    ip=ipaddress.ip_address(socket.gethostbyname(socket.gethostname()))
+    if not ip.is_private or ip.is_loopback:
+        raise RuntimeError("Cannot identify private HA app network address")
+    return "http://"+str(ip)+":5000"
+
+def publish_service_address(address):
+    root=CONFIG/".tafa"
+    root.mkdir(mode=0o700,exist_ok=True)
+    path=root/"service.json"
+    candidate=root/"service.json.tmp"
+    candidate.write_text(json.dumps({"schema":1,"piper_base":address}),encoding="utf-8")
+    os.chmod(candidate,0o600)
+    candidate.replace(path)
+
+def speech_status():
+    try:
+        return _json_url(STATUS_URL,timeout=0.8)
+    except (OSError,ValueError):
+        return {"piper_ready":False,"whisper_ready":False,
+                "piper_error":"Service offline","whisper_error":"Service offline"}
+
+def setup_status():
+    try:
+        return json.loads(SETUP_STATE.read_text())
+    except (OSError,ValueError):
+        return {"status":"pending","detail":""}
+
+def autoconfigure(address):
+    # Reattempt after HA Core restarts and discovers newly installed files.
+    while True:
+        try:
+            if speech_status().get("piper_ready"):
+                outcome=configure(address)
+                save_state(outcome)
+                if outcome in ("configured","already_configured"):
+                    LOG.info("HA integration configuration: %s",outcome)
+                    return
+        except (urllib.error.URLError,TimeoutError,ValueError,RuntimeError) as exc:
+            save_state("waiting_for_home_assistant",type(exc).__name__)
+        time.sleep(20)
+
+def startup():
+    try:
+        added=bootstrap(CONFIG,BUNDLE)
+        if added: LOG.info("Unified TAFA backend staged. Home Assistant must restart to discover it.")
+        else: LOG.info("Existing TAFA installation preserved.")
+    except (OSError,ValueError,SyntaxError) as exc:
+        LOG.error("Backend installation could not complete: %s",type(exc).__name__)
+    subprocess.Popen([sys.executable,str(Path(__file__).parent/"speech_proxy.py")])
+    try:
+        address=_internal_address()
+        publish_service_address(address)
+        threading.Thread(target=autoconfigure,args=(address,),daemon=True).start()
+        LOG.info("Internal CPU service endpoint registered")
+    except (OSError,RuntimeError,ValueError) as exc:
+        LOG.error("Automatic HA setup unavailable: %s",type(exc).__name__)
+        save_state("needs_attention",type(exc).__name__)
+
+def display(message="",lang="de"):
+    en=lang=="en"
+    t=lambda de,eng:eng if en else de
+    state=status(CONFIG)
+    runtime=speech_status()
+    setup=setup_status()
+    cards=[
+      (t("Home-Assistant-Backend","Home Assistant backend"),state.get("tablet_assist_for_alexa","not installed")),
+      ("Piper · TTS",t("Bereit","Ready") if runtime.get("piper_ready") else t("Noch nicht bereit","Not ready")),
+      ("Whisper · STT",t("Bereit","Ready") if runtime.get("whisper_ready") else t("Noch nicht bereit","Not ready")),
+      (t("HA-Einrichtung","HA setup"),setup.get("status","pending"))
+    ]
+    panels="".join('<div class="tile"><strong>'+html.escape(a)+'</strong><span>'+html.escape(str(b))+'</span></div>' for a,b in cards)
+    note=t("Neue Komponenten werden beim App-Start eingebunden. Home Assistant muss danach einmal neu gestartet werden.",
+      "New components are staged at app startup. Home Assistant needs one restart afterwards.")
+    install=t("Backend erneut prüfen","Check backend installation")
+    return f"""<!doctype html>
+<html lang="{lang}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>TAFA · Control Center</title>
+<style>
+:root{{font:15px/1.5 system-ui,-apple-system,sans-serif;color-scheme:light dark;--accent:#259f8f}}
+*{{box-sizing:border-box}}body{{max-width:1000px;margin:0 auto;padding:22px 16px}}
+h1{{font-size:27px;margin:0}}h2{{font-size:17px;margin:0 0 8px}}p{{margin:8px 0}}
+.top{{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}}
+small,.muted{{opacity:.7}}.tiles{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:20px 0}}
+.tile,section{{border:1px solid #80808055;background:color-mix(in srgb,canvas 96%,var(--accent));border-radius:13px;padding:16px}}
+.tile strong,.tile span{{display:block}}.tile span{{font-size:13px;margin-top:8px;overflow-wrap:anywhere}}
+section{{margin:13px 0}}a,button{{font:inherit}}a{{color:var(--accent)}}button{{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 15px;border-radius:9px;cursor:pointer}}
+nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
+</style></head>
+<body>
+<div class="top"><div><h1>TAFA Control Center</h1><small>{t("Lokaler Sprachassistent","Local voice assistant")} · {APP_VERSION} · Beta</small></div>
+<nav><a href="?lang=de">Deutsch</a><a href="?lang=en">English</a></nav></div>
+<div class="tiles">{panels}</div>
+<section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
+<form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
+<button type="submit">{install}</button></form></section>
+<section><h2>{t("Inbetriebnahme","Getting started")}</h2>
+<ol class="steps">
+<li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
+<li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
+<li>{t("Die TAFA-Integration wird eingerichtet, sobald Piper verfügbar ist und Home Assistant sie erkennt.","The TAFA integration is configured when Piper is ready and Home Assistant discovers it.")}</li>
+<li>{t("TAFA Device Bridge auf dem Tablet mit Home Assistant verbinden und die Assist-Pipeline auswählen.","Connect TAFA Device Bridge to Home Assistant and select the Assist pipeline.")}</li>
+</ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
+ · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>
+<p class="muted">{t("Externe GPU ist optional. Kameras und Mikrofone werden nicht automatisch aktiviert.","External GPU is optional. Cameras and microphones are never activated automatically.")}</p></section>
+<section><h2>{t("Anleitungen & Support","Guides & support")}</h2>
+<a href="{REPO}/blob/main/docs/app.md" target="_blank" rel="noopener">DE</a>
+ · <a href="{REPO}/blob/main/docs/en/app.md" target="_blank" rel="noopener">EN</a>
+ · <a href="{REPO}/tree/main/android" target="_blank" rel="noopener">Device Bridge</a>
+ · <a href="{REPO}/issues" target="_blank" rel="noopener">GitHub Issues</a>
+<p class="muted">{t("Dein privates Dashboard wird nicht installiert oder verändert.","Your private dashboard is never installed or modified.")}</p></section>
+</body></html>"""
 
 class Handler(BaseHTTPRequestHandler):
     def allowed(self):
-        return self.client_address[0] == "172.30.32.2"
-    def send_page(self, message="", code=200):
-        data = page(message).encode()
-        self.send_response(code)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
-        self.send_header("Content-Length", str(len(data)))
+        # Only the HA Supervisor ingress proxy or container-local health probes.
+        return self.client_address[0] in ("172.30.32.2","127.0.0.1","::1")
+    def respond(self,body,status_code=200):
+        content=body.encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type","text/html; charset=utf-8")
+        self.send_header("Cache-Control","no-store")
+        self.send_header("X-Content-Type-Options","nosniff")
+        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
+        self.send_header("Content-Length",str(len(content)))
         self.end_headers()
-        self.wfile.write(data)
+        self.wfile.write(content)
     def do_GET(self):
-        if not self.allowed():
-            self.send_error(403)
-            return
-        self.send_page()
+        if not self.allowed():return self.send_error(403)
+        query=parse_qs(urlsplit(self.path).query)
+        lang="en" if query.get("lang")==["en"] else "de"
+        self.respond(display(lang=lang))
     def do_POST(self):
-        if not self.allowed():
-            self.send_error(403)
-            return
+        if not self.allowed():return self.send_error(403)
+        length=self.headers.get("Content-Length")
+        if not length or not length.isdigit() or not 0<int(length)<=2048:
+            return self.send_error(400)
+        if self.headers.get_content_type()!="application/x-www-form-urlencoded":
+            return self.send_error(415)
+        fields=parse_qs(self.rfile.read(int(length)).decode("utf-8"),max_num_fields=5)
+        if not secrets.compare_digest(fields.get("csrf",[""])[0],CSRF):
+            return self.send_error(403)
+        lang="en" if fields.get("lang")==["en"] else "de"
         try:
-            size = int(self.headers.get("Content-Length", "0"))
-            if not 0 < size <= 8192 or self.headers.get_content_type() != "application/x-www-form-urlencoded":
-                self.send_error(400)
-                return
-            form = {k: v[0] for k,v in parse_qs(self.rfile.read(size).decode(), max_num_fields=12).items()}
-            if not compare_digest(form.pop("csrf", ""), CSRF):
-                self.send_error(403)
-                return
-            installed = install(CONFIG, BUNDLE, form)
-            self.send_page("Installed / Installiert: " + ", ".join(installed) + ". Restart HA manually." if installed else "No changes / Keine Änderungen.")
-        except (ValueError, OSError, SyntaxError) as exc:
-            self.send_page("Installation stopped / Installation abgebrochen: " + str(exc), 400)
+            added=bootstrap(CONFIG,BUNDLE)
+            msg=("Installed: "+", ".join(added)+". Restart HA." if added
+                 else "Existing TAFA files preserved. / Bestehende Dateien bleiben unverändert.")
+            self.respond(display(msg,lang=lang))
+        except (OSError,ValueError,SyntaxError) as exc:
+            self.respond(display("Installation stopped: "+type(exc).__name__,lang=lang),400)
 
-if __name__ == "__main__":
-    try:
-        installed = bootstrap(CONFIG, BUNDLE)
-        if installed:
-            print("TAFA: base integration provisioned; restart Home Assistant to load it.", flush=True)
-        else:
-            print("TAFA: existing base integration preserved.", flush=True)
-    except (ValueError, OSError, SyntaxError) as exc:
-        print("TAFA: automatic base provisioning skipped: " + str(exc), flush=True)
-    HTTPServer(("0.0.0.0",8099), Handler).serve_forever()
+if __name__=="__main__":
+    logging.basicConfig(level=logging.INFO,format="%(levelname)s %(message)s")
+    startup()
+    ThreadingHTTPServer(("0.0.0.0",8099),Handler).serve_forever()
