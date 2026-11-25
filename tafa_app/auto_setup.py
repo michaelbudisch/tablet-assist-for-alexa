@@ -195,6 +195,12 @@ def provision_worker_manifest(manifest, tracked):
                 continue
             if not reply.get("success"):
                 error=reply.get("error",{})
-                raise RuntimeError("TAFA HA provisioning not ready: "+str(error.get("code","unknown")))
+                code=str(error.get("code","unknown"))
+                if code in ("unknown_command","not_found"):
+                    raise RuntimeError(
+                        "TAFA HA backend not loaded yet. Restart Home Assistant Core once, "
+                        "then reimport JSON / TAFA-Backend noch nicht geladen. "
+                        "Home Assistant Core einmal neu starten, dann JSON erneut importieren.")
+                raise RuntimeError("TAFA HA provisioning unavailable: "+code)
             return reply.get("result",{})
     raise RuntimeError("HA provisioning did not answer")
