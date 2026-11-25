@@ -8,19 +8,19 @@ REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa/archive/refs/hea
 WORK=""
 CREATED=0
 CTID=""
-die() { printf '\nFEHLER: %s\n' "$*" >&2; exit 1; }
+die() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 on_error() {
   if (( CREATED )); then
-    printf '\nFehler nach CT-Erstellung. Container %s bleibt zur Diagnose erhalten.\n' "$CTID" >&2
-    printf 'Im PVE-Host: pct enter %s\n' "$CTID" >&2
+    printf '\nInstallation failed after CT %s was created. The CT remains available for troubleshooting.\n' "$CTID" >&2
+    printf 'On the PVE host: pct enter %s\n' "$CTID" >&2
   fi
 }
 cleanup() { if [[ -n "$WORK" && -d "$WORK" ]]; then rm -rf -- "$WORK"; fi; }
 trap on_error ERR
 trap cleanup EXIT
-[[ "$EUID" == 0 && -t 0 && -r /dev/tty ]] || die "Als root in einer interaktiven Proxmox-Shell starten."
+[[ "$EUID" == 0 && -t 0 && -r /dev/tty ]] || die "Run as root in an interactive Proxmox VE host shell."
 for cmd in pct qm pvesh pvesm pveam pveversion curl tar awk grep sort python3; do
-  command -v "$cmd" >/dev/null || die "PVE-Werkzeug fehlt: $cmd"
+  command -v "$cmd" >/dev/null || die "Missing Proxmox tool: $cmd"
 done
 ask() {
   local label="$1" fallback="$2" answer
@@ -30,46 +30,52 @@ ask() {
   [[ -n "$REPLY_VALUE" ]] || REPLY_VALUE="$fallback"
 }
 optional() {
-  printf '%s (leer=spaeter): ' "$1" >/dev/tty
+  printf '%s (leave blank to configure later): ' "$1" >/dev/tty
   IFS= read -r REPLY_VALUE </dev/tty
 }
-printf '\n=== TAFA: Ein CT fuer Piper, Whisper, MP3 und Nginx ===\n'
-printf 'Gefuehrter Installer. Neue, unprivilegierte Debian-Umgebung.\n'
-printf 'Keine bestehende CT-/VM-Konfiguration und keine Routerfreigaben werden geaendert.\n\n'
+printf '\n=== TAFA: Guided speech server installer ===\n'
+printf 'A new unprivileged Debian CT will be created.\n'
+printf 'Existing CTs/VMs, proxy websites and router port forwards will not be changed.\n\n'
 NEXT="$(pvesh get /cluster/nextid 2>/dev/null | tr -dc '0-9' | head -c 8 || true)"
 [[ "$NEXT" =~ ^[1-9][0-9]{2,7}$ ]] || NEXT=105
-ask "Freie CT-ID" "$NEXT"
+ask "Unused CT ID" "$NEXT"
 CTID="$REPLY_VALUE"
-[[ "$CTID" =~ ^[1-9][0-9]{2,7}$ ]] || die "Ungueltige ID."
+[[ "$CTID" =~ ^[1-9][0-9]{2,7}$ ]] || die "Invalid CT ID."
 if pct config "$CTID" >/dev/null 2>&1 || qm config "$CTID" >/dev/null 2>&1 || [[ -e "/etc/pve/lxc/$CTID.conf" || -e "/etc/pve/qemu-server/$CTID.conf" ]]; then
-  die "Diese CT-/VM-ID ist bereits belegt."
+  die "This CT/VM ID is already in use."
 fi
+ask "Container hostname" "tafa-voice"
+CT_HOSTNAME="$REPLY_VALUE"
+# A single DNS label only: prevent spaces, metacharacters and invalid hostname characters.
+[[ ${#CT_HOSTNAME} -le 63 && "$CT_HOSTNAME" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || \
+  die "Invalid hostname: use 1-63 lowercase letters, digits or hyphens, without leading/trailing hyphens."
+[[ "$CT_HOSTNAME" != localhost ]] || die "The hostname 'localhost' is reserved."
 ROOT_STORES="$(pvesm status --content rootdir | awk 'NR>1 && $3=="active" {print $1}')"
-[[ -n "$ROOT_STORES" ]] || die "Kein Rootfs-Speicher verfuegbar."
-printf '\nCT-Speicher:\n%s\n' "$ROOT_STORES"
+[[ -n "$ROOT_STORES" ]] || die "No active container root filesystem storage is available."
+printf '\nContainer storage:\n%s\n' "$ROOT_STORES"
 DEFAULT_STORE="$(printf '%s\n' "$ROOT_STORES" | grep -Fx local-lvm | head -n1 || true)"
 [[ -n "$DEFAULT_STORE" ]] || DEFAULT_STORE="$(printf '%s\n' "$ROOT_STORES" | head -n1)"
-ask "Rootfs-Speicher" "$DEFAULT_STORE"
+ask "Root filesystem storage" "$DEFAULT_STORE"
 STORE="$REPLY_VALUE"
-printf '%s\n' "$ROOT_STORES" | grep -Fxq -- "$STORE" || die "Rootfs-Speicher nicht verfuegbar."
+printf '%s\n' "$ROOT_STORES" | grep -Fxq -- "$STORE" || die "The selected root filesystem storage is unavailable."
 TPL_STORES="$(pvesm status --content vztmpl | awk 'NR>1 && $3=="active" {print $1}')"
-[[ -n "$TPL_STORES" ]] || die "Kein Template-Speicher verfuegbar."
-printf '\nTemplate-Speicher:\n%s\n' "$TPL_STORES"
+[[ -n "$TPL_STORES" ]] || die "No active template storage is available."
+printf '\nTemplate storage:\n%s\n' "$TPL_STORES"
 DEFAULT_TPL="$(printf '%s\n' "$TPL_STORES" | grep -Fx local | head -n1 || true)"
 [[ -n "$DEFAULT_TPL" ]] || DEFAULT_TPL="$(printf '%s\n' "$TPL_STORES" | head -n1)"
-ask "Template-Speicher" "$DEFAULT_TPL"
+ask "Template storage" "$DEFAULT_TPL"
 TPL_STORE="$REPLY_VALUE"
-printf '%s\n' "$TPL_STORES" | grep -Fxq -- "$TPL_STORE" || die "Template-Speicher nicht verfuegbar."
-ask "Netzwerkbridge" "vmbr0"
+printf '%s\n' "$TPL_STORES" | grep -Fxq -- "$TPL_STORE" || die "The selected template storage is unavailable."
+ask "Network bridge" "vmbr0"
 BRIDGE="$REPLY_VALUE"
-[[ "$BRIDGE" =~ ^[a-zA-Z0-9_.-]+$ && -d "/sys/class/net/$BRIDGE" ]] || die "Bridge existiert nicht."
-ask "Netzwerk: dhcp oder static" "dhcp"
+[[ "$BRIDGE" =~ ^[a-zA-Z0-9_.-]+$ && -d "/sys/class/net/$BRIDGE" ]] || die "Network bridge does not exist."
+ask "Network mode (dhcp/static)" "dhcp"
 case "$REPLY_VALUE" in
   dhcp) NET="name=eth0,bridge=$BRIDGE,ip=dhcp" ;;
   static)
-    ask "Statische IP/CIDR" "192.168.1.90/24"; IP="$REPLY_VALUE"
-    ask "Standardgateway" "192.168.1.1"; GW="$REPLY_VALUE"
-    python3 - "$IP" "$GW" <<'PY' || die "Statische Netzwerkadresse ungueltig."
+    ask "Static IPv4/CIDR" "192.168.1.90/24"; IP="$REPLY_VALUE"
+    ask "Default gateway" "192.168.1.1"; GW="$REPLY_VALUE"
+    python3 - "$IP" "$GW" <<'PY' || die "Invalid static IPv4 address or gateway."
 import sys,ipaddress
 n=ipaddress.ip_interface(sys.argv[1])
 g=ipaddress.ip_address(sys.argv[2])
@@ -78,17 +84,17 @@ assert isinstance(g,ipaddress.IPv4Address) and g in n.network
 PY
     NET="name=eth0,bridge=$BRIDGE,ip=$IP,gw=$GW"
     ;;
-  *) die "Netzwerkmodus ungueltig." ;;
+  *) die "Invalid network mode; choose dhcp or static." ;;
 esac
-ask "CPU-Kerne" "4"; CORES="$REPLY_VALUE"
+ask "CPU cores" "4"; CORES="$REPLY_VALUE"
 ask "RAM in MiB" "4096"; RAM="$REPLY_VALUE"
-ask "Festplatte in GiB" "32"; DISK="$REPLY_VALUE"
-[[ "$CORES" =~ ^[0-9]+$ && "$RAM" =~ ^[0-9]+$ && "$DISK" =~ ^[0-9]+$ ]] || die "Ressourcen muessen Zahlen sein."
-(( CORES>=2 && CORES<=64 && RAM>=2048 && RAM<=131072 && DISK>=24 && DISK<=2048 )) || die "Ressourcen ausserhalb sinnvoller Grenzen."
-optional "Optionaler GPU-Worker fuer Qwen-MP3 (http://LAN-IP:10502)"
+ask "Disk size in GiB" "32"; DISK="$REPLY_VALUE"
+[[ "$CORES" =~ ^[0-9]+$ && "$RAM" =~ ^[0-9]+$ && "$DISK" =~ ^[0-9]+$ ]] || die "CPU, RAM and disk must be whole numbers."
+(( CORES>=2 && CORES<=64 && RAM>=2048 && RAM<=131072 && DISK>=24 && DISK<=2048 )) || die "Resources out of supported range: 2-64 CPU, 2048-131072 MiB RAM, 24-2048 GiB disk."
+optional "Optional Qwen GPU worker URL (http://LAN-IP:10502)"
 GPU_BASE="$REPLY_VALUE"
 if [[ -n "$GPU_BASE" ]]; then
-  python3 - "$GPU_BASE" <<'PY' || die "GPU-Adresse muss eine private HTTP-LAN-Adresse ohne Pfad sein."
+  python3 - "$GPU_BASE" <<'PY' || die "GPU URL must be a private HTTP LAN URL with a port and no path."
 import ipaddress,sys
 from urllib.parse import urlsplit
 u=urlsplit(sys.argv[1])
@@ -100,10 +106,10 @@ except ValueError:
   assert u.hostname.endswith(".local") and len(u.hostname)<254
 PY
 fi
-optional "Oeffentlicher Alexa-Audiohostname (ohne https://)"
+optional "Public Alexa audio hostname (without https://)"
 PUBLIC_HOST="$REPLY_VALUE"
 if [[ -n "$PUBLIC_HOST" ]]; then
-  python3 - "$PUBLIC_HOST" <<'PY' || die "Oeffentlicher Hostname ist ungueltig."
+  python3 - "$PUBLIC_HOST" <<'PY' || die "Invalid public audio hostname."
 import re,sys
 host=sys.argv[1].lower()
 label=r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
@@ -113,70 +119,70 @@ PY
 fi
 # With an existing public Nginx CT, keep router 80/443 unchanged.
 # The new CT is only the fresh speech backend; the shared proxy gets a NEW site.
-printf '\nHTTPS-Modus: dedicated = neuer CT mit eigenem Nginx/Portweiterleitung;\n'
-printf '            shared = bereits vorhandener zentraler Nginx-CT;\n'
-printf '            none = noch kein oeffentlicher HTTPS-Zugriff.\n'
-ask "HTTPS-Modus (dedicated/shared/none)" "dedicated"
+printf '\nHTTPS mode: dedicated = new CT runs its own Nginx;\n'
+printf '            shared = use an existing central Nginx proxy CT;\n'
+printf '            none = no public HTTPS yet.\n'
+ask "HTTPS mode (dedicated/shared/none)" "dedicated"
 PUBLIC_MODE="$REPLY_VALUE"
 PROXY_CT=""
 PROXY_IP=""
 case "$PUBLIC_MODE" in
   dedicated) : ;;
   none)
-    [[ -z "$PUBLIC_HOST" ]] || die "Fuer eine Domain bitte dedicated oder shared waehlen."
+    [[ -z "$PUBLIC_HOST" ]] || die "Choose dedicated or shared when a public hostname was supplied."
     ;;
   shared)
-    [[ -n "$PUBLIC_HOST" ]] || die "Shared-Proxy-Modus erfordert einen neuen Audio-Hostnamen."
-    ask "CT-ID des vorhandenen zentralen Nginx-Proxys" "101"
+    [[ -n "$PUBLIC_HOST" ]] || die "Shared proxy mode requires an audio hostname."
+    ask "Existing central Nginx proxy CT ID" "101"
     PROXY_CT="$REPLY_VALUE"
-    [[ "$PROXY_CT" =~ ^[1-9][0-9]{2,7}$ && "$PROXY_CT" != "$CTID" ]] || die "Ungueltige Proxy-ID."
-    [[ "$(pct status "$PROXY_CT" 2>/dev/null)" == *running* ]] || die "Proxy CT laeuft nicht."
-    pct exec "$PROXY_CT" -- nginx -t || die "Vorhandener Nginx hat Konfigurationsfehler."
-    pct exec "$PROXY_CT" -- bash -lc 'command -v certbot >/dev/null' || die "Certbot fehlt auf Proxy-CT."
+    [[ "$PROXY_CT" =~ ^[1-9][0-9]{2,7}$ && "$PROXY_CT" != "$CTID" ]] || die "Invalid proxy CT ID."
+    [[ "$(pct status "$PROXY_CT" 2>/dev/null)" == *running* ]] || die "Proxy CT is not running."
+    pct exec "$PROXY_CT" -- nginx -t || die "Existing Nginx configuration failed validation."
+    pct exec "$PROXY_CT" -- bash -lc 'command -v certbot >/dev/null' || die "Certbot is missing in the proxy CT."
     if pct exec "$PROXY_CT" -- test -e /etc/nginx/sites-available/tablet-assist-audio; then
-      die "Ein TAFA Audio-vHost existiert bereits auf dem Proxy; nicht ueberschreiben."
+      die "A TAFA audio site already exists on the proxy; refusing to overwrite it."
     fi
     PROXY_IP="$(pct exec "$PROXY_CT" -- hostname -I | tr ' ' '\n' | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -n1)"
-    [[ -n "$PROXY_IP" ]] || die "Keine private IPv4-Adresse des Proxy-CT gefunden."
-    printf 'Bestehender Proxy-CT %s hat LAN-IP %s und behaelt 80/443.\n' "$PROXY_CT" "$PROXY_IP"
-    printf 'Es wird spaeter nur eine NEUE Audio-Site hinzugefuegt, keine bestehende veraendert.\n'
+    [[ -n "$PROXY_IP" ]] || die "Could not find a private IPv4 address on the proxy CT."
+    printf 'Existing proxy CT %s uses LAN IP %s and keeps ports 80/443.\n' "$PROXY_CT" "$PROXY_IP"
+    printf 'Only one NEW audio site will be added; existing sites will not be changed.\n'
     ;;
-  *) die "Nur dedicated, shared oder none moeglich." ;;
+  *) die "Choose dedicated, shared or none." ;;
 esac
 if [[ "$PUBLIC_HOST" == *.duckdns.org ]]; then
-  printf '\nDuckDNS: Domain %s vorher unter https://www.duckdns.org registrieren.\n' "$PUBLIC_HOST"
-  printf 'Der DuckDNS-Update-Token bleibt privat und ist KEIN TAFA-API-Token.\n'
+  printf '\nDuckDNS: Register %s at https://www.duckdns.org before proceeding.\n' "$PUBLIC_HOST"
+  printf 'Keep your DuckDNS account token private; it is NOT a TAFA API token.\n'
 fi
-printf '\nNEUER CT %s | %s CPU | %s MiB RAM | %s GiB | %s\n' "$CTID" "$CORES" "$RAM" "$DISK" "$STORE"
-printf 'Netzwerk %s | Qwen: %s | HTTPS-Hostname: %s\n' "$NET" "$GPU_BASE" "$PUBLIC_HOST"
-printf 'HTTPS-Modus: %s | bestehender Proxy-CT: %s\n' "$PUBLIC_MODE" "${PROXY_CT:-keiner}"
+printf '\nNEW CT %s | Hostname: %s | %s CPU | %s MiB RAM | %s GiB disk | %s\n' "$CTID" "$CT_HOSTNAME" "$CORES" "$RAM" "$DISK" "$STORE"
+printf 'Network: %s | Qwen: %s | Public hostname: %s\n' "$NET" "$GPU_BASE" "$PUBLIC_HOST"
+printf 'HTTPS mode: %s | Existing proxy CT: %s\n' "$PUBLIC_MODE" "${PROXY_CT:-none}"
 if [[ "$PUBLIC_MODE" == shared ]]; then
-  printf 'Zusatz-Bestaetigung: Eine neue Nginx-Site auf CT %s vorbereiten? JA eintippen: ' "$PROXY_CT"
+  printf 'Confirmation: Prepare one NEW Nginx site on CT %s? Type YES: ' "$PROXY_CT"
   IFS= read -r PROXY_CONFIRM </dev/tty
-  [[ "$PROXY_CONFIRM" == JA ]] || die "Proxy-Aenderung nicht bestaetigt; nichts erstellt."
+  [[ "$PROXY_CONFIRM" == YES ]] || die "Proxy site addition not confirmed; nothing created."
 fi
-printf 'CT-ID %s zur endgueltigen Bestaetigung eintippen: ' "$CTID" >/dev/tty
+printf 'Final confirmation: Type CT ID %s: ' "$CTID" >/dev/tty
 IFS= read -r CONFIRM </dev/tty
-[[ "$CONFIRM" == "$CTID" ]] || die "Abgebrochen, nichts erstellt."
+[[ "$CONFIRM" == "$CTID" ]] || die "Cancelled; no new CT was created."
 
 WORK="$(mktemp -d /tmp/tafa-pve.XXXXXXXX)"
 curl -fLSs --retry 2 --connect-timeout 15 --max-time 180 "$REPO" -o "$WORK/repo.tar.gz"
 tar -xzf "$WORK/repo.tar.gz" -C "$WORK"
 SOURCE="$WORK/tablet-assist-for-alexa-main"
 for file in proxmox/install-speechserver.sh proxmox/install-nginx-proxy.sh proxmox/install-combined-ct.sh proxmox/combined-console.sh speechserver/api.py; do
-  [[ -f "$SOURCE/$file" ]] || die "Repository-Datei fehlt: $file"
+  [[ -f "$SOURCE/$file" ]] || die "Missing repository file: $file"
 done
 pveam update
 TEMPLATE="$(pveam available --section system | awk '$2 ~ /^debian-13-standard_.*_amd64.tar.zst$/ {print $2}' | sort -V | tail -n1)"
 [[ -n "$TEMPLATE" ]] || TEMPLATE="$(pveam available --section system | awk '$2 ~ /^debian-12-standard_.*_amd64.tar.zst$/ {print $2}' | sort -V | tail -n1)"
-[[ "$TEMPLATE" =~ ^debian-1[23]-standard_[A-Za-z0-9._-]+_amd64.tar.zst$ ]] || die "Kein Debian 12/13 AMD64-Template gefunden."
+[[ "$TEMPLATE" =~ ^debian-1[23]-standard_[A-Za-z0-9._-]+_amd64.tar.zst$ ]] || die "No supported Debian 12/13 AMD64 template found."
 if ! pveam list "$TPL_STORE" | grep -Fq "vztmpl/$TEMPLATE"; then
   pveam download "$TPL_STORE" "$TEMPLATE"
 fi
 if pct config "$CTID" >/dev/null 2>&1 || qm config "$CTID" >/dev/null 2>&1; then
-  die "Die ID wurde zwischenzeitlich belegt."
+  die "The CT ID became unavailable during setup."
 fi
-printf '\nLege neuen CT %s an ...\n' "$CTID"
+printf '\nCreating new CT %s ...\n' "$CTID"
 # Proxmox VE 9 container bug #8295: umask 0077 makes the transient
 # /var/lib/lxc/CTID/rootfs directories inaccessible to the mapped root
 # of an unprivileged container during the archive extraction.
@@ -185,7 +191,7 @@ printf '\nLege neuen CT %s an ...\n' "$CTID"
 (
   umask 0022
   pct create "$CTID" "$TPL_STORE:vztmpl/$TEMPLATE" \
-    --hostname tafa-voice --unprivileged 1 --ostype debian \
+    --hostname "$CT_HOSTNAME" --unprivileged 1 --ostype debian \
     --cores "$CORES" --memory "$RAM" --swap 1024 --rootfs "$STORE:$DISK" \
     --net0 "$NET" --onboot 1
 )
@@ -198,7 +204,7 @@ pct exec "$CTID" -- tar -xzf /tmp/tafa-installer.tar.gz -C /opt/tafa-installer
 if [[ "$PUBLIC_MODE" == shared ]]; then
   pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE" shared "$PROXY_IP" "$PROXY_CT" "$CTID"
   NEW_CT_IP="$(pct exec "$CTID" -- hostname -I | tr ' ' '\n' | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -n1)"
-  [[ -n "$NEW_CT_IP" ]] || die "Neuer CT hat noch keine private IPv4."
+  [[ -n "$NEW_CT_IP" ]] || die "The new CT has no private IPv4 address yet."
   PROXY_SETUP="/opt/tafa-audio-setup-$CTID"
   pct exec "$PROXY_CT" -- test ! -e "$PROXY_SETUP" || die "Das Verzeichnis $PROXY_SETUP ist belegt."
   pct exec "$PROXY_CT" -- mkdir -m 0700 "$PROXY_SETUP"
@@ -207,31 +213,31 @@ if [[ "$PUBLIC_MODE" == shared ]]; then
   done
   # Existing sites are never edited. Prepare only a new hostname and ACME webroot.
   pct exec "$PROXY_CT" -- bash "$PROXY_SETUP/install-nginx-proxy.sh" prepare "$PUBLIC_HOST" "$NEW_CT_IP" --shared
-  printf '\nNEUE Domain vorbereitet auf CT %s, ohne bestehende Sites zu veraendern.\n' "$PROXY_CT"
-  printf 'Wenn DNS aktuell ist, auf dem Proxmox-Host diese Schritte ausfuehren:\n'
+  printf '\nNEW audio domain prepared on CT %s; existing sites remain unchanged.\n' "$PROXY_CT"
+  printf 'Once DNS is configured, complete these commands:\n'
   printf '  pct enter %s\n' "$PROXY_CT"
   printf '  certbot certonly --webroot -w /var/lib/tablet-assist-acme --cert-name %s -d %s\n' "$PUBLIC_HOST" "$PUBLIC_HOST"
   printf '  bash %s/install-nginx-proxy.sh enable %s %s --shared\n' "$PROXY_SETUP" "$PUBLIC_HOST" "$NEW_CT_IP"
   if [[ "$PUBLIC_HOST" == *.duckdns.org ]]; then
-    printf '\nOPTIONAL: Neue DuckDNS-Domain automatisch aktuell halten (nur einmal im CT %s):\n' "$PROXY_CT"
+    printf '\nOPTIONAL: Keep this DuckDNS name updated (run once in proxy CT %s):\n' "$PROXY_CT"
     printf '  bash %s/install-duckdns-updater.sh %s\n' "$PROXY_SETUP" "$PUBLIC_HOST"
-    printf 'Den DuckDNS-Account-Token dort verdeckt eingeben, niemals im Chat oder in Git.\n'
+    printf 'Enter the DuckDNS token privately there; never paste it in chat or Git.\n'
   fi
 elif [[ "$PUBLIC_MODE" == none ]]; then
   pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "" "$GPU_BASE"
 else
   pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE"
 fi
-printf '\n=== Installation beendet: CT %s ===\n' "$CTID"
+printf '\n=== Installation completed: CT %s ===\n' "$CTID"
 pct exec "$CTID" -- /usr/local/sbin/tafa-info || true
-printf '\nProxmox → CT %s → Konsole: dauerhafte Statusinfos.\n' "$CTID"
+printf '\nProxmox > CT %s > Console: persistent endpoint and service information.\n' "$CTID"
 printf 'PVE-Shell: pct enter %s\n' "$CTID"
-printf 'Im CT: tafa-info (Status) | tafa-setup (HTTPS-Assistent)\n'
+printf 'Inside CT: tafa-info (status) | tafa-setup (HTTPS wizard)\n'
 if [[ "$PUBLIC_MODE" == shared ]]; then
-  printf 'Der bisherige Proxy CT %s bleibt oeffentlicher HTTPS-Eingang; keine Routerumstellung.\n' "$PROXY_CT"
-  printf 'Die neue Domain wird erst nach Certbot und enable erreichbar.\n'
-  printf 'DuckDNS-Aktualisierung bei dynamischer oeffentlicher IP separat einrichten.\n'
+  printf 'Existing proxy CT %s remains the public HTTPS entry point; no router changes.\n' "$PROXY_CT"
+  printf 'The new domain becomes available after certificate issuance and HTTPS activation.\n'
+  printf 'Configure DuckDNS updates separately if your public IP changes.\n'
 else
-  printf 'DNS und Router werden bewusst nicht automatisch umgestellt.\n'
+  printf 'DNS and router configuration are intentionally not changed automatically.\n'
 fi
 CREATED=0
