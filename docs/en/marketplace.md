@@ -8,6 +8,10 @@ Home Assistant Core 2026.11 or newer. Developer preview 0.3.1. Start on a test i
 
 **New:** Contextual follow-ups and optional administrator-approved aliases. [Guide](data-sources.md).
 
+## Marketplace scope and backend roadmap
+
+The current link installs the `tablet_assist_for_alexa` base integration only. The separate `jarvis_tablet_audio` backend (multiroom, device registration, native wake-word routing and camera/vision interfaces) is not installed by this link. Marketplace supports one integration per repository; the target is a single configurable domain with these backend capabilities ported and tested, while retaining documented compatibility with Device Bridge 1.0.0. External CPU/GPU speech servers and the Android APK remain separate installations. The private TAFA dashboard, its assets and household configuration are excluded. Do not install a second integration over a working system or assume automatic migration. See the [backend consolidation plan](backend-roadmap.md).
+
 ## 1. Prepare the speech server
 
 Follow the [CPU / Proxmox setup](proxmox.md). The [GPU worker](worker.md) is optional. Add the CPU Wyoming integration (speech server host, TCP 10300). If using GPU STT, add its separate Wyoming integration as well and note its entity.
