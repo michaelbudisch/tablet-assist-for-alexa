@@ -85,6 +85,21 @@ ask "RAM in MiB" "4096"; RAM="$REPLY_VALUE"
 ask "Festplatte in GiB" "32"; DISK="$REPLY_VALUE"
 [[ "$CORES" =~ ^[0-9]+$ && "$RAM" =~ ^[0-9]+$ && "$DISK" =~ ^[0-9]+$ ]] || die "Ressourcen muessen Zahlen sein."
 (( CORES>=2 && CORES<=64 && RAM>=2048 && RAM<=131072 && DISK>=24 && DISK<=2048 )) || die "Ressourcen ausserhalb sinnvoller Grenzen."
+optional "Optionaler GPU-Worker fuer Qwen-MP3 (http://LAN-IP:10502)"
+GPU_BASE="$REPLY_VALUE"
+if [[ -n "$GPU_BASE" ]]; then
+  python3 - "$GPU_BASE" <<'PY' || die "GPU-Adresse muss eine private HTTP-LAN-Adresse ohne Pfad sein."
+import ipaddress,sys
+from urllib.parse import urlsplit
+u=urlsplit(sys.argv[1])
+assert u.scheme=="http" and u.hostname and u.port and not any((u.username,u.password,u.path,u.query,u.fragment))
+try:
+  ip=ipaddress.ip_address(u.hostname)
+  assert ip.version==4 and ip.is_private and not ip.is_loopback
+except ValueError:
+  assert u.hostname.endswith(".local") and len(u.hostname)<254
+PY
+fi
 optional "Oeffentlicher Alexa-Audiohostname (ohne https://)"
 PUBLIC_HOST="$REPLY_VALUE"
 if [[ -n "$PUBLIC_HOST" ]]; then
@@ -97,7 +112,7 @@ assert not host.endswith(".local")
 PY
 fi
 printf '\nNEUER CT %s | %s CPU | %s MiB RAM | %s GiB | %s\n' "$CTID" "$CORES" "$RAM" "$DISK" "$STORE"
-printf 'Netzwerk %s | HTTPS-Hostname: %s\n' "$NET" "$PUBLIC_HOST"
+printf 'Netzwerk %s | Qwen: %s | HTTPS-Hostname: %s\n' "$NET" "$GPU_BASE" "$PUBLIC_HOST"
 printf 'CT-ID %s zur endgueltigen Bestaetigung eintippen: ' "$CTID" >/dev/tty
 IFS= read -r CONFIRM </dev/tty
 [[ "$CONFIRM" == "$CTID" ]] || die "Abgebrochen, nichts erstellt."
@@ -130,7 +145,7 @@ tar -C "$SOURCE" -czf "$WORK/installer.tar.gz" speechserver proxmox
 pct push "$CTID" "$WORK/installer.tar.gz" /tmp/tafa-installer.tar.gz
 pct exec "$CTID" -- mkdir -p /opt/tafa-installer
 pct exec "$CTID" -- tar -xzf /tmp/tafa-installer.tar.gz -C /opt/tafa-installer
-pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST"
+pct exec "$CTID" -- bash /opt/tafa-installer/proxmox/install-combined-ct.sh "$PUBLIC_HOST" "$GPU_BASE"
 printf '\n=== Installation beendet: CT %s ===\n' "$CTID"
 pct exec "$CTID" -- /usr/local/sbin/tafa-info || true
 printf '\nProxmox → CT %s → Konsole: dauerhafte Statusinfos.\n' "$CTID"
