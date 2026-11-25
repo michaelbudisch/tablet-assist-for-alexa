@@ -71,4 +71,19 @@ class Tests(unittest.TestCase):
    code,body=self.post({"csrf":server.CSRF,"lang":"de"})
    self.assertEqual(code,200)
    self.assertIn("Bestehende Dateien",body)
+ def test_model_removal_requires_explicit_confirmation(self):
+  with patch.object(server,"choose_speech_source",return_value=("external","http://192.168.1.10:5000")),\
+       patch.object(server,"external_piper_ready",return_value=True),\
+       patch.object(server,"local_model_inventory",return_value={"piper_bytes":1024,"whisper_bytes":2048}),\
+       patch.object(server,"remove_local_models",return_value={"piper_bytes":1024,"whisper_bytes":2048}) as remove,\
+       patch.object(server,"status",return_value={}),\
+       patch.object(server,"setup_status",return_value={"status":"configured"}):
+   code,_=self.post({"csrf":server.CSRF,"lang":"de","action":"cleanup","confirmation":"WRONG"})
+   self.assertEqual(code,400)
+   remove.assert_not_called()
+   code,body=self.post({"csrf":server.CSRF,"lang":"de","action":"cleanup","confirmation":"ENTFERNEN"})
+   self.assertEqual(code,200)
+   self.assertIn("TAFA downloads removed",body)
+   remove.assert_called_once_with("external")
+
 if __name__=="__main__":unittest.main()
