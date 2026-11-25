@@ -206,7 +206,7 @@ if [[ "$PUBLIC_MODE" == shared ]]; then
   NEW_CT_IP="$(pct exec "$CTID" -- hostname -I | tr ' ' '\n' | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -n1)"
   [[ -n "$NEW_CT_IP" ]] || die "The new CT has no private IPv4 address yet."
   PROXY_SETUP="/opt/tafa-audio-setup-$CTID"
-  pct exec "$PROXY_CT" -- test ! -e "$PROXY_SETUP" || die "Das Verzeichnis $PROXY_SETUP ist belegt."
+  pct exec "$PROXY_CT" -- test ! -e "$PROXY_SETUP" || die "Proxy setup directory $PROXY_SETUP already exists; refusing to overwrite."
   pct exec "$PROXY_CT" -- mkdir -m 0700 "$PROXY_SETUP"
   for filename in install-nginx-proxy.sh render-nginx-proxy.py check-proxy-host.py install-duckdns-updater.sh duckdns-update.py; do
     pct push "$PROXY_CT" "$SOURCE/proxmox/$filename" "$PROXY_SETUP/$filename"
