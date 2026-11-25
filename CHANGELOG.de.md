@@ -1,5 +1,12 @@
 # Changelog
 
+## Unveröffentlicht — geführter Proxmox-Ein-CT-Installer
+- Neues optionales Skript `proxmox/quick-install.sh`: lädt das Repository, führt durch CT-ID, Storage, Netzwerk, Ressourcen, GPU-Worker und Alexa-Hostname und erstellt nur nach Bestätigung einen neuen unprivilegierten Debian-CT.
+- Piper, Wyoming-Whisper, MP3-Generator und Nginx laufen gemeinsam im neuen CT. MP3-Dateiausgabe auf 127.0.0.1:8080 begrenzt; die Generierungs-API (5001) bleibt ausschließlich fürs vertrauenswürdige LAN.
+- `tafa-info`, `tafa-setup` und regelmäßig aktualisierter Konsolenbanner zeigen IPs, Ports und Dienste und ermöglichen eine bewusste spätere Zertifikatseinrichtung.
+- Bestehende CTs, VMs, Routerregeln und Zertifikate werden nicht verändert. Sicherer PVE-Praxistest mit neuem CT noch ausstehend.
+
+
 ## TAFA-App 0.3.11 — Zentrale Einrichtung und Verbindungsstatus
 - App-Konfiguration auf Deutsch/Englisch: Proxmox, GPU/Qwen, Fallback, Stimme, Klangprofil und Alexa-MP3.
 - Control Center prüft Qwen, Piper-Reserve und MP3-Generator ohne Testdurchsage.
