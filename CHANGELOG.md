@@ -4,6 +4,13 @@
 
 # Changelog
 
+## Unreleased — guided combined Proxmox CT installer
+- New optional `proxmox/quick-install.sh` script creates a single new unprivileged Debian CT after confirming free CT ID, storage, network, resources, optional GPU worker and Alexa hostname.
+- Piper, Wyoming Whisper, MP3 generator and Nginx share the new guest. Temporary audio port 8080 binds to loopback only; generator port 5001 must remain private LAN only.
+- Persistent console status via `tafa-info`, guided HTTPS via `tafa-setup` and periodic login banner.
+- Existing CTs, VMs, proxy sites, router ports and TLS certificates are unchanged. A physical PVE end-to-end test is still required.
+
+
 ## TAFA App 0.3.11 — Central onboarding, diagnostics and cache cleanup
 - Translated HA App options for Proxmox, Qwen/Piper fallback, voice, and Alexa MP3.
 - Ingress read-only connection diagnostics for GPU, Piper and MP3 without generating audio.
