@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.24 — import-first setup, resumable HA provisioning and Android-brand UI
+- Fresh installations start in setup mode without loading or downloading local CPU speech models. Existing installs keep their saved local/external source; importing GPU JSON enables CPU fallback, while Proxmox JSON selects external speech.
+- Administrator-approved JSON import provisions Wyoming/Ollama when possible. If HA Core needs to load the newly staged custom integration, the approved import is queued and can optionally trigger an explicitly authorized Core restart; provisioning and delayed entity mapping resume afterwards.
+- TAFA Lokal is created when its Assist entities are available, and the Control Center shows an actual read-only readiness check and links to HA voice assistant selection. No default assistant is changed.
+- Control Center and HA Sprachzentrale both display the original teal/mint Android launcher vector as a shared SVG asset. No Android binary modifications.
+
+
 ## 0.3.23 — JSON worker and speech CT setup import
 - Add a compact JSON file/paste wizard to Settings: preview first, explicitly confirm changes, and store a stable worker/CT identity for future IP reimport.
 - Provision Home Assistant Wyoming and optional Ollama through a separate admin-only TAFA backend command; preserve unrelated integration entries and existing Assist pipelines. Never auto-download an Ollama model.

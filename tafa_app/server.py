@@ -529,7 +529,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self.allowed():return self.send_error(403)
         path=urlsplit(self.path).path
         assets={"/assets/control-center.css":("control_center.css","text/css; charset=utf-8"),
-                "/assets/control-center.js":("control_center.js","text/javascript; charset=utf-8")}
+                "/assets/control-center.js":("control_center.js","text/javascript; charset=utf-8"),
+                "/assets/brand.svg":("brand.svg","image/svg+xml")}
         if path in assets:
             filename,mimetype=assets[path]
             content=(Path(__file__).parent/filename).read_bytes()

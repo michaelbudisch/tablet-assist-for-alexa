@@ -120,7 +120,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 <div class="shell">
 <header class="hero">
   <div class="hero-main">
-    <div class="brand-mark" aria-hidden="true">T</div>
+    <div class="brand-mark" aria-hidden="true"><img src="assets/brand.svg?v={version}" alt="" width="54" height="54"></div>
     <div class="hero-text">
       <p class="eyebrow">TAFA Control Center</p>
       <h1>{t("Alles im Blick. Einfach eingestellt.","Everything in view. Easy to configure.")}</h1>

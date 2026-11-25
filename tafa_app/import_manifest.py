@@ -116,6 +116,9 @@ def proposed_options(manifest, current):
     services=manifest["services"]
     delta={}
     if manifest["kind"]=="gpu_worker":
+        # First-run setup mode avoids CPU model downloads until confirmation.
+        if current.get("speech_mode")=="setup":
+            delta["speech_mode"]="local"
         if services["qwen_tts"]["enabled"]:
             delta["gpu_base"]=services["qwen_tts"]["url"]
             delta["hardware_profile"]="automatic"

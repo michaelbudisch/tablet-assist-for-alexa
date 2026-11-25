@@ -184,3 +184,7 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;co
 
 .import-review .restart-opt-in{display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:630;margin:12px 0}
 .import-review .restart-opt-in input{width:17px;height:17px;flex:none;accent-color:var(--accent)}
+
+/* Same branded vector as the TAFA Android launcher icon. */
+.brand-mark{background:#0B1220;overflow:hidden;padding:0;box-shadow:0 0 0 1px #ffffff26}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain}

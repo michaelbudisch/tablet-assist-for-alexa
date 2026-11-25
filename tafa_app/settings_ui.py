@@ -12,7 +12,7 @@ from endpoint_checks import suggested_gpu_stt_host
 from wyoming_picker import SUPERVISOR_OPTIONS
 
 CHOICES = {
-    "speech_mode": ("local", "external"),
+    "speech_mode": ("setup", "local", "external"),
     "hardware_profile": ("automatic", "cpu"),
     "voice_variant": ("default", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
     "live_profile": ("natural", "studio", "clear"),
@@ -120,7 +120,8 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 <input type="hidden" name="lang" value="{esc(lang)}"><input type="hidden" name="tab" value="setup">
 <details open><summary>1 · {t("Sprachserver und Whisper", "Speech server and Whisper")}</summary>
 {select("speech_mode",t("Wo läuft Piper?", "Where does Piper run?"),
- [("local",t("In der TAFA-App (einfach)", "Inside TAFA (simple)")),
+ [("setup",t("Einrichtung: zunächst keinen Sprachserver starten", "Setup: do not start speech yet")),
+  ("local",t("In der TAFA-App (mit CPU-Fallback)", "Inside TAFA (CPU fallback)")),
   ("external",t("Extern auf Proxmox", "External Proxmox server"))])}
 {field("external_piper_base",t("Proxmox-Piper (Adresse samt Port 5000)", "Proxmox Piper (URL with port 5000)"),
  t("Im lokalen Modus ignoriert.", "Ignored in local mode."),"http://192.168.1.50:5000")}
