@@ -3,7 +3,7 @@ import os
 import re
 import time
 from pathlib import Path
-from flask import Flask, abort, send_file
+from flask import Flask, abort, send_file, request
 app = Flask(__name__)
 AUDIO_DIR = Path(os.environ.get('JARVIS_AUDIO_DIR', '/var/lib/jarvis/audio'))
 TTL = 900
@@ -11,6 +11,12 @@ TTL = 900
 @app.get('/<name>')
 def audio(name):
     if not re.fullmatch(r'[a-f0-9]{32}\.mp3', name):
+        abort(404)
+    # In shared-proxy mode the temporary MP3 service is reachable only
+    # from the explicitly selected trusted Nginx CT. An unset value preserves
+    # the original private-LAN behaviour for existing installations.
+    allowed_ip = os.environ.get("JARVIS_AUDIO_ALLOW_IP", "").strip()
+    if allowed_ip and request.remote_addr != allowed_ip:
         abort(404)
     p = AUDIO_DIR / name
     try:
