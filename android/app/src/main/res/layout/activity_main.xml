@@ -85,7 +85,7 @@
 <TextView android:id="@+id/wake_status" style="@style/Body" android:text="@string/wake_stopped" android:accessibilityLiveRegion="polite"/>
 <Button android:id="@+id/wake_start" style="@style/Primary" android:text="@string/wake_start"/>
 <Button android:id="@+id/wake_stop" style="@style/Action" android:text="@string/wake_stop"/>
-</Linear>
+</LinearLayout>
 <LinearLayout style="@style/Card">
 <TextView style="@style/Eyebrow" android:text="@string/camera_optional"/>
 <TextView style="@style/Heading" android:text="@string/camera_title"/>
