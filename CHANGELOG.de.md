@@ -1,5 +1,9 @@
 # Changelog
 
+## TAFA App 0.3.19 — Docker-Startfehler behoben
+- Die Datei `wyoming_picker.py` wird ins App-Image kopiert. In 0.3.18 verursachte ihr Fehlen einen `ModuleNotFoundError` beim Start.
+- Importprüfung beim Build und Regressionstest ergänzt. Einstellungen, HA-Integration 0.4.9, GPU-Worker und Android-App unverändert.
+
 ## TAFA App 0.3.18 / GPU-Worker 2.2.2 — Ersteinrichtung vereinfachen
 - GPU-Worker-Verbindungsdatei enthält jetzt eine vollständige deutsch-englische Anleitung für GPU-/CPU-Wyoming, Ollama sowie alle TAFA-Felder.
 - Im **TAFA Control Center** werden vorhandene Wyoming-STT-Entitäten als getrennte **CPU-/GPU-Dropdowns** angeboten. Speichern übernimmt die Auswahl in die App-Optionen; TAFA-App danach neu starten.

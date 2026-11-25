@@ -9,7 +9,7 @@
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.18**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.19**, HA integration **0.4.9**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
@@ -83,3 +83,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **New in TAFA 0.3.16 / integration 0.4.8:** External Proxmox setup checks for Wyoming STT and a complete Assist pipeline before reporting ready. A single Wyoming STT provider is selected automatically; with multiple providers, choose `cpu_stt` in TAFA App Configuration. See the optional native Android 1.0.1 microphone setup under **TAFA → Devices**. [Setup](docs/en/setup-guide.md).
 
 **New:** TAFA Control Center lets you assign discovered Wyoming STT entities to CPU/GPU dropdowns. **GPU Worker 2.2.2** provides a complete DE/EN setup and connection TXT (`04-Verbindungsdaten.bat`), including the separate Ollama conversation integration. [Setup guide](docs/en/setup-guide.md).
+
+**TAFA App 0.3.19 hotfix:** Add the missing Wyoming picker to the Docker build. Update/rebuild the TAFA App; the existing configuration and Android app remain unchanged.

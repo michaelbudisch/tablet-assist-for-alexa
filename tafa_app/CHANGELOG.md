@@ -1,5 +1,10 @@
 # TAFA App changelog
 
+## 0.3.19 — Wyoming picker Docker startup hotfix
+- Bundle `wyoming_picker.py` so the TAFA App does not crash with `ModuleNotFoundError` on startup after 0.3.18.
+- Check the import during the container build and test that all local Python server imports are copied into the image.
+- Existing configuration, HA integration 0.4.9, GPU Worker and Android Device Bridge unchanged.
+
 ## 0.3.18 — live Wyoming STT dropdowns in the Control Center
 
 - New admin-only **TAFA Control Center → Automatically discover Wyoming STT** panel lists currently registered enabled `stt.*` entities directly from Home Assistant. Explicitly assign the CPU Proxmox and GPU Windows Whisper roles via dropdown instead of typing IDs.

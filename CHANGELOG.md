@@ -1,3 +1,7 @@
+## TAFA App 0.3.19 — fix Docker startup
+- Include the missing `wyoming_picker.py` in the Docker image and verify it imports during the build.
+- Regression guard prevents omitting local TAFA server modules. No existing configuration, HA integration, Android app or GPU changes.
+
 ## TAFA App 0.3.18 / GPU Worker 2.2.2 — guided Home Assistant setup
 - Generated GPU connection TXT now provides complete bilingual Wyoming GPU/CPU STT, Ollama conversation, Qwen TTS and precise TAFA field mapping.
 - TAFA Control Center discovers registered Wyoming STT entities and offers explicit CPU/GPU dropdown assignment. Save persists only these two choices in the App options; restart the App to synchronize.
