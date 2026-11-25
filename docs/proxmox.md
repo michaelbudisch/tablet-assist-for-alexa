@@ -39,6 +39,20 @@ Wenn derselbe Nginx-CT bereits Home Assistant, ShapeAnywhere-MCP und die oeffent
 
 Zum vorsichtigen Aufraeumen gibt es das **nur lesende** Skript `proxmox/audit-shared-proxy.sh`. Es listet aktive Nginx-Seiten, Domains, Proxy-Ziele sowie Zertifikatsablaufdaten auf, ohne Einstellungen zu veraendern. Erst nach dem Pruefen alter Sites etwas entfernen.
 
+## Neuinstallation testen, obwohl bereits ein zentraler Nginx-Proxy läuft
+
+**Beispiel: Proxmox CT 101 bleibt für Home Assistant, ShapeAnywhere-MCP und Alexa zuständig.** So kannst du den Installer trotzdem vollständig testen, ohne 80/443 an einen anderen CT weiterzuleiten.
+
+1. Auf [duckdns.org](https://www.duckdns.org) eine **neue, noch verfügbare Subdomain** anlegen, z. B. `tafa-neu.duckdns.org`. DuckDNS-Domains werden im Web-Dashboard registriert; die dokumentierte Update-API ändert nur den DNS-Eintrag bereits registrierter Domains. Bestehende Domainnamen behalten.
+2. Im **Proxmox-Host** den Ein-Zeilen-Installer oben starten, neuen freien CT erstellen und bei **HTTPS-Modus** `shared` wählen. Danach den **bereits bestehenden Nginx-CT** angeben (z. B. `101`) und die zusätzliche Nginx-Audio-Site ausdrücklich mit `JA` bestätigen.
+3. Der neue CT installiert **Piper, Whisper und MP3**, aber **keinen zweiten öffentlichen Nginx-Server**. Der alte Nginx-CT behält seine öffentlichen Portfreigaben. Der neue CT liefert MP3-Dateien auf Port 8080 ausschließlich an die IP des gewählten Proxys (zusätzliche Firewall-Einschränkungen empfohlen).
+4. Der Installer kopiert die benötigten Dateien in ein **neues Verzeichnis** auf dem bestehenden Proxy und ruft dort `prepare ... --shared` auf. Dabei wird nur eine neue, streng begrenzte Audio-Site angelegt; bereits existierende Websites, Zertifikate und Routing-Regeln werden nicht überschrieben.
+5. Nach erfolgter DNS-Aktualisierung auf **CT 101** das vom Installer ausgegebene `certbot certonly --webroot ...` ausführen und danach die ebenfalls ausgegebene `install-nginx-proxy.sh enable ... --shared`-Zeile. So wird das TLS-Zertifikat dort verwaltet, wo die öffentlichen Ports ankommen.
+6. Optional für dynamische IPv4: Auf **CT 101** `bash /opt/tafa-audio-setup-CTID/install-duckdns-updater.sh NEUE-DOMAIN.duckdns.org` ausführen. Es fragt den **DuckDNS-Account-Token verdeckt** ab und speichert ihn ausschließlich lokal in `/etc/tafa-duckdns/` (0600); ein systemd-Timer aktualisiert nur diesen neuen DNS-Eintrag alle zehn Minuten. **Der DuckDNS-Account-Token ist kein TAFA-API-Token.** Niemals ins GitHub-Repository oder in einen Chat kopieren.
+7. In einer **separaten Home-Assistant-Testinstallation** die **interne MP3-API des neuen CTs** (`http://NEUE-CT-IP:5001`) und die **neue öffentliche HTTPS-Domain** (`https://NEUE-DOMAIN.duckdns.org`) gemeinsam einstellen. Auch Piper `http://NEUE-CT-IP:5000` und Wyoming `NEUE-CT-IP:10300` auf den neuen CT setzen. Danach eine Alexa-Testdurchsage prüfen.
+
+**Wichtig zur späteren Migration:** Eine neue Domain, die auf den neuen CT zeigt, kann **nicht** die Dateien des alten MP3-Generators ausliefern. `mp3_base` und `public_audio_base` müssen zusammen auf den neuen CT umgestellt werden; nur die Domain allein zu wechseln würde Alexa-Audio unterbrechen. Solange der Test läuft, bleibt die alte produktive HA-Installation mit dem alten CT und der alten Domain unverändert. Den bestehenden Proxy CT 101 und die übrigen Sites nicht löschen.
+
 ## Neuer separater Sprachserver-CT (Alternative)
 
 In Proxmox eine Debian-Vorlage in der Oberfläche herunterladen. Repository auspacken/klonen. Auf dem Proxmox-Host als Administrator:
