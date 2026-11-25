@@ -69,7 +69,7 @@ def schema():
     password = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD))
     return vol.Schema({
         vol.Required("piper_base", default="http://speechserver.local:5000"): str,
-        vol.Required("cpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
+        vol.Optional("cpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
         vol.Optional("gpu_base", default=""): str,
         vol.Optional("qwen_token", default=""): password,
         vol.Optional("gpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
@@ -98,6 +98,7 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             data = {**user_input}
+            data["cpu_stt"] = (data.get("cpu_stt") or "").strip()
             for key, choices in CHOICES.items():
                 data[key] = choices.get(data.get(key), data.get(key))
             for key in ("gpu_base", "qwen_token", "gpu_stt", "gpu_stt_host", "llm_agent",

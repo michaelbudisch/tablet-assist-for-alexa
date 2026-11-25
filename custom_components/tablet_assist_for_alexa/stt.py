@@ -4,6 +4,9 @@ Only audio from a running Assist request is processed. No recordings or
 transcripts are persisted or logged by this router.
 """
 import asyncio
+import io
+import wave
+import aiohttp
 from collections.abc import AsyncIterable
 import logging
 from time import monotonic
@@ -13,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 from .const import settings
@@ -99,6 +103,45 @@ class JarvisSpeechRouter(stt.SpeechToTextEntity):
             # Never log audio, transcripts or exception payloads.
             return None
 
+    async def _built_in_stt(self, stream):
+        """Use the bundled TAFA App CPU recognizer when no Wyoming STT is configured."""
+        endpoint = self._cfg.get("piper_base", "").rstrip("/")
+        if not endpoint:
+            return None
+        chunks = []
+        length = 0
+        try:
+            async with asyncio.timeout(55):
+                async for chunk in stream:
+                    length += len(chunk)
+                    if length > MAX_AUDIO_BYTES:
+                        return None
+                    chunks.append(bytes(chunk))
+            if not chunks:
+                return None
+            data = b"".join(chunks)
+            if not data.startswith(b"RIFF"):
+                buf = io.BytesIO()
+                with wave.open(buf, "wb") as wav:
+                    wav.setnchannels(1)
+                    wav.setsampwidth(2)
+                    wav.setframerate(16000)
+                    wav.writeframes(data)
+                data = buf.getvalue()
+            session = async_get_clientsession(self.hass)
+            async with session.post(endpoint + "/stt", data=data,
+                    headers={"Content-Type": "audio/wav"},
+                    timeout=aiohttp.ClientTimeout(total=55),
+                    allow_redirects=False) as response:
+                if response.status != 200:
+                    return None
+                result = await response.json()
+                if isinstance(result, dict) and isinstance(result.get("text"), str) and result["text"].strip():
+                    return stt.SpeechResult(result["text"].strip(), stt.SpeechResultState.SUCCESS)
+        except (aiohttp.ClientError, TimeoutError, ValueError, OSError):
+            pass
+        return None
+
     def _finish(self, name, start, result, fallback=False):
         self._counts[name] += 1
         if fallback:
@@ -117,7 +160,7 @@ class JarvisSpeechRouter(stt.SpeechToTextEntity):
 
     async def async_process_audio_stream(self, metadata, stream: AsyncIterable[bytes]):
         start = monotonic()
-        base_id = self._cfg["cpu_stt"]
+        base_id = self._cfg.get("cpu_stt", "")
         base = self._engine(base_id, metadata)
         mode = self._cfg.get("hardware_profile", "Automatisch")
         target_id = self._cfg.get("gpu_stt", "")
@@ -135,7 +178,7 @@ class JarvisSpeechRouter(stt.SpeechToTextEntity):
 
         # Fast path: original streaming behavior on the homeserver.
         if enhanced is None:
-            result = await self._call(base, metadata, stream, 60)
+            result = await self._call(base, metadata, stream, 60) if base is not None else await self._built_in_stt(stream)
             return self._finish("homeserver", start, result, fallback=unavailable)
 
         # Buffer only the bounded active request in RAM, so a failure can
@@ -164,5 +207,5 @@ class JarvisSpeechRouter(stt.SpeechToTextEntity):
             return self._finish("zusatzrechner", start, result)
         self._retry_after[target_id] = monotonic() + FAILOVER_SECONDS
         _LOGGER.debug("Jarvis STT: Zusatzrechner nicht erfolgreich, CPU-Fallback.")
-        result = await self._call(base, metadata, replay(), 25)
+        result = await self._call(base, metadata, replay(), 25) if base is not None else await self._built_in_stt(replay())
         return self._finish("homeserver", start, result, fallback=True)
