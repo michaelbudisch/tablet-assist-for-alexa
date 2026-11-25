@@ -122,6 +122,7 @@ async def phase_one(hass):
         menu=await hass.config_entries.options.async_init(entry.entry_id)
         menu=await hass.config_entries.options.async_configure(menu["flow_id"],{"next_step_id":"announcements"})
         check(menu["type"]=="form","optional Alexa announcement settings displayed")
+        data=hass.data[DOMAIN][entry.entry_id]  # options reload replaced the per-entry runtime object
         agent=entity(hass,entry,"conversation")
         speech,cid,keep=await converse(hass,agent,"Wie hoch ist die Vorlauftemperatur?")
         check("40" in speech and keep,"flow temperature and follow-up requested")
