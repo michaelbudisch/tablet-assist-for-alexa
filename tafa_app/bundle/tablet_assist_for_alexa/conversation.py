@@ -91,6 +91,17 @@ def ann_label(rooms):
 
 
 
+def _agent_is_usable(agent, state, own_entity_id):
+    """Unknown means a conversation entity has not handled its first message.
+
+    HA's ConversationEntity state is the last-message timestamp; its normal
+    initial state is 'unknown'. Only a missing or explicitly unavailable
+    agent must prevent forwarding to its conversation handler.
+    """
+    return bool(agent and agent != own_entity_id and
+                state is not None and state.state != "unavailable")
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([JarvisConversation(entry.entry_id, settings(entry), hass.data[DOMAIN][entry.entry_id])])
 
@@ -314,9 +325,10 @@ class JarvisConversation(conversation.ConversationEntity):
                 "Unter Apps, TAFA, Konfiguration kannst du den Ollama-Agenten auswählen."
             )
         state = self.hass.states.get(agent)
-        if (self._cfg.get("hardware_profile") == "Homeserver"
-                or agent == self.entity_id or state is None
-                or state.state in ("unavailable", "unknown")):
+        # Hardware profile controls TTS routing (Qwen/Piper), not whether
+        # a configured HA conversation agent may handle a question.
+        # 'unknown' is the normal state of an unused ConversationEntity.
+        if not _agent_is_usable(agent, state, self.entity_id):
             self._remember_closed(key, monotonic())
             return self._reply(
                 user_input, chat_log,
