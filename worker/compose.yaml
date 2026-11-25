@@ -31,7 +31,6 @@ services:
     ports:
       - "${LAN_IP}:10501:10501"
     environment:
-      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice}
       QWEN_SPEAKER: ${QWEN_SPEAKER:-Ryan}
       HF_HOME: /models
@@ -42,7 +41,7 @@ services:
     profiles: ["tts"]
   qwen-stream:
     build: ./qwen-stream
-    image: jarvis-qwen-stream:2.2.0
+    image: jarvis-qwen-stream:2.2.1
     deploy:
       resources:
         reservations:
@@ -53,7 +52,6 @@ services:
     ports:
       - "${LAN_IP}:10502:10502"
     environment:
-      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       QWEN_SPEAKER: ${QWEN_SPEAKER:-Ryan}
       STREAM_VOICE_MODE: ${STREAM_VOICE_MODE:-fast}
       STREAM_FIXED_MODEL_SIZE: ${STREAM_FIXED_MODEL_SIZE:-1.7B}
@@ -92,8 +90,6 @@ services:
   ollama-gateway:
     image: nginx:alpine
     environment:
-      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
-      NGINX_ENVSUBST_FILTER: "^JARVIS_TTS_TOKEN$"
     ports:
       - "${LAN_IP}:11434:8080"
     volumes:
@@ -105,9 +101,8 @@ services:
     networks: [llm-private]
   vision:
     build: ./vision
-    image: jarvis-vision:2.2.0
+    image: jarvis-vision:2.2.1
     environment:
-      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       VISION_MODEL: ${VISION_MODEL:-qwen3-vl:4b-instruct}
     ports:
       - "${LAN_IP}:10503:10503"
@@ -124,9 +119,8 @@ services:
     cap_drop: [ALL]
   ops:
     build: ./ops
-    image: jarvis-ops:2.2.0
+    image: jarvis-ops:2.2.1
     environment:
-      JARVIS_TTS_TOKEN: ${JARVIS_TTS_TOKEN:?run Setup.ps1 first}
       NVIDIA_DRIVER_CAPABILITIES: utility
     ports:
       - "${LAN_IP}:10504:10504"

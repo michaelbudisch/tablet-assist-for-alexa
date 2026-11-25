@@ -1,7 +1,6 @@
-"""Authenticated local image descriptions and explicitly requested frame benchmarks."""
+"""Private-LAN image descriptions and explicitly requested frame benchmarks."""
 import base64
 import binascii
-import hmac
 import io
 import json
 import os
@@ -102,9 +101,7 @@ def payload(model, mode, image, keep_alive=0, num_ctx=4096):
             "messages": [{"role": "system", "content": SYSTEM},
                          {"role": "user", "content": PROMPTS[mode], "images": [image]}]}
 
-def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
-    if len(token) < 32:
-        raise RuntimeError("A random worker token of at least 32 characters is required")
+def create_app(default_model=DEFAULT_MODEL, call=ollama_json):
     if default_model not in MODELS:
         raise RuntimeError("Unsupported VISION_MODEL")
     app = Flask(__name__)
@@ -116,11 +113,6 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
         if priority not in ('interactive', 'background') or type(wait_ms) is not int or not 0 <= wait_ms <= 20000:
             return None
         return priority, wait_ms
-
-    @app.before_request
-    def authorize():
-        if not hmac.compare_digest(request.headers.get("X-API-Key", "").encode(), token.encode()):
-            return jsonify(error="unauthorized"), 401
 
     @app.after_request
     def no_cache(response):
@@ -252,7 +244,7 @@ def create_app(token, default_model=DEFAULT_MODEL, call=ollama_json):
 
 if __name__ == "__main__":
     from waitress import serve
-    app = create_app(os.environ.get("JARVIS_TTS_TOKEN", ""),
+    app = create_app(
                      os.environ.get("VISION_MODEL", DEFAULT_MODEL))
     serve(app, host="0.0.0.0", port=10503, threads=4,
           max_request_body_size=MAX_BENCH_BODY, channel_timeout=125)

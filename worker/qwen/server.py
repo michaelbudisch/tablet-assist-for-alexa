@@ -1,5 +1,4 @@
 """LAN-only Qwen TTS, standard model voices, no persistent audio or text logs."""
-import hmac
 import io
 import os
 import threading
@@ -11,9 +10,6 @@ from flask import Flask, Response, jsonify, request
 from qwen_tts import Qwen3TTSModel
 from waitress import serve
 
-TOKEN = os.environ.get("JARVIS_TTS_TOKEN", "")
-if len(TOKEN) < 32:
-    raise RuntimeError("A random JARVIS_TTS_TOKEN of at least 32 characters is required")
 MODEL = os.environ.get("QWEN_MODEL", "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice")
 SPEAKER = os.environ.get("QWEN_SPEAKER", "Ryan")
 if not torch.cuda.is_available():
@@ -30,8 +26,6 @@ def health():
 
 @app.post("/synthesize")
 def synthesize():
-    if not hmac.compare_digest(request.headers.get("X-API-Key", ""), TOKEN):
-        return jsonify(error="unauthorized"), 401
     data = request.get_json(silent=True)
     text = data.get("text") if isinstance(data, dict) else None
     if not isinstance(text, str) or not 0 < len(text.strip()) <= 500:

@@ -1,5 +1,4 @@
-"""Local authenticated Faster Qwen TTS: PCM stream and complete WAV endpoints."""
-import hmac
+"""Private-LAN Faster Qwen TTS: PCM stream and complete WAV endpoints."""
 import hashlib
 import io
 import os
@@ -14,9 +13,6 @@ from faster_qwen3_tts import FasterQwen3TTS
 from waitress import serve
 from text_processing import dictionary, prepare_text, split_sentences
 
-TOKEN = os.environ.get('JARVIS_TTS_TOKEN', '')
-if len(TOKEN) < 32:
-    raise RuntimeError('A JARVIS_TTS_TOKEN of at least 32 characters is required')
 MODE = os.environ.get('STREAM_VOICE_MODE', 'fast').strip().lower()
 MODELS = {
     'fast': 'Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',
@@ -125,8 +121,6 @@ def health():
 
 
 def validated_text():
-    if not hmac.compare_digest(request.headers.get('X-API-Key', ''), TOKEN):
-        return None, (jsonify(error='unauthorized'), 401)
     data = request.get_json(silent=True)
     text = data.get('text') if isinstance(data, dict) else None
     if not isinstance(text, str) or not 0 < len(text.strip()) <= 500:
@@ -141,8 +135,6 @@ def validated_text():
 def cancel():
     # Cooperative cancellation. Playback clients must still stop their own
     # audio; an active GPU generation can only stop between generated chunks.
-    if not hmac.compare_digest(request.headers.get('X-API-Key', ''), TOKEN):
-        return jsonify(error='unauthorized'), 401
     busy = lock.locked()
     if busy:
         cancel_event.set()

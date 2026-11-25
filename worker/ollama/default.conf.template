@@ -4,7 +4,6 @@ server {
     server_name _;
     access_log off;
     client_max_body_size 512k;
-    if ($http_authorization != "Bearer ${JARVIS_TTS_TOKEN}") { return 401; }
     location ~ ^/(api/(version|tags|show|chat|generate|ps))?$ {
         proxy_pass http://ollama:11434;
         proxy_http_version 1.1;
