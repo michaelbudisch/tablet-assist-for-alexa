@@ -181,4 +181,11 @@
     <string name="wake_unmute_button">Natives Mikrofon wieder freigeben</string>
     <string name="wake_remote_help">Die Einstellungen werden mit Home Assistant synchronisiert. Stumm gibt das Android-Mikrofon wirklich frei, der Dienst bleibt aktiv. Änderungen im TAFA-Dashboard gelten normalerweise innerhalb von drei Sekunden.</string>
     <string name="wake_save_error">Wakeword-Einstellung konnte nicht an Home Assistant gesendet werden: %1$s</string>
+    <string name="wake_multiroom_help">Multiroom: Jedes Tablet braucht einen eigenen Platz (1–4). Der Platz wird in Home Assistant für diese App-Installation reserviert. Dieses Tablet danach im TAFA-Dashboard unter Sprache &amp; Audio koppeln. Andere Tablets ignorieren sein Rufwort.</string>
+    <string name="wake_slot_label">Tablet-Platz in Home Assistant</string>
+    <string name="wake_room_label">Raumname (für die Anzeige)</string>
+    <string name="wake_room_hint">z. B. Wohnzimmer</string>
+    <string name="wake_device_id">Diese Installation: %1$s</string>
+    <string name="wake_slot_in_use">Tablet-Platz gewechselt. Native Erkennung nach Auswahl eines freien Platzes neu starten.</string>
+    <string-array name="wake_slots"><item>Tablet 1</item><item>Tablet 2</item><item>Tablet 3</item><item>Tablet 4</item></string-array>
 </resources>
