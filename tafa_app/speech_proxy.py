@@ -4,6 +4,10 @@ Only accepts bounded in-memory WAV or short text requests. Audio and transcripts
 are never archived or logged. No public host port is mapped by the HA App.
 """
 import io
+import importlib.metadata
+import os
+import time
+import traceback
 import json
 import logging
 import subprocess
@@ -24,41 +28,75 @@ class Models:
     def __init__(self):
         self.voice = None
         self.asr = None
-        self.tts_error = "Initializing"
-        self.stt_error = "Initializing"
+        self.tts_error = "Initialisierung läuft"
+        self.stt_error = "Initialisierung läuft"
+        self.tts_phase = "initializing"
+        self.stt_phase = "initializing"
+        self._model_lock = threading.Lock()
         self.tts_lock = threading.BoundedSemaphore(1)
         self.stt_lock = threading.BoundedSemaphore(1)
     def load_voice(self):
+        self.tts_phase = "loading"
         try:
             from piper import PiperVoice
             path = DATA / "voices" / (VOICE_NAME + ".onnx")
-            if not path.exists():
+            config = path.with_suffix(path.suffix + ".json")
+            if not (path.is_file() and config.is_file() and path.stat().st_size > 1_000_000):
+                self.tts_phase = "downloading"
                 path.parent.mkdir(parents=True, exist_ok=True)
-                subprocess.run([sys.executable, "-m", "piper.download_voices",
-                                "--data-dir", str(path.parent), VOICE_NAME],
-                               check=True, timeout=900, stdout=subprocess.DEVNULL)
+                # Both model and .onnx.json are required. Existing partial downloads
+                # are recoverable; the downloader validates the catalog entry.
+                subprocess.run(
+                    [sys.executable, "-m", "piper.download_voices", "--data-dir",
+                     str(path.parent), VOICE_NAME],
+                    check=True, timeout=1200,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                    text=True)
+            if not (path.is_file() and config.is_file() and path.stat().st_size > 1_000_000):
+                raise RuntimeError("Piper model or .onnx.json missing after download")
+            self.tts_phase = "loading"
             self.voice = PiperVoice.load(str(path))
+            self.tts_phase = "ready"
             self.tts_error = ""
-            LOG.info("Piper voice ready")
+            LOG.info("Piper voice ready (%s)", VOICE_NAME)
         except Exception as exc:
-            self.tts_error = type(exc).__name__
-            LOG.error("Piper initialization failed: %s", self.tts_error)
+            self.voice = None
+            self.tts_phase = "error"
+            self.tts_error = type(exc).__name__ + ": " + str(exc)[:240]
+            LOG.exception("Piper initialization failed (%s)", self.tts_error)
     def load_asr(self):
+        self.stt_phase = "loading"
         try:
             from faster_whisper import WhisperModel
             folder = DATA / "models"
             folder.mkdir(parents=True, exist_ok=True)
+            self.stt_phase = "downloading"
             self.asr = WhisperModel("base", device="cpu", compute_type="int8",
                                     download_root=str(folder))
+            self.stt_phase = "ready"
             self.stt_error = ""
             LOG.info("Whisper CPU model ready")
         except Exception as exc:
-            self.stt_error = type(exc).__name__
-            LOG.error("Whisper initialization failed: %s", self.stt_error)
+            self.asr = None
+            self.stt_phase = "error"
+            self.stt_error = type(exc).__name__ + ": " + str(exc)[:240]
+            LOG.exception("Whisper initialization failed (%s)", self.stt_error)
     def start(self):
         (DATA / "voices").mkdir(parents=True, exist_ok=True)
         threading.Thread(target=self.load_voice, daemon=True).start()
         threading.Thread(target=self.load_asr, daemon=True).start()
+    def retry(self):
+        """Start a new initialization only for a failed/unavailable model."""
+        if not self._model_lock.acquire(blocking=False):
+            return False
+        try:
+            if self.voice is None and self.tts_phase != "loading" and self.tts_phase != "downloading":
+                threading.Thread(target=self.load_voice, daemon=True).start()
+            if self.asr is None and self.stt_phase != "loading" and self.stt_phase != "downloading":
+                threading.Thread(target=self.load_asr, daemon=True).start()
+            return True
+        finally:
+            self._model_lock.release()
 
 STATE = Models()
 
@@ -81,9 +119,14 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_data({"ready": STATE.voice is not None, "stt_ready": STATE.asr is not None})
         if self.path == "/status":
             return self.send_data({"piper_ready": STATE.voice is not None, "whisper_ready": STATE.asr is not None,
-                                   "piper_error": STATE.tts_error, "whisper_error": STATE.stt_error})
+                                   "piper_error": STATE.tts_error, "whisper_error": STATE.stt_error,
+                                   "piper_phase": STATE.tts_phase, "whisper_phase": STATE.stt_phase})
         self.send_data({"error":"unknown endpoint"},404)
     def do_POST(self):
+        if self.path == "/retry":
+            if self.client_address[0] not in ("127.0.0.1", "::1"):
+                return self.send_data({"error":"forbidden"},403)
+            return self.send_data({"accepted":STATE.retry()})
         if self.path not in ("/synthesize", "/stt"):
             return self.send_data({"error":"unknown endpoint"},404)
         try:
