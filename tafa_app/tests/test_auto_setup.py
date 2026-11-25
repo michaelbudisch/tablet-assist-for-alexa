@@ -30,6 +30,11 @@ def fake_connect(responses,on_sent):
                     *([dict(entity_id="tts.tafa_stream",platform="tablet_assist_for_alexa",unique_id="unit_stream",disabled_by=None)] if responses.get("stream",True) else []),
                     dict(entity_id="conversation.tafa",platform="tablet_assist_for_alexa",unique_id="unit_conversation_router",disabled_by=None)
                 ] if responses.get("entities",True) else []
+                value.extend(
+                    dict(entity_id=f"stt.wyoming_{i}",platform="wyoming",
+                         unique_id=f"wyoming_stt_{i}",disabled_by=None)
+                    for i in range(responses.get("wyoming_count",0))
+                )
             elif kind=="assist_pipeline/pipeline/list":
                 value={"pipelines":responses.get("pipelines",[])}
             elif kind=="assist_pipeline/pipeline/create":
@@ -44,7 +49,7 @@ def fake_connect(responses,on_sent):
     return lambda *args,**kwargs:WS()
 
 class Tests(unittest.TestCase):
-    def invoke(self,responses):
+    def invoke(self,responses, **params):
         sent=[]
         client=types.ModuleType("websockets.sync.client")
         client.connect=fake_connect(responses,sent)
@@ -54,7 +59,7 @@ class Tests(unittest.TestCase):
         root.sync=sync
         with patch.dict(sys.modules,{"websockets":root,"websockets.sync":sync,"websockets.sync.client":client}):
             with patch.object(auto_setup,"TOKEN","test-only-token"):
-                result=auto_setup.ensure_pipeline()
+                result=auto_setup.ensure_pipeline(**params)
         return result,sent
     def test_creates_pipeline_with_complete_required_schema(self):
         result,sent=self.invoke({})
@@ -108,6 +113,29 @@ class Tests(unittest.TestCase):
                                                   "conversation_engine":"conversation.configured"}]})
         self.assertEqual(result,"pipeline_needs_review")
         self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create" for msg in sent))
+
+    def test_external_proxmox_waits_for_wyoming_whisper(self):
+        for count in (0, 2):
+            result, sent = self.invoke({"wyoming_count":count}, external_wyoming=True)
+            self.assertEqual(result,"waiting_for_external_stt")
+            self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create"
+                                 for msg in sent))
+
+    def test_external_proxmox_auto_selects_one_wyoming_provider(self):
+        result, sent = self.invoke({"wyoming_count":1}, external_wyoming=True)
+        self.assertEqual(result,"pipeline_created")
+        self.assertTrue(any(msg.get("type")=="assist_pipeline/pipeline/create"
+                            for msg in sent))
+
+    def test_external_proxmox_accepts_explicit_provider_with_many_choices(self):
+        result, _ = self.invoke({"wyoming_count":2},
+                                external_wyoming=True, configured_stt="stt.wyoming_1")
+        self.assertEqual(result,"pipeline_created")
+        result, sent = self.invoke({"wyoming_count":1},
+                                   external_wyoming=True, configured_stt="stt.missing")
+        self.assertEqual(result,"waiting_for_external_stt")
+        self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create"
+                             for msg in sent))
 
     def test_wait_for_registered_entities(self):
         result,sent=self.invoke({"entities":False})
