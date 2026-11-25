@@ -250,6 +250,11 @@ def display(message="",lang="de"):
       (t("GPU-Worker / Qwen","GPU worker / Qwen"),
        translations.get(links["gpu"],links["gpu"])+
        (" · v"+links["gpu_version"] if links["gpu_version"] else "")),
+      (t("Lokale KI · Gesprächsassistent","Local AI · conversation agent"),
+       t("Kein KI-Agent ausgewählt; Ollama als HA-Integration hinzufügen und unter Apps → TAFA → Konfiguration bei llm_agent auswählen",
+         "No AI agent selected; add Ollama as an HA integration, then select it in Apps → TAFA → Configuration → llm_agent")
+       if not preferences.get("llm_agent") else
+       t("Ausgewählt (nicht live getestet): ","Selected (not live-tested): ")+preferences["llm_agent"]),
       (t("Piper-Fallback","Piper fallback"),
        translations.get(links["piper"],links["piper"])),
       (t("Sprachweg laut App-Einstellung","Expected App speech route"),
@@ -273,7 +278,7 @@ def display(message="",lang="de"):
         f'<button type="submit" name="action" value="cleanup">{t("TAFA-Sprachmodelle löschen","Delete TAFA speech models")}</button>'
         f'</form>' if mode == "external" and has_cache else "")
     guide = f"""
-<section><h2>{t("Einrichtung in drei Schritten", "Setup in three steps")}</h2>
+<section><h2>{t("Einrichtung in vier Schritten", "Setup in four steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
 <div class="tiles">
 <div class="tile"><strong>1 · {t("Sprachserver", "Speech server")}</strong>
@@ -288,7 +293,12 @@ def display(message="",lang="de"):
 <p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
 </div>
-<div class="tile"><strong>3 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
+<div class="tile"><strong>3 · {t("Text-KI für freie Fragen (Ollama)", "Text AI for open questions (Ollama)")}</strong>
+<p>{t("Qwen-TTS auf Port 10502 spricht nur die Antwort. Für Wissensfragen Ollama auf dem GPU-PC (meist Port 11434) als Home-Assistant-Integration hinzufügen. Dort ein Textmodell wie qwen3:4b-instruct wählen und in Apps → TAFA → Konfiguration bei llm_agent dessen conversation-Entität eintragen. Danach TAFA-App neu starten. Keine automatischen Modelldownloads.",
+"Qwen TTS on port 10502 only speaks the reply. For general questions, add Ollama from the GPU PC (usually port 11434) as a Home Assistant integration, select a text model such as qwen3:4b-instruct, and set llm_agent to its conversation entity in Apps → TAFA → Configuration. Restart TAFA App afterwards. No automatic model downloads.")}</p>
+<a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("Text-KI-Anleitung", "Text AI guide")}</a>
+</div>
+<div class="tile"><strong>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
 <p>{t("Nur für Alexa-MP3-Durchsagen: Generator 5001, temporäre Dateien 8080 und gesonderter öffentlicher HTTPS-Proxy. Bei Bluetooth-Ausgabe an den Echo nicht nötig.", "Only for Alexa MP3 announcements: generator 5001, temporary files 8080, and a separate public HTTPS proxy. Not needed for Echo Bluetooth output.")}</p>
 <p>{t("Einstellungen unter Optionen → Alexa-Durchsagen & HTTPS.", "Configure under Options → Alexa announcements & HTTPS.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}nginx-proxy.md" target="_blank" rel="noopener">{t("HTTPS-Anleitung", "HTTPS guide")}</a>
