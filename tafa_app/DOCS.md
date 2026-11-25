@@ -1,4 +1,4 @@
-# TAFA App 0.3.17 documentation
+# TAFA App 0.3.18 documentation
 
 [Deutsch](../docs/app.md) · [Project overview](../README.md)
 
@@ -72,3 +72,7 @@ Under **TAFA → Devices → Voice test** the UI reports whether a complete Assi
 
 
 **Ollama first-question fix:** The normal initial `unknown` state of a new HA conversation entity is now accepted. In App Configuration select the exact Ollama `conversation.*` entity, restart HA Core after the component upgrade, then restart TAFA App to synchronize. App 0.3.17 / HA integration 0.4.9. No Android rebuild.
+
+## Automatically select Wyoming STT providers
+
+Open **TAFA Control Center → Automatically discover Wyoming STT** as an HA administrator. The two dropdowns show currently registered enabled Wyoming speech entities. Select **CPU** (Proxmox / local HA) and **GPU** (Windows worker), using *two different IDs*. Save, then **restart the TAFA App** to synchronize. Unrelated configuration is preserved. If the GPU entry is absent, add **Wyoming Protocol** at the GPU worker LAN host, TCP 10300, under **Settings → Devices & services**; merely setting the Qwen TTS URL on port 10502 does not enable GPU Whisper. You can still edit the fields manually through **Apps → TAFA → Configuration**; that native Supervisor options page uses a static schema and cannot offer dynamic entity choices.
