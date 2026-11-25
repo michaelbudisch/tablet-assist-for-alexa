@@ -43,6 +43,17 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn("--rootfs", HOST)
         self.assertIn("pveam download", HOST)
 
+    def test_proxmox_bug_8295_unprivileged_create_umask(self):
+        # PVE 9 before upstream bugfix creates the rootfs dir as 0700 when
+        # pct create inherits the installer's restrictive umask 0077.
+        # Require only the Proxmox create subprocess to use 0022.
+        start = HOST.index('printf \\nLege neuen CT') if 'printf \\nLege neuen CT' in HOST else HOST.index("pct create")
+        around = HOST[max(0, start - 450):HOST.index("CREATED=1", start)]
+        self.assertIn("umask 0022", around)
+        self.assertLess(around.index("umask 0022"), around.index('pct create "$CTID"'))
+        self.assertIn("--unprivileged 1", around)
+        self.assertIn("umask 077", HOST)
+
     def test_guest_does_not_install_on_pve_host(self):
         self.assertIn("command -v pveversion", GUEST)
         self.assertIn("Already installed", GUEST) if "Already installed" in GUEST else self.assertIn("Existing installation", GUEST)
