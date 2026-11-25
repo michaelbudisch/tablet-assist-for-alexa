@@ -132,10 +132,11 @@ class RoomAudioAdminView(HomeAssistantView):
             principal = body.get("user_id")
             wake_id = body.get("device_id")
             replace = body.get("replace", False)
+            transfer_device = body.get("transfer_device", False)
             if (not isinstance(room, str) or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", room)
                     or not isinstance(principal, str) or not 1 <= len(principal) <= 128
                     or not isinstance(wake_id, str) or not re.fullmatch(r"[a-f0-9]{32}", wake_id)
-                    or type(replace) is not bool):
+                    or type(replace) is not bool or type(transfer_device) is not bool):
                 raise ValueError("Invalid room, user or device")
             target = await hass.auth.async_get_user(principal)
             if not target or not target.is_active or target.is_admin or target.system_generated:
@@ -143,8 +144,8 @@ class RoomAudioAdminView(HomeAssistantView):
             device = controller.devices.get(wake_id)
             if not device:
                 raise ValueError("Tablet is no longer registered")
-            if device.get("user_id") != principal:
-                raise ValueError("Tablet uses another HA account; reconnect it with the selected user's token")
+            if device.get("user_id") != principal and not transfer_device:
+                raise ValueError("Tablet is owned by another HA user; confirm device account transfer")
             if any(r != room and p == principal for r, p in transport.rooms.items()):
                 raise ValueError("This HA user already has another audio room")
             if any(r != room and s.get("wake_device_id") == wake_id
@@ -160,6 +161,13 @@ class RoomAudioAdminView(HomeAssistantView):
                 "wake_device_id": wake_id,
             }
             await data["room_audio_save"]()
+            if device.get("user_id") != principal:
+                # Explicitly approved by the HA administrator. Persist under
+                # the wake device controller's own lock so old tokens lose
+                # access and only the paired HA user can configure it.
+                async with controller.lock:
+                    controller.devices[wake_id]["user_id"] = principal
+                    await controller.save()
             return web.json_response(
                 {"room": room, "user_id": principal, "paired": True},
                 headers={"Cache-Control": "no-store"})
