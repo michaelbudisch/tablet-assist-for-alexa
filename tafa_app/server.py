@@ -35,7 +35,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.15"
+APP_VERSION="0.3.16"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -323,7 +323,7 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <ol class="steps">
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
 <li>{t("Home Assistant einmal über Einstellungen → System neu starten.","Restart Home Assistant once through Settings → System.")}</li>
-<li>{t("Im lokalen Modus wird die TAFA-Lokal-Pipeline automatisch eingerichtet. Im externen Modus zuerst Wyoming-STT und TAFA-Optionen konfigurieren; anschließend die Assist-Pipeline manuell auswählen bzw. erstellen.","Local mode can auto-create the TAFA Lokal pipeline. In external mode configure Wyoming STT and TAFA options first, then create/select the Assist pipeline manually.")}</li>
+<li>{t("Im lokalen Modus wird die TAFA-Lokal-Pipeline automatisch eingerichtet. Im externen Modus Wyoming-STT und die STT-Entität in der TAFA-App konfigurieren; TAFA erstellt danach automatisch die vollständige Assist-Pipeline.","Local mode can auto-create the TAFA Lokal pipeline. In external mode configure Wyoming STT and its entity in the TAFA App; TAFA then automatically creates the complete Assist pipeline.")}</li>
 <li>{t("TAFA Device Bridge für Rufwort/Audio verbinden. Die Pipeline in Home Assistant Assist auswählen; die Bridge selbst überträgt keine anschließende Frage.","Connect Device Bridge for wake events/audio. Select the Assist pipeline in Home Assistant; the Bridge does not transmit the following spoken question.")}</li>
 </ol><p><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open devices & services")}</a>
  · <a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></p>
