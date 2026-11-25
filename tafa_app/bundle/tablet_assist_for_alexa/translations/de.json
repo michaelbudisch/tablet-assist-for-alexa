@@ -1,0 +1,189 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper und mindestens eine Wyoming-STT-Entität erforderlich. GPU, KI und Alexa-Durchsagen sind optional. Siehe Installationsanleitung für Raumzuordnung.",
+        "data": {
+          "piper_base": "Piper-Adresse",
+          "cpu_stt": "CPU-Wyoming-Spracherkennung",
+          "gpu_base": "GPU-Streaming-Adresse (optional)",
+          "qwen_token": "GPU-API-Schlüssel (optional)",
+          "gpu_stt": "GPU-Wyoming-Spracherkennung (optional)",
+          "gpu_stt_host": "GPU-STT-Host (optionaler Schnelltest)",
+          "llm_agent": "KI-Konversationsagent (optional)",
+          "hardware_profile": "Hardwareprofil",
+          "live_profile": "Live-Klangprofil",
+          "voice_variant": "Stimmvariante",
+          "conversation_mode": "Gesprächsmodus",
+          "mp3_base": "MP3-API-Adresse (optional)",
+          "mp3_token": "MP3-API-Schlüssel (optional)",
+          "public_audio_base": "Öffentliche HTTPS-Audioadresse (optional)",
+          "rooms_json": "Raumzuordnung (JSON, optional)",
+          "mp3_profile": "Klangprofil Durchsagen",
+          "chime": "Durchsage-Signalton"
+        },
+        "data_description": {
+          "rooms_json": "Raumschlüssel Büro, Wohnzimmer, Badezimmer, Schlafzimmer und Kinderzimmer beibehalten.",
+          "cpu_stt": "Die mitgelieferte Pipeline unterstützt deutsche Sprache."
+        }
+      },
+      "reconfigure": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper und mindestens eine Wyoming-STT-Entität erforderlich. GPU, KI und Alexa-Durchsagen sind optional. Siehe Installationsanleitung für Raumzuordnung.",
+        "data": {
+          "piper_base": "Piper-Adresse",
+          "cpu_stt": "CPU-Wyoming-Spracherkennung",
+          "gpu_base": "GPU-Streaming-Adresse (optional)",
+          "qwen_token": "GPU-API-Schlüssel (optional)",
+          "gpu_stt": "GPU-Wyoming-Spracherkennung (optional)",
+          "gpu_stt_host": "GPU-STT-Host (optionaler Schnelltest)",
+          "llm_agent": "KI-Konversationsagent (optional)",
+          "hardware_profile": "Hardwareprofil",
+          "live_profile": "Live-Klangprofil",
+          "voice_variant": "Stimmvariante",
+          "conversation_mode": "Gesprächsmodus",
+          "mp3_base": "MP3-API-Adresse (optional)",
+          "mp3_token": "MP3-API-Schlüssel (optional)",
+          "public_audio_base": "Öffentliche HTTPS-Audioadresse (optional)",
+          "rooms_json": "Raumzuordnung (JSON, optional)",
+          "mp3_profile": "Klangprofil Durchsagen",
+          "chime": "Durchsage-Signalton"
+        },
+        "data_description": {
+          "rooms_json": "Raumschlüssel Büro, Wohnzimmer, Badezimmer, Schlafzimmer und Kinderzimmer beibehalten.",
+          "cpu_stt": "Die mitgelieferte Pipeline unterstützt deutsche Sprache."
+        }
+      }
+    },
+    "error": {
+      "invalid_configuration": "Adressen, Wyoming-Entitäten, Schlüssel und Raumzuordnung prüfen.",
+      "cannot_connect": "Piper-Sprachserver nicht erreichbar."
+    },
+    "abort": {
+      "already_configured": "Bereits eingerichtet.",
+      "reconfigure_successful": "Konfiguration aktualisiert."
+    }
+  },
+  "services": {
+    "announce": {
+      "name": "Alexa-Durchsage",
+      "description": "Spielt eine nicht vertrauliche MP3 über ausgewählte, freigegebene Echo-Räume ab.",
+      "fields": {
+        "text": {
+          "name": "Nachricht",
+          "description": "Maximal 500 Zeichen."
+        },
+        "rooms": {
+          "name": "Räume",
+          "description": "Konfigurierte Räume wählen."
+        }
+      }
+    }
+  },
+  "selector": {
+    "hardware_profile": {
+      "options": {
+        "automatic": "Automatisch",
+        "cpu": "Homeserver"
+      }
+    },
+    "live_profile": {
+      "options": {
+        "natural": "Natürlich",
+        "studio": "Studio",
+        "clear": "Klar"
+      }
+    },
+    "voice_variant": {
+      "options": {
+        "1": "Variante 1",
+        "2": "Variante 2",
+        "3": "Variante 3",
+        "4": "Variante 4",
+        "5": "Variante 5",
+        "6": "Variante 6",
+        "7": "Variante 7",
+        "8": "Variante 8",
+        "9": "Variante 9",
+        "default": "Standard"
+      }
+    },
+    "conversation_mode": {
+      "options": {
+        "manual": "Manuell",
+        "intelligent": "Intelligent",
+        "automatic": "Automatisch"
+      }
+    },
+    "mp3_profile": {
+      "options": {
+        "natural": "Natürlich",
+        "studio": "Studio",
+        "announcement": "Durchsage"
+      }
+    },
+    "rooms": {
+      "options": {
+        "buero": "Büro",
+        "wohnzimmer": "Wohnzimmer",
+        "badezimmer": "Badezimmer",
+        "schlafzimmer": "Schlafzimmer",
+        "kinderzimmer": "Kinderzimmer"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Datenquellen und Erinnerungen",
+        "description": "Alle Datenquellen sind optional. Wähle vorhandene Entitäten; leere Felder bleiben deaktiviert. Erinnerungen sind gemeinsam sichtbar. Ein Echo-Raum ist optional.",
+        "data": {
+          "weather": "Wetter-Entität",
+          "shopping": "Einkaufsliste (Bring! oder andere To-do-Liste)",
+          "restmuell": "Restmüll-Abholtermine",
+          "bioabfall": "Biomüll-Abholtermine",
+          "papier": "Papier-Abholtermine",
+          "wertstoff": "Wertstoff-Abholtermine",
+          "vorlauf": "Vorlauftemperatur (°C)",
+          "ruecklauf": "Rücklauftemperatur (°C)",
+          "spreizung": "Heizungsspreizung (K)",
+          "preis": "Aktueller Strompreis",
+          "guenstig": "Niedrigster Strompreis morgen",
+          "netz": "Netzleistung (+ Bezug, − Einspeisung)",
+          "solar": "Gesamte PV-Leistung",
+          "prognose": "PV-Ertragsprognose morgen",
+          "solarheute": "PV-Ertrag heute",
+          "netzheute": "Netzbezug heute",
+          "einspeisungheute": "Einspeisung heute",
+          "heizoel": "Heizölbestand",
+          "oelverbrauch": "Geschätzter Heizölverbrauch heute",
+          "waschmaschine": "Waschmaschinenleistung",
+          "waschkosten": "Waschmaschinenkosten heute",
+          "waschenergie": "Waschmaschinenverbrauch heute",
+          "waermepumpe": "Wärmepumpenleistung",
+          "wpheute": "Wärmepumpenverbrauch heute",
+          "wpkosten": "Wärmepumpenkosten heute",
+          "kuehlschrank": "Kühlschrankleistung",
+          "kuehlschrankheute": "Kühlschrankverbrauch heute",
+          "reminders_enabled": "Gemeinsame Erinnerungen aktivieren",
+          "reminder_room": "Optionaler Echo-Raum für Erinnerungen",
+          "learning_enabled": "Optionale Lernfunktion für allgemeine Hausdaten-Abfragen"
+        },
+        "data_description": {
+          "restmuell": "ISO-Datum YYYY-MM-DD als Zustand oder als Datumsschlüssel in den Attributen.",
+          "netz": "Positive Werte = Netzbezug, negative Werte = Einspeisung.",
+          "preis": "ct/kWh oder EUR/kWh.",
+          "guenstig": "Preissensor mit timestamp-Attribut für morgen.",
+          "solar": "Nutze einen Gesamtsensor bei mehreren Anlagen.",
+          "reminders_enabled": "Maximal eine aktive Erinnerung. HA-Benachrichtigung; auch nach Neustart.",
+          "reminder_room": "Nur ein freigegebener Raum. Audio kann über öffentliche temporäre Links laufen; keine vertraulichen Inhalte.",
+          "learning_enabled": "Standardmäßig aus. Nur allgemeine, nicht erkannte Hausdaten-Fragen aus einer begrenzten Wortliste; Vorschläge 24 Stunden im RAM, Freigabe durch Administrator."
+        }
+      }
+    },
+    "error": {
+      "invalid_configuration": "Bitte Entitäten und Raumzuordnung prüfen."
+    }
+  }
+}

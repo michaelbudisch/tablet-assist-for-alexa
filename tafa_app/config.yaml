@@ -1,0 +1,23 @@
+name: TAFA
+slug: tafa
+version: "0.1.0"
+description: Local voice assistant setup and backend manager
+url: https://github.com/michaelbudisch/tablet-assist-for-alexa/tree/main/tafa_app
+arch:
+  - amd64
+  - aarch64
+homeassistant: "2026.11.0"
+startup: application
+boot: manual
+stage: experimental
+init: true
+ingress: true
+ingress_port: 8099
+panel_admin: true
+panel_title: TAFA
+panel_icon: mdi:microphone-message
+map:
+  - type: homeassistant_config
+    read_only: false
+options: {}
+schema: {}

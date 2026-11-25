@@ -1,0 +1,189 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper and one Wyoming STT entity are required. GPU, LLM and Alexa announcements are optional. See installation guide for room mapping.",
+        "data": {
+          "piper_base": "Piper URL",
+          "cpu_stt": "CPU Wyoming STT",
+          "gpu_base": "GPU streaming URL (optional)",
+          "qwen_token": "GPU API key (optional)",
+          "gpu_stt": "GPU Wyoming STT (optional)",
+          "gpu_stt_host": "GPU STT host (optional fast probe)",
+          "llm_agent": "Conversation agent (optional)",
+          "hardware_profile": "Hardware profile",
+          "live_profile": "Live sound profile",
+          "voice_variant": "Voice variant",
+          "conversation_mode": "Conversation mode",
+          "mp3_base": "MP3 API URL (optional)",
+          "mp3_token": "MP3 API key (optional)",
+          "public_audio_base": "Public HTTPS audio origin (optional)",
+          "rooms_json": "Room mapping (JSON, optional)",
+          "mp3_profile": "Announcement sound profile",
+          "chime": "Announcement chime"
+        },
+        "data_description": {
+          "rooms_json": "Use the stored room keys Büro, Wohnzimmer, Badezimmer, Schlafzimmer and Kinderzimmer.",
+          "cpu_stt": "The supplied speech pipeline supports German."
+        }
+      },
+      "reconfigure": {
+        "title": "Tablet Assist for Alexa",
+        "description": "Piper and one Wyoming STT entity are required. GPU, LLM and Alexa announcements are optional. See installation guide for room mapping.",
+        "data": {
+          "piper_base": "Piper URL",
+          "cpu_stt": "CPU Wyoming STT",
+          "gpu_base": "GPU streaming URL (optional)",
+          "qwen_token": "GPU API key (optional)",
+          "gpu_stt": "GPU Wyoming STT (optional)",
+          "gpu_stt_host": "GPU STT host (optional fast probe)",
+          "llm_agent": "Conversation agent (optional)",
+          "hardware_profile": "Hardware profile",
+          "live_profile": "Live sound profile",
+          "voice_variant": "Voice variant",
+          "conversation_mode": "Conversation mode",
+          "mp3_base": "MP3 API URL (optional)",
+          "mp3_token": "MP3 API key (optional)",
+          "public_audio_base": "Public HTTPS audio origin (optional)",
+          "rooms_json": "Room mapping (JSON, optional)",
+          "mp3_profile": "Announcement sound profile",
+          "chime": "Announcement chime"
+        },
+        "data_description": {
+          "rooms_json": "Use the stored room keys Büro, Wohnzimmer, Badezimmer, Schlafzimmer and Kinderzimmer.",
+          "cpu_stt": "The supplied speech pipeline supports German."
+        }
+      }
+    },
+    "error": {
+      "invalid_configuration": "Check URLs, Wyoming entities, keys and room mapping.",
+      "cannot_connect": "Cannot reach Piper server."
+    },
+    "abort": {
+      "already_configured": "Already configured.",
+      "reconfigure_successful": "Configuration updated."
+    }
+  },
+  "services": {
+    "announce": {
+      "name": "Alexa announcement",
+      "description": "Send a non-confidential MP3 to selected enabled Echo rooms.",
+      "fields": {
+        "text": {
+          "name": "Message",
+          "description": "Up to 500 characters."
+        },
+        "rooms": {
+          "name": "Rooms",
+          "description": "Select configured rooms."
+        }
+      }
+    }
+  },
+  "selector": {
+    "hardware_profile": {
+      "options": {
+        "automatic": "Automatic",
+        "cpu": "CPU server"
+      }
+    },
+    "live_profile": {
+      "options": {
+        "natural": "Natural",
+        "studio": "Studio",
+        "clear": "Clear"
+      }
+    },
+    "voice_variant": {
+      "options": {
+        "1": "Variant 1",
+        "2": "Variant 2",
+        "3": "Variant 3",
+        "4": "Variant 4",
+        "5": "Variant 5",
+        "6": "Variant 6",
+        "7": "Variant 7",
+        "8": "Variant 8",
+        "9": "Variant 9",
+        "default": "Default"
+      }
+    },
+    "conversation_mode": {
+      "options": {
+        "manual": "Manual",
+        "intelligent": "Intelligent",
+        "automatic": "Automatic"
+      }
+    },
+    "mp3_profile": {
+      "options": {
+        "natural": "Natural",
+        "studio": "Studio",
+        "announcement": "Announcement"
+      }
+    },
+    "rooms": {
+      "options": {
+        "buero": "Office",
+        "wohnzimmer": "Living room",
+        "badezimmer": "Bathroom",
+        "schlafzimmer": "Bedroom",
+        "kinderzimmer": "Children's room"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Data sources and reminders",
+        "description": "All sources are optional. Select existing entities; empty fields stay disabled. Reminders are shared. An Echo room is optional.",
+        "data": {
+          "weather": "Weather entity",
+          "shopping": "Shopping list (Bring! or other to-do list)",
+          "restmuell": "Residual waste dates",
+          "bioabfall": "Organic waste dates",
+          "papier": "Paper collection dates",
+          "wertstoff": "Recycling collection dates",
+          "vorlauf": "Heating flow temperature (°C)",
+          "ruecklauf": "Heating return temperature (°C)",
+          "spreizung": "Temperature difference (K)",
+          "preis": "Current electricity price",
+          "guenstig": "Lowest electricity price tomorrow",
+          "netz": "Signed grid power (+ import, − export)",
+          "solar": "Total PV power",
+          "prognose": "Forecast PV yield tomorrow",
+          "solarheute": "PV yield today",
+          "netzheute": "Grid import today",
+          "einspeisungheute": "Grid export today",
+          "heizoel": "Heating oil stock",
+          "oelverbrauch": "Estimated oil use today",
+          "waschmaschine": "Washing machine power",
+          "waschkosten": "Washing machine cost today",
+          "waschenergie": "Washing machine energy today",
+          "waermepumpe": "Heat pump power",
+          "wpheute": "Heat pump energy today",
+          "wpkosten": "Heat pump cost today",
+          "kuehlschrank": "Refrigerator power",
+          "kuehlschrankheute": "Refrigerator energy today",
+          "reminders_enabled": "Enable shared reminders",
+          "reminder_room": "Optional Echo room for reminders",
+          "learning_enabled": "Optional learning for generic home-data questions"
+        },
+        "data_description": {
+          "restmuell": "ISO YYYY-MM-DD state or date-key attributes.",
+          "netz": "Positive values = import, negative = export.",
+          "preis": "ct/kWh or EUR/kWh.",
+          "guenstig": "Price sensor with a timestamp attribute for tomorrow.",
+          "solar": "Use an aggregate sensor for multiple arrays.",
+          "reminders_enabled": "One active reminder. HA notification, including after restart.",
+          "reminder_room": "One configured room only. Audio may use public short-lived links; no confidential content.",
+          "learning_enabled": "Off by default. Only generic unmatched home-data questions from a restricted vocabulary; suggestions in RAM for 24 hours, admin approval required."
+        }
+      }
+    },
+    "error": {
+      "invalid_configuration": "Check source entities and the room selection."
+    }
+  }
+}

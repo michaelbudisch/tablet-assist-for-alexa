@@ -1,0 +1,23 @@
+announce:
+  fields:
+    text:
+      required: true
+      selector:
+        text:
+          multiline: true
+    rooms:
+      required: true
+      selector:
+        select:
+          multiple: true
+          options:
+            - value: Büro
+              label: Büro / Office
+            - value: Wohnzimmer
+              label: Wohnzimmer / Living room
+            - value: Badezimmer
+              label: Badezimmer / Bathroom
+            - value: Schlafzimmer
+              label: Schlafzimmer / Bedroom
+            - value: Kinderzimmer
+              label: Kinderzimmer / Children's room

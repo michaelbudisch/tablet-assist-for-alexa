@@ -1,0 +1,144 @@
+describe_camera:
+  name: Describe camera
+  description: Describe a camera image or (ring_video) a structured twelve-frame sequence sampled from an authorized Ring MP4 recording, with bounded detail and fallback modes. Cameras are selected in integration options.
+  fields:
+    source:
+      default: outside
+      selector:
+        select:
+          options: [tablet, outside, door]
+    mode:
+      default: scene
+      selector:
+        select:
+          options: [scene, objects, object_in_hand, ring_video]
+camera_vision_status:
+  name: Vision status
+  description: Check local vision readiness without sending an image.
+ring_benchmark_status:
+  name: Ring A/B benchmark status
+  description: Read optional legacy benchmark status and timing results. Production analysis does not schedule benchmarks.
+ring_benchmark_probe:
+  name: Ring A/B synthetic probe
+  description: Administrator diagnostic using four synthetic JPEGs, without camera access or test count changes.
+camera_pipeline_check:
+  name: Check camera question pipeline
+  description: Administrator diagnostic. Run a camera question through the configured Jarvis Assist intent pipeline, without TTS or playback. Returns speech, local-routing status and run ID.
+  fields:
+    text:
+      required: true
+      example: "Wer ist an der Haustür?"
+      selector:
+        text:
+    pipeline_id:
+      description: Omit to use the preferred pipeline. Must use the Jarvis conversation router.
+      selector:
+        text:
+unpair_camera:
+  name: Unpair camera
+  description: Administrator action to invalidate the current camera session and allow pairing a different tablet.
+model_settings:
+  name: Jarvis AI model settings
+  description: Administrator action. Read installed/loaded models or save text/vision model, matching context and residency. Preserves Ollama prompts, tools and history settings; does not download models or restart the camera.
+  fields:
+    action:
+      default: get
+      selector:
+        select:
+          options: [get, set]
+    text_model:
+      selector:
+        text:
+    vision_model:
+      selector:
+        text:
+    keep_alive:
+      description: Shared residency in seconds; allowed 0, 60, 120, 300, 600.
+      selector:
+        number:
+          min: 0
+          max: 600
+          mode: box
+    num_ctx:
+      description: Matching text/vision context; allowed 2048, 4096, 8192.
+      selector:
+        number:
+          min: 2048
+          max: 8192
+          mode: box
+    revision:
+      description: Revision returned by get; required for saving to prevent stale settings writes.
+      selector:
+        text:
+
+proactive:
+  name: Proactive motion actions
+  description: Opt-in bounded tablet checks and explicit actions. Get/set requires administrator. Automation check skips offline, busy, stale or throttled requests. Heartbeat/claim/ack coordinate one authorized visible dashboard; fixed names are configuration, never recognition.
+  fields:
+    action:
+      default: get
+      selector:
+        select:
+          options: [get, set, check, heartbeat, claim, ack]
+    settings:
+      selector:
+        object:
+    revision:
+      selector:
+        text:
+    manual:
+      description: Check a fresh image without requiring the current motion flag. All opt-in and cooldown guards remain active.
+      selector:
+        boolean:
+    room:
+      description: Optional opt-in Multiroom camera slug for administrator check, e.g. buero. Omitting it retains the legacy tablet camera.
+      selector:
+        text:
+    client_id:
+      selector:
+        text:
+    busy:
+      selector:
+        boolean:
+    request_id:
+      selector:
+        text:
+    started:
+      selector:
+        boolean:
+
+room_audio:
+  name: Room audio (experimental)
+  description: Administrator provisioning and targeted room announcements. A dedicated non-admin HA user is required per room.
+  fields:
+    action:
+      required: true
+      selector:
+        select:
+          options: [list, users, provision, configure, revoke, announce]
+    room:
+      selector:
+        text:
+    user_id:
+      selector:
+        text:
+    message:
+      selector:
+        text:
+          multiline: true
+    rooms:
+      selector:
+        object:
+    quiet_start:
+      selector:
+        text:
+    quiet_end:
+      selector:
+        text:
+    device_id:
+      selector:
+        device:
+    camera_enabled:
+      description: Permit locally started camera transmission in a consented shared room. Off by default.
+      selector:
+        boolean:

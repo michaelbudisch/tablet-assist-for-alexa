@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Jarvis Tablet Audio",
+        "description": "Local Piper playback on the tablet. Optional: enter the Qwen API key from the GPU worker's local .env in this form only. Keep it private. Leave blank for Piper only.",
+        "data": {
+          "qwen_token": "Qwen API key (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Tablet audio settings",
+        "description": "Enter your Qwen key again to enable Qwen. Leave blank to use only Piper.",
+        "data": {
+          "qwen_token": "Qwen API key (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_token": "The token must contain at least 32 characters."
+    },
+    "abort": {
+      "already_configured": "Already configured",
+      "reconfigure_successful": "Configuration updated"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Camera and local vision",
+        "description": "The existing Qwen token is used for the worker. Empty URL uses the GPU host on port 10503.",
+        "data": {
+          "vision_url": "Vision-Worker URL (optional)",
+          "vision_outside_camera": "Outdoor camera",
+          "vision_door_camera": "Door camera"
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Use a local IP address and port without a path."
+    }
+  }
+}
