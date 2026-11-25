@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.0** zunächst weiterverwenden. Die optionale native Spracheingabe kommt mit der separat signierten Android-App **1.0.1**.
+**Eine Home-Assistant-App für das komplette lokale Sprachassistenten-Backend.** TAFA über Home Assistant Apps installieren und die bereits vorhandene **TAFA Device Bridge 1.0.1** auf dem Android-Gerät weiterverwenden. Die separat veröffentlichte Android-App 1.0.1 enthält die optionale native Spracheingabe.
 
 [English](README.md) | **Deutsch**
 
@@ -9,7 +9,7 @@
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.14**, zusammengeführte HA-Integration **0.4.6**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.16**, zusammengeführte HA-Integration **0.4.8**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
@@ -30,7 +30,7 @@ curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelb
 3. **TAFA** installieren, starten und das integrierte Control Center öffnen (Ingress).
 4. TAFA stellt **eine** gemeinsame HA-Integration unter `custom_components/tablet_assist_for_alexa` bereit. Home Assistant einmal neu starten, damit die Integration erkannt wird.
 5. **Vor dem ersten Start** in der App-Konfiguration `speech_mode=local` (CPU-Modelle in der App) oder `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000` auswählen. Bei `external` werden keine lokalen Sprachmodelle gestartet. Die HA-Integration wird vorbereitet; danach Wyoming-STT (`PROXMOX-IP:10300`) in HA hinzufügen, die passende STT-Entität unter Apps → TAFA → Konfiguration im Feld `cpu_stt` auswählen bzw. automatisch erkennen lassen und eine Assist-Pipeline anlegen. Im lokalen Modus erfolgt die Einrichtung der TAFA-Lokal-Pipeline automatisch.
-6. Die unveränderte [TAFA Device Bridge 1.0.0](android/README.de.md) für Rufwort-Ereignisse und Audio mit HA verbinden. Die Pipeline **TAFA Lokal** in Home Assistant Assist oder der HA Companion App auswählen – nicht in der Device Bridge. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
+6. Die unveränderte [TAFA Device Bridge 1.0.1](android/README.de.md) für Rufwort-Ereignisse und Audio mit HA verbinden. Die Pipeline **TAFA Lokal** in Home Assistant Assist oder der HA Companion App auswählen – nicht in der Device Bridge. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
 
 [Vollständige Anleitung](docs/app.md) · [Multiroom](homeassistant/examples/MULTIROOM.de.md) · [Android-Einrichtung](android/README.de.md)
 
@@ -74,10 +74,10 @@ Marketplace installiert dieselbe **zusammengeführte TAFA-Integration 0.4.3**, e
 
 Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergeladene Sprach-/STT-Modelle unterliegen ihren jeweiligen Lizenzen (einschließlich Piper). Unabhängiges Community-Projekt ohne Verbindung zu Amazon oder Home Assistant.
 
-**Tablet-Multiroom (neu):** Unter **TAFA → Geräte** kann ein Administrator jetzt den registrierten Tablet-Geräten einen bestehenden, nicht-administrativen HA-Benutzer und Audio-Raum zuordnen und den Verbindungsstatus sehen. Keine YAML-Aktionen erforderlich; die bestehende Android-App 1.0.0 bleibt unverändert. [Schrittfolge](docs/setup-guide.md).
+**Tablet-Multiroom (neu):** Unter **TAFA → Geräte** kann ein Administrator jetzt den registrierten Tablet-Geräten einen bestehenden, nicht-administrativen HA-Benutzer und Audio-Raum zuordnen und den Verbindungsstatus sehen. Keine YAML-Aktionen erforderlich; Android 1.0.1 unterstützt eine zuschaltbare native Sprachaufnahme. [Schrittfolge](docs/setup-guide.md).
 
 **Neu: Sprachtest ohne YAML.** Unter **TAFA → Geräte → Sprachtest** lässt sich eine Frage über das Browser-Mikrofon stellen und die Qwen/Piper-Antwort auf dem verbundenen Tablet hören. Benötigt HTTPS und die vollständige TAFA Lokal-Pipeline. Die Android-App bleibt unverändert. [Anleitung](docs/setup-guide.md).
 
 **Neu in App 0.3.15 / Integration 0.4.7:** Unter **TAFA → Geräte → Sprachtest** kannst du die Sprachausgabe auf dem verbundenen Tablet auch ohne HTTPS testen. Der separate Mikrofontest benötigt weiterhin HTTPS. [Anleitung](docs/setup-guide.md).
 
-**Neu in TAFA 0.3.16 / Integration 0.4.8:** Externe Proxmox-Installationen prüfen die vollständige Assist-Pipeline, bevor die Einrichtung als bereit gilt. Unter **TAFA → Geräte** werden die Voraussetzungen für die native Android-Sprachaufnahme erklärt. [Anleitung](docs/setup-guide.md).
+**Neu in TAFA 0.3.16 / Integration 0.4.8:** Bei externen Proxmox-Sprachservern meldet TAFA die Sprachpipeline erst nach Prüfung der Wyoming-STT-Anbindung und aller Assist-Komponenten als bereit. Eine einzelne Wyoming-STT-Entität wird automatisch gewählt, bei mehreren `cpu_stt` in der TAFA-App auswählen. Unter **TAFA → Geräte** stehen die Voraussetzungen für die native Android-1.0.1-Sprachaufnahme. [Anleitung](docs/setup-guide.md).
