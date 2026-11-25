@@ -76,6 +76,17 @@
 <TextView style="@style/Body" android:text="@string/keepalive_one" android:textSize="12sp"/>
 </LinearLayout>
 <LinearLayout style="@style/Card">
+<TextView style="@style/Eyebrow" android:text="@string/wake_label"/>
+<TextView style="@style/Heading" android:text="@string/wake_title"/>
+<TextView style="@style/Body" android:text="@string/wake_description"/>
+<TextView style="@style/Body" android:text="@string/wake_privacy" android:textSize="12sp"/>
+<Spinner android:id="@+id/wake_choice" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/wake_select"/>
+<Button android:id="@+id/wake_model_install" style="@style/Action" android:text="@string/wake_install"/>
+<TextView android:id="@+id/wake_status" style="@style/Body" android:text="@string/wake_stopped" android:accessibilityLiveRegion="polite"/>
+<Button android:id="@+id/wake_start" style="@style/Primary" android:text="@string/wake_start"/>
+<Button android:id="@+id/wake_stop" style="@style/Action" android:text="@string/wake_stop"/>
+</Linear>
+<LinearLayout style="@style/Card">
 <TextView style="@style/Eyebrow" android:text="@string/camera_optional"/>
 <TextView style="@style/Heading" android:text="@string/camera_title"/>
 <TextView style="@style/Body" android:text="@string/camera_intro"/>
