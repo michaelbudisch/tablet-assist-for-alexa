@@ -52,6 +52,9 @@ Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen.
 
 ## Wo sind die Einstellungen?
 
+**Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bei bestehenden HA-Integrationen müssen abweichende Optionen gegebenenfalls dort abgeglichen werden.
+
+
 1. **TAFA Control Center** unter Home Assistant **Apps → TAFA → Weboberfläche** öffnen. Dort sind Zustände und diese Schritte erklärt.
 2. **Einstellungen → Geräte & Dienste → TAFA → Optionen** öffnen.
 3. Einen Abschnitt auswählen: **Sprachserver & GPU**, **Alexa-Durchsagen & HTTPS** oder **Datenquellen & Erinnerungen**.
