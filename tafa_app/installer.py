@@ -1,109 +1,127 @@
-"""Install only bundled public components; never overwrite existing components."""
+"""Safe TAFA App installer for a single public Home Assistant integration.
+
+Never touches configuration.yaml, .storage, private dashboards or separately
+managed Marketplace/manual integrations. App-owned upgrades are staged, verified,
+swapped atomically and backed up for rollback.
+"""
 import ast
+import hashlib
 import json
-import re
+import os
 import shutil
 import tempfile
 from pathlib import Path
+from uuid import uuid4
 
-DOMAINS = ("tablet_assist_for_alexa",)
-FIELDS = ("cpu_host", "gpu_host", "cpu_stt", "gpu_stt", "llm_agent")
-HOST = re.compile(r"[A-Za-z0-9][A-Za-z0-9.-]{0,252}\Z")
-ENTITY = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+\Z")
+DOMAIN = "tablet_assist_for_alexa"
+DOMAINS = (DOMAIN,)
+MARKER = ".tafa-managed.json"
 
-def replacements(values):
-    cpu = values.get("cpu_host", "").strip()
-    gpu = values.get("gpu_host", "").strip() or cpu
-    stt = values.get("cpu_stt", "").strip()
-    gpu_stt = values.get("gpu_stt", "").strip() or stt
-    llm = values.get("llm_agent", "").strip() or "conversation.home_assistant"
-    if not all(HOST.fullmatch(v) for v in (cpu, gpu)):
-        raise ValueError("Enter valid hostnames or IPv4 addresses (without scheme or port).")
-    if not all(ENTITY.fullmatch(v) for v in (stt, gpu_stt, llm)) or not stt.startswith("stt.") or not gpu_stt.startswith("stt.") or not llm.startswith("conversation."):
-        raise ValueError("Enter valid STT and conversation entity IDs.")
-    return dict(zip(("__JARVIS_CPU_HOST__", "__JARVIS_GPU_HOST__", "__JARVIS_CPU_STT__", "__JARVIS_GPU_STT__", "__JARVIS_LLM_AGENT__", "__JARVIS_PIPELINE_ID__"), (cpu, gpu, stt, gpu_stt, llm, "")))
-
-def status(config):
-    root = config / "custom_components"
+def _files(root):
     result = {}
-    for domain in DOMAINS:
-        p = root / domain
-        if root.is_symlink() or p.is_symlink():
-            result[domain] = "existing (not managed)"
-        elif not p.exists():
-            result[domain] = "not installed"
-        else:
-            try:
-                result[domain] = "installed · " + str(json.loads((p / "manifest.json").read_text())["version"])
-            except (OSError, ValueError, KeyError, TypeError):
-                result[domain] = "existing (version unknown)"
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("Symlinks are not allowed in a managed integration")
+        if not path.is_file() or path.name == MARKER or "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     return result
 
-def install(config, bundle, values, domains=DOMAINS):
-    """Stage validated components. Install new ones only; never update existing folders."""
-    if not domains or any(d not in DOMAINS for d in domains):
+def _managed(root):
+    path = root / MARKER
+    if not path.is_file() or path.is_symlink():
+        return False
+    try:
+        marker = json.loads(path.read_text(encoding="utf-8"))
+        return marker.get("schema") == 1 and marker.get("domain") == DOMAIN and marker.get("files") == _files(root)
+    except (OSError, ValueError, TypeError):
+        return False
+
+def _prepare(source, dest):
+    if not source.is_dir() or source.is_symlink():
+        raise ValueError("Incomplete bundled integration.")
+    for f in source.rglob("*"):
+        if f.is_symlink():
+            raise ValueError("Unexpected bundled symlink.")
+        if not f.is_file():
+            continue
+        if "__pycache__" in f.parts or f.suffix == ".pyc" or f.name == MARKER:
+            continue
+        target = dest / f.relative_to(source)
+        target.parent.mkdir(parents=True,exist_ok=True)
+        if f.suffix in (".py", ".json", ".yaml", ".js"):
+            content = f.read_text(encoding="utf-8")
+            if f.suffix == ".py":
+                ast.parse(content,filename=str(f))
+            if f.suffix == ".json":
+                json.loads(content)
+            target.write_text(content,encoding="utf-8")
+        else:
+            shutil.copyfile(f,target)
+    manifest = json.loads((dest / "manifest.json").read_text(encoding="utf-8"))
+    if manifest.get("domain") != DOMAIN or not manifest.get("version"):
+        raise ValueError("Unexpected integration domain or version")
+    (dest / MARKER).write_text(json.dumps({
+        "schema": 1, "domain": DOMAIN,
+        "version": manifest["version"], "files": _files(dest)
+    },sort_keys=True),encoding="utf-8")
+
+def status(config):
+    root=config / "custom_components"
+    path=root / DOMAIN
+    if root.is_symlink() or path.is_symlink():
+        return {DOMAIN:"existing (not managed)"}
+    if not path.exists():
+        return {DOMAIN:"not installed"}
+    if not path.is_dir():
+        return {DOMAIN:"invalid installation"}
+    try:
+        version=json.loads((path/"manifest.json").read_text(encoding="utf-8"))["version"]
+    except (OSError,ValueError,KeyError,TypeError):
+        return {DOMAIN:"existing (version unknown)"}
+    return {DOMAIN:"installed · "+str(version)+(" · managed by TAFA App" if _managed(path) else " · external/manual installation")}
+
+def install(config, bundle, values=None, domains=DOMAINS):
+    """Add missing files or safely update an unchanged TAFA-managed installation.
+
+    For HACS-managed/manual installations, return without mutation.
+    """
+    if tuple(domains) != DOMAINS:
         raise ValueError("Invalid component selection")
-    root = config / "custom_components"
+    if not config.is_dir() or config.is_symlink():
+        raise ValueError("Home Assistant configuration mount is missing")
+    root=config / "custom_components"
     if root.is_symlink():
-        raise ValueError("Refusing symbolic-link destination.")
-    if not config.is_dir():
-        raise ValueError("Home Assistant configuration mount is missing.")
+        raise ValueError("Refusing symbolic-link destination")
     root.mkdir(exist_ok=True)
     if not root.is_dir():
-        raise ValueError("Invalid custom_components directory.")
-    pending = [d for d in domains if not (root / d).exists() and not (root / d).is_symlink()]
-    if not pending:
+        raise ValueError("Invalid custom_components directory")
+    dest=root / DOMAIN
+    if dest.is_symlink() or (dest.exists() and (not dest.is_dir() or not _managed(dest))):
         return []
-    # All public backend modules are now in the single bundled component.
-    repl = {}
-    # Build and validate every new component before publishing any directory.
-    with tempfile.TemporaryDirectory(prefix=".tafa-stage-", dir=root) as tmp:
-        stage = Path(tmp)
-        for domain in pending:
-            src = bundle / domain
-            target = stage / domain
-            if not (src / "manifest.json").is_file():
-                raise ValueError("Incomplete bundled integration.")
-            for f in src.rglob("*"):
-                if f.is_symlink():
-                    raise ValueError("Unexpected bundled symbolic link.")
-                if not f.is_file():
-                    continue
-                out = target / f.relative_to(src)
-                out.parent.mkdir(parents=True, exist_ok=True)
-                if f.suffix in (".py", ".json", ".yaml", ".js"):
-                    content = f.read_text(encoding="utf-8")
-                    if f.suffix == ".py":
-                        ast.parse(content, filename=str(f))
-                    if f.suffix == ".json":
-                        json.loads(content)
-                    out.write_text(content, encoding="utf-8")
-                else:
-                    shutil.copyfile(f, out)
-            if json.loads((target / "manifest.json").read_text())["domain"] != domain:
-                raise ValueError("Unexpected integration domain.")
-        installed = []
-        for domain in pending:
-            dest = root / domain
-            # mkdir is exclusive: never replace a pre-existing directory.
+    with tempfile.TemporaryDirectory(prefix=".tafa-stage-",dir=root) as tmp:
+        stage=Path(tmp) / DOMAIN
+        stage.mkdir()
+        _prepare(bundle/DOMAIN,stage)
+        if dest.exists():
+            if _files(stage)==_files(dest):
+                return []
+            backup_dir=config / ".tafa" / "rollback"
+            backup_dir.mkdir(parents=True,exist_ok=True)
+            backup=backup_dir / (DOMAIN+"-"+uuid4().hex)
+            os.replace(dest,backup)
             try:
-                dest.mkdir()
-            except FileExistsError:
-                continue
-            try:
-                shutil.copytree(stage / domain, dest, dirs_exist_ok=True)
-            except Exception:
-                # Only remove the directory created by this invocation.
-                shutil.rmtree(dest)
+                os.replace(stage,dest)
+            except OSError:
+                os.replace(backup,dest)
                 raise
-            installed.append(domain)
-        return installed
+            return [DOMAIN+" (updated; previous version backed up)"]
+        try:
+            os.replace(stage,dest)
+        except OSError:
+            raise
+        return [DOMAIN]
 
-
-def bootstrap(config, bundle):
-    """Provision the standalone base integration when the TAFA App first starts.
-
-    Never overwrite an existing Marketplace-managed or manually installed integration.
-    The optional legacy backend remains an explicit configuration choice until merged.
-    """
-    return install(config, bundle, {}, domains=("tablet_assist_for_alexa",))
+def bootstrap(config,bundle):
+    """Install/update one app-managed backend. Never overwrite external copies."""
+    return install(config,bundle)
