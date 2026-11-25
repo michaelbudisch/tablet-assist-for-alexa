@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.3.8 — Guided first-run setup (release candidate)
+- Guided TAFA-local CPU, external Proxmox, Qwen GPU routing and optional Alexa MP3/HTTPS instructions in Control Center.
+- HA Options split into Speech servers & GPU, Alexa announcements & HTTPS, and Data sources & reminders.
+- Public integration panel links directly to TAFA settings, with bilingual setup documentation.
+- Saved GPU/MP3 keys are retained when password fields are blank; the bundled CPU processes are not yet stopped by selecting external services.
+- Integration updated to 0.4.2. Android Device Bridge and private dashboard unchanged.
+- End-to-end HA OS hardware verification pending.
+
+
 ## 0.3.7 — Automatic Qwen/Piper voice routing as default
 - New automatically created **TAFA Lokal** Assist pipelines select the unified Stream TTS provider instead of Piper-only.
 - If Qwen is unavailable or not configured, Stream TTS falls back to Piper automatically.
