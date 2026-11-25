@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit;
  */
 public final class WakeWordService extends Service implements RecognitionListener {
     static final String START="de.jarvis.audio.WAKE_START",STOP="de.jarvis.audio.WAKE_STOP",
-        NATIVE_SETTINGS="de.jarvis.audio.NATIVE_SETTINGS";
+        NATIVE_SETTINGS="de.jarvis.audio.NATIVE_SETTINGS",
+        NATIVE_TEST="de.jarvis.audio.NATIVE_TEST";
     static volatile boolean running=false;
     static volatile String status="off";
     private static final String CHANNEL="jarvis-wake",TAG="JarvisWake";
@@ -85,6 +86,15 @@ public final class WakeWordService extends Service implements RecognitionListene
                 main.removeCallbacks(followup);nativeConversationId="";
                 holdUntil=0;
                 if(!muted)main.postDelayed(rearm,350);
+            }
+            return START_NOT_STICKY;
+        }
+        if(intent!=null&&NATIVE_TEST.equals(intent.getAction())){
+            if(enabled&&!muted&&nativeSession==null){
+                main.removeCallbacks(rearm);
+                releaseRecognizer();
+                holdUntil=0;nativeConversationId="";nativeFollowupCount=0;
+                main.postDelayed(()->beginNativeAssist("",false),250);
             }
             return START_NOT_STICKY;
         }
