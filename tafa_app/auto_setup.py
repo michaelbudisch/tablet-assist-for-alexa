@@ -82,7 +82,8 @@ def ensure_pipeline():
                      and not item.get("disabled_by")]
             return matches[0] if len(matches)==1 else None
         stt=select("stt","_stt_router")
-        tts=select("tts","_piper")
+        # Use the GPU-aware provider even when no GPU is configured: it then falls back to Piper.
+        tts=select("tts","_stream")
         agent=select("conversation","_conversation_router")
         if not all((stt,tts,agent)):
             return "waiting_for_entities"

@@ -26,7 +26,8 @@ def fake_connect(responses,on_sent):
             if kind=="config/entity_registry/list":
                 value=[
                     dict(entity_id="stt.tafa",platform="tablet_assist_for_alexa",unique_id="unit_stt_router",disabled_by=None),
-                    dict(entity_id="tts.tafa",platform="tablet_assist_for_alexa",unique_id="unit_piper",disabled_by=None),
+                    dict(entity_id="tts.tafa_piper",platform="tablet_assist_for_alexa",unique_id="unit_piper",disabled_by=None),
+                    *([dict(entity_id="tts.tafa_stream",platform="tablet_assist_for_alexa",unique_id="unit_stream",disabled_by=None)] if responses.get("stream",True) else []),
                     dict(entity_id="conversation.tafa",platform="tablet_assist_for_alexa",unique_id="unit_conversation_router",disabled_by=None)
                 ] if responses.get("entities",True) else []
             elif kind=="assist_pipeline/pipeline/list":
@@ -60,11 +61,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(created["name"],"TAFA Lokal")
         self.assertEqual(created["stt_engine"],"stt.tafa")
         self.assertEqual(created["conversation_engine"],"conversation.tafa")
-        self.assertEqual(created["tts_engine"],"tts.tafa")
+        self.assertEqual(created["tts_engine"],"tts.tafa_stream")
         self.assertIn("wake_word_entity",created)
         self.assertIn("wake_word_id",created)
         self.assertIsNone(created["wake_word_entity"])
         self.assertIsNone(created["tts_voice"])
+    def test_does_not_create_piper_only_pipeline_if_router_missing(self):
+        result,sent=self.invoke({"stream":False})
+        self.assertEqual(result,"waiting_for_entities")
+        self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create" for msg in sent))
     def test_existing_pipeline_preserved(self):
         result,sent=self.invoke({"pipelines":[{"name":"TAFA Lokal","id":"existing"}]})
         self.assertEqual(result,"pipeline_exists")

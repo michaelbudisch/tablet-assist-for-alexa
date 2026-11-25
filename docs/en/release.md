@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](../release.md) · [Project overview](../../README.md)
 
-**Current state:** TAFA Home Assistant App **0.3.6** (experimental release candidate), unified HA integration **0.4.1**, Android Device Bridge **1.0.0 unchanged**. No production or hardware certification.
+**Current state:** TAFA Home Assistant App **0.3.7** (experimental release candidate), unified HA integration **0.4.1**, Android Device Bridge **1.0.0 unchanged**. No production or hardware certification.
 
 ## Automated checks
 

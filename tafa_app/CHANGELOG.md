@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.7 — Automatic Qwen/Piper voice routing as default
+- New automatically created **TAFA Lokal** Assist pipelines select the unified Stream TTS provider instead of Piper-only.
+- If Qwen is unavailable or not configured, Stream TTS falls back to Piper automatically.
+- Qwen worker URL and API token must still be configured explicitly in the HA TAFA integration; no automatic scanning or exposure of private machines.
+- Existing user-owned pipelines are not silently rewritten. Select **Tablet Assist Stream** as TTS engine in the existing TAFA Lokal pipeline to enable the router.
+- Android Device Bridge and private dashboard remain untouched.
+
+
 ## 0.3.6 — CPU compatibility hotfix
 - Fix failed updates on virtual CPUs without x86-64-v2: pin NumPy 1.26.4 instead of automatically selecting NumPy 2.5.5.
 - Validate the resolved NumPy version and imports of Piper/Faster-Whisper during both amd64 and arm64 container builds.
