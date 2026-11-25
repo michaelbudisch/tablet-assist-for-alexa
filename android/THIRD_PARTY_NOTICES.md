@@ -7,6 +7,8 @@ The original Android app code and vector artwork are distributed under the repos
 - [ZXing Android Embedded 4.3.0](https://github.com/journeyapps/zxing-android-embedded/tree/v4.3.0) — Copyright ZXing authors and Journey Mobile; Apache License 2.0.
 - [ZXing Core 3.4.1](https://github.com/zxing/zxing) — Copyright ZXing authors; Apache License 2.0.
 - [AndroidX Core and Fragment, including their transitive AndroidX dependencies](https://android.googlesource.com/platform/frameworks/support/) — Copyright The Android Open Source Project; Apache License 2.0.
+- [Vosk Android 0.3.75](https://github.com/alphacep/vosk-api) — Vosk contributors; Apache License 2.0. On-device wakeword recognition.
+- [Java Native Access (JNA) 5.18.1](https://github.com/java-native-access/jna) — JNA contributors; dual licensed under Apache License 2.0 or LGPL-2.1-or-later. This distribution uses Apache License 2.0. Includes the native JNA bridge.
 - [JUnit 4.13.2](https://github.com/junit-team/junit4) — Eclipse Public License 1.0; test-only dependency, not packaged in the application.
 
 Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
