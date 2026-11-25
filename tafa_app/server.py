@@ -23,7 +23,10 @@ from urllib.parse import urlsplit,parse_qs
 
 from auto_setup import configure, ensure_pipeline, save_state, STATE as SETUP_STATE
 from installer import bootstrap, status
-from speech_source import choose as choose_speech_source, piper_ready as external_piper_ready
+from speech_source import (choose as choose_speech_source,
+                           piper_ready as external_piper_ready,
+                           setup_settings, connection_status)
+from model_store import inventory as local_model_inventory, remove_local_models
 
 LOG=logging.getLogger("tafa.app")
 CONFIG=Path("/homeassistant")
@@ -32,7 +35,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.10"
+APP_VERSION="0.3.11"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -92,7 +95,7 @@ def autoconfigure(address, mode="local"):
                     save_state("waiting_for_external_piper", "Check Proxmox Piper /health on the private LAN")
                     time.sleep(20)
                     continue
-                outcome=configure(address)
+                outcome=configure(address,setup_settings())
                 if outcome in ("configured", "already_configured"):
                     # Proxmox Piper does not implement POST /stt. Wyoming STT
                     # must be selected explicitly in Home Assistant.
@@ -111,7 +114,7 @@ def autoconfigure(address, mode="local"):
                 time.sleep(20)
                 continue
             if speech.get("piper_ready") and speech.get("whisper_ready"):
-                outcome=configure(address)
+                outcome=configure(address,setup_settings())
                 save_state(outcome)
                 if outcome in ("configured","already_configured"):
                     pipeline=ensure_pipeline()
@@ -163,9 +166,11 @@ def display(message="",lang="de"):
     state=status(CONFIG)
     try:
         mode, external_base = choose_speech_source()
+        preferences=setup_settings()
         source_error=""
     except (OSError, ValueError) as exc:
         mode, external_base, source_error = "invalid", "", str(exc)
+        preferences={"gpu_base":"","mp3_base":"","hardware_profile":"cpu"}
     if mode == "local":
         runtime=speech_status()
     elif mode == "external":
@@ -177,6 +182,21 @@ def display(message="",lang="de"):
                  "piper_phase":"error","piper_error":source_error,
                  "whisper_phase":"external"}
     setup=setup_status()
+    links=connection_status(preferences, runtime.get("piper_ready") is True)
+    cache=local_model_inventory()
+    translations={
+      "not_configured":t("Nicht eingerichtet","Not configured"),
+      "offline":t("Nicht erreichbar","Unreachable"),
+      "busy":t("Beschäftigt – Piper übernehmen","Busy – use Piper"),
+      "ready":t("Bereit","Ready"),
+      "not_ready":t("Erreichbar, aber nicht bereit","Reachable, not ready"),
+      "qwen":t("Qwen bevorzugt, Piper bleibt Reserve","Qwen preferred, Piper available as reserve"),
+      "piper":t("Piper-Fallback verfügbar","Piper fallback available"),
+      "none":t("Keine einsatzbereite Sprachausgabe","No ready speech engine")}
+    def pretty_size(count):
+        return f"{count / 1048576:.1f} MiB"
+    cache_info=(t("TAFA-Modelldaten","TAFA model cache")+": Piper "+pretty_size(cache["piper_bytes"])+
+                " · Whisper "+pretty_size(cache["whisper_bytes"]))
     def model_state(prefix):
         if runtime.get(prefix+"_ready"):
             return t("Bereit","Ready")
@@ -193,7 +213,16 @@ def display(message="",lang="de"):
        model_state("piper")),
       ("Whisper · STT", t("Über Wyoming in HA einrichten","Configure Wyoming in HA")
        if mode == "external" else model_state("whisper")),
-      (t("HA-Einrichtung","HA setup"),setup.get("status","pending"))
+      (t("HA-Einrichtung","HA setup"),setup.get("status","pending")),
+      (t("GPU-Worker / Qwen","GPU worker / Qwen"),
+       translations.get(links["gpu"],links["gpu"])+
+       (" · v"+links["gpu_version"] if links["gpu_version"] else "")),
+      (t("Piper-Fallback","Piper fallback"),
+       translations.get(links["piper"],links["piper"])),
+      (t("Sprachweg laut App-Einstellung","Expected App speech route"),
+       translations.get(links["route"],links["route"])),
+      (t("Alexa MP3-Generator","Alexa MP3 generator"),
+       translations.get(links["mp3"],links["mp3"]))
     ]
     panels="".join('<div class="tile"><strong>'+html.escape(a)+'</strong><span>'+html.escape(str(b))+'</span></div>' for a,b in cards)
     note=t("Neue Komponenten werden beim App-Start eingebunden. Home Assistant muss danach einmal neu gestartet werden.",
@@ -202,6 +231,14 @@ def display(message="",lang="de"):
     retry=t("Sprachmodelle erneut laden","Retry speech models")
     retry_button=(f'<button type="submit" name="action" value="models">{retry}</button>'
                   if mode == "local" else "")
+    has_cache=cache["piper_bytes"] > 0 or cache["whisper_bytes"] > 0
+    remove_button=(
+        f'<form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}">'
+        f'<input type="hidden" name="lang" value="{lang}">'
+        f'<label>{t("Zur Bestätigung ENTFERNEN eingeben","Type ENTFERNEN to confirm")}'
+        f'<input name="confirmation" type="text" maxlength="10" required pattern="ENTFERNEN" autocomplete="off"></label>'
+        f'<button type="submit" name="action" value="cleanup">{t("TAFA-Sprachmodelle löschen","Delete TAFA speech models")}</button>'
+        f'</form>' if mode == "external" and has_cache else "")
     guide = f"""
 <section><h2>{t("Einrichtung in drei Schritten", "Setup in three steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
@@ -246,11 +283,23 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <body>
 <div class="top"><div><h1>TAFA Control Center</h1><small>{t("Lokaler Sprachassistent","Local voice assistant")} · {APP_VERSION} · Beta</small></div>
 <nav><a href="?lang=de">Deutsch</a><a href="?lang=en">English</a></nav></div>
-<div class="tiles">{panels}</div>{guide}
+<div class="tiles">{panels}</div>
+<section id="connections"><h2>{t("Verbindungsdiagnose", "Connection diagnostics")}</h2>
+<p>{t("Abfragen der eingerichteten GPU-/Piper-/MP3-Health-Endpunkte. Kein Test-Audio und keine Durchsage werden erzeugt.", "Checks the configured GPU, Piper and MP3 health endpoints. No speech or announcements are generated.")}</p>
+<p><a href="?lang={lang}#connections">{t("Verbindungen jetzt erneut prüfen", "Check connections now")}</a></p>
+<p class="muted">{t("Die Sprachausgabe-Prognose stammt aus den App-Optionen. Bei bestehenden HA-Integrationen müssen abweichende Optionen dort separat angeglichen werden.", "The predicted speech route uses App options. Existing HA integration settings may need to be aligned separately.")}</p>
+</section>
+{guide}
 <section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
 <form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
 <button type="submit" name="action" value="backend">{install}</button>
 {retry_button}</form></section>
+<section><h2>{t("Lokale Sprachmodelle verwalten","Manage local speech models")}</h2>
+<p>{cache_info}</p>
+<p class="muted">{t("Es werden ausschließlich TAFA-eigene Piper-/Whisper-Downloads aus /data/tafa_speech verwaltet, keine Modelle aus Proxmox, Wyoming oder anderen Home-Assistant-Apps.", "Only TAFA-owned Piper/Whisper downloads in /data/tafa_speech are managed; Proxmox, Wyoming and other Home Assistant apps are untouched.")}</p>
+<p class="muted">{t("Zum Löschen zuerst in der App-Konfiguration external wählen und TAFA neu starten. Dadurch wird der lokale Sprachprozess beendet; ein unbeabsichtigtes erneutes Herunterladen wird verhindert.", "To delete, first select external in App Configuration and restart TAFA. This stops local speech so models cannot be redownloaded automatically.")}</p>
+{remove_button}
+</section>
 <section><h2>{t("Inbetriebnahme","Getting started")}</h2>
 <ol class="steps">
 <li>{t("TAFA installiert das gemeinsame Backend automatisch, falls es noch fehlt.","TAFA automatically stages the unified backend if missing.")}</li>
@@ -306,6 +355,12 @@ class Handler(BaseHTTPRequestHandler):
                 accepted=retry_models()
                 msg=("Speech model retry requested / Sprachmodelle erneut gestartet."
                      if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
+            elif action=="cleanup":
+                if fields.get("confirmation",[""])[0] != "ENTFERNEN":
+                    return self.send_error(400, "Explicit deletion confirmation required")
+                removed=remove_local_models(choose_speech_source()[0])
+                msg=("TAFA downloads removed: "+
+                     f"Piper {removed['piper_bytes']} B / Whisper {removed['whisper_bytes']} B")
             elif action=="backend":
                 added=bootstrap(CONFIG,BUNDLE)
                 msg=("Installed: "+", ".join(added)+". Restart HA." if added
