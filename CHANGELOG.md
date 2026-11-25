@@ -1,3 +1,7 @@
+## Integration 0.4.0 — unified backend candidate
+- Single TAFA integration with native Device Bridge API compatibility, multiroom services, camera/motion and opt-in vision. CPU STT can use the local TAFA App. The existing Android APK is unchanged.
+- Release acceptance: automated checks plus clean HA OS installation and real-audio testing required before marking stable.
+
 # Changelog
 
 ## TAFA Apps preview 0.1.0
