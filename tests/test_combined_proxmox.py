@@ -84,6 +84,10 @@ class CombinedCTTests(unittest.TestCase):
         self.assertIn("Container hostname [jarvis-speechserver]", standalone)
         self.assertIn('--hostname "$CT_HOSTNAME"', standalone)
         self.assertNotIn('--hostname jarvis-speechserver', standalone)
+        proxy_ct = (PVE / "create-proxy-ct.sh").read_text(encoding="utf-8")
+        self.assertIn("Proxy container hostname [tablet-assist-proxy]", proxy_ct)
+        self.assertIn('--hostname "$CT_HOSTNAME"', proxy_ct)
+        self.assertNotIn('--hostname tablet-assist-proxy', proxy_ct)
 
     def test_proxmox_bug_8295_unprivileged_create_umask(self):
         # PVE 9 before upstream bugfix creates the rootfs dir as 0700 when
