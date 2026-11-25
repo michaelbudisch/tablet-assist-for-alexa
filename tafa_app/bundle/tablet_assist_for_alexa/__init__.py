@@ -1,5 +1,6 @@
 """Tablet speech processing and optional Alexa announcements."""
 import asyncio
+import logging
 from pathlib import Path
 
 import aiohttp
@@ -22,7 +23,8 @@ from homeassistant.components import websocket_api
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.STT, Platform.TTS, Platform.CONVERSATION]
+PLATFORMS = [Platform.STT, Platform.TTS, Platform.CONVERSATION, Platform.CAMERA, Platform.BINARY_SENSOR]
+_LOGGER = logging.getLogger(__name__)
 ANNOUNCE_SCHEMA = vol.Schema({
     vol.Required("text"): vol.All(cv.string, vol.Length(min=1, max=500)),
     vol.Required("rooms"): vol.All(cv.ensure_list, [vol.In(ROOMS)], vol.Length(min=1, max=len(ROOMS))),
@@ -73,13 +75,28 @@ async def async_setup_entry(hass, entry):
     reminders = Reminders(hass, entry, cfg)
     learning = Learning(hass, entry, cfg)
     await learning.load()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LocalData(hass, cfg, reminders, learning)
+    data = hass.data.setdefault(DOMAIN, {})
+    data[entry.entry_id] = LocalData(hass, cfg, reminders, learning)
+    # Device Bridge REST paths and legacy service names are owned by the new
+    # single integration. Never register duplicate views if an older Jarvis
+    # Tablet Audio integration is still configured in this Home Assistant.
+    legacy_present = bool(hass.config_entries.async_entries("jarvis_tablet_audio"))
+    data["relay_started"] = not legacy_present
+    if legacy_present:
+        _LOGGER.warning("Legacy Jarvis Tablet Audio detected; integrated relay disabled to avoid duplicate API routes. Migrate the old integration before enabling the unified backend.")
+    else:
+        from .relay.relay_camera import async_setup as setup_relay_camera
+        from .relay.relay_room_adapter import setup_room_audio
+        from .relay.relay_wake_devices import setup_wake_devices
+        await setup_relay_camera(hass, entry)
+        await setup_room_audio(hass, entry)
+        await setup_wake_devices(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
         sidebar_title="Tablet Assist", sidebar_icon="mdi:microphone-message",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.3.1",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.0",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()
@@ -92,6 +109,13 @@ async def _reload(hass, entry):
 async def async_unload_entry(hass, entry):
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
+        if hass.data.get(DOMAIN, {}).pop("relay_started", False):
+            from .relay.relay_camera import async_unload as unload_relay_camera
+            from .relay.relay_room_adapter import unload_room_audio
+            from .relay.relay_wake_devices import unload_wake_devices
+            unload_relay_camera(hass)
+            unload_room_audio(hass)
+            unload_wake_devices(hass)
         data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
         if data:
             data.reminders.close()

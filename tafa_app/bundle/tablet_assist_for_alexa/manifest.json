@@ -1,6 +1,6 @@
 {
   "domain": "tablet_assist_for_alexa",
-  "name": "Tablet Assist for Alexa",
+  "name": "TAFA",
   "after_dependencies": [
     "wyoming",
     "todo",
@@ -14,12 +14,14 @@
   ],
   "config_flow": true,
   "dependencies": [
+    "binary_sensor",
+    "camera",
     "conversation",
-    "tts",
-    "stt",
-    "http",
     "frontend",
+    "http",
     "panel_custom",
+    "stt",
+    "tts",
     "websocket_api"
   ],
   "documentation": "https://github.com/michaelbudisch/tablet-assist-for-alexa/blob/main/docs/marketplace.md",
@@ -28,5 +30,5 @@
   "issue_tracker": "https://github.com/michaelbudisch/tablet-assist-for-alexa/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.3.1"
+  "version": "0.4.0"
 }
