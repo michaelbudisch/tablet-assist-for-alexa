@@ -46,6 +46,16 @@ show_status() {
   printf ' Alexa MP3   : http://%s:5001 | %s\n' "$IP" "$(svc jarvis-mp3)"
   printf ' Wyoming STT : %s:10300 | %s\n' "$IP" "$(svc jarvis-whisper)"
   printf ' MP3-Dateien : 127.0.0.1:8080 (nur lokal im CT)\n'
+  if [[ -f /etc/jarvis-local.env ]]; then
+    GPU="$(sed -n 's/^JARVIS_GPU_BASE=//p' /etc/jarvis-local.env | head -n1)"
+  else
+    GPU=""
+  fi
+  if [[ -n "$GPU" ]]; then
+    printf ' Qwen Worker : %s (MP3-Erzeugung, falls bereit)\n' "$GPU"
+  else
+    printf ' Qwen Worker : nicht konfiguriert (Piper wird verwendet)\n'
+  fi
   printf ' Nginx       : %s\n' "$(svc nginx)"
   printf ' Alexa HTTPS : %s\n' "$HTTPS"
   if [[ -n "$HOST" ]]; then printf ' Audio-Domain: %s\n' "$HOST"; fi
