@@ -263,6 +263,11 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 int min=AudioRecord.getMinBufferSize(SAMPLE_RATE,
                     AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
                 if(min<=0)throw new IOException("microphone_unavailable");
+                // Recheck the revocable Android runtime permission immediately
+                // before opening the microphone, not just at session start.
+                if(context.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                        !=PackageManager.PERMISSION_GRANTED)
+                    throw new IOException("microphone_permission_revoked");
                 audio=new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
                     SAMPLE_RATE,AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT,Math.max(4096,min*2));
