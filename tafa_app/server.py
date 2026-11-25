@@ -92,6 +92,18 @@ def autoconfigure(address):
             save_state("waiting_for_home_assistant",type(exc).__name__)
         time.sleep(20)
 
+def monitor_speech():
+    """Restart an exited speech worker while keeping the Ingress UI responsive."""
+    worker = str(Path(__file__).parent / "speech_proxy.py")
+    while True:
+        try:
+            child = subprocess.Popen([sys.executable,worker])
+            code = child.wait()
+            LOG.error("CPU speech process exited with code %s; restarting in 10 s",code)
+        except OSError as exc:
+            LOG.error("CPU speech process could not start: %s",type(exc).__name__)
+        time.sleep(10)
+
 def startup():
     try:
         added=bootstrap(CONFIG,BUNDLE)
@@ -99,7 +111,7 @@ def startup():
         else: LOG.info("Existing TAFA installation preserved.")
     except (OSError,ValueError,SyntaxError) as exc:
         LOG.error("Backend installation could not complete: %s",type(exc).__name__)
-    subprocess.Popen([sys.executable,str(Path(__file__).parent/"speech_proxy.py")])
+    threading.Thread(target=monitor_speech,daemon=True).start()
     try:
         address=_internal_address()
         publish_service_address(address)
