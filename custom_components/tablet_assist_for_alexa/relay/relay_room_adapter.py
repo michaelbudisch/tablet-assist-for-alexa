@@ -80,6 +80,94 @@ class RoomAudioView(HomeAssistantView):
         return web.json_response(result, headers={"Cache-Control": "no-store"})
 
 
+class RoomAudioAdminView(HomeAssistantView):
+    """Admin-only pairing for registered Device Bridge tablets.
+
+    The administrator is authenticated by HA. No credentials, microphone
+    recordings or room session tokens are returned to the panel.
+    """
+    url = "/api/jarvis_tablet_audio/room_admin"
+    name = "api:jarvis_tablet_audio:room_admin"
+    requires_auth = True
+
+    async def post(self, request):
+        hass = request.app[KEY_HASS]
+        user = request.get("hass_user")
+        if not user or not user.is_active or not user.is_admin:
+            raise web.HTTPForbidden()
+        if request.content_length is None or not 0 < request.content_length <= 4096:
+            raise web.HTTPBadRequest()
+        try:
+            body = await request.json()
+            if not isinstance(body, dict) or body.get("action") not in ("list", "pair"):
+                raise ValueError("Invalid action")
+            data = hass.data.get(DOMAIN, {})
+            transport = data.get(KEY)
+            controller = data.get("wake_devices_dynamic")
+            if transport is None or controller is None:
+                raise web.HTTPServiceUnavailable()
+            if body["action"] == "list":
+                people = [
+                    {"id": u.id, "name": u.name}
+                    for u in await hass.auth.async_get_users()
+                    if u.is_active and not u.is_admin and not u.system_generated
+                ]
+                paired = [
+                    {"room": room, "user_id": principal,
+                     "wake_device_id": transport.settings.get(room, {}).get("wake_device_id", ""),
+                     **transport.status(principal)}
+                    for room, principal in transport.rooms.items()
+                ]
+                devices = [
+                    {"device_id": key, "owner_user_id": value.get("user_id", "")}
+                    for key, value in controller.devices.items()
+                ]
+                return web.json_response({
+                    "users": sorted(people, key=lambda p: p["name"].casefold()),
+                    "rooms": paired,
+                    "devices": devices,
+                }, headers={"Cache-Control": "no-store"})
+
+            room = body.get("room")
+            principal = body.get("user_id")
+            wake_id = body.get("device_id")
+            replace = body.get("replace", False)
+            if (not isinstance(room, str) or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", room)
+                    or not isinstance(principal, str) or not 1 <= len(principal) <= 128
+                    or not isinstance(wake_id, str) or not re.fullmatch(r"[a-f0-9]{32}", wake_id)
+                    or type(replace) is not bool):
+                raise ValueError("Invalid room, user or device")
+            target = await hass.auth.async_get_user(principal)
+            if not target or not target.is_active or target.is_admin or target.system_generated:
+                raise ValueError("Choose an active non-admin Home Assistant user")
+            device = controller.devices.get(wake_id)
+            if not device:
+                raise ValueError("Tablet is no longer registered")
+            if device.get("user_id") != principal:
+                raise ValueError("Tablet uses another HA account; reconnect it with the selected user's token")
+            if any(r != room and p == principal for r, p in transport.rooms.items()):
+                raise ValueError("This HA user already has another audio room")
+            if any(r != room and s.get("wake_device_id") == wake_id
+                   for r, s in transport.settings.items()):
+                raise ValueError("This tablet is paired with another audio room")
+            current = transport.rooms.get(room)
+            if current is not None and current != principal and not replace:
+                raise ValueError("Room belongs to another user; confirm reassignment")
+            if current != principal:
+                transport.provision(room, principal)
+            transport.settings[room] = {
+                **transport.settings.get(room, {}),
+                "wake_device_id": wake_id,
+            }
+            await data["room_audio_save"]()
+            return web.json_response(
+                {"room": room, "user_id": principal, "paired": True},
+                headers={"Cache-Control": "no-store"})
+        except (ValueError, TypeError) as exc:
+            return web.json_response({"error": str(exc)[:160]},
+                                     status=400, headers={"Cache-Control": "no-store"})
+
+
 async def setup_room_audio(hass, entry):
     data = hass.data.setdefault(DOMAIN, {})
     transport = RoomAudioTransport()
@@ -98,10 +186,14 @@ async def setup_room_audio(hass, entry):
         hass.http.register_view(RoomAudioView())
         data["room_audio_view_registered"] = True
     lock = asyncio.Lock()
+    if not data.get("room_admin_view_registered"):
+        hass.http.register_view(RoomAudioAdminView())
+        data["room_admin_view_registered"] = True
 
     async def persist():
         await store.async_save({"rooms": transport.rooms.copy(), "settings": transport.settings.copy()})
         cameras.sync()
+    data["room_audio_save"] = persist
 
     def room_settings(values):
         start, end = values.get("quiet_start", ""), values.get("quiet_end", "")
@@ -199,5 +291,6 @@ def unload_room_audio(hass):
     from .relay_room_camera import unload_room_cameras
     unload_room_cameras(hass)
     hass.data.get(DOMAIN, {}).pop(KEY, None)
+    hass.data.get(DOMAIN, {}).pop("room_audio_save", None)
     if hass.services.has_service(DOMAIN, SERVICE):
         hass.services.async_remove(DOMAIN, SERVICE)
