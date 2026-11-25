@@ -65,9 +65,26 @@ class SpeechSourceTests(unittest.TestCase):
              patch.object(server, "ensure_pipeline", return_value="pipeline_exists") as pipeline, \
              patch.object(server, "save_state", side_effect=lambda *args: states.append(args)):
             server.autoconfigure("http://192.168.178.60:5000", "external")
-        pipeline.assert_called_once_with()
+        pipeline.assert_called_once_with(external_wyoming=True, configured_stt="")
         sync.assert_called_once()
         self.assertEqual(states[-1][0], "external_ready")
+
+
+    def test_external_wyoming_pending_preserves_tts_and_pairing_setup(self):
+        states = []
+        with patch.object(server, "external_piper_ready", return_value=True), \
+             patch.object(server, "configure", return_value="configured") as configure, \
+             patch.object(server, "sync_app_configuration", return_value="changed") as sync, \
+             patch.object(server, "ensure_pipeline", return_value="waiting_for_external_stt") as pipeline, \
+             patch.object(server, "save_state", side_effect=lambda *args: states.append(args)), \
+             patch.object(server.time, "sleep", side_effect=SystemExit):
+            with self.assertRaises(SystemExit):
+                server.autoconfigure("http://192.168.178.60:5000", "external")
+        configure.assert_called_once()
+        sync.assert_called_once()
+        pipeline.assert_called_once_with(external_wyoming=True, configured_stt="")
+        self.assertEqual(states[-1][0], "waiting_for_external_stt")
+
 
 
 if __name__ == "__main__":
