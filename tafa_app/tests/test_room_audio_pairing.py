@@ -63,8 +63,19 @@ class FakeTransport:
         self.sessions = {"jarvis_tablet": object()}
         self.provision_calls = []
 
-    def status(self, principal):
-        return {"online": principal == "tablet1", "ready": True}
+    def status(self, principal, request_id=None):
+        result = {"online": principal == "tablet1", "ready": True, "room": "jarvis_tablet"}
+        if request_id is not None:
+            result["stage"] = "done" if request_id == "b" * 32 else "unknown"
+        return result
+
+    def submit_room(self, room, path):
+        self.test_submit = (room, path)
+        return "b" * 32
+
+    def cancel(self, principal, job_id):
+        self.test_cancel = (principal, job_id)
+        return True
 
     def provision(self, room, user):
         self.provision_calls.append((room, user))
@@ -241,6 +252,46 @@ class PairingTests(unittest.IsolatedAsyncioTestCase):
             await self.call(FakeHass(), {"action": "camera", "room": "jarvis_tablet",
                                         "device_id": ID, "enabled": True}, admin=False)
 
+
+
+    async def test_admin_speech_test_targets_only_paired_room_and_local_audio(self):
+        hass = FakeHass()
+        base = {"action": "test", "room": "jarvis_tablet", "device_id": ID}
+        status = await self.call(hass, {**base, "operation": "status"})
+        self.assertEqual(status["room"], "jarvis_tablet")
+        self.assertTrue(status["ready"])
+        self.assertEqual(status["stage"], "unknown") if "stage" in status else None
+        path = "/api/tts_proxy/" + "z" * 30
+        result = await self.call(hass, {**base, "operation": "submit", "path": path})
+        self.assertTrue(result["accepted"])
+        self.assertEqual(result["id"], "b" * 32)
+        self.assertEqual(hass.transport.test_submit, ("jarvis_tablet", path))
+        stage = await self.call(hass, {**base, "operation": "status", "id": "b" * 32})
+        self.assertEqual(stage["stage"], "done")
+        stop = await self.call(hass, {**base, "operation": "cancel", "id": "b" * 32})
+        self.assertTrue(stop["accepted"])
+        self.assertEqual(hass.transport.test_cancel, ("tablet1", "b" * 32))
+
+    async def test_speech_test_does_not_allow_cross_room_or_remote_audio(self):
+        for values in (
+            {"device_id": "c" * 32, "operation": "status"},
+            {"room": "another", "operation": "status"},
+            {"operation": "submit", "path": "https://example.org/secret"},
+            {"operation": "submit", "path": "/api/tts_proxy/../../bad"},
+            {"operation": "cancel", "id": "not-valid"},
+            {"operation": "run"},
+        ):
+            hass = FakeHass()
+            request = {"action": "test", "room": "jarvis_tablet", "device_id": ID}
+            request.update(values)
+            with self.subTest(values=values):
+                result = await self.call(hass, request)
+                self.assertEqual(result["status"], 400)
+                self.assertEqual(hass.saves, 0)
+        with self.assertRaises(Forbidden):
+            await self.call(FakeHass(),
+                {"action": "test", "operation": "status", "room": "jarvis_tablet", "device_id": ID},
+                admin=False)
 
     async def test_reassignment_needs_explicit_replace(self):
         hass = FakeHass()

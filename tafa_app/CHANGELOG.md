@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.14 — First-run speech and tablet playback self-test
+- Built-in **TAFA → Devices → Speak once** guided microphone test reuses the user's proven room Assist implementation: browser microphone → Whisper STT → conversation → Qwen/Piper TTS → paired Android/Bluetooth audio player.
+- Automatically choose TAFA Lokal when configured, allow selection of another complete STT+TTS pipeline, and show actionable errors for missing pipelines, insecure microphone origins and offline room players.
+- An HA administrator may test a specifically paired tablet via a scoped room-audio API; non-admin accounts test their own room. No new HA helper entities, tokens or Android APK updates.
+- Recording stops when closing/leaving the test. Full physical HA/tablet verification remains required before stable release.
+
+
 ## 0.3.13 — Device audio pairing in the TAFA Devices page
 - Administrators can choose a non-admin HA user, assign or update an audio room, and see online/ready status for each registered tablet without developer tools or YAML.
 - Each room has a separate opt-in camera permission toggle in TAFA → Devices. Camera uploads remain off by default, must be started on the tablet, and use the room account rather than an administrator token. Disabling permission revokes and clears buffered frames.

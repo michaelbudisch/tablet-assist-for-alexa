@@ -55,6 +55,15 @@ If you **hear a chime but no voice**, check the Notify entity first; next verify
 
 **Important:** Wake device registration and audio room pairing are separate systems. A registered wake device alone does not prove audio playback is connected. Each audio room requires its own active non-admin HA account; its assignment is managed in the TAFA Devices page rather than Developer tools. The dashboard does not store or display access tokens. The legacy `input_text.jarvis_native_audio_command` helper is not required in Multiroom mode.
 
+
+### Test a spoken question after pairing a tablet
+
+Open **TAFA → Devices → [tablet] → Voice test · Speak once** and expand the section. TAFA automatically selects an existing **TAFA Lokal** Assist pipeline with speech recognition and **Tablet Assist Stream**; another complete pipeline can be selected. Tap **Speak once**, grant browser microphone permission, ask a short question and hear the reply on the paired tablet/Bluetooth player. This reuses the tested Assist and room-audio transport; no additional HA helpers or scripts are required.
+
+The browser requires **trusted HTTPS** (or localhost) for microphone access. A logged-in HA administrator may also run the test against an explicitly paired tablet shown in the Devices list; normal tablet accounts test only their own room. TTS uses Qwen with Piper fallback as usual. Closing the test or leaving the Devices view stops microphone capture. If no complete STT+TTS pipeline exists, TAFA links to Voice assistants setup.
+
+This microphone flow runs in the **Home Assistant browser/dashboard**. Android **Device Bridge 1.0.0** still sends wake-word events only and does not record the subsequent question in the background.
+
 ## Where to configure
 
 **First:** Open **Settings → Apps → TAFA → Configuration** and configure Proxmox/Piper, GPU/Qwen, Alexa MP3, automatic Piper fallback, voice and sound profile. Restart the App. Live **Connection diagnostics** and safe TAFA-only CPU model cleanup are in **Apps → TAFA → Web UI**. Existing App-managed integration settings are synchronized from App Configuration on restart.

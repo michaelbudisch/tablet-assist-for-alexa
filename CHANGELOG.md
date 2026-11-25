@@ -5,6 +5,11 @@
 
 # Changelog
 
+## TAFA App 0.3.14 / integration 0.4.6 — built-in spoken setup test
+- TAFA → Devices includes the proven "Speak once" browser microphone → Whisper → Assist → Qwen/Piper → paired tablet audio test, with automatic pipeline selection and a clear secure-context requirement.
+- Authenticated room user or administrator-scoped selected device, with no token in the dashboard, no duplicate HA helper scripts and no Android APK update. Capture stops on closing the view.
+
+
 ## TAFA App 0.3.13 / integration 0.4.5 — tablet room pairing
 - TAFA → Devices now combines wake-device controls and admin-only Multiroom audio room pairing, selectable non-admin HA user, room ID and live online/ready state.
 - Opt-in per-room camera access is managed in the same panel, disabled by default, and cleared on revocation; Android still requires explicit capture start and uses the room user token.
