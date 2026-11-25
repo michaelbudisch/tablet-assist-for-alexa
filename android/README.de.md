@@ -8,11 +8,11 @@ Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetoo
 
 ## Download und Update
 
-[Bisherige stabile 0.6.0-Vorschau-APK herunterladen](downloads/HA-Jarvis-Echo-Relay-0.6.0-preview.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
+[Letzte reguläre Version 0.7.1 herunterladen](downloads/HA-Jarvis-Echo-Relay-0.7.1.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
-Die APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Der sichtbare Name und das Icon ändern sich.
+Die regulär veröffentlichte, signierte APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Die reguläre App behält ihren Namen **HA Jarvis Echo Relay**.
 
-Die Vorschau verwendet denselben lokalen Android-Testsignaturschlüssel wie die vorherigen Builds, damit Updates funktionieren. Die veröffentlichte APK ist ein signierter, nicht debuggbarer Release-Build; Signaturschlüssel werden nicht veröffentlicht. CI-Debug-APKs verwenden einen anderen Testschlüssel und sind kein Ersatz für dieses Update.
+Die signierte Release-Version verwendet denselben lokalen Android-Testsignaturschlüssel wie die vorherigen Builds, damit Updates funktionieren. Die veröffentlichte APK ist ein signierter, nicht debuggbarer Release-Build; Signaturschlüssel werden nicht veröffentlicht. CI-Debug-APKs verwenden einen anderen Testschlüssel und sind kein Ersatz für dieses Update.
 
 ## Experimentelle native Rufworterkennung (0.7.0-Testzweig)
 
@@ -36,14 +36,14 @@ Die Einstellungen werden mit Home Assistant abgeglichen; das Stummschalten wirkt
 
 ### Beliebig viele Tablets · Dynamisches Multiroom (0.9.0)
 
-1. **Jarvis Wake Pilot 0.9.0** auf jedem zusätzlichen Android-Tablet installieren. Optional unter „Raumname“ beispielsweise Wohnzimmer, Büro, Küche oder Flur angeben; eine zufällige Installationskennung wird automatisch erstellt.
+1. **HA Jarvis Echo Relay 0.9.0 (Test)** auf jedem zusätzlichen Android-Tablet installieren. Optional unter „Raumname“ beispielsweise Wohnzimmer, Büro, Küche oder Flur angeben; eine zufällige Installationskennung wird automatisch erstellt.
 2. Die HA-Verbindung einrichten, das Offline-Modell laden und **Native Erkennung starten**. Das Tablet registriert sich bei Home Assistant automatisch. Es gibt keine Vierergrenze und keinen manuell anzulegenden Helfer mehr.
 3. Im **TAFA-Dashboard → Jarvis → Sprache & Audio → Native Rufworterkennung** auf **Geräteliste aktualisieren** klicken. Das Tablet auswählen und **Ausgewähltes Gerät diesem Dashboard zuordnen** drücken. Alternativ ein neues Tablet per Rufwort koppeln.
 4. Stumm, Rufwort, Strenge, Sperrzeit und Übergabe werden pro Gerät getrennt gespeichert; der Mikrofonknopf oben rechts steuert nur das gekoppelte Tablet. Raumname und Geräte lassen sich in TAFA verwalten.
 5. Bei zwei gleichzeitigen Rufwortmeldungen akzeptiert Home Assistant das zuerst eingegangene Ereignis und sperrt weitere Kandidaten drei Sekunden. Das ist keine akustische Entfernungsmessung. Die Ausgabe muss für verschiedene Räume weiterhin wie bisher über Raumkonto/Room Audio passend zugeordnet sein.
 6. Entfernte Geräte geben ihre native Audioaufnahme aus Sicherheitsgründen frei und stellen die Aufnahme ein, bis die App ausdrücklich neu gestartet und angemeldet wird.
 
-**Wichtig:** Die neue Geräteverwaltung benötigt die aktualisierte Jarvis-Tablet-Audio-Integration und die neue App 0.9.0. Der bisherige Wake Pilot 0.7.x bzw. 0.8.0 nutzt ältere Wege. Die alten vier festen Helper können nach erfolgreichem Umstieg bereinigt werden.
+**Wichtig:** Die neue Geräteverwaltung benötigt die aktualisierte Jarvis-Tablet-Audio-Integration und die neue App 0.9.0. Frühere Testversionen 0.7.x bzw. 0.8.0 nutzen ältere Wege. Die alten vier festen Helper können nach erfolgreichem Umstieg bereinigt werden.
 
 ## Einrichten
 

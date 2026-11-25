@@ -4,6 +4,8 @@
 
 ## 0.9.0 · Unlimited dynamic multiroom devices
 
+- Keep the canonical **HA Jarvis Echo Relay** product name; the side-by-side debug build is **HA Jarvis Echo Relay (Test)**. Continue the main version line (0.7.1 → 0.8.0 → 0.9.0), with 0.9.0 still experimental and not yet an officially signed update.
+
 - No numbered tablet slots. Each Android installation enrolls with a persistent random ID; Home Assistant creates device records and all five settings dynamically.
 - TAFA device manager can list, choose, pair, rename, mute and remove devices without manual helper creation.
 - Authenticated HA API handles wake events and accepts only the earliest arriving device within a three-second arbitration window.

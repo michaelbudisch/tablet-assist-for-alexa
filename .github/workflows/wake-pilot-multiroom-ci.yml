@@ -1,4 +1,4 @@
-name: Wake Pilot Multiroom Android CI
+name: HA Jarvis Echo Relay Android 0.9.0 Test
 on:
   push:
     branches: ['feature/native-wakeword-0.7.0']
@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   android:
-    name: Wake Pilot 0.9.0 build and JVM tests
+    name: HA Jarvis Echo Relay 0.9.0 build, tests and lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -26,8 +26,8 @@ jobs:
       - name: Build debug APK, unit tests and lint
         working-directory: android
         run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest --no-daemon --no-problems-report
-      - name: Upload Wake Pilot 0.9.0
+      - name: Upload HA Jarvis Echo Relay 0.9.0 test
         uses: actions/upload-artifact@v4
         with:
-          name: Jarvis-Wake-Pilot-0.9.0-dynamic-debug
+          name: HA-Jarvis-Echo-Relay-0.9.0-test
           path: android/app/build/outputs/apk/debug/app-debug.apk
