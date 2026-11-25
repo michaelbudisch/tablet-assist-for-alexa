@@ -66,17 +66,19 @@ The local configuration remains in `/etc/jarvis-local.env` (root only). The curr
 
 Configure firewall rules to allow only the required HA and proxy hosts. No automatic router configuration. The GPU address initially remains empty; see [GPU worker](worker.md).
 
-## Recover an incomplete CT after `runuser ... Permission denied`
+## Resume a newly created CT after interrupted shell installation
 
-An earlier installer used `umask 077` while creating the Python virtual environment, preventing the `jarvis-local` service account from opening installed packages. Fresh installations now use `umask 022` **only around non-secret venv/pip installation**.
+The guided recovery wizard supports **two verified stages**: **(1) a newly created, empty Debian CT with no TAFA services**, such as a browser shell that was closed before guest setup started, and **(2) a partial Python venv that failed at `runuser ... Permission denied` after pip setup**. An existing, configured TAFA system is never overwritten.
 
-If a brand-new CT already exists and failed **specifically at `runuser: failed to execute .../venv/bin/python: Permission denied` immediately after pip installation**, execute this in the **Proxmox host shell**:
+Earlier installer versions created the venv under `umask 077`; new installations use `umask 022` only around non-secret venv/pip setup. Existing downloaded packages need not be discarded.
+
+Run on the **Proxmox host**:
 
 ```bash
 curl -fsSLo /root/tafa-resume.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/resume-install.sh && bash /root/tafa-resume.sh
 ```
 
-The recovery wizard checks that the interrupted CT has the expected partial install and no existing runtime configuration, asks for its ID, fresh registered audio hostname, optional GPU URL and the existing proxy CT, then requires the explicit `FORTSETZEN` confirmation. It fixes only the Python venv file permissions and completes the existing install without recreating or destroying a CT. It prepares a **new** HTTPS site on the existing proxy, leaving current websites untouched, and prints the subsequent certificate commands.
+The wizard checks whether the CT is empty or at the known interrupted Python-venv stage. It asks for the CT ID, registered audio hostname, optional GPU URL and existing proxy CT, and requires the explicit `RESUME` confirmation. It installs TAFA into the existing empty CT or repairs the interrupted venv, without creating or destroying a CT. It prepares a **new** HTTPS site on the existing proxy, leaving current websites untouched, and prints the subsequent certificate commands.
 
 ## Fresh installation behind an existing central Nginx proxy
 
