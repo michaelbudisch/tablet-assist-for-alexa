@@ -1,122 +1,45 @@
-# Marketplace — TAFA
+# Marketplace installation — TAFA integration 0.4.0
 
 **English** | [Deutsch](../marketplace.md) · [Project overview](../../README.md)
 
-Home Assistant Core 2026.11 or newer. Developer preview 0.3.1. Start on a test instance and do not overwrite a working legacy configuration.
+Marketplace and Home Assistant Apps are two different installation methods. The recommended way to get CPU Piper + Whisper and the TAFA Control Center together is the **[one-App installation](app.md)**. **Do not install both routes on the same Home Assistant instance.**
 
-**New in 0.3.1:** Local intent recognition, configurable weather, Bring!, collection, heating and energy sources, and a persistent reminder dialogue. [Data sources and voice commands](data-sources.md).
+## What Marketplace installs
 
-**New:** Contextual follow-ups and optional administrator-approved aliases. [Guide](data-sources.md).
+Home Assistant Marketplace installs the unified `tablet_assist_for_alexa` integration **0.4.0**, including HA STT, TTS, conversation, optional announcements, native wake-device registration, multiroom/room-audio compatibility APIs, and optional camera/motion and vision interfaces. The old separate `jarvis_tablet_audio` integration is **not required on a fresh install**. The unchanged Device Bridge 1.0.0 is a separate Android application.
 
-## TAFA Home Assistant App (experimental)
+Marketplace cannot deploy the running CPU processes. If you install via Marketplace alone, provide a compatible existing Piper HTTP server (with `/health` and `/synthesize`) and either a Wyoming STT entity or a compatible backend supporting `/stt` at the same Piper origin. [CPU server](proxmox.md) · [GPU worker](worker.md). The **TAFA Home Assistant App** bundles compatible CPU Piper/Whisper endpoints instead.
 
-[![Add TAFA app repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
+## Installing the integration through Marketplace
 
-On Home Assistant OS, open Settings → Apps → Install app, add this repository URL, install **TAFA**, start it and open its Web UI. The experimental setup app (0.1.0) bundles the public base integration and the separate room-audio backend; its administrator-only Ingress page installs missing backend files after explicit confirmation. It never overwrites existing integrations. External speech servers and the Android Device Bridge remain separate installations. After installing files, restart HA and configure both integrations via Devices & services. See [App installation](app.md).
+1. Back up Home Assistant, ideally test first. Home Assistant Core 2026.11 or later is targeted.
+2. Settings → Marketplace → Add from link. Paste `https://github.com/michaelbudisch/tablet-assist-for-alexa`, category Integration.
+3. Install and restart Home Assistant if prompted.
+4. Settings → Devices & services → Add integration → **TAFA**.
+5. Configure an accessible Piper origin, optionally select a Wyoming STT entity, GPU worker, conversation agent and external announcements.
+6. Create/select an Assist pipeline with the TAFA STT, conversation and TTS entities. Choose the pipeline on Device Bridge.
 
-Marketplace is a separate installation route and still installs only the base integration. Neither route includes the private dashboard. Clean-instance testing is outstanding; this is not a production-ready unified backend release.
+[Open in HA](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Start integration setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
 
-## Marketplace scope and backend roadmap
+## Configuration
 
-The current link installs the `tablet_assist_for_alexa` base integration only. The separate `jarvis_tablet_audio` backend (multiroom, device registration, native wake-word routing and camera/vision interfaces) is not installed by this link. Marketplace supports one integration per repository; the target is a single configurable domain with these backend capabilities ported and tested, while retaining documented compatibility with Device Bridge 1.0.0. External CPU/GPU speech servers and the Android APK remain separate installations. The private TAFA dashboard, its assets and household configuration are excluded. Do not install a second integration over a working system or assume automatic migration. See the [backend consolidation plan](backend-roadmap.md).
-
-## 1. Prepare the speech server
-
-Follow the [CPU / Proxmox setup](proxmox.md). The [GPU worker](worker.md) is optional. Add the CPU Wyoming integration (speech server host, TCP 10300). If using GPU STT, add its separate Wyoming integration as well and note its entity.
-
-## 2. Install from Marketplace
-
-1. Open Settings → Marketplace → Add from link.
-2. Enter `https://github.com/michaelbudisch/tablet-assist-for-alexa` and select Integration if prompted. Connect GitHub if requested.
-3. Install the available version. The repository has one integration in `custom_components/tablet_assist_for_alexa/` and a root-level `hacs.json`. No manual copying is needed for the Marketplace installation.
-4. Go to Settings → Devices & services → Add integration → Tablet Assist for Alexa. Restart if required.
-
-[Open in Home Assistant](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Start integration setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
-
-## 3. Configure without YAML
-
-| Field | Example / description |
+| Field | Meaning |
 |---|---|
-| Piper URL | `http://speechserver.local:5000` (replace with your internal host) |
-| CPU Wyoming STT | Select the CPU STT entity |
-| GPU streaming URL | Optional, e.g. `http://gpu.local:10502` |
-| GPU API key | Optional, from the worker's local configuration |
-| GPU Wyoming STT | Optional second Wyoming entity |
-| GPU STT host | Optional hostname for a reachability check on port 10300 |
-| Conversation agent | Optional HA LLM conversation entity, not this router itself |
-| Hardware profile | Automatic: GPU preferred; Homeserver: CPU |
-| Live sound profile | Natural / Studio / Clear |
-| Voice variant | Default or 1–9, with compatible prepared worker |
-| Conversation mode | Manual / Intelligent / Automatic |
+| Piper origin | Compatible local Piper HTTP API, e.g. `http://speechserver.local:5000` |
+| CPU STT entity | Optional Wyoming STT entity; without it, TAFA uses `/stt` on the Piper origin |
+| GPU streaming origin/token | Optional external Qwen streaming backend and key |
+| GPU STT entity / host | Optional acceleration, with fallback to CPU |
+| Conversation agent | Optional existing HA agent for general knowledge |
+| Audio profile and voice | Optional preferences |
+| MP3 announcement settings | Optional HTTPS MP3 generator and room mapping |
 
-Addresses and credentials are stored locally in the config entry. Use its Reconfigure menu to change them. Piper must be reachable during setup. GPU and LLM are optional. Settings apply to the integration, not individual tablets.
+No custom YAML or private dashboard is necessary for the shared integration. Interface labels are DE/EN; shipped local voice commands and CPU models are German. Android camera/microphone permissions and wake-word activation remain under Device Bridge.
 
-**Speech language:** The shipped speech pipeline and custom voice-command grammar are currently German. English documentation and UI labels do not mean English speech recognition, synthesis or announcement dialogue has been implemented. The bundled installer loads German voice models. For native local intents, enable local-intent priority; general knowledge questions require a configured conversation agent.
+## Existing installations, updates and limitations
 
-Create an Assist pipeline with German language, the Tablet Assist conversation router, STT router and Stream (or Piper) TTS. Select the pipeline in the Android Companion app. See [Bluetooth and wake word](home-assistant.md#native-amazon-echo-output-bluetooth). Echo is the output speaker, not the microphone.
+- Do not overwrite a configured `jarvis_tablet_audio` installation. The unified backend detects old config entries and avoids duplicate legacy REST and service registration. Existing room assignments and storage do **not** migrate automatically.
+- App-managed component files are never overwritten by a Marketplace install. If you choose Marketplace, manage integration updates there and do not also let the TAFA App manage its code.
+- New version **0.4.0** merges public native relay modules; private household dashboard and its resources are excluded. Optional GPU services remain external.
+- Automated validation includes source/static tests, HACS/hassfest, and HA runtime workflow; physical Device Bridge, Bluetooth, concurrent multiroom, and clean HA OS installation are still outstanding. Treat this as a **release candidate**, not a validated stable release.
 
-## 4. Standalone voice center (automatic)
-
-After successful integration setup, **Tablet Assist** appears in the Home Assistant sidebar at `/tablet_assist_for_alexa`. This is a dedicated integration panel, not an editable Lovelace dashboard. It needs no private house dashboard, legacy helpers or manual resource registration. It contains native Assist launch, speech service status, administration shortcuts, Bluetooth keepalive and announcements to configured rooms. The Companion app opens native Assist; a normal browser uses the default dashboard's Assist as a fallback. Select the correct pipeline. The panel follows the HA interface language and is removed when the integration unloads. Real device rendering and native app launch still require testing.
-
-## 5. Optional Alexa MP3 announcements
-
-Not needed for Bluetooth. Follow [Nginx, DuckDNS and existing proxy setup](nginx-proxy.md) and configure a compatible notify integration that supports SSML audio.
-
-- MP3 API URL: internal `http://speechserver.local:5001`.
-- MP3 API key: generated in the CPU speech server's root-only configuration.
-- Public HTTPS audio origin: your own certificate-backed hostname, e.g. `https://audio.example.org`.
-- Room mapping JSON. The existing German room keys are stable internal identifiers, even in the English interface; use actual notify entities and optional DND and schedule helpers.
-
-```json
-{
-  "Büro": {
-    "notify": "notify.echo_office_speak",
-    "dnd": "switch.echo_office_dnd",
-    "quiet": "schedule.echo_office_quiet"
-  }
-}
-```
-
-Supported keys: Büro (office), Wohnzimmer (living room), Badezimmer (bathroom), Schlafzimmer (bedroom), Kinderzimmer (children's room). Other room names are not supported yet. Configured DND and schedule flags must be off; missing/unavailable configured flags block delivery. Omit a flag only if you deliberately do not need that restriction. Unconfigured rooms receive nothing. Share no confidential messages: the HTTPS file link expires after 15 minutes.
-
-Use the action in automations or developer tools:
-
-```yaml
-action: tablet_assist_for_alexa.announce
-data:
-  text: "Die Waschmaschine ist fertig."
-  rooms:
-    - Büro
-```
-
-Use text compatible with the installed voice. The German multi-turn announcement dialogue calls this service. It verifies the returned audio path, rechecks room restrictions and calls notify. Successful service execution does not establish audible playback on Echo.
-
-## 6. Optional cards for other dashboards
-
-Only if you want additional dashboard cards, register these local URLs as JavaScript module resources (Settings → Dashboards → Resources, advanced mode):
-
-- `/tablet_assist_for_alexa/assist.js`
-- `/tablet_assist_for_alexa/keepalive.js`
-
-Add a dashboard card:
-
-```yaml
-type: custom:tablet-assist-conversation-card
-```
-
-Optional separate card:
-
-```yaml
-type: custom:tablet-assist-bt-keepalive
-```
-
-The Assist card uses the last-used pipeline unless `pipeline:` specifies a pipeline ID. Both cards follow the HA interface language (German or English). Keepalive is a manually started silent audio loop on the tablet, not a second microphone. Compatibility varies; stop if it interferes with Alexa or media playback.
-
-## Legacy installation / migration
-
-The pre-0.2 manual installer, dashboard, timer and notification templates remain in `homeassistant/`. They are **not** installed automatically by Marketplace. Create new HA automations with the announcement action instead. Existing Jarvis settings, pipelines, reminders and room rules are not imported automatically. Do not remove legacy providers until their consumers have been reconfigured. Back up and test first. The Marketplace integration has its own domain and does not overwrite the older components.
-
-## Status
-
-The layout follows the Marketplace custom-repository format. Fresh Marketplace installation, live HA API compatibility, GPU inference, Bluetooth and public HTTPS playback still require end-to-end testing. This is a developer preview, not an official certification or public catalog listing.
+[App installation](app.md) · [Backend integration](backend-roadmap.md) · [Security](security.md) · [Multiroom](../../homeassistant/examples/MULTIROOM.md).

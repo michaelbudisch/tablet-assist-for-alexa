@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA-Integration 0.4.0 — Release-Kandidat
+- Öffentliche HA-Backend-Module unter einer einzigen Integration zusammengeführt; native Rufwort-/Multiroom-Schnittstellen, Kamera, Vision und Sprachrouter eingeschlossen.
+- TAFA Home-Assistant-App 0.3.2 enthält Piper und Faster-Whisper für CPU, automatische Einrichtung und ein zweisprachiges Control Center.
+- Automatisierte Installations-, Quellcode- und Docker-Prüfungen. Neuinstallation unter echtem HA OS und Tablet-Bluetooth-Test stehen aus.
+- Android Device Bridge 1.0.0 und privates Dashboard bleiben unverändert.
+
+
 ## TAFA Apps Vorschau 0.1.0
 - Experimentelles HA-OS-App-Repository, Installer für mitgelieferte öffentliche Integrationen und Administrator-Ingress-Einrichtung ergänzt. Kein privates Dashboard und keine automatische Migration; Marketplace-Basisintegration bleibt 0.3.1.
 
