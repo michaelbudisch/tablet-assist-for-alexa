@@ -96,17 +96,20 @@ def autoconfigure(address, mode="local"):
                     time.sleep(20)
                     continue
                 settings = setup_settings()
-                if not (settings.get("cpu_stt") or settings.get("gpu_stt")):
-                    save_state("waiting_for_external_stt",
-                               "Choose a Wyoming Whisper STT entity (cpu_stt) "
-                               "under Settings -> Apps -> TAFA -> Configuration.")
-                    time.sleep(20)
-                    continue
+                # Always install and synchronize the HA integration first.
+                # Missing STT must NOT prevent Device Bridge pairing or TTS.
                 outcome=configure(address,settings)
                 if outcome in ("configured", "already_configured"):
                     # App Configuration is authoritative even for already-existing
                     # HA entries. Do not require Devices & services options.
                     sync_app_configuration(address, settings)
+                    if not (settings.get("cpu_stt") or settings.get("gpu_stt")):
+                        save_state("waiting_for_external_stt",
+                                   "TAFA backend installed. Choose a Wyoming Whisper STT "
+                                   "entity (cpu_stt) in Settings -> Apps -> TAFA -> Configuration "
+                                   "for the native voice pipeline.")
+                        time.sleep(20)
+                        continue
                     pipeline = ensure_pipeline()
                     if pipeline in ("pipeline_created", "pipeline_exists"):
                         save_state("external_ready",
