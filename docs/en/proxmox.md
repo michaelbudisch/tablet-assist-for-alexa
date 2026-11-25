@@ -66,4 +66,4 @@ Configure firewall rules to allow only the required HA and proxy hosts. No autom
 
 ## Optional HTTPS proxy
 
-For Alexa announcements, follow the [Nginx guide](nginx-proxy.md). No proxy is required for ordinary tablet-to-Echo Bluetooth output.
+**With the new combined single-CT installer Nginx is already installed.** Run `tafa-setup` inside the new guest once public DNS/routing has been prepared. A separate proxy CT remains available as an alternative in the [Nginx guide](nginx-proxy.md). No public proxy is needed for tablet-to-Echo Bluetooth.
