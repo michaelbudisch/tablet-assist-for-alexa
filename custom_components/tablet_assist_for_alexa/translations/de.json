@@ -178,7 +178,7 @@
         },
         "data_description": {
           "mp3_token": "PIPER_API_TOKEN aus /etc/jarvis-local.env des Proxmox-Sprachservers. Nur lokal verwenden.",
-          "rooms_json": "Beispiel: {\"Wohnzimmer\":{\"notify\":\"notify.echo_wohnzimmer\"}}. Nur konfigurierte Räume werden verwendet."
+          "rooms_json": "JSON-Zuordnung: Raumname Wohnzimmer mit Notify-Entität notify.echo_wohnzimmer. Siehe Ersteinrichtungsanleitung."
         }
       }
     },

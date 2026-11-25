@@ -178,7 +178,7 @@
         },
         "data_description": {
           "mp3_token": "PIPER_API_TOKEN from /etc/jarvis-local.env on Proxmox speech server. Keep private.",
-          "rooms_json": "Example: {\"Wohnzimmer\":{\"notify\":\"notify.living_room\"}}. Only configured rooms are used."
+          "rooms_json": "JSON mapping: room name Wohnzimmer with notify entity notify.living_room. See setup guide."
         }
       }
     },
