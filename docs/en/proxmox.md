@@ -6,6 +6,29 @@ Requirements: current Proxmox VE or Debian 12/13 with systemd. Start with 4 vCPU
 
 **Existing speech server:** To update only the MP3 generator from an older token-based version, use the source checkout inside the dedicated Debian guest and run `sudo bash proxmox/update-mp3-generator.sh`. It backs up the existing `api.py` and restarts only `jarvis-mp3.service`, rolling back if health checks fail. This does not replace Piper, Whisper, data or your proxy. Update the matching TAFA integration to 0.4.3. Never run this script on the Proxmox host. No public forwarding for port 5001.
 
+## Recommended: one combined CT with a one-line PVE installer
+
+For a **fresh installation**, a single unprivileged Debian LXC hosts Piper, Wyoming-Whisper, the MP3 generator, and Nginx. Existing CTs, VMs and proxy sites are never modified.
+
+Run this in an interactive **root Proxmox VE host shell**:
+
+```bash
+curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
+```
+
+You can review `/root/tafa-pve-install.sh` before running it. The interactive wizard asks for an unused CT ID, Proxmox root/template storage, bridge and DHCP/static IP, 4 cores/4 GiB RAM/32 GiB disk defaults, and optional LAN GPU Qwen and public Alexa audio hostname. Only after confirming the CT ID is a new CT created.
+
+It installs private Piper (5000), MP3 generation (5001), Wyoming Whisper (10300), a **loopback-only** audio file backend (127.0.0.1:8080), and Nginx. Neither public DNS nor router port forwarding is changed. HTTPS remains pending until you have a public hostname, suitable routing and a certificate.
+
+The new container's pre-login `/etc/issue` and interactive console show IP, ports and service information; a periodic job refreshes the banner. Inside the new guest:
+
+```bash
+tafa-info               # Current IP, endpoints, service state
+tafa-setup              # Guided Nginx/Certbot HTTPS completion
+```
+
+If the GUI CT console asks for a root password and none exists, enter from PVE with `pct enter CTID` and set one using `passwd root` inside the guest. Do not put passwords in scripts or logs. Only expose the Nginx 80/443 entry point when intentionally configured; **never publish** 5000, 5001, 8080, 10300, or GPU ports. If another proxy already owns port forwarding, keep it in place until a deliberate migration.
+
 ## New VM/container
 
 Download a Debian template in Proxmox and clone or extract this repository. On the Proxmox host as administrator:
