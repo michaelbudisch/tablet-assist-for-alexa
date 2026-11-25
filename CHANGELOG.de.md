@@ -1,5 +1,8 @@
 # Changelog
 
+## TAFA Apps Vorschau 0.1.0
+- Experimentelles HA-OS-App-Repository, Installer für mitgelieferte öffentliche Integrationen und Administrator-Ingress-Einrichtung ergänzt. Kein privates Dashboard und keine automatische Migration; Marketplace-Basisintegration bleibt 0.3.1.
+
 ## Unveröffentlicht — Marketplace-Backend-Konsolidierung
 - Aktuelle Installationsgrenze und Ziel einer einzigen Integration dokumentiert; Android-Bezeichnung TAFA Device Bridge 1.0.0. Privates Dashboard bleibt ausgeschlossen. Kein neuer Integrationsrelease und keine Backend-Migration.
 

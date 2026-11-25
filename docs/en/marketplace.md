@@ -8,6 +8,14 @@ Home Assistant Core 2026.11 or newer. Developer preview 0.3.1. Start on a test i
 
 **New:** Contextual follow-ups and optional administrator-approved aliases. [Guide](data-sources.md).
 
+## TAFA Home Assistant App (experimental)
+
+[![Add TAFA app repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
+
+On Home Assistant OS, open Settings → Apps → Install app, add this repository URL, install **TAFA**, start it and open its Web UI. The experimental setup app (0.1.0) bundles the public base integration and the separate room-audio backend; its administrator-only Ingress page installs missing backend files after explicit confirmation. It never overwrites existing integrations. External speech servers and the Android Device Bridge remain separate installations. After installing files, restart HA and configure both integrations via Devices & services. See [App installation](app.md).
+
+Marketplace is a separate installation route and still installs only the base integration. Neither route includes the private dashboard. Clean-instance testing is outstanding; this is not a production-ready unified backend release.
+
 ## Marketplace scope and backend roadmap
 
 The current link installs the `tablet_assist_for_alexa` base integration only. The separate `jarvis_tablet_audio` backend (multiroom, device registration, native wake-word routing and camera/vision interfaces) is not installed by this link. Marketplace supports one integration per repository; the target is a single configurable domain with these backend capabilities ported and tested, while retaining documented compatibility with Device Bridge 1.0.0. External CPU/GPU speech servers and the Android APK remain separate installations. The private TAFA dashboard, its assets and household configuration are excluded. Do not install a second integration over a working system or assume automatic migration. See the [backend consolidation plan](backend-roadmap.md).

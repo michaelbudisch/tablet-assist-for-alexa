@@ -1,5 +1,8 @@
 # Changelog
 
+## TAFA Apps preview 0.1.0
+- Added an experimental HA OS app repository, bundled public integration installer and administrator-only Ingress setup page. No private dashboard or automatic migration; Marketplace base integration remains 0.3.1.
+
 ## Unreleased — Marketplace backend consolidation plan
 - Clarified the current installation boundary and the single-domain target; Android branding updated to TAFA Device Bridge 1.0.0. Private dashboard remains excluded. No new integration release or backend migration is claimed.
 

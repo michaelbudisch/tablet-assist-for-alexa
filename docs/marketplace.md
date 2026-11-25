@@ -8,6 +8,14 @@ Home Assistant Core ab 2026.11; Entwicklungsvorschau 0.3.1. Auf einer Testinstan
 
 **Neu:** Kontextbezogene Folgefragen und freiwillige, administrativ freigegebene Lernzuordnungen. [Anleitung](data-sources.md).
 
+## TAFA Home-Assistant-App (experimentell)
+
+[![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
+
+Unter Home Assistant OS: Einstellungen → Apps → App installieren, diese Repository-Adresse hinzufügen, **TAFA** installieren, starten und die Weboberfläche öffnen. Die experimentelle Einrichtungs-App (0.1.0) enthält die öffentlichen Basis- und Raum-Audio-Integrationen. Fehlende Backend-Dateien werden über die Administrator-Ingress-Oberfläche nach ausdrücklicher Bestätigung installiert; vorhandene Integrationen werden nie überschrieben. Externe Sprachserver und die Android Device Bridge bleiben separat. Nach der Dateiinstallation HA neu starten und beide Integrationen unter Geräte & Dienste konfigurieren. Siehe [App-Installation](app.md).
+
+Marketplace ist ein separater Installationsweg und installiert weiterhin nur die Basisintegration. Das private Dashboard ist bei beiden Wegen ausgeschlossen. Der Neuinstallationstest steht noch aus; dies ist noch kein produktionsreifer, zusammengeführter Backend-Release.
+
 ## Marketplace-Umfang und Backend-Fahrplan
 
 Der aktuelle Link installiert ausschließlich die Basisintegration `tablet_assist_for_alexa`. Das separate Backend `jarvis_tablet_audio` (Multiroom, Geräteregistrierung, native Rufwortweiterleitung und Kamera-/Vision-Schnittstellen) wird darüber nicht installiert. Marketplace unterstützt eine Integration pro Repository. Ziel ist eine einzige konfigurierbare Integration, in die diese Funktionen portiert und getestet werden, einschließlich dokumentierter Kompatibilität mit Device Bridge 1.0.0. Externe CPU-/GPU-Sprachserver und die Android-APK bleiben separate Installationen. Privates TAFA-Dashboard, dessen Ressourcen und Haushaltskonfiguration sind ausgeschlossen. Bestehende Systeme nicht überschreiben; keine automatische Migration voraussetzen. Siehe [Backend-Fahrplan](backend-roadmap.md).
