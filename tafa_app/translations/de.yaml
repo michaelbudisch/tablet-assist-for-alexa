@@ -48,7 +48,7 @@ configuration:
     description: "Automatisch, intelligent oder manuell; steuert die KI-Weiterleitung."
   rooms_json:
     name: Alexa-Räume (JSON, optional)
-    description: "Optional, z. B. {\"Wohnzimmer\":{\"notify\":\"notify.echo_wohnzimmer\"}}. Nur vorhandene Räume verwenden."
+    description: "Bei Alexa Devices für externe MP3-Audiodateien die Notify-Entität Sprechen wählen (z. B. notify.buro_dot_sprechen), nicht Durchsagen (dort ertönt ggf. nur der Gong). Beispiel: {\"Büro\":{\"notify\":\"notify.buro_dot_sprechen\"}}. Entitäts-ID in HA prüfen; andere Alexa-Integrationen können abweichen."
   sources_json:
     name: HA-Datenquellen (JSON, optional)
     description: "Optional, z. B. {\"weather\":\"weather.home\",\"solar\":\"sensor.pv_power\"}. Leeres {} deaktiviert alle."

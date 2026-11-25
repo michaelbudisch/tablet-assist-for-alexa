@@ -48,7 +48,7 @@ configuration:
     description: "Automatic, intelligent, or manual AI routing."
   rooms_json:
     name: Alexa rooms (JSON, optional)
-    description: "Optional, e.g. {\"Wohnzimmer\":{\"notify\":\"notify.echo_wohnzimmer\"}}. Use existing rooms only."
+    description: "For external MP3 audio with Alexa Devices, select the Speak notification entity (e.g. notify.buro_dot_sprechen), not Announce (which may only play the chime). Example: {\"Büro\":{\"notify\":\"notify.buro_dot_sprechen\"}}. Verify the entity ID in HA; other Alexa integrations may differ."
   sources_json:
     name: HA data sources (JSON, optional)
     description: "Optional, e.g. {\"weather\":\"weather.home\",\"solar\":\"sensor.pv_power\"}. Empty {} disables all."
