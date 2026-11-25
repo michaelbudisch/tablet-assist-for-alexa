@@ -16,6 +16,8 @@ Run this in an interactive **root Proxmox VE host shell**:
 curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
 ```
 
+**English interface and custom container name:** All setup dialogs, recovery prompts and CT console status screens are in English. Immediately after selecting the CT ID, the wizard asks `Container hostname [tafa-voice]`. Enter any valid single-label Linux hostname (1–63 lowercase letters, numbers or hyphens; e.g. `jarvis-speech`) or press Enter for the default. This is passed directly to Proxmox `pct create --hostname`; it does not rename an existing or already running installation.
+
 You can review `/root/tafa-pve-install.sh` before running it. The interactive wizard asks for an unused CT ID, Proxmox root/template storage, bridge and DHCP/static IP, 4 cores/4 GiB RAM/32 GiB disk defaults, and optional LAN GPU Qwen and public Alexa audio hostname. Only after confirming the CT ID is a new CT created.
 
 It installs private Piper (5000), MP3 generation (5001), Wyoming Whisper (10300), a **loopback-only** audio file backend (127.0.0.1:8080), and Nginx. Neither public DNS nor router port forwarding is changed. HTTPS remains pending until you have a public hostname, suitable routing and a certificate.
