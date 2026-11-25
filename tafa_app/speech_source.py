@@ -1,7 +1,7 @@
 """Read supervised App options and probe only explicitly selected private LAN services.
 
 No token fields, discovery, redirect following, environment proxies or public
-GPU/MP3 endpoints. App Configuration remains the primary first-run source.
+GPU/MP3 endpoints. The TAFA Control Center and the advanced HA App editor use the same Supervisor options.
 """
 import ipaddress
 import json
@@ -150,8 +150,12 @@ def _advanced(values):
     return result
 
 def setup_settings(path=OPTIONS_FILE):
-    """Validate extra first-run fields; use only known keys for HA setup."""
-    values = load_options(path)
+    """Read and validate stored options."""
+    return setup_settings_values(load_options(path))
+
+
+def setup_settings_values(values):
+    """Validate proposed options before persisting them."""
     gpu = values.get("gpu_base", "") or ""
     mp3 = values.get("mp3_base", "") or ""
     public = values.get("public_audio_base", "") or ""

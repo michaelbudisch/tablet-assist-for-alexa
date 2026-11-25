@@ -28,6 +28,8 @@ from speech_source import (choose as choose_speech_source,
                            setup_settings, connection_status)
 from model_store import inventory as local_model_inventory, remove_local_models
 from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
+from settings_ui import render_settings_form, save_settings_form
+from speech_source import load_options
 
 LOG=logging.getLogger("tafa.app")
 CONFIG=Path("/homeassistant")
@@ -36,7 +38,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.19"
+APP_VERSION="0.3.20"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -252,8 +254,8 @@ def display(message="",lang="de"):
        translations.get(links["gpu"],links["gpu"])+
        (" · v"+links["gpu_version"] if links["gpu_version"] else "")),
       (t("Lokale KI · Gesprächsassistent","Local AI · conversation agent"),
-       t("Kein KI-Agent ausgewählt; Ollama als HA-Integration hinzufügen und unter Apps → TAFA → Konfiguration bei llm_agent auswählen",
-         "No AI agent selected; add Ollama as an HA integration, then select it in Apps → TAFA → Configuration → llm_agent")
+       t("Kein KI-Agent ausgewählt; Ollama als HA-Integration hinzufügen und unter TAFA Control Center → Einstellungen als KI-Agent auswählen",
+         "No AI agent selected; add Ollama as an HA integration, then select it in TAFA Control Center → Settings → AI agent")
        if not preferences.get("llm_agent") else
        t("Ausgewählt (nicht live getestet): ","Selected (not live-tested): ")+preferences["llm_agent"]),
       (t("Piper-Fallback","Piper fallback"),
@@ -306,53 +308,37 @@ def display(message="",lang="de"):
     picker_note=wyoming_error or (t("Keine Wyoming-STT-Entitaeten gefunden. Erst Wyoming Protocol in HA installieren.",
                               "No Wyoming STT entities found. Install Wyoming Protocol in HA first.")
                            if not wyoming_entries else t("Erkannte Entitaeten: ","Discovered entities: ")+str(len(wyoming_entries)))
-    picker=f"""
-<section id="wyoming-picker"><h2>{t("Wyoming-STT automatisch erkennen", "Automatically discover Wyoming STT")}</h2>
-<p>{t("Waehle vorhandene Wyoming-Entitaeten fuer CPU und GPU aus. Die GPU/CPU-Zuordnung muss bestaetigt werden, weil Home Assistant sie nicht automatisch unterscheiden kann.",
-"Select registered Wyoming entities for CPU and GPU. Confirm their roles: Home Assistant cannot reliably identify which PC is the GPU.")}</p>
-<p class="muted">{html.escape(picker_note)}</p>
-<form action="./" method="post">
-<input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
-<label for="cpu_stt">{t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox")}</label>
-<select id="cpu_stt" name="cpu_stt">{stt_options(current_cpu)}</select>
-<label for="gpu_stt">{t("GPU-Whisper / Windows", "GPU Whisper / Windows")}</label>
-<select id="gpu_stt" name="gpu_stt">{stt_options(current_gpu)}</select>
-<p class="muted">{t("CPU/GPU brauchen unterschiedliche STT-IDs. Zuerst in Home Assistant unter Geraete & Dienste Wyoming Protocol fuer jeden Sprachserver hinzufuegen.",
-"CPU/GPU require different entity IDs. First add Wyoming Protocol in Home Assistant Devices & services for each speech server.")}</p>
-<button type="submit" name="action" value="wyoming"{" disabled" if not wyoming_entries else ""}>{t("STT-Auswahl speichern", "Save STT selection")}</button>
-</form>
-<p class="muted">{t("Speichert beide Werte dauerhaft in der TAFA-App-Konfiguration, ohne andere Einstellungen zu aendern. Danach TAFA-App einmal neu starten.",
-"Saves both values in TAFA App Configuration without altering other settings. Restart TAFA App once to apply.")}</p>
-<p><a href="/config/integrations" target="_top">{t("Wyoming-Integrationen einrichten", "Set up Wyoming integrations")}</a></p></section>
-"""
+    # The Control Center edits the same persisted Supervisor options as the
+    # advanced HA App Configuration screen (never a second settings store).
+    picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note)
     guide = f"""
 <section><h2>{t("Einrichtung in vier Schritten", "Setup in four steps")}</h2>
 <p class="muted">{t("Wähle nur die Funktionen, die du tatsächlich brauchst. TAFA ändert keine Proxmox-Container, GPU-Worker oder Router-Einstellungen automatisch.", "Configure only what you need. TAFA does not modify Proxmox containers, GPU workers or router settings automatically.")}</p>
 <div class="tiles">
 <div class="tile"><strong>1 · {t("Sprachserver", "Speech server")}</strong>
 <p><b>{t("A: Alles in TAFA (Standard)", "A: Everything in TAFA (default)")}</b></p>
-<p>{t("Piper und Whisper laufen lokal in dieser App, wenn als App-Option speech_mode=local gewählt ist. Keine weitere VM nötig.", "Piper and Whisper run locally with App option speech_mode=local. No additional VM required.")}</p>
+<p>{t("Piper und Whisper laufen in TAFA, wenn unter Einstellungen der lokale Sprachserver gewählt ist. Keine weitere VM nötig.", "Piper and Whisper run inside TAFA when local speech is selected above. No additional VM required.")}</p>
 <p><b>{t("B: Proxmox-Sprachserver", "B: Proxmox speech server")}</b></p>
-<p>{t("Bei Apps → TAFA → Konfiguration speech_mode=external und external_piper_base=http://SERVER:5000 setzen, danach App neu starten. Dann in HA Wyoming-STT von SERVER:10300 ergänzen Die Wyoming-Entitäts-ID bei Apps → TAFA → Konfiguration eintragen (oder bei genau einer STT-Entität automatisch erkennen lassen). Es werden keine lokalen Sprachmodelle geladen.", "In Apps → TAFA → Configuration choose speech_mode=external and external_piper_base=http://SERVER:5000, then restart the App. Add Wyoming STT from SERVER:10300 in HA and set its entity ID in Apps → TAFA → Configuration (or auto-select when exactly one Wyoming STT exists). No local CPU models are loaded.")}</p>
+<p>{t("Oben unter Einstellungen Externen Proxmox-Sprachserver wählen und http://SERVER:5000 eintragen; danach TAFA neu starten. Dann in HA Wyoming-STT von SERVER:10300 ergänzen Die Wyoming-Entitäts-ID bei TAFA-Einstellungen oben auswählen (oder bei genau einer STT-Entität automatisch erkennen lassen). Es werden keine lokalen Sprachmodelle geladen.", "In Settings above select the external Proxmox speech server and enter http://SERVER:5000, then restart TAFA. Add Wyoming STT from SERVER:10300 in HA and set its entity ID in TAFA Settings above (or auto-select when exactly one Wyoming STT exists). No local CPU models are loaded.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}proxmox.md" target="_blank" rel="noopener">{t("Proxmox-Anleitung", "Proxmox guide")}</a>
 </div>
 <div class="tile"><strong>2 · {t("GPU-Hauptrechner (optional)", "GPU computer (optional)")}</strong>
-<p>{t("Qwen-Streaming auf Port 10502. Die Windows-BAT-Dateien erzeugen bei Bedarf eine .env ohne API-Token. Die GPU-Adresse unter Optionen → Sprachserver & GPU eintragen.", "Qwen streaming uses port 10502. The Windows BAT files create an optional .env without API tokens. Configure the GPU URL under Options → Speech servers & GPU.")}</p>
+<p>{t("Qwen-Streaming auf Port 10502. Die Windows-BAT-Dateien erzeugen bei Bedarf eine .env ohne API-Token. Die GPU-Adresse oben unter Einstellungen eintragen.", "Qwen streaming uses port 10502. The Windows BAT files create an optional .env without API tokens. Configure the GPU URL in Settings above.")}</p>
 <p>{t("Automatisch: Qwen, wenn bereit; sonst Piper. Keine automatische Netzwerksuche.", "Automatic: Qwen if ready; otherwise Piper. No network scanning.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("GPU-Worker einrichten", "Set up GPU worker")}</a>
 </div>
 <div class="tile"><strong>3 · {t("Text-KI für freie Fragen (Ollama)", "Text AI for open questions (Ollama)")}</strong>
-<p>{t("Qwen-TTS auf Port 10502 spricht nur die Antwort. Für Wissensfragen Ollama auf dem GPU-PC (meist Port 11434) als Home-Assistant-Integration hinzufügen. Dort ein Textmodell wie qwen3:4b-instruct wählen und in Apps → TAFA → Konfiguration bei llm_agent dessen conversation-Entität eintragen. Danach TAFA-App neu starten. Keine automatischen Modelldownloads.",
-"Qwen TTS on port 10502 only speaks the reply. For general questions, add Ollama from the GPU PC (usually port 11434) as a Home Assistant integration, select a text model such as qwen3:4b-instruct, and set llm_agent to its conversation entity in Apps → TAFA → Configuration. Restart TAFA App afterwards. No automatic model downloads.")}</p>
+<p>{t("Qwen-TTS auf Port 10502 spricht nur die Antwort. Für Wissensfragen Ollama auf dem GPU-PC (meist Port 11434) als Home-Assistant-Integration hinzufügen. Dort ein Textmodell wie qwen3:4b-instruct wählen und oben unter Einstellungen die conversation-Entität bei Text-KI eintragen. Danach TAFA-App neu starten. Keine automatischen Modelldownloads.",
+"Qwen TTS on port 10502 only speaks the reply. For general questions, add Ollama from the GPU PC (usually port 11434) as a Home Assistant integration, select a text model such as qwen3:4b-instruct, and select its conversation entity under Settings above. Restart TAFA App afterwards. No automatic model downloads.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}worker.md" target="_blank" rel="noopener">{t("Text-KI-Anleitung", "Text AI guide")}</a>
 </div>
 <div class="tile"><strong>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</strong>
 <p>{t("Nur für Alexa-MP3-Durchsagen: Generator 5001, temporäre Dateien 8080 und gesonderter öffentlicher HTTPS-Proxy. Bei Bluetooth-Ausgabe an den Echo nicht nötig.", "Only for Alexa MP3 announcements: generator 5001, temporary files 8080, and a separate public HTTPS proxy. Not needed for Echo Bluetooth output.")}</p>
-<p>{t("Einstellungen unter Optionen → Alexa-Durchsagen & HTTPS.", "Configure under Options → Alexa announcements & HTTPS.")}</p>
+<p>{t("Einstellungen oben im Bereich Alexa & Durchsagen.", "Configure in the Alexa & announcements area above.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}nginx-proxy.md" target="_blank" rel="noopener">{t("HTTPS-Anleitung", "HTTPS guide")}</a>
 </div>
 </div>
-<p><a href="/config/integrations/integration/tablet_assist_for_alexa" target="_top">{t("TAFA-Integration öffnen → Optionen", "Open TAFA integration → Options")}</a></p>
+<p class="muted">{t("Alle TAFA-Werte oben unter Einstellungen verwalten. Die Home-Assistant-App-Konfiguration ist nur eine technische Alternative.", "Manage TAFA options in Settings above. Home Assistant App Configuration is an advanced fallback.")}</p>
 </section>
 """
     return f"""<!doctype html>
@@ -368,7 +354,7 @@ h1{{font-size:27px;margin:0}}h2{{font-size:17px;margin:0 0 8px}}p{{margin:8px 0}
 small,.muted{{opacity:.7}}.tiles{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:20px 0}}
 .tile,section{{border:1px solid #80808055;background:color-mix(in srgb,canvas 96%,var(--accent));border-radius:13px;padding:16px}}
 .tile strong,.tile span{{display:block}}.tile span{{font-size:13px;margin-top:8px;overflow-wrap:anywhere}}
-section{{margin:13px 0}}label{{display:block;font-weight:600;margin-top:10px}}select{{display:block;width:100%;max-width:100%;padding:9px;margin:5px 0 12px;background:canvas;color:canvastext;border:1px solid #80808088;border-radius:8px}}button:disabled{{opacity:.45}}a,button{{font:inherit}}a{{color:var(--accent)}}button{{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 15px;border-radius:9px;cursor:pointer}}
+section{{margin:13px 0}}label{{display:block;font-weight:600;margin-top:10px}}select,input[type=text],textarea{{display:block;width:100%;padding:9px;margin:5px 0 12px;background:canvas;color:canvastext;border:1px solid #80808088;border-radius:8px}}textarea{{min-height:80px;resize:vertical}}details{{border-top:1px solid #80808055;padding:10px 0}}details summary{{cursor:pointer;font-weight:650;font-size:16px}}fieldset{{border:0;padding:0;margin:0}}button:disabled{{opacity:.45}}a,button{{font:inherit}}a{{color:var(--accent)}}button{{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 15px;border-radius:9px;cursor:pointer}}
 nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 </style></head>
 <body>
@@ -378,10 +364,10 @@ nav a{{margin-right:12px}}.steps{{padding-left:23px}}li{{margin:7px 0}}
 <section id="connections"><h2>{t("Verbindungsdiagnose", "Connection diagnostics")}</h2>
 <p>{t("Abfragen der eingerichteten GPU-/Piper-/MP3-Health-Endpunkte. Kein Test-Audio und keine Durchsage werden erzeugt.", "Checks the configured GPU, Piper and MP3 health endpoints. No speech or announcements are generated.")}</p>
 <p><a href="?lang={lang}#connections">{t("Verbindungen jetzt erneut prüfen", "Check connections now")}</a></p>
-<p class="muted">{t("Die Sprachausgabe-Prognose stammt aus den App-Optionen. Bei bestehenden HA-Integrationen müssen abweichende Optionen dort separat angeglichen werden.", "The predicted speech route uses App options. Existing HA integration settings may need to be aligned separately.")}</p>
+<p class="muted">{t("Alle TAFA-Einstellungen werden zentral gespeichert und beim nächsten App-Start synchronisiert.", "All TAFA settings share one store and synchronize on the next App start.")}</p>
 </section>
-{guide}
 {picker}
+{guide}
 <section><h2>{t("Einrichtungsstatus","Setup status")}</h2><p>{html.escape(message or setup.get("detail","") or note)}</p>
 <form action="./" method="post"><input type="hidden" name="csrf" value="{CSRF}"><input type="hidden" name="lang" value="{lang}">
 <button type="submit" name="action" value="backend">{install}</button>
@@ -431,11 +417,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():return self.send_error(403)
         length=self.headers.get("Content-Length")
-        if not length or not length.isdigit() or not 0<int(length)<=2048:
+        if not length or not length.isdigit() or not 0<int(length)<=16384:
             return self.send_error(400)
         if self.headers.get_content_type()!="application/x-www-form-urlencoded":
             return self.send_error(415)
-        fields=parse_qs(self.rfile.read(int(length)).decode("utf-8"),max_num_fields=5)
+        fields=parse_qs(self.rfile.read(int(length)).decode("utf-8"),max_num_fields=32,keep_blank_values=True)
         if not secrets.compare_digest(fields.get("csrf",[""])[0],CSRF):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
@@ -447,6 +433,9 @@ class Handler(BaseHTTPRequestHandler):
                 accepted=retry_models()
                 msg=("Speech model retry requested / Sprachmodelle erneut gestartet."
                      if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
+            elif action=="settings":
+                changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
+                msg="Einstellungen gespeichert. TAFA-App jetzt neu starten, um sie zu übernehmen. / Settings saved. Restart TAFA App to apply."
             elif action=="wyoming":
                 choices=discover_wyoming_stt(TOKEN)
                 selection=save_wyoming_selection(TOKEN,

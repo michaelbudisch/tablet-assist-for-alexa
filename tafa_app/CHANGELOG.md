@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.20 — one guided Control Center settings page
+- TAFA Control Center now provides one bilingual settings form for speech mode, Piper/Whisper, GPU Qwen, Ollama agent, speech routing, Alexa and optional advanced mappings. The previous separate Wyoming picker becomes part of this page.
+- Saving writes only validated changes to the existing Supervisor-managed App options; no second configuration store or changes to user Assist pipelines. Restart TAFA to apply. The native Home Assistant App Configuration stays as an advanced recovery editor.
+- All fields are checked server-side, rendered with HTML escaping, and protected by Ingress authorization and CSRF. Add integration tests for settings preservation and validation.
+- HA integration, GPU Worker and Android Device Bridge unchanged.
+
 ## 0.3.19 — Wyoming picker Docker startup hotfix
 - Bundle `wyoming_picker.py` so the TAFA App does not crash with `ModuleNotFoundError` on startup after 0.3.18.
 - Check the import during the container build and test that all local Python server imports are copied into the image.
