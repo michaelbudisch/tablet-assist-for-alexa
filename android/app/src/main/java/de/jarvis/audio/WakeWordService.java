@@ -38,6 +38,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     private final WakeTriggerGate triggerGate=new WakeTriggerGate();
     private ScheduledExecutorService settingsExecutor;
     private long lastFullSync=0;
+    private int activeSettingsSlot=0;
     private Model model;
     private Recognizer recognizer;
     private SpeechService speech;
@@ -118,10 +119,12 @@ public final class WakeWordService extends Service implements RecognitionListene
         settingsExecutor.scheduleWithFixedDelay(()->{
             if(!enabled)return;
             try{
-                boolean full=SystemClock.elapsedRealtime()-lastFullSync>=12000;
+                int currentSlot=WakeDeviceIdentity.slot(this);
+                boolean full=currentSlot!=activeSettingsSlot||SystemClock.elapsedRealtime()-lastFullSync>=12000;
                 if(full){
                     WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
                     lastFullSync=SystemClock.elapsedRealtime();
+                    activeSettingsSlot=currentSlot;
                     main.post(()->{
                         if(!enabled)return;
                         wordChoice=settings.word;
@@ -253,6 +256,10 @@ public final class WakeWordService extends Service implements RecognitionListene
                 conn.setRequestProperty("Content-Type","application/json");
                 conn.setDoOutput(true);
                 byte[] body=new JSONObject().put("source","android_echo_relay")
+                    .put("version",2)
+                    .put("device_id",WakeDeviceIdentity.get(this))
+                    .put("slot",WakeDeviceIdentity.slot(this))
+                    .put("room",WakeDeviceIdentity.room(this))
                     .put("wakeword",word).put("timestamp_ms",System.currentTimeMillis())
                     .toString().getBytes(StandardCharsets.UTF_8);
                 conn.setFixedLengthStreamingMode(body.length);
