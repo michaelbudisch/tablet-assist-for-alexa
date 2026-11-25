@@ -25,11 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     session = async_get_clientsession(hass)
     cfg = settings(entry)
-    token = ""  # GPU worker is restricted to the private network.
-    entities = [JarvisNativeTTS(entry.entry_id, session, "piper", "Tablet Assist Piper", "", cfg)]
+    entities = [JarvisNativeTTS(entry.entry_id, session, "piper", "Tablet Assist Piper", cfg)]
     if cfg.get("gpu_base"):
-        entities.append(JarvisNativeTTS(entry.entry_id, session, "qwen", "Tablet Assist Qwen", token, cfg))
-    entities.append(JarvisStreamingTTS(entry.entry_id, session, "stream", "Tablet Assist Stream", token, cfg))
+        entities.append(JarvisNativeTTS(entry.entry_id, session, "qwen", "Tablet Assist Qwen", cfg))
+    entities.append(JarvisStreamingTTS(entry.entry_id, session, "stream", "Tablet Assist Stream", cfg))
     async_add_entities(entities)
 
 
@@ -51,7 +50,7 @@ class JarvisNativeTTS(TextToSpeechEntity):
     _attr_supported_languages = ["de", "de-DE"]
     _attr_supported_options = []
 
-    def __init__(self, entry_id, session, backend, name, token, cfg):
+    def __init__(self, entry_id, session, backend, name, cfg):
         self._cfg = cfg
         self._piper_url = cfg["piper_base"] + "/synthesize"
         self._gpu_base = cfg.get("gpu_base", "")
@@ -59,14 +58,12 @@ class JarvisNativeTTS(TextToSpeechEntity):
         self._attr_name = name
         self._session = session
         self._backend = backend
-        self._token = token
         self._retry_after = 0.0
         self._lock = asyncio.Lock()
 
-    async def _fetch(self, url, text, timeout, token="", voice_variant=None):
-        headers = {"X-API-Key": token} if token else {}
+    async def _fetch(self, url, text, timeout, voice_variant=None):
         async with self._session.post(
-            url, json={"text": text, **({"voice_variant": voice_variant} if voice_variant else {})}, headers=headers,
+            url, json={"text": text, **({"voice_variant": voice_variant} if voice_variant else {})},
             timeout=aiohttp.ClientTimeout(total=timeout),
             allow_redirects=False,
         ) as response:
@@ -108,7 +105,7 @@ class JarvisNativeTTS(TextToSpeechEntity):
             if self._backend == "qwen" and self._gpu_base and self._cfg.get("hardware_profile") != "Homeserver" and monotonic() >= self._retry_after:
                 try:
                     if await self._qwen_ready():
-                        audio = await self._fetch(self._gpu_base + "/synthesize", text, 20, self._token)
+                        audio = await self._fetch(self._gpu_base + "/synthesize", text, 20)
                         _LOGGER.debug("Tablet TTS: Qwen in %.2fs", monotonic() - start)
                         return "wav", audio
                 except (aiohttp.ClientError, TimeoutError, ValueError):
@@ -241,7 +238,6 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 async with self._session.post(
                     self._gpu_base + "/stream",
                     json={"text": text, "voice_variant": voice_variant},
-                    headers={},
                     timeout=aiohttp.ClientTimeout(total=90, connect=2, sock_read=15),
                     allow_redirects=False,
                 ) as response:
@@ -323,7 +319,7 @@ class JarvisStreamingTTS(JarvisNativeTTS):
                 try:
                     if not await self._stream_ready():
                         raise ValueError("GPU stream not ready")
-                    audio = await self._fetch(self._gpu_base + "/synthesize", text, 20, self._token, self._requested_variant(options))
+                    audio = await self._fetch(self._gpu_base + "/synthesize", text, 20, self._requested_variant(options))
                     if sound_profile != "Natürlich":
                         audio = await self.hass.async_add_executor_job(filter_wav, audio, sound_profile)
                     self._attr_extra_state_attributes = {"letztes_backend": "Faster Qwen (Datei)", "erste_audio_ms": round((monotonic()-start)*1000), "klangprofil": sound_profile, **getattr(self, "_voice_metadata", {})}
