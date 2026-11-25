@@ -70,6 +70,8 @@ class SetupAndBrandTests(unittest.TestCase):
     def test_finish_delayed_entities_without_recreating_integrations(self):
         with patch.object(server,"_tracked_profiles",return_value={
                   "gpu_worker":{"wyoming_stt":"entry","expected":{"wyoming_stt":True,"ollama":False}}}), \
+             patch.object(server,"load_records",return_value={"test-device":{
+                 "kind":"gpu_worker","provision_pending":False}}), \
              patch.object(server,"resolve_import_entities",return_value={
                  "entities":{"gpu_stt":"stt.gpu_1"},"pending":[]}) as resolve, \
              patch.object(server,"load_options",return_value={"gpu_stt":""}), \
