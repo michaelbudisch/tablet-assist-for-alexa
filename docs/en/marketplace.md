@@ -1,4 +1,4 @@
-# Marketplace installation — TAFA integration 0.4.0
+# Marketplace installation — TAFA integration 0.4.1
 
 **English** | [Deutsch](../marketplace.md) · [Project overview](../../README.md)
 
@@ -6,7 +6,7 @@ Marketplace and Home Assistant Apps are two different installation methods. The 
 
 ## What Marketplace installs
 
-Home Assistant Marketplace installs the unified `tablet_assist_for_alexa` integration **0.4.0**, including HA STT, TTS, conversation, optional announcements, native wake-device registration, multiroom/room-audio compatibility APIs, and optional camera/motion and vision interfaces. The old separate `jarvis_tablet_audio` integration is **not required on a fresh install**. The unchanged Device Bridge 1.0.0 is a separate Android application.
+Home Assistant Marketplace installs the unified `tablet_assist_for_alexa` integration **0.4.1**, including HA STT, TTS, conversation, optional announcements, native wake-device registration, multiroom/room-audio compatibility APIs, and optional camera/motion and vision interfaces. The old separate `jarvis_tablet_audio` integration is **not required on a fresh install**. The unchanged Device Bridge 1.0.0 is a separate Android application.
 
 Marketplace cannot deploy the running CPU processes. If you install via Marketplace alone, provide a compatible existing Piper HTTP server (with `/health` and `/synthesize`) and either a Wyoming STT entity or a compatible backend supporting `/stt` at the same Piper origin. [CPU server](proxmox.md) · [GPU worker](worker.md). The **TAFA Home Assistant App** bundles compatible CPU Piper/Whisper endpoints instead.
 
@@ -39,7 +39,7 @@ No custom YAML or private dashboard is necessary for the shared integration. Int
 
 - Do not overwrite a configured `jarvis_tablet_audio` installation. The unified backend detects old config entries and avoids duplicate legacy REST and service registration. Existing room assignments and storage do **not** migrate automatically.
 - App-managed component files are never overwritten by a Marketplace install. If you choose Marketplace, manage integration updates there and do not also let the TAFA App manage its code.
-- New version **0.4.0** merges public native relay modules; private household dashboard and its resources are excluded. Optional GPU services remain external.
+- New version **0.4.1** merges public native relay modules; private household dashboard and its resources are excluded. Optional GPU services remain external.
 - Automated validation includes source/static tests, HACS/hassfest, and HA runtime workflow; physical Device Bridge, Bluetooth, concurrent multiroom, and clean HA OS installation are still outstanding. Treat this as a **release candidate**, not a validated stable release.
 
 [App installation](app.md) · [Backend integration](backend-roadmap.md) · [Security](security.md) · [Multiroom](../../homeassistant/examples/MULTIROOM.md).

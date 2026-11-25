@@ -6,7 +6,7 @@
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.2**, integrated HA component **0.4.0**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.3**, integrated HA component **0.4.1**, Device Bridge **1.0.0 unchanged**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 ## Quick start — Home Assistant OS
 
@@ -38,7 +38,7 @@ The GPU worker, Ollama and Alexa MP3 notifications are **optional**. The app doe
 
 [![Marketplace integration](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration)
 
-Marketplace installs the **same unified TAFA integration 0.4.0**, including the public native-device and multiroom backend. Unlike the Home Assistant App, Marketplace does not provide bundled Piper and Whisper processes. Use your own accessible speech services with that installation. **Do not install the integration through both methods.** [Marketplace guide](docs/en/marketplace.md).
+Marketplace installs the **same unified TAFA integration 0.4.1**, including the public native-device and multiroom backend. Unlike the Home Assistant App, Marketplace does not provide bundled Piper and Whisper processes. Use your own accessible speech services with that installation. **Do not install the integration through both methods.** [Marketplace guide](docs/en/marketplace.md).
 
 ## Safety and migration
 

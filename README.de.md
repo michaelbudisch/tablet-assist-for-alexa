@@ -6,7 +6,7 @@
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.2**, zusammengeführte HA-Integration **0.4.0**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.3**, zusammengeführte HA-Integration **0.4.1**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 ## Schnellinstallation — Home Assistant OS
 
@@ -38,7 +38,7 @@ GPU-Worker, Ollama und Alexa-MP3-Durchsagen sind **optional**. Das private Dashb
 
 [![Marketplace-Integration](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration)
 
-Marketplace installiert dieselbe **zusammengeführte TAFA-Integration 0.4.0**, einschließlich öffentlicher Geräte-/Multiroom-Funktionen. Im Unterschied zur Home-Assistant-App enthält Marketplace jedoch **keine laufenden Piper-/Whisper-Dienste**. Diese müssen dort separat bereitgestellt werden. **Nicht gleichzeitig beide Installationswege verwenden.** [Marketplace-Anleitung](docs/marketplace.md).
+Marketplace installiert dieselbe **zusammengeführte TAFA-Integration 0.4.1**, einschließlich öffentlicher Geräte-/Multiroom-Funktionen. Im Unterschied zur Home-Assistant-App enthält Marketplace jedoch **keine laufenden Piper-/Whisper-Dienste**. Diese müssen dort separat bereitgestellt werden. **Nicht gleichzeitig beide Installationswege verwenden.** [Marketplace-Anleitung](docs/marketplace.md).
 
 ## Sicherheit, Updates und Altinstallation
 

@@ -1,4 +1,4 @@
-# Zusammengeführtes TAFA-Backend 0.4.0 — Release-Kandidat
+# Zusammengeführtes TAFA-Backend 0.4.1 — Release-Kandidat
 
 [English](en/backend-roadmap.md)
 

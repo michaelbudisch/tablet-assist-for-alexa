@@ -1,5 +1,11 @@
 # Changelog
 
+## Zusammengeführte TAFA-Integration 0.4.1 — Release-Kandidat
+- Öffentliche TAFA-Oberfläche mit Geräteliste, Rufwortauswahl, Stummschaltung und Raumnamen.
+- Erweiterte reale HA-Laufzeit-, Pipeline- und Ingress-Tests; App 0.3.3 mit Wiederanlauf des CPU-Sprachprozesses.
+- Android Device Bridge 1.0.0 und privates Dashboard bleiben unverändert. Für stabilen Release fehlt der HA-OS-/Hardware-End-to-End-Test.
+
+
 ## TAFA-Integration 0.4.0 — Release-Kandidat
 - Öffentliche HA-Backend-Module unter einer einzigen Integration zusammengeführt; native Rufwort-/Multiroom-Schnittstellen, Kamera, Vision und Sprachrouter eingeschlossen.
 - TAFA Home-Assistant-App 0.3.2 enthält Piper und Faster-Whisper für CPU, automatische Einrichtung und ein zweisprachiges Control Center.

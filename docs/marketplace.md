@@ -1,4 +1,4 @@
-# Marketplace-Installation — TAFA-Integration 0.4.0
+# Marketplace-Installation — TAFA-Integration 0.4.1
 
 [English](en/marketplace.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -6,7 +6,7 @@ Marketplace und Home Assistant Apps sind unterschiedliche Installationswege. Die
 
 ## Umfang der Marketplace-Integration
 
-Marketplace installiert die zusammengeführte HA-Integration `tablet_assist_for_alexa` **0.4.0** mit STT, TTS, Gesprächsrouter, optionalen Durchsagen, nativer Rufwort-Geräteregistrierung, Multiroom/Room-Audio-Kompatibilitätsschnittstellen sowie optionaler Kamera-/Bewegungs- und Vision-Unterstützung. Die alte separate `jarvis_tablet_audio`-Integration ist bei einer Neuinstallation **nicht erforderlich**. Device Bridge 1.0.0 bleibt eine unveränderte Android-App.
+Marketplace installiert die zusammengeführte HA-Integration `tablet_assist_for_alexa` **0.4.1** mit STT, TTS, Gesprächsrouter, optionalen Durchsagen, nativer Rufwort-Geräteregistrierung, Multiroom/Room-Audio-Kompatibilitätsschnittstellen sowie optionaler Kamera-/Bewegungs- und Vision-Unterstützung. Die alte separate `jarvis_tablet_audio`-Integration ist bei einer Neuinstallation **nicht erforderlich**. Device Bridge 1.0.0 bleibt eine unveränderte Android-App.
 
 Marketplace kann keine laufenden CPU-Sprachdienste installieren. Bei alleiniger Marketplace-Einrichtung benötigst du einen bestehenden kompatiblen Piper-HTTP-Server (`/health`, `/synthesize`) sowie eine Wyoming-STT-Entität oder die kompatible Schnittstelle `/stt` auf demselben Server. [CPU-Sprachserver](proxmox.md) · [GPU-Worker](worker.md). Die **TAFA Home-Assistant-App** enthält Piper und Whisper für CPU bereits selbst.
 
@@ -39,7 +39,7 @@ Keine manuelle YAML-Konfiguration und kein privates Dashboard nötig. Die Oberfl
 
 - Eine bestehende `jarvis_tablet_audio`-Installation nicht überschreiben. Die neue Integration erkennt alte Konfigurationseinträge und vermeidet doppelte API-/Dienst-Registrierungen. Bestehende Raumzuordnungen und Speicherstände werden **nicht** automatisch übernommen.
 - Eine durch die TAFA-App verwaltete Integration nicht parallel über Marketplace aktualisieren. Bei Marketplace-Installation Updates ausschließlich dort durchführen.
-- Version **0.4.0** vereinheitlicht öffentliche Native-Relay-Komponenten; das private Haushalts-Dashboard bleibt ausgeschlossen. Optionale GPU-Dienste bleiben extern.
+- Version **0.4.1** vereinheitlicht öffentliche Native-Relay-Komponenten; das private Haushalts-Dashboard bleibt ausgeschlossen. Optionale GPU-Dienste bleiben extern.
 - Automatisierte Tests für Code, HACS/hassfest und HA-Laufzeit sind vorhanden. Der reale Test mit Device Bridge, Bluetooth, zwei Tablets und eine komplette neue HA-OS-Installation stehen noch aus. Deshalb **Release-Kandidat**, kein bestätigter stabiler Release.
 
 [App-Installation](app.md) · [Backend](backend-roadmap.md) · [Sicherheit](security.md) · [Multiroom](../homeassistant/examples/MULTIROOM.de.md).
