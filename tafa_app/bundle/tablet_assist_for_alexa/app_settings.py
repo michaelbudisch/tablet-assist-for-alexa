@@ -105,12 +105,16 @@ def merge_settings(entry, values, registry):
         if first_sync and key in {
             "cpu_stt", "gpu_stt", "gpu_stt_host", "llm_agent", "reminder_room"
         } and not value and previous.get(key):
+            result[key] = previous[key]
             continue
         if first_sync and key in {"rooms", "sources"} and not value and previous.get(key):
+            result[key] = previous[key]
             continue
         if first_sync and key in {"rooms_json", "sources_json"} and value == "{}" and previous.get(key):
+            result[key] = previous[key]
             continue
         if first_sync and key in {"learning_enabled", "reminders_enabled"} and value is False and previous.get(key):
+            result[key] = previous[key]
             continue
         result[key] = value
     if not result.get("cpu_stt"):
