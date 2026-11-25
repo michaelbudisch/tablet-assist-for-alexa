@@ -153,6 +153,70 @@ public class MainActivity extends Activity {
     private Button wakeInstall;
     private TextView wakeStatus;
     private boolean wakeDownloading=false;
+    private SeekBar wakeStrictSlider,wakeCooldownSlider,wakeHoldSlider;
+    private Button wakeMuteButton;
+    private boolean wakeSliderBeingDragged=false;
+
+    private void configureWakeSlider(SeekBar slider,String pref,int min,int step,int label){
+        final android.content.SharedPreferences prefs=getSharedPreferences(PREF,0);
+        int def=pref.equals("wake_strict")?1:pref.equals("wake_cooldown")?12:50;
+        slider.setProgress((prefs.getInt(pref,def)-min)/step);
+        slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(SeekBar bar,int progress,boolean fromUser){
+                updateWakeSliderLabel(label,min+progress*step);
+            }
+            public void onStartTrackingTouch(SeekBar bar){wakeSliderBeingDragged=true;}
+            public void onStopTrackingTouch(SeekBar bar){
+                wakeSliderBeingDragged=false;
+                int value=min+bar.getProgress()*step;
+                prefs.edit().putInt(pref,value).apply();
+                remoteWakeSetting(pref.equals("wake_strict")?"strict":
+                    pref.equals("wake_cooldown")?"cooldown":"hold",value);
+            }
+        });
+        updateWakeSliderLabel(label,min+slider.getProgress()*step);
+    }
+
+    private void updateWakeSliderLabel(int label,int value){
+        TextView target=findViewById(label);
+        if(label==R.id.wake_strict_label)
+            target.setText(getString(R.string.wake_strict_label).replace("1 of 3",value+" of 3").replace("1 von 3",value+" von 3"));
+        else if(label==R.id.wake_cooldown_label)
+            target.setText(getString(R.string.wake_cooldown_label).replace("12",Integer.toString(value)));
+        else target.setText(getString(R.string.wake_hold_label).replace("50",Integer.toString(value)));
+    }
+
+    private void remoteWakeSetting(String setting,Object value){
+        new Thread(()->{
+            try{
+                WakePilotSettings.write(this,setting,value);
+            }catch(Exception e){
+                android.util.Log.w("JarvisWake","Unable to save HA wakeword setting",e);
+                runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_save_error,
+                    e.getClass().getSimpleName())));
+            }
+        },"JarvisWakeSettingsUpdate").start();
+    }
+
+    private void refreshWakeConfigUi(){
+        if(wakeChoice==null||wakeSliderBeingDragged)return;
+        var prefs=getSharedPreferences(PREF,0);
+        String choice=prefs.getString("wake_choice","hey_jarvis");
+        for(int i=0;i<WAKE_KEYS.length;i++){
+            if(WAKE_KEYS[i].equals(choice)&&wakeChoice.getSelectedItemPosition()!=i){
+                wakeChoice.setSelection(i);
+                break;
+            }
+        }
+        int strict=prefs.getInt("wake_strict",1),cooldown=prefs.getInt("wake_cooldown",12),hold=prefs.getInt("wake_hold",50);
+        if(wakeStrictSlider.getProgress()!=strict-1)wakeStrictSlider.setProgress(strict-1);
+        if(wakeCooldownSlider.getProgress()!=cooldown-3)wakeCooldownSlider.setProgress(cooldown-3);
+        if(wakeHoldSlider.getProgress()!=(hold-10)/5)wakeHoldSlider.setProgress((hold-10)/5);
+        wakeMuteButton.setText(prefs.getBoolean("wake_muted",true)?
+            R.string.wake_unmute_button:R.string.wake_mute_button);
+    }
+
+
 
     private void initializeNativeWake(){
         var preferences=getSharedPreferences(PREF,0);
@@ -168,8 +232,11 @@ public class MainActivity extends Activity {
             public void onNothingSelected(AdapterView<?> parent){}
             public void onItemSelected(AdapterView<?> parent,View view,int index,long id){
                 if(index>=0&&index<WAKE_KEYS.length){
-                    preferences.edit().putString("wake_choice",WAKE_KEYS[index]).apply();
-                    if(WakeWordService.running)wakeStatus.setText(R.string.wake_stop);
+                    String newChoice=WAKE_KEYS[index];
+                    if(!newChoice.equals(preferences.getString("wake_choice","hey_jarvis"))){
+                        preferences.edit().putString("wake_choice",newChoice).apply();
+                        remoteWakeSetting("word",newChoice);
+                    }
                 }
             }
         });
@@ -189,6 +256,20 @@ public class MainActivity extends Activity {
                 }
             },"JarvisWakeModelDownload").start();
         });
+        wakeStrictSlider=findViewById(R.id.wake_strict_slider);
+        wakeCooldownSlider=findViewById(R.id.wake_cooldown_slider);
+        wakeHoldSlider=findViewById(R.id.wake_hold_slider);
+        configureWakeSlider(wakeStrictSlider,"wake_strict",1,1,R.id.wake_strict_label);
+        configureWakeSlider(wakeCooldownSlider,"wake_cooldown",3,1,R.id.wake_cooldown_label);
+        configureWakeSlider(wakeHoldSlider,"wake_hold",10,5,R.id.wake_hold_label);
+        wakeMuteButton=findViewById(R.id.wake_mute_toggle);
+        wakeMuteButton.setOnClickListener(v->{
+            boolean newMuted=!preferences.getBoolean("wake_muted",true);
+            preferences.edit().putBoolean("wake_muted",newMuted).apply();
+            remoteWakeSetting("muted",newMuted);
+            refreshWakeConfigUi();
+        });
+        refreshWakeConfigUi();
         findViewById(R.id.wake_start).setOnClickListener(v->startNativeWake());
         findViewById(R.id.wake_stop).setOnClickListener(v->{
             stopService(new Intent(this,WakeWordService.class));
@@ -351,6 +432,7 @@ public class MainActivity extends Activity {
     }
 
     private void refreshStatus() {
+        refreshWakeConfigUi();
         ((TextView)findViewById(R.id.camera_main_status)).setText(CameraActivity.relayMessage(this));
         findViewById(R.id.camera_main_stop).setVisibility(CameraRelayService.running?View.VISIBLE:View.GONE);
         String raw = AudioService.ui;
@@ -395,7 +477,7 @@ public class MainActivity extends Activity {
                     getString(R.string.wake_model_missing)));
             findViewById(R.id.wake_start).setEnabled(!WakeWordService.running&&WakeModelInstaller.installed(this));
             findViewById(R.id.wake_stop).setEnabled(WakeWordService.running);
-            wakeChoice.setEnabled(!WakeWordService.running);
+            wakeChoice.setEnabled(true);
             wakeInstall.setEnabled(!WakeWordService.running);
         }
     }
