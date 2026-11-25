@@ -10,9 +10,9 @@ Native Audiobrücke von Home Assistant über ein Android-Gerät zu einem Bluetoo
 
 [Letzte reguläre Version 0.7.1 herunterladen](downloads/HA-Jarvis-Echo-Relay-0.7.1.apk). Die SHA-256-Prüfsumme steht in [downloads/SHA256SUMS](downloads/SHA256SUMS).
 
-Die regulär veröffentlichte, signierte APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Die reguläre App behält ihren Namen **HA Jarvis Echo Relay**.
+Die signierte Release-APK **über die vorhandene Version installieren**. App-ID `de.jarvis.audio`, Schlüsselalias und bisheriges Speicherformat bleiben erhalten. Adresse und verschlüsselter Token bleiben dadurch auf demselben Gerät erhalten. Die reguläre App behält ihren Namen **HA Jarvis Echo Relay**.
 
-Die signierte Release-Version verwendet denselben lokalen Android-Testsignaturschlüssel wie die vorherigen Builds, damit Updates funktionieren. Die veröffentlichte APK ist ein signierter, nicht debuggbarer Release-Build; Signaturschlüssel werden nicht veröffentlicht. CI-Debug-APKs verwenden einen anderen Testschlüssel und sind kein Ersatz für dieses Update.
+Nur die mit dem bisherigen **0.7.1-Keystore** signierte APK lässt sich ohne Deinstallation als Update installieren. Die Signatur der 0.9.0-APK wird vor Veröffentlichung gegen die vorhandene signierte 0.7.1 geprüft. Ein unsignierter oder anders signierter CI-Build ist kein installierbares Update.
 
 ## Experimentelle native Rufworterkennung (0.7.0-Testzweig)
 
@@ -20,7 +20,7 @@ In der Echo-Relay-App unter **Native Rufworterkennung** das optionale deutsche S
 
 Die App erkennt die Rufwörter lokal und sendet nur das erkannte Rufwort über die hinterlegte Home-Assistant-Verbindung als `jarvis_android_wakeword`-Ereignis. Sie gibt das Mikrofon anschließend frei und pausiert 50 Sekunden. Das HA-Dashboard empfängt das Ereignis und startet seine vorhandene Whisper-STT-Aufnahme. Für die ersten Tests das Dashboard geöffnet lassen und dessen eigene Rufworterkennung ausschalten; direkt angehängte Wörter können vor der Übernahme durch das Browsermikrofon verloren gehen. Bei geschlossenem Dashboard ist ein vollständig freihändiger Betrieb noch nicht gewährleistet. **Alexa** kann zugleich einen echten Echo aktivieren.
 
-Das ist ein experimenteller Quellcode-Zweig, noch keine signierte 0.7.0-Update-APK. Die **Debug-APK aus GitHub Actions** verwendet die separate App-ID `de.jarvis.audio.wakepilot` und heißt **Jarvis Wake Pilot**. Sie kann neben der vorhandenen signierten Echo-Relay-App installiert werden, besitzt aber eigene Einstellungen und benötigt eine eigene HA-Verbindung. **In der Test-App HA-Adresse/Token eintragen und nur „Native Erkennung starten“ antippen**; dabei wird die Verbindung verschlüsselt gespeichert. Nicht zusätzlich den Audio-Player der Test-App starten, sonst laufen zwei Echo-Relay-Player parallel. Erkennungsqualität, Latenz und Mikrofon-Koexistenz müssen auf dem Tablet geprüft werden.
+Das ist ein experimenteller Quellcode-Zweig, noch keine signierte 0.7.0-Update-APK. Die **Debug-APK aus GitHub Actions** verwendet die separate App-ID `de.jarvis.audio.wakepilot` und heißt **HA Jarvis Echo Relay**. Sie kann neben der vorhandenen signierten Echo-Relay-App installiert werden, besitzt aber eigene Einstellungen und benötigt eine eigene HA-Verbindung. **In der Test-App HA-Adresse/Token eintragen und nur „Native Erkennung starten“ antippen**; dabei wird die Verbindung verschlüsselt gespeichert. Nicht zusätzlich den Audio-Player der Test-App starten, sonst laufen zwei Echo-Relay-Player parallel. Erkennungsqualität, Latenz und Mikrofon-Koexistenz müssen auf dem Tablet geprüft werden.
 
 ### Rufwort- und Mikrofoneinstellungen (0.7.1)
 
@@ -36,7 +36,7 @@ Die Einstellungen werden mit Home Assistant abgeglichen; das Stummschalten wirkt
 
 ### Beliebig viele Tablets · Dynamisches Multiroom (0.9.0)
 
-1. **HA Jarvis Echo Relay 0.9.0 (Test)** auf jedem zusätzlichen Android-Tablet installieren. Optional unter „Raumname“ beispielsweise Wohnzimmer, Büro, Küche oder Flur angeben; eine zufällige Installationskennung wird automatisch erstellt.
+1. **HA Jarvis Echo Relay 0.9.0** auf jedem zusätzlichen Android-Tablet installieren. Optional unter „Raumname“ beispielsweise Wohnzimmer, Büro, Küche oder Flur angeben; eine zufällige Installationskennung wird automatisch erstellt.
 2. Die HA-Verbindung einrichten, das Offline-Modell laden und **Native Erkennung starten**. Das Tablet registriert sich bei Home Assistant automatisch. Es gibt keine Vierergrenze und keinen manuell anzulegenden Helfer mehr.
 3. Im **TAFA-Dashboard → Jarvis → Sprache & Audio → Native Rufworterkennung** auf **Geräteliste aktualisieren** klicken. Das Tablet auswählen und **Ausgewähltes Gerät diesem Dashboard zuordnen** drücken. Alternativ ein neues Tablet per Rufwort koppeln.
 4. Stumm, Rufwort, Strenge, Sperrzeit und Übergabe werden pro Gerät getrennt gespeichert; der Mikrofonknopf oben rechts steuert nur das gekoppelte Tablet. Raumname und Geräte lassen sich in TAFA verwalten.
