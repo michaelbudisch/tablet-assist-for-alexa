@@ -204,11 +204,6 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
     "Wie im bisherigen Dashboard: Mikrofon aktivieren, Frage sprechen, Whisper erkennt sie und Qwen/Piper antwortet über den gekoppelten Tablet-Player.":
     "Same as the original dashboard: activate the mic, ask a question, Whisper transcribes it and Qwen/Piper responds on the paired tablet player.");
   body.append(help);
-  if(typeof window!=="undefined"&&!window.isSecureContext){
-    body.append(el("p",de?
-      "Mikrofontest benötigt eine vertrauenswürdige HTTPS-Adresse (oder localhost).":
-      "Microphone test requires trusted HTTPS (or localhost)."));
-  }
   const label=el("label",de?"Assist-Pipeline":"Assist pipeline");
   label.style.cssText="display:grid;gap:6px";
   const select=el("select");
@@ -253,7 +248,7 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
     }
     send.disabled=true;let id="";
     const rpc=async(operation,params={})=>hass.callApi("POST",admin?
-      "jarvis_tablet_audio/room_admin":"jarvis_tablet_audio/room_audio",
+      "jarvis_tablet_audio/room_admin":"jarvis_echo_relay/room_audio",
       admin?{action:"test",room:current.room,device_id:device.device_id,operation,...params}:
         {action:operation,...params});
     try{
