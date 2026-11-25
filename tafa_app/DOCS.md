@@ -1,11 +1,11 @@
-# TAFA App 0.3.9 documentation
+# TAFA App 0.3.13 documentation
 
 [Deutsch](../docs/app.md) · [Project overview](../README.md)
 
-> **New in App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
+> **Since App 0.3.12:** Manage TAFA settings exclusively at **Settings → Apps → TAFA → Configuration**; restart the App after saving. On upgrade, restart HA Core once for integration 0.4.4, then restart the App to sync existing settings. Add the native Wyoming integration once in Devices & services, but choose its TAFA entity and configure all other TAFA options in the App. Existing Assist pipelines are preserved. Marketplace-only installations retain their HA options flow.
 
 
-**TAFA App 0.3.9 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
+**TAFA App 0.3.13 — release candidate, not yet certified on a clean HA OS device.** Requirements: Home Assistant OS 2026.11+ and a supported amd64/aarch64 machine; enough memory and disk space for German CPU speech models. Android Device Bridge 1.0.0 is unchanged.
 
 ## One-App setup
 
@@ -36,3 +36,13 @@ Device Bridge 1.0.0 sends the recognized wake word and releases its microphone b
 - Known release gate: clean HA OS install, model download, end-to-end Assist/Device Bridge/Bluetooth and simultaneous physical Multiroom tests still need confirmation. See [release checklist](../docs/en/release.md).
 
 [Marketplace-only instructions](marketplace.md) · [Multiroom](../homeassistant/examples/MULTIROOM.md) · [Optional GPU worker](worker.md)
+
+### Set up tablet and Multiroom without YAML
+
+1. In the Android **TAFA Device Bridge → Connect**, use an active **non-admin HA account** and its own access token. Start wake recognition under **Wake word** so the tablet appears in **TAFA → Devices**.
+2. As an **HA administrator**, open **TAFA → Devices** and choose the detected tablet. Under **Multiroom audio**, select the HA user, accept/edit the suggested room ID and click **Connect audio room**. Unchanged existing rooms and active players are preserved.
+3. If this device belongs to another HA user, an administrator must explicitly confirm the ownership transfer; then use the selected account token on the tablet.
+4. On Android enable **Multiroom audio** and **Start player**. **TAFA → Devices** now reports audio connected, player offline or playback not ready. For playback not ready, check the Bluetooth media output.
+
+**Important:** Wake device registration and audio room pairing are separate systems. A registered wake device alone does not prove audio playback is connected. Each audio room requires its own active non-admin HA account; its assignment is managed in the TAFA Devices page rather than Developer tools. The dashboard does not store or display access tokens. The legacy `input_text.jarvis_native_audio_command` helper is not required in Multiroom mode.
+

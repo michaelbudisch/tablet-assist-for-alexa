@@ -2,7 +2,7 @@
 
 [English](en/setup-guide.md) · [App installieren](app.md)
 
-> **Neu in App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration 0.4.4 geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
+> **Neu ab App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
 
 
 TAFA App **0.3.12** kann Piper/Whisper entweder lokal betreiben oder deinen vorhandenen **Proxmox-Sprachserver exklusiv nutzen**. Die Wahl erfolgt vor dem App-Start unter **Einstellungen → Apps → TAFA → Konfiguration**. Es gibt drei voneinander unabhängige Entscheidungen:
@@ -67,6 +67,16 @@ Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen.
 3. App-Konfiguration speichern, TAFA neu starten und die Testdurchsage unter **TAFA → Alexa-Durchsage** erneut auslösen. Bei Bedarf die HA-Integration neu laden.
 
 Bei **Gong ohne Sprache** zuerst die verwendete Notify-Entität prüfen und danach testen, ob die erzeugte MP3-Datei über die öffentliche HTTPS-Adresse abrufbar ist. **„Sprechen“** erzeugt nicht zwingend den Alexa-Ankündigungsgong; falls gewünscht, den **TAFA-Signalton** für MP3-Durchsagen aktivieren. Die Zuordnung gilt für das getestete Alexa-Devices-Setup; andere Alexa-Integrationen können andere Möglichkeiten haben.
+
+### Tablet und Multiroom ohne YAML einrichten
+
+1. Android **TAFA Device Bridge → Verbinden** mit einem aktiven, **nicht-administrativen HA-Benutzer** und dessen persönlichem Token verbinden; unter **Rufwort** die Erkennung starten, damit das Gerät unter **TAFA → Geräte** registriert wird.
+2. Als **HA-Administrator** unter **TAFA → Geräte** das erkannte Tablet öffnen. Dort **Multiroom-Audio → HA-Benutzer** auswählen; die vorgeschlagene Raumkennung bestätigen und **Audio-Raum verbinden** klicken. Bereits verbundene Räume und Player werden bei unveränderter Zuordnung nicht getrennt.
+3. Falls das Tablet zuvor einem anderen HA-Benutzer zugeordnet war, muss der Administrator die Übertragung ausdrücklich bestätigen; anschließend auf dem Tablet den neuen Benutzer-Token verwenden.
+4. Auf dem Tablet **Multiroom-Audio** aktivieren und **Player starten**. Der Status unter **TAFA → Geräte** zeigt „Audio verbunden“, „Player offline“ oder „Wiedergabe noch nicht bereit“ an. Für letzteres den Bluetooth-Medienausgang prüfen.
+4. **Kamerazugriff (optional):** Unter **TAFA → Geräte → Multiroom-Audio** den Schalter **„Kamerazugriff für diesen Raum erlauben“** bewusst aktivieren. Standardmäßig ist die Kamera für jeden Raum deaktiviert. Anschließend auf dem Tablet **Multiroom-Audio** eingeschaltet lassen und die Kameraübertragung *ausdrücklich* starten. Der Raum-Benutzer-Token genügt, ein Administrator-Token ist nicht erforderlich. Die Freigabe startet niemals automatisch die Kamera; Deaktivieren verwirft gepufferte Bilder.
+
+**Wichtig:** Die Rufwort-Geräteliste und die Audio-Räume sind getrennte Dienste. „Tablet registriert“ beweist nicht, dass der Audio-Player verbunden ist. Der Audio-Raum benötigt einen **eigenen aktiven HA-Benutzer ohne Administratorrechte**; der Administrator ordnet diesen über das TAFA-Dashboard zu, statt über Entwicklerwerkzeuge. Ein Token wird nie im Dashboard angezeigt oder hinterlegt. Der alte Helfer `input_text.jarvis_native_audio_command` ist im Multiroom-Modus nicht erforderlich.
 
 ## Wo sind die Einstellungen?
 

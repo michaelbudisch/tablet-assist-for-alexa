@@ -1,3 +1,4 @@
+import {fetchAudioPairings,renderAudioPairing} from "/tablet_assist_for_alexa/device_audio.js?v=0.4.5";
 import "/tablet_assist_for_alexa/keepalive.js?v=0.3.1";
 const SOURCE_LABELS={"weather":["Weather entity","Wetter-Entität"],"shopping":["Shopping list (Bring! or other to-do list)","Einkaufsliste (Bring! oder andere To-do-Liste)"],"restmuell":["Residual waste dates","Restmüll-Abholtermine"],"bioabfall":["Organic waste dates","Biomüll-Abholtermine"],"papier":["Paper collection dates","Papier-Abholtermine"],"wertstoff":["Recycling collection dates","Wertstoff-Abholtermine"],"vorlauf":["Heating flow temperature (°C)","Vorlauftemperatur (°C)"],"ruecklauf":["Heating return temperature (°C)","Rücklauftemperatur (°C)"],"spreizung":["Temperature difference (K)","Heizungsspreizung (K)"],"preis":["Current electricity price","Aktueller Strompreis"],"guenstig":["Lowest electricity price tomorrow","Niedrigster Strompreis morgen"],"netz":["Signed grid power (+ import, − export)","Netzleistung (+ Bezug, − Einspeisung)"],"solar":["Total PV power","Gesamte PV-Leistung"],"prognose":["Forecast PV yield tomorrow","PV-Ertragsprognose morgen"],"solarheute":["PV yield today","PV-Ertrag heute"],"netzheute":["Grid import today","Netzbezug heute"],"einspeisungheute":["Grid export today","Einspeisung heute"],"heizoel":["Heating oil stock","Heizölbestand"],"oelverbrauch":["Estimated oil use today","Geschätzter Heizölverbrauch heute"],"waschmaschine":["Washing machine power","Waschmaschinenleistung"],"waschkosten":["Washing machine cost today","Waschmaschinenkosten heute"],"waschenergie":["Washing machine energy today","Waschmaschinenverbrauch heute"],"waermepumpe":["Heat pump power","Wärmepumpenleistung"],"wpheute":["Heat pump energy today","Wärmepumpenverbrauch heute"],"wpkosten":["Heat pump cost today","Wärmepumpenkosten heute"],"kuehlschrank":["Refrigerator power","Kühlschrankleistung"],"kuehlschrankheute":["Refrigerator energy today","Kühlschrankverbrauch heute"],"reminders_enabled":["Enable shared reminders","Gemeinsame Erinnerungen aktivieren"],"reminder_room":["Optional Echo room for reminders","Optionaler Echo-Raum für Erinnerungen"]};
 const INTENT_LABELS={...SOURCE_LABELS,...{"aktuell":["Current weather","Aktuelles Wetter"],"temperatur":["Outside temperature","Außentemperatur"],"feuchte":["Humidity","Luftfeuchtigkeit"],"wind":["Wind speed","Windgeschwindigkeit"],"druck":["Air pressure","Luftdruck"],"gefuehlt":["Feels like","Gefühlte Temperatur"],"regenjetzt":["Rain now","Regen aktuell"],"regenwahrscheinlichkeit":["Rain probability (if available)","Regenwahrscheinlichkeit"],"heute":["Weather today","Wetter heute"],"morgen":["Weather tomorrow","Wetter morgen"],"uebermorgen":["Weather day after tomorrow","Wetter übermorgen"],"kommendetage":["Weather next days","Wetter nächste Tage"],"frost":["Frost tomorrow","Frost morgen"],"regenuebermorgen":["Rain day after tomorrow","Regen übermorgen"],"regenheute":["Rain today","Regen heute"],"regenmorgen":["Rain tomorrow","Regen morgen"],"regennachher":["Rain next 6 hours","Regen nächste 6 Stunden"],"regenzwei":["Rain next 2 hours","Regen nächste 2 Stunden"],"regenabend":["Rain this evening","Regen heute Abend"],"regennacht":["Rain tonight","Regen heute Nacht"],"regenmorgenfrueh":["Rain tomorrow morning","Regen morgen früh"],"schnee":["Snow next 24 hours","Schnee nächste 24 Stunden"],"schneeheute":["Snow today","Schnee heute"],"schneemorgen":["Snow tomorrow","Schnee morgen"],"abend":["Weather this evening","Wetter heute Abend"],"nacht":["Weather tonight","Wetter heute Nacht"],"morgenfrueh":["Weather tomorrow morning","Wetter morgen früh"],"stunden":["Weather next hours","Wetter nächste Stunden"],"bring_list":["Read shopping list","Einkaufsliste vorlesen"]}};
@@ -54,6 +55,10 @@ class TabletAssistPanel extends HTMLElement {
    this._deviceBusy=true;status.textContent=t.deviceRefresh+" …";
    try{
      const response=await this._hass.callApi("POST","jarvis_tablet_audio/wake_devices",{action:"list"});
+     let audio=null;
+     if(this._hass.user?.is_admin){
+       try{audio=await fetchAudioPairings(this._hass);}catch{audio={unavailable:true};}
+     }
      if(this._view!=="devices"||!rows.isConnected)return;
      rows.replaceChildren();
      const devices=Array.isArray(response?.devices)?response.devices:[];
@@ -78,7 +83,10 @@ class TabletAssistPanel extends HTMLElement {
        const rename=document.createElement("div");rename.style.cssText="display:flex;flex-wrap:wrap;gap:8px";
        const input=document.createElement("input");input.type="text";input.maxLength=48;input.value=d.room||"";input.setAttribute("aria-label",t.deviceRename);
        const save=document.createElement("button");save.textContent=t.deviceRename;save.onclick=()=>{if(input.value.trim())void this.configureDevice(d.device_id,{room:input.value.trim()});};
-       rename.append(input,save);panel.append(rename);rows.append(panel);
+       rename.append(input,save);panel.append(rename);
+       renderAudioPairing({container:panel,hass:this._hass,device:d,audio,
+         language:this._lang,onChanged:async()=>{if(this._view==="devices")await this.refreshDevices();}});
+       rows.append(panel);
      }
    }catch{
      if(status?.isConnected)status.textContent=t.deviceOffline;
