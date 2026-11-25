@@ -125,9 +125,10 @@ public class MainActivity extends Activity {
                 .setTitle(R.string.forget_title).setMessage(R.string.forget_help)
                 .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.forget, (dialog, which) -> {
                     stopService(new Intent(this, AudioService.class));
+                    stopService(new Intent(this, WakeWordService.class));
                     stopService(new Intent(this, CameraRelayService.class));
                     stopDiscovery();
-                    prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).remove("room_audio_enabled").apply();
+                    prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).remove("room_audio_enabled").remove("wake_choice").apply();
                     roomAudio.setChecked(false);
                     tokenInput.setText(""); urlInput.setText("");
                     searchResults.removeAllViews(); searchMessage.setText("");
@@ -140,9 +141,85 @@ public class MainActivity extends Activity {
             prefs.edit().putBoolean("keepalive_enabled", enabled).apply();
             if (AudioService.running) startService(new Intent(this, AudioService.class).setAction("update_keepalive"));
         });
+        initializeNativeWake();
         languageButton(R.id.language_de, "de");
         languageButton(R.id.language_en, "en");
         didAutoSearch = state != null && state.getBoolean("did_auto_search", false);
+    }
+
+    private static final int WAKE_MICROPHONE_PERMISSION = 120;
+    private static final String[] WAKE_KEYS={"hey_jarvis","jarvis","alexa","all"};
+    private Spinner wakeChoice;
+    private Button wakeInstall;
+    private TextView wakeStatus;
+    private boolean wakeDownloading=false;
+
+    private void initializeNativeWake(){
+        var preferences=getSharedPreferences(PREF,0);
+        wakeChoice=findViewById(R.id.wake_choice);
+        wakeInstall=findViewById(R.id.wake_model_install);
+        wakeStatus=findViewById(R.id.wake_status);
+        ArrayAdapter<CharSequence> adapter=ArrayAdapter.createFromResource(this,R.array.wake_choices,
+                android.R.layout.simple_spinner_dropdown_item);
+        wakeChoice.setAdapter(adapter);
+        String saved=preferences.getString("wake_choice","hey_jarvis");
+        for(int i=0;i<WAKE_KEYS.length;i++)if(WAKE_KEYS[i].equals(saved))wakeChoice.setSelection(i);
+        wakeChoice.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int index,long id){
+                if(index>=0&&index<WAKE_KEYS.length){
+                    preferences.edit().putString("wake_choice",WAKE_KEYS[index]).apply();
+                    if(WakeWordService.running)wakeStatus.setText(R.string.wake_stop);
+                }
+            }
+        });
+        wakeInstall.setOnClickListener(v->{
+            if(wakeDownloading||WakeWordService.running)return;
+            wakeDownloading=true;wakeInstall.setEnabled(false);
+            wakeStatus.setText(R.string.wake_model_missing);
+            new Thread(()->{
+                try{
+                    WakeModelInstaller.install(this,progress->runOnUiThread(()->wakeStatus.setText(progress)));
+                    runOnUiThread(()->wakeStatus.setText(R.string.wake_ready));
+                }catch(Exception e){
+                    runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_download_failed,
+                        e.getMessage()==null?e.getClass().getSimpleName():e.getMessage())));
+                }finally{
+                    runOnUiThread(()->{wakeDownloading=false;wakeInstall.setEnabled(true);});
+                }
+            },"JarvisWakeModelDownload").start();
+        });
+        findViewById(R.id.wake_start).setOnClickListener(v->startNativeWake());
+        findViewById(R.id.wake_stop).setOnClickListener(v->{
+            stopService(new Intent(this,WakeWordService.class));
+            wakeStatus.setText(R.string.wake_stopped);
+        });
+    }
+
+    private void startNativeWake(){
+        if(!WakeModelInstaller.installed(this)){
+            wakeStatus.setText(R.string.wake_model_missing);return;
+        }
+        if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
+            wakeStatus.setText(R.string.wake_permission);
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},WAKE_MICROPHONE_PERMISSION);
+            return;
+        }
+        try{
+            stopService(new Intent(this,WakeWordService.class));
+            startForegroundService(new Intent(this,WakeWordService.class).setAction(WakeWordService.START));
+            wakeStatus.setText(R.string.wake_running);
+        }catch(Exception error){
+            wakeStatus.setText(getString(R.string.wake_download_failed,
+                error.getMessage()==null?error.getClass().getSimpleName():error.getMessage()));
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grants){
+        super.onRequestPermissionsResult(requestCode,permissions,grants);
+        if(requestCode!=WAKE_MICROPHONE_PERMISSION)return;
+        if(grants.length>0&&grants[0]==PackageManager.PERMISSION_GRANTED)startNativeWake();
+        else wakeStatus.setText(R.string.wake_permission);
     }
 
     private void configureColumns() {
@@ -285,6 +362,15 @@ public class MainActivity extends Activity {
                 : keepalive.equals("error") ? R.string.keepalive_error : R.string.keepalive_off;
         ((TextView) findViewById(R.id.keepalive_status)).setText(keepaliveText);
         findViewById(R.id.player_stop).setEnabled(AudioService.running);
+        if(wakeStatus!=null&&!wakeDownloading){
+            wakeStatus.setText(WakeWordService.running?WakeWordService.status:
+                (WakeModelInstaller.installed(this)?getString(R.string.wake_ready)+" · "+getString(R.string.wake_stopped):
+                    getString(R.string.wake_model_missing)));
+            findViewById(R.id.wake_start).setEnabled(!WakeWordService.running&&WakeModelInstaller.installed(this));
+            findViewById(R.id.wake_stop).setEnabled(WakeWordService.running);
+            wakeChoice.setEnabled(!WakeWordService.running);
+            wakeInstall.setEnabled(!WakeWordService.running);
+        }
     }
 
     private void scanToken() {
