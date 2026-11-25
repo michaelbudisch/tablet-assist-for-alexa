@@ -58,7 +58,8 @@
     },
     "abort": {
       "already_configured": "Bereits eingerichtet.",
-      "reconfigure_successful": "Konfiguration aktualisiert."
+      "reconfigure_successful": "Konfiguration aktualisiert.",
+      "app_configuration_only": "Diese Installation wird unter Einstellungen → Apps → TAFA → Konfiguration verwaltet. Nach dem Speichern TAFA neu starten."
     }
   },
   "services": {
@@ -222,6 +223,9 @@
     },
     "error": {
       "invalid_configuration": "Eingaben prüfen: Serveradressen, bestehende Wyoming-Entitäten, GPU-Adresse oder Raumzuordnung."
+    },
+    "abort": {
+      "app_configuration_only": "Diese Installation wird unter Einstellungen → Apps → TAFA → Konfiguration verwaltet. Nach dem Speichern TAFA neu starten."
     }
   }
 }

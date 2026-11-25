@@ -5,6 +5,13 @@
 
 # Changelog
 
+## TAFA App 0.3.12 / integration 0.4.4 — single configuration source
+- Apps → TAFA → Configuration is the source of truth for App-managed installations; all integration options and optional data source/room mappings are represented there.
+- Admin-only WebSocket sync updates existing App-managed integration entries, avoiding duplicate setup under Devices & services. First migration preserves advanced options when newly added App fields are blank.
+- Marketplace users remain configurable through the normal HA integration; existing HA Assist pipelines and legacy deployments are preserved.
+
+
+
 ## Unreleased — guided combined Proxmox CT installer
 - Proxmox CT creation now uses native interactive `pct create --password` in the guided combined and separate-CT installers. The root password is entered privately during installation, never passed in the script's command arguments.
 

@@ -29,3 +29,35 @@ configuration:
   chime:
     name: Announcement chime
     description: "Play a short sound before an Alexa MP3 announcement."
+
+# Integration settings are owned by this App. No duplicate setup under Devices & services.
+  cpu_stt:
+    name: Whisper entity (CPU)
+    description: "Optional Wyoming entity ID, e.g. stt.faster_whisper. A single Wyoming STT entity is selected automatically."
+  gpu_stt:
+    name: Whisper entity (GPU, optional)
+    description: "Optional second Wyoming STT entity on GPU; must differ from CPU."
+  gpu_stt_host:
+    name: GPU Whisper host (optional)
+    description: "Host or IP only, no protocol or port."
+  llm_agent:
+    name: AI conversation agent (optional)
+    description: "HA entity ID of your existing AI agent, e.g. conversation.ollama."
+  conversation_mode:
+    name: Conversation mode
+    description: "Automatic, intelligent, or manual AI routing."
+  rooms_json:
+    name: Alexa rooms (JSON, optional)
+    description: "Optional, e.g. {\"Wohnzimmer\":{\"notify\":\"notify.echo_wohnzimmer\"}}. Use existing rooms only."
+  sources_json:
+    name: HA data sources (JSON, optional)
+    description: "Optional, e.g. {\"weather\":\"weather.home\",\"solar\":\"sensor.pv_power\"}. Empty {} disables all."
+  learning_enabled:
+    name: Optional home-data learning
+    description: "Only approved household data queries; off by default."
+  reminders_enabled:
+    name: Shared reminders
+    description: "Enable TAFA reminders."
+  reminder_room:
+    name: Echo room for reminders (optional)
+    description: "Name must exist in Alexa rooms."

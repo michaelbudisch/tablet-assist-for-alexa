@@ -4,9 +4,12 @@
 
 [English](README.md) | **Deutsch**
 
+> **Neu in App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration 0.4.4 geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
+
+
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.11**, zusammengeführte HA-Integration **0.4.3**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.12**, zusammengeführte HA-Integration **0.4.4**, Device Bridge **1.0.0 unverändert**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
@@ -26,7 +29,7 @@ curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelb
 2. Einstellungen → Apps → App installieren → Repositories: `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen.
 3. **TAFA** installieren, starten und das integrierte Control Center öffnen (Ingress).
 4. TAFA stellt **eine** gemeinsame HA-Integration unter `custom_components/tablet_assist_for_alexa` bereit. Home Assistant einmal neu starten, damit die Integration erkannt wird.
-5. **Vor dem ersten Start** in der App-Konfiguration `speech_mode=local` (CPU-Modelle in der App) oder `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000` auswählen. Bei `external` werden keine lokalen Sprachmodelle gestartet. Die HA-Integration wird vorbereitet; danach Wyoming-STT (`PROXMOX-IP:10300`) in HA hinzufügen, in den TAFA-Optionen als CPU-STT festlegen und eine Assist-Pipeline anlegen. Im lokalen Modus erfolgt die Einrichtung der TAFA-Lokal-Pipeline automatisch.
+5. **Vor dem ersten Start** in der App-Konfiguration `speech_mode=local` (CPU-Modelle in der App) oder `speech_mode=external` und `external_piper_base=http://PROXMOX-IP:5000` auswählen. Bei `external` werden keine lokalen Sprachmodelle gestartet. Die HA-Integration wird vorbereitet; danach Wyoming-STT (`PROXMOX-IP:10300`) in HA hinzufügen, die passende STT-Entität unter Apps → TAFA → Konfiguration im Feld `cpu_stt` auswählen bzw. automatisch erkennen lassen und eine Assist-Pipeline anlegen. Im lokalen Modus erfolgt die Einrichtung der TAFA-Lokal-Pipeline automatisch.
 6. Die unveränderte [TAFA Device Bridge 1.0.0](android/README.de.md) für Rufwort-Ereignisse und Audio mit HA verbinden. Die Pipeline **TAFA Lokal** in Home Assistant Assist oder der HA Companion App auswählen – nicht in der Device Bridge. Der Echo dient optional als Bluetooth-Lautsprecher, nicht als Mikrofon.
 
 [Vollständige Anleitung](docs/app.md) · [Multiroom](homeassistant/examples/MULTIROOM.de.md) · [Android-Einrichtung](android/README.de.md)

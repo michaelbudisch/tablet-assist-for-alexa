@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA App 0.3.12 / Integration 0.4.4 — zentrale Konfiguration
+- Für App-Installationen werden Sprachserver, GPU, Alexa, Entitäten und Erinnerungen zentral unter Apps → TAFA → Konfiguration verwaltet.
+- Die App überträgt Änderungen an bestehende App-eigene HA-Integrationen. Erweiterte Alt-Einstellungen bleiben bei der ersten Übernahme erhalten.
+- Marketplace-Installationen behalten ihren bisherigen Konfigurationsweg. Vorhandene Assist-Pipelines werden nicht ersetzt.
+
+
+
 ## Unveröffentlicht — geführter Proxmox-Ein-CT-Installer
 - Die Proxmox-Installer (Ein-CT sowie separate Sprachserver-/Proxy-CTs) lassen `pct create --password` das Root-Passwort bei der Erstellung verdeckt abfragen. Keine Passwortübergabe in der Kommandozeile; direkte Anmeldung an der CT-Konsole möglich.
 

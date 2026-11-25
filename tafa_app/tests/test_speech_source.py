@@ -61,11 +61,13 @@ class SpeechSourceTests(unittest.TestCase):
         states = []
         with patch.object(server, "external_piper_ready", return_value=True), \
              patch.object(server, "configure", return_value="configured"), \
-             patch.object(server, "ensure_pipeline") as pipeline, \
+             patch.object(server, "sync_app_configuration", return_value="changed") as sync, \
+             patch.object(server, "ensure_pipeline", return_value="pipeline_exists") as pipeline, \
              patch.object(server, "save_state", side_effect=lambda *args: states.append(args)):
             server.autoconfigure("http://192.168.178.60:5000", "external")
-        pipeline.assert_not_called()
-        self.assertEqual(states[-1][0], "external_ready_select_wyoming")
+        pipeline.assert_called_once_with()
+        sync.assert_called_once()
+        self.assertEqual(states[-1][0], "external_ready")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit,parse_qs
 
-from auto_setup import configure, ensure_pipeline, save_state, STATE as SETUP_STATE
+from auto_setup import configure, sync_app_configuration, ensure_pipeline, save_state, STATE as SETUP_STATE
 from installer import bootstrap, status
 from speech_source import (choose as choose_speech_source,
                            piper_ready as external_piper_ready,
@@ -35,7 +35,7 @@ CSRF=secrets.token_urlsafe(32)
 REPO="https://github.com/michaelbudisch/tablet-assist-for-alexa"
 TOKEN=os.environ.get("SUPERVISOR_TOKEN","")
 STATUS_URL="http://127.0.0.1:5000/status"
-APP_VERSION="0.3.11"
+APP_VERSION="0.3.12"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -97,10 +97,13 @@ def autoconfigure(address, mode="local"):
                     continue
                 outcome=configure(address,setup_settings())
                 if outcome in ("configured", "already_configured"):
-                    # Proxmox Piper does not implement POST /stt. Wyoming STT
-                    # must be selected explicitly in Home Assistant.
-                    save_state("external_ready_select_wyoming",
-                               "Add Proxmox Wyoming STT port 10300 in HA, select it under TAFA options, then create/select your Assist pipeline")
+                    # App Configuration is authoritative even for already-existing
+                    # HA entries. Do not require Devices & services options.
+                    sync_app_configuration(address, setup_settings())
+                    pipeline = ensure_pipeline()
+                    save_state("external_ready",
+                               "App settings synchronized; " + pipeline +
+                               ". Wyoming integration is a native HA prerequisite.")
                     return
                 save_state(outcome)
                 time.sleep(20)
@@ -117,6 +120,7 @@ def autoconfigure(address, mode="local"):
                 outcome=configure(address,setup_settings())
                 save_state(outcome)
                 if outcome in ("configured","already_configured"):
+                    sync_app_configuration(address, setup_settings())
                     pipeline=ensure_pipeline()
                     save_state(pipeline)
                     if pipeline in ("pipeline_created","pipeline_exists"):
@@ -247,7 +251,7 @@ def display(message="",lang="de"):
 <p><b>{t("A: Alles in TAFA (Standard)", "A: Everything in TAFA (default)")}</b></p>
 <p>{t("Piper und Whisper laufen lokal in dieser App, wenn als App-Option speech_mode=local gewählt ist. Keine weitere VM nötig.", "Piper and Whisper run locally with App option speech_mode=local. No additional VM required.")}</p>
 <p><b>{t("B: Proxmox-Sprachserver", "B: Proxmox speech server")}</b></p>
-<p>{t("Bei Apps → TAFA → Konfiguration speech_mode=external und external_piper_base=http://SERVER:5000 setzen, danach App neu starten. Dann in HA Wyoming-STT von SERVER:10300 ergänzen und unter TAFA-Optionen als CPU-STT wählen. Es werden keine lokalen Sprachmodelle geladen.", "In Apps → TAFA → Configuration choose speech_mode=external and external_piper_base=http://SERVER:5000, then restart the App. Add Wyoming STT from SERVER:10300 in HA and select it under TAFA Options. No local CPU models are loaded.")}</p>
+<p>{t("Bei Apps → TAFA → Konfiguration speech_mode=external und external_piper_base=http://SERVER:5000 setzen, danach App neu starten. Dann in HA Wyoming-STT von SERVER:10300 ergänzen Die Wyoming-Entitäts-ID bei Apps → TAFA → Konfiguration eintragen (oder bei genau einer STT-Entität automatisch erkennen lassen). Es werden keine lokalen Sprachmodelle geladen.", "In Apps → TAFA → Configuration choose speech_mode=external and external_piper_base=http://SERVER:5000, then restart the App. Add Wyoming STT from SERVER:10300 in HA and set its entity ID in Apps → TAFA → Configuration (or auto-select when exactly one Wyoming STT exists). No local CPU models are loaded.")}</p>
 <a href="{REPO}/blob/main/docs/{'en/' if en else ''}proxmox.md" target="_blank" rel="noopener">{t("Proxmox-Anleitung", "Proxmox guide")}</a>
 </div>
 <div class="tile"><strong>2 · {t("GPU-Hauptrechner (optional)", "GPU computer (optional)")}</strong>

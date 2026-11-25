@@ -75,6 +75,80 @@ def choose(path=OPTIONS_FILE):
     return "external", private_http_origin(values.get("external_piper_base", ""))
 
 
+
+# Match the public HA integration's source names and expected entity domains.
+SOURCE_DOMAINS = {
+    "weather": "weather", "shopping": "todo",
+    **dict.fromkeys(("restmuell", "bioabfall", "papier", "wertstoff",
+       "vorlauf", "ruecklauf", "spreizung", "preis", "guenstig", "netz",
+       "solar", "prognose", "solarheute", "netzheute", "einspeisungheute",
+       "heizoel", "oelverbrauch", "waschmaschine", "waschkosten",
+       "waschenergie", "waermepumpe", "wpheute", "wpkosten",
+       "kuehlschrank", "kuehlschrankheute"), "sensor"),
+}
+ROOMS = {"Büro", "Wohnzimmer", "Badezimmer", "Schlafzimmer", "Kinderzimmer"}
+
+
+def _entity(value, domain):
+    if not isinstance(value, str) or (
+        value and not re.fullmatch(domain + r"\.[a-z0-9_]+", value)
+    ):
+        raise ValueError("Invalid " + domain + " entity ID")
+    return value
+
+
+def _mapping(value, label):
+    if not isinstance(value, str):
+        raise ValueError(label + " must be JSON text")
+    try:
+        result = json.loads(value or "{}")
+    except (ValueError, TypeError) as exc:
+        raise ValueError(label + " contains invalid JSON") from exc
+    if not isinstance(result, dict):
+        raise ValueError(label + " must contain an object")
+    return result
+
+
+def _advanced(values):
+    rooms = _mapping(values.get("rooms_json", "{}"), "rooms_json")
+    if len(rooms) > len(ROOMS) or any(k not in ROOMS for k in rooms):
+        raise ValueError("Unrecognized Alexa room")
+    for room in rooms.values():
+        if not isinstance(room, dict) or set(room) - {"notify", "dnd", "quiet"} or not room.get("notify"):
+            raise ValueError("Invalid Alexa room mapping")
+        for key, domain in (("notify", "notify"), ("dnd", "switch"), ("quiet", "schedule")):
+            if key in room:
+                _entity(room[key], domain)
+    sources = _mapping(values.get("sources_json", "{}"), "sources_json")
+    if set(sources) - set(SOURCE_DOMAINS):
+        raise ValueError("Unknown HA data source")
+    for key, value in sources.items():
+        _entity(value, SOURCE_DOMAINS[key])
+    result = {"rooms_json": json.dumps(rooms, ensure_ascii=False),
+              "sources_json": json.dumps(sources, ensure_ascii=False)}
+    for key, domain in (("cpu_stt", "stt"), ("gpu_stt", "stt"),
+                        ("llm_agent", "conversation")):
+        result[key] = _entity(values.get(key, "") or "", domain)
+    if result["cpu_stt"] and result["gpu_stt"] == result["cpu_stt"]:
+        raise ValueError("CPU and GPU Wyoming entities must differ")
+    host = values.get("gpu_stt_host", "") or ""
+    if not isinstance(host, str) or (host and not re.fullmatch(r"[A-Za-z0-9.-]+", host)):
+        raise ValueError("Invalid GPU Whisper host")
+    result["gpu_stt_host"] = host
+    cmode = values.get("conversation_mode", "intelligent")
+    if cmode not in ("manual", "automatic", "intelligent"):
+        raise ValueError("Invalid conversation mode")
+    result["conversation_mode"] = cmode
+    for key in ("reminders_enabled", "learning_enabled"):
+        result[key] = values.get(key, False)
+        if not isinstance(result[key], bool):
+            raise ValueError("Expected Boolean for " + key)
+    room = values.get("reminder_room", "") or ""
+    if not isinstance(room, str) or (room and room not in rooms):
+        raise ValueError("Reminder room must be configured among Alexa rooms")
+    result["reminder_room"] = room
+    return result
+
 def setup_settings(path=OPTIONS_FILE):
     """Validate extra first-run fields; use only known keys for HA setup."""
     values = load_options(path)
@@ -110,7 +184,11 @@ def setup_settings(path=OPTIONS_FILE):
         raise ValueError("Invalid MP3 profile")
     if not isinstance(values.get("chime", False), bool):
         raise ValueError("Chime must be a boolean")
+    advanced = _advanced(values)
+    if advanced["rooms_json"] != "{}" and not (mp3 and public):
+        raise ValueError("Alexa rooms require MP3 generator and HTTPS audio")
     return {
+        **advanced,
         "gpu_base": private_http_origin(gpu) if gpu else "",
         "hardware_profile": mode,
         "voice_variant": variant,

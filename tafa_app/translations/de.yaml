@@ -29,3 +29,35 @@ configuration:
   chime:
     name: Signalton vor Durchsagen
     description: "Vor Alexa-MP3-Ansagen einen kurzen Signalton aktivieren."
+
+# Integration settings are owned by this App. No duplicate setup under Devices & services.
+  cpu_stt:
+    name: Whisper-Entität (CPU)
+    description: "Optional. Wyoming-Entitäts-ID, z. B. stt.faster_whisper. Bei genau einer Wyoming-STT-Entität wird sie automatisch ausgewählt."
+  gpu_stt:
+    name: Whisper-Entität (GPU, optional)
+    description: "Optionaler zweiter Wyoming-STT-Dienst auf dem GPU-Rechner; muss von CPU verschieden sein."
+  gpu_stt_host:
+    name: GPU-Whisper-Host (optional)
+    description: "Nur Host oder IP, kein Protokoll und kein Port."
+  llm_agent:
+    name: KI-Konversationsagent (optional)
+    description: "HA-Entitäts-ID der vorhandenen KI, z. B. conversation.ollama."
+  conversation_mode:
+    name: Gesprächsmodus
+    description: "Automatisch, intelligent oder manuell; steuert die KI-Weiterleitung."
+  rooms_json:
+    name: Alexa-Räume (JSON, optional)
+    description: "Optional, z. B. {\"Wohnzimmer\":{\"notify\":\"notify.echo_wohnzimmer\"}}. Nur vorhandene Räume verwenden."
+  sources_json:
+    name: HA-Datenquellen (JSON, optional)
+    description: "Optional, z. B. {\"weather\":\"weather.home\",\"solar\":\"sensor.pv_power\"}. Leeres {} deaktiviert alle."
+  learning_enabled:
+    name: Optionale Hausdaten-Lernfunktion
+    description: "Nur bekannte, freigegebene Hausdaten-Abfragen; standardmäßig aus."
+  reminders_enabled:
+    name: Gemeinsame Erinnerungen
+    description: "Erinnerungsfunktion in TAFA aktivieren."
+  reminder_room:
+    name: Echo-Raum für Erinnerungen (optional)
+    description: "Name muss in Alexa-Räume enthalten sein."

@@ -34,6 +34,8 @@ def fake_connect(responses,on_sent):
                 value={"pipelines":responses.get("pipelines",[])}
             elif kind=="assist_pipeline/pipeline/create":
                 value={"id":"tafa"}
+            elif kind=="tablet_assist_for_alexa/sync_app_configuration":
+                value={"changed":True}
             else:
                 raise AssertionError("Unexpected HA request: "+kind)
             self.replies.append({"id":msg["id"],"success":True,"result":value})
@@ -70,6 +72,28 @@ class Tests(unittest.TestCase):
         result,sent=self.invoke({"stream":False})
         self.assertEqual(result,"waiting_for_entities")
         self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create" for msg in sent))
+    def test_sync_existing_entry_through_authenticated_app_command(self):
+        sent=[]
+        client=types.ModuleType("websockets.sync.client")
+        client.connect=fake_connect({},sent)
+        sync=types.ModuleType("websockets.sync")
+        sync.client=client
+        root=types.ModuleType("websockets")
+        root.sync=sync
+        with patch.dict(sys.modules,{"websockets":root,"websockets.sync":sync,
+                                     "websockets.sync.client":client}):
+            with patch.object(auto_setup,"TOKEN","supervisor-internal"):
+                result=auto_setup.sync_app_configuration(
+                    "http://192.168.1.50:5000",
+                    {"gpu_base":"http://192.168.1.60:10502","cpu_stt":"stt.whisper",
+                     "hardware_profile":"automatic"})
+        self.assertEqual(result,"changed")
+        message=next(msg for msg in sent if msg.get("type")==
+                     "tablet_assist_for_alexa/sync_app_configuration")
+        self.assertEqual(message["settings"]["cpu_stt"],"stt.whisper")
+        self.assertEqual(message["settings"]["gpu_base"],"http://192.168.1.60:10502")
+        self.assertNotIn("api_key",message["settings"])
+
     def test_existing_pipeline_preserved(self):
         result,sent=self.invoke({"pipelines":[{"name":"TAFA Lokal","id":"existing"}]})
         self.assertEqual(result,"pipeline_exists")

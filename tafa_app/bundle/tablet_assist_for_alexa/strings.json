@@ -58,7 +58,8 @@
     },
     "abort": {
       "already_configured": "Already configured.",
-      "reconfigure_successful": "Configuration updated."
+      "reconfigure_successful": "Configuration updated.",
+      "app_configuration_only": "This installation is managed in Settings → Apps → TAFA → Configuration. Restart TAFA after saving."
     }
   },
   "services": {
@@ -222,6 +223,9 @@
     },
     "error": {
       "invalid_configuration": "Check server URLs, existing Wyoming entities, GPU address and room mapping."
+    },
+    "abort": {
+      "app_configuration_only": "This installation is managed in Settings → Apps → TAFA → Configuration. Restart TAFA after saving."
     }
   }
 }
