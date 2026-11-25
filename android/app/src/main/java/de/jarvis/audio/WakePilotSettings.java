@@ -127,7 +127,10 @@ final class WakePilotSettings {
     static Snapshot readFull(Context ctx) throws Exception {
         ensureOwner(ctx);
         int slot=WakeDeviceIdentity.slot(ctx);
-        boolean muted=readMute(ctx);
+        String muteState=state(ctx,entity("muted",slot));
+        if(!"on".equals(muteState)&&!"off".equals(muteState))
+            throw new IllegalStateException("Wake Pilot mute state unavailable");
+        boolean muted="on".equals(muteState);
         String word=choiceFor(state(ctx,entity("word",slot)));
         int strict=clamp((int)Math.round(Double.parseDouble(state(ctx,entity("strict",slot)))),1,3);
         int cooldown=clamp((int)Math.round(Double.parseDouble(state(ctx,entity("cooldown",slot)))),3,30);
