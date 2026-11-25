@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unveröffentlicht — geführter Proxmox-Ein-CT-Installer
+- Die Proxmox-Installer (Ein-CT sowie separate Sprachserver-/Proxy-CTs) lassen `pct create --password` das Root-Passwort bei der Erstellung verdeckt abfragen. Keine Passwortübergabe in der Kommandozeile; direkte Anmeldung an der CT-Konsole möglich.
+
 - Geführte Proxmox-Installation, Wiederaufnahme und CT-Konsole vollständig auf Englisch; neuer Dialog für einen frei wählbaren, validierten CT-Hostnamen (Standard `tafa-voice`). Gilt für neue Installationsläufe, nicht rückwirkend für laufende CTs.
 - Neues optionales Skript `proxmox/quick-install.sh`: lädt das Repository, führt durch CT-ID, Storage, Netzwerk, Ressourcen, GPU-Worker und Alexa-Hostname und erstellt nur nach Bestätigung einen neuen unprivilegierten Debian-CT.
 - Piper, Wyoming-Whisper, MP3-Generator und Nginx laufen gemeinsam im neuen CT. MP3-Dateiausgabe auf 127.0.0.1:8080 begrenzt; die Generierungs-API (5001) bleibt ausschließlich fürs vertrauenswürdige LAN.
