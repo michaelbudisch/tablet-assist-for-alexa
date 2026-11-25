@@ -173,4 +173,12 @@
     <string name="wake_download_failed">Model download failed: %1$s</string>
     <string name="wake_running">Microphone active · wakeword recognition</string>
     <string-array name="wake_choices"><item>Hey Jarvis</item><item>Jarvis</item><item>Alexa</item><item>All three</item></string-array>
+    <string name="wake_strict_label">Recognition strictness · 1 of 3</string>
+    <string name="wake_strict_help">This is a hypothesis-confirmation count, NOT an audio volume or decibel threshold. 1 = more sensitive, 3 = fewer false activations but possible missed calls.</string>
+    <string name="wake_cooldown_label">Trigger cooldown · 12 seconds</string>
+    <string name="wake_hold_label">Microphone handoff · 50 seconds</string>
+    <string name="wake_mute_button">Mute native microphone</string>
+    <string name="wake_unmute_button">Unmute native microphone</string>
+    <string name="wake_remote_help">Settings are synchronized with Home Assistant. Muting releases the Android microphone; the pilot service remains running. Changes in TAFA take effect after the next sync (usually within 3 seconds).</string>
+    <string name="wake_save_error">Could not save wakeword settings to Home Assistant: %1$s</string>
 </resources>
