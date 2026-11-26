@@ -22,7 +22,7 @@ SETTINGS_SIGNAL = DOMAIN + "_tablet_settings_changed"
 DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
-DEFAULTS = {"muted": False, "voice_mode": "wake", "word": "Hey Jarvis", "room": "Jarvis Tablet",
+DEFAULTS = {"muted": False, "voice_mode": "wake", "audio_output_mode": "auto", "word": "Hey Jarvis", "room": "Jarvis Tablet",
             "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1,
             "pause_ms": 1700, "mic_gain": 100, "brightness": 80,
             "screen_awake": True, "display_control_enabled": False}
@@ -123,6 +123,8 @@ class WakeDevices:
             if key in ("muted", "screen_awake", "display_control_enabled") and type(value) is bool:
                 cleaned[key] = value
             elif key == "voice_mode" and type(value) is str and value in ("wake", "continuous"):
+                cleaned[key] = value
+            elif key == "audio_output_mode" and type(value) is str and value in ("auto", "bluetooth", "tablet"):
                 cleaned[key] = value
             elif key == "word" and isinstance(value, str) and value in CHOICES:
                 cleaned[key] = value

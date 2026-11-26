@@ -16,7 +16,7 @@ FIELDS = {
     "hold": (int, 10, 90), "pause_ms": (int, 900, 3200),
     "followup_limit": (int, -1, 100),
     "mic_gain": (int, 50, 200), "brightness": (int, 1, 100),
-    "muted": (bool,), "voice_mode": (str,), "screen_awake": (bool,),
+    "muted": (bool,), "voice_mode": (str,), "audio_output_mode": (str,), "screen_awake": (bool,),
     "display_control_enabled": (bool,), "room": (str,),
     "word": (str,),
 }
@@ -63,6 +63,8 @@ def update_device(fields):
         value = raw.strip()
         if key == "voice_mode" and value not in ("wake","continuous"):
             raise ValueError("Unknown native speech mode")
+        if key == "audio_output_mode" and value not in ("auto", "bluetooth", "tablet"):
+            raise ValueError("Unknown audio output mode")
         if key == "word" and value not in WORDS:
             raise ValueError("Unknown wake phrase")
         if key == "room" and not 0 < len(value) <= 48:
@@ -172,10 +174,10 @@ def render_device_center(lang, csrf, state):
         value = device.get(key)
         if value is None:
             value = {"muted": False, "screen_awake": True,
-                     "display_control_enabled": False}.get(key, "")
+                     "display_control_enabled": False, "audio_output_mode": "auto"}.get(key, "")
         if choices is not None:
             options = "".join(
-                f'<option value="{h(item)}"{" selected" if item == value else ""}>{h(item)}</option>'
+                f'<option value="{h(item)}"{" selected" if item == value else ""}>{h({"auto": t("Automatisch", "Automatic"), "bluetooth": t("Nur Bluetooth", "Bluetooth only"), "tablet": t("Nur Tablet", "Tablet only")}.get(item, item) if key == "audio_output_mode" else item)}</option>'
                 for item in choices)
             control = f'<select name="value" id="{h(device["device_id"]+key)}">{options}</select>'
         elif kind == "boolean":
@@ -247,7 +249,9 @@ def render_device_center(lang, csrf, state):
                      f'<span class="status-pill status-{"good" if connected else "neutral"}">'
                      f'{t("Online","Online") if connected else t("Offline","Offline")}</span></header>'
                      f'<p class="subtle">{h(did)}</p><p class="subtle">{telemetry}</p>'
-                     '<details open><summary>'+t("Rufwort & Mikrofon","Wakeword & microphone")+'</summary>'
+                     '<details open><summary>'+t("Audioausgabe","Audio output")+'</summary><div class="device-settings">'+
+                     setting(device,"audio_output_mode",t("Audioausgabe","Audio output"),choices=("auto","bluetooth","tablet"))+
+                     '</div></details><details><summary>'+t("Rufwort & Mikrofon","Wakeword & microphone")+'</summary>'
                      '<div class="device-settings">'+
                      setting(device,"muted",t("Mikrofon stumm","Mute microphone"),kind="boolean")+
                      setting(device,"voice_mode",t("Nativer Sprachmodus","Native speech mode"),choices=("wake","continuous"))+

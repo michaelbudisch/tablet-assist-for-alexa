@@ -18,7 +18,7 @@ TAFA brings together native Android voice input, Home Assistant, local speech re
 | --- | --- |
 | **Voice conversations** | Local wake-word detection on Android, audio sent to Home Assistant Assist, Whisper speech recognition, conversation handling and spoken replies. Optional follow-up questions. |
 | **Local AI** | Use Home Assistant's own intents for smart-home commands and optionally connect an Ollama language model for open questions. |
-| **Speech output** | Piper as a CPU option; optional GPU-based Qwen voice output. Replies play through the native Android player, including on a Bluetooth-connected Echo. |
+| **Speech output** | Piper as a CPU option; optional GPU-based Qwen voice output. Replies play through the native Android player: automatic Bluetooth-to-tablet fallback, Bluetooth only, or tablet only, configurable per device. |
 | **GPU and CPU** | Route speech recognition to a separate GPU worker when available, with a separately configured CPU fallback. |
 | **Multiroom** | Enrol multiple tablets, assign rooms, and manage native microphone and player status centrally in Home Assistant. |
 | **TAFA Dashboard** | An integrated Home Assistant dashboard with configurable modules for lights, weather, energy, EV charging, heating, appliances, cameras and more. Data depends on your existing HA entities. |
@@ -37,7 +37,7 @@ TAFA is **not an Alexa replacement**: a paired Echo can still be used normally. 
              → Whisper STT (GPU or CPU)
              → HA intent or optional local Ollama model
              → Qwen / Piper TTS
-             → TAFA Android audio player → Bluetooth → Echo
+             → TAFA Android audio player → Bluetooth Echo or tablet speaker
 ```
 
 Wake-word detection runs on the tablet, not by repeatedly sending audio to Whisper. The native Android service remains independent of the open dashboard. A separate **Speak once** control in the TAFA Control Center is a browser-based diagnostic test, not a second permanent wake-word engine.
