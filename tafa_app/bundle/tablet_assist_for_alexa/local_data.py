@@ -96,9 +96,21 @@ class LocalData:
         query = SEARCH_PATTERN.match(text.strip())
         if query:
             from .web_search import query_searxng
-            result = await query_searxng(self.hass, self.cfg.get("search_base", ""), query.group(1))
-            self.search_sessions[key] = {"results": result["results"], "expires": monotonic() + 720}
-            return result["message"], False
+            term = query.group(1)
+            result = await query_searxng(self.hass, self.cfg.get("search_base", ""), term)
+            # SearXNG sometimes finds a dish but not its longer '... Rezept'
+            # phrase. Only retry empty *valid* search results, not server errors.
+            if not result["results"] and "keine passenden Treffer" in result["message"] and re.search(r"\\brezept\\w*\\b", term, re.I):
+                simpler = re.sub(r"\\brezept\\w*\\b", " ", term, flags=re.I)
+                simpler = re.sub(r"\\s+", " ", simpler).strip()
+                if len(simpler) >= 2 and simpler != term:
+                    retry = await query_searxng(self.hass, self.cfg.get("search_base", ""), simpler)
+                    if retry["results"]:
+                        result = retry
+            self.search_sessions[key] = {"query": term, "results": result["results"],
+                                         "selected": -1, "article": None,
+                                         "expires": monotonic() + 720}
+            return result["message"], bool(result["results"])
         follow = FOLLOW_PATTERN.match(text.strip())
         context_results = self.search_context(key)
         if follow and context_results:
@@ -106,9 +118,32 @@ class LocalData:
             index = int(token) if token.isdigit() else NUMBERS.get(token, 0)
             matches = context_results.get("results", [])
             if index and index <= len(matches):
+                context_results["selected"] = index - 1
+                context_results["article"] = None
+                context_results["expires"] = monotonic() + 720
                 item = matches[index-1]
-                return "Treffer " + str(index) + ": " + item["title"] + ". Den Link kannst du in der TAFA-Infobox öffnen.", False
-            return "Diese Treffer-Nummer gibt es in der letzten Suche nicht.", False
+                return ("Treffer " + str(index) + ": " + item["title"]
+                        + ". Ich öffne den Lesemodus im Dashboard. "
+                        "Du kannst auch sagen: Lies das Rezept vor, oder: Zurück zu den Treffern."), True
+            return "Diese Treffer-Nummer gibt es in der letzten Suche nicht.", True
+        if context_results and re.match(r"^(?:zurück|zurueck|zeige|zeig)(?:\\s+(?:zu|zur|zu den|die|mir|wieder))*\\s+(?:suche|suchergebnisse|ergebnisse|treffer)\\s*[.!?]?$", text.strip(), re.I):
+            context_results["selected"] = -1
+            context_results["article"] = None
+            return "Hier sind die Suchtreffer. Welche Nummer soll ich öffnen?", True
+        if context_results and context_results.get("selected", -1) >= 0 and re.match(
+                r"^(?:lies|lese|erzähl|erzaehl|erkläre|erklaere|fass|fasse)\\b.*\\b(?:rezept|artikel|seite|inhalt)\\b", text.strip(), re.I):
+            from .web_article import read_public_article
+            item = context_results["results"][context_results["selected"]]
+            try:
+                article = await read_public_article(item["url"])
+            except (ValueError, TypeError, OSError, TimeoutError):
+                return "Diese Webseite lässt sich nicht sicher auslesen. Der Suchauszug bleibt im Dashboard sichtbar.", True
+            context_results["article"] = article
+            recipe = article.get("recipe")
+            if recipe:
+                return (article["voice_summary"] +
+                        " Die Zutaten und die einzelnen Schritte findest du im geöffneten Rezept."), True
+            return article["voice_summary"] or "Der Artikel ist in der Infobox geöffnet.", True
         request=parse_shopping(text)
         kind=None
         if request is None:
