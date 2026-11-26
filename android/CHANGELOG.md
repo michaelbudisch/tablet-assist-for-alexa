@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.0.4 · Auto-enroll when Bluetooth playback is connected
+- Starting the native HA Bluetooth player also enrolls the tablet in TAFA's authenticated device registry, even when wakeword recognition has not yet been started.
+- While playing audio without the wakeword service, the app sends periodic status heartbeats so the tablet appears online and can be paired/configured in **Apps → TAFA → Devices & multiroom**.
+- Enrollment runs on its own worker, with safe retries, and cannot block native Assist or Bluetooth polling; existing wakeword registration remains supported.
+- Version code 17 and unchanged package ID. Replacing an installed release requires the existing Android signing certificate.
+
+
 ## 1.0.3 · Native-only HA control
 
 - Unlimited follow-ups until silence, mute or stop. Only the HA Assist / Bluetooth transport is used.

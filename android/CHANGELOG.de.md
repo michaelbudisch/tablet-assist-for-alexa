@@ -1,5 +1,12 @@
 # Android-Änderungsverlauf
 
+## 1.0.4 · Automatische Tablet-Anmeldung beim Bluetooth-Player
+- Nach erfolgreichem Verbindungsaufbau des nativen Audioplayers meldet sich das Tablet zusätzlich im authentifizierten TAFA-Geräteregister an, auch ohne gestartete Rufworterkennung.
+- Ohne laufenden Rufwortdienst sendet die App regelmäßig einen Status, damit das Tablet im Control Center unter **Apps → TAFA → Geräte & Multiroom** als online angezeigt und zugeordnet werden kann.
+- Die Anmeldung läuft unabhängig von der Audioabfrage, wiederholt fehlgeschlagene Versuche und unterbricht die Sprachausgabe nicht.
+- Versionscode 17, unveränderte Paket-ID. Zum Überschreiben einer installierten Release-App ist derselbe Android-Signierschlüssel nötig.
+
+
 ## 1.0.3 · Native Geräteverwaltung
 
 - Folgefragen unbegrenzt bis Stille, Stummschaltung oder Stopp.
