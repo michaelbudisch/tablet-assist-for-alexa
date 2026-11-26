@@ -323,7 +323,15 @@ class JarvisConversation(conversation.ConversationEntity):
         # The ordinary pipeline still handles its local intents before invoking us.
         try:
             handler = getattr(conversation, "async_handle_sentence_triggers", None)
-            if handler is not None:
+            # A legacy HA conversation trigger may still refer to an obsolete
+            # oil tank sensor. For an explicitly configured, read-only TAFA oil
+            # source, let the native local-data router answer first. Never
+            # disable or modify the user's existing HA automations.
+            prefer_tafa_oil = (
+                classify(user_input.text) == "heizoel"
+                and bool(self._local_data.sources.get("heizoel"))
+            )
+            if handler is not None and not prefer_tafa_oil:
                 local = await handler(self.hass, user_input, chat_log)
                 if isinstance(local, str):
                     self._local_data.followups.clear(key)
