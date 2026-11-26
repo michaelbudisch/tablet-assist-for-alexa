@@ -600,7 +600,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():return self.send_error(403)
         length=self.headers.get("Content-Length")
-        if urlsplit(self.path).path == "/voice/run":
+        if urlsplit(getattr(self,"path","/")).path == "/voice/run":
             if (self.headers.get_content_type()!="application/octet-stream"
                     or not length or not length.isdigit()
                     or not 16000 <= int(length) <= MAX_AUDIO
