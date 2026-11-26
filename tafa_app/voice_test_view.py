@@ -29,6 +29,7 @@ def public_device_snapshot(state):
             "room": str(item.get("room") or "Tablet")[:48],
             "online": item.get("online") is True,
             "muted": item.get("muted") is True,
+            "voice_mode": "continuous" if item.get("voice_mode") == "continuous" else "wake",
             "word": str(item.get("word") or "")[:32],
             "telemetry": telemetry,
         })
@@ -63,12 +64,12 @@ def render_voice_panel(lang, csrf, device_state):
       <div class="voice-modes" role="group" aria-label="{t("Native Mikrofoneinstellung für das ausgewählte Tablet", "Native microphone setting for selected tablet")}">
         <button type="button" data-native-mode="mute" aria-pressed="false">{t("Stumm", "Muted")}</button>
         <button type="button" data-native-mode="wake" aria-pressed="false">{t("Rufwort", "Wake word")}</button>
-        <button type="button" data-native-mode="continuous" aria-pressed="false" disabled title="{t("Noch nicht von der Android-App unterstützt", "Not yet supported by the Android app")}">{t("Immer an", "Always on")}</button>
+        <button type="button" data-native-mode="continuous" aria-pressed="false" title="{t("Nur mit Device Bridge 1.2.1 oder neuer", "Requires Device Bridge 1.2.1 or newer")}">{t("Immer an", "Always on")}</button>
       </div>
       <p class="subtle">{t("Diese Schalter steuern die registrierte Android-App über Home Assistant. Die native Erkennung läuft auch bei geschlossenem Dashboard weiter.",
           "These switches control the enrolled Android app through Home Assistant. Native wake-word detection continues when the dashboard is closed.")}</p>
-      <p class="subtle">{t("„Immer an“ ist in der aktuellen Device Bridge noch nicht implementiert. Die Option bleibt deaktiviert statt einen zusätzlichen Browser-Whisper-Dauerbetrieb zu starten.",
-          "Always on is not implemented in the current Device Bridge. The option remains disabled instead of starting an extra browser Whisper loop.")}</p>
+      <p class="subtle">{t("„Immer an“ verwendet ab Device Bridge 1.2.1 lokale Spracherkennung ohne Rufwort. Hintergrundgespräche können die KI auslösen. Keine zweite Browser-Whisper-Schleife.",
+          "Always on uses local speech activity detection without a wakeword in Device Bridge 1.2.1+. Background conversations can trigger the AI. No second browser Whisper loop.")}</p>
       <div class="voice-facts">
         <div><small>{t("Rufwort", "Wake phrase")}</small><strong id="voice-native-word">—</strong></div>
         <div><small>{t("Mikrofon / Erkennung", "Microphone / detection")}</small><strong id="voice-native-microphone">—</strong></div>

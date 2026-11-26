@@ -34,7 +34,7 @@ from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
 from voice_test_view import render_voice_panel, public_device_snapshot
 from voice_test import run_voice, voice_status, load_audio, VoiceTestError, MAX_AUDIO
-from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
+from device_center import read_device_data, render_device_center, update_device, set_native_microphone_mode, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
@@ -646,11 +646,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self.respond_json({"error":"Invalid native microphone request"},400)
                 identifier=fields["device_id"][0]
                 target=fields["mode"][0]
-                if target not in ("mute","wake"):
+                if target not in ("mute","wake","continuous"):
                     return self.respond_json({"error":"Unsupported native microphone mode"},400)
                 try:
-                    update_device({"device_id":[identifier],"setting":["muted"],
-                                   "value":["true" if target=="mute" else "false"]})
+                    set_native_microphone_mode(identifier,target)
                     current=read_device_data()
                     if current.get("error"):
                         raise RuntimeError("Device status unavailable")

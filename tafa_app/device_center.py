@@ -15,7 +15,7 @@ FIELDS = {
     "strict": (int, 1, 3), "cooldown": (int, 3, 30),
     "hold": (int, 10, 90), "pause_ms": (int, 900, 3200),
     "mic_gain": (int, 50, 200), "brightness": (int, 1, 100),
-    "muted": (bool,), "screen_awake": (bool,),
+    "muted": (bool,), "voice_mode": (str,), "screen_awake": (bool,),
     "display_control_enabled": (bool,), "room": (str,),
     "word": (str,),
 }
@@ -60,12 +60,25 @@ def update_device(fields):
             raise ValueError("Setting outside allowed range")
     else:
         value = raw.strip()
+        if key == "voice_mode" and value not in ("wake","continuous"):
+            raise ValueError("Unknown native speech mode")
         if key == "word" and value not in WORDS:
             raise ValueError("Unknown wake phrase")
         if key == "room" and not 0 < len(value) <= 48:
             raise ValueError("Room name must be 1–48 characters")
     ws_call("configure", device_id=identifier, settings={key: value})
     return "Tablet setting saved."
+
+
+def set_native_microphone_mode(identifier, mode):
+    """Set native mode atomically through the existing per-device HA store."""
+    if not DEVICE_ID.fullmatch(identifier) or mode not in ("mute","wake","continuous"):
+        raise ValueError("Invalid microphone mode")
+    settings = {"muted": mode == "mute"}
+    if mode != "mute":
+        settings["voice_mode"] = mode
+    ws_call("configure", device_id=identifier, settings=settings)
+    return "Native microphone mode saved."
 
 
 def create_room(fields):
@@ -228,6 +241,7 @@ def render_device_center(lang, csrf, state):
                      '<details open><summary>'+t("Rufwort & Mikrofon","Wakeword & microphone")+'</summary>'
                      '<div class="device-settings">'+
                      setting(device,"muted",t("Mikrofon stumm","Mute microphone"),kind="boolean")+
+                     setting(device,"voice_mode",t("Nativer Sprachmodus","Native speech mode"),choices=("wake","continuous"))+
                      setting(device,"word",t("Rufwort","Wake phrase"),choices=WORDS)+
                      setting(device,"strict",t("Rufwort-Bestätigung","Wake confirmation"),lo=1,hi=3)+
                      setting(device,"cooldown",t("Rufwort-Sperrzeit (s)","Wake cooldown (s)"),lo=3,hi=30)+

@@ -103,7 +103,7 @@ class VoiceTestContracts(unittest.TestCase):
         self.assertIn('data-native-mode="wake"',markup)
         self.assertIn('data-native-mode="mute"',markup)
         self.assertIn('data-native-mode="continuous"',markup)
-        self.assertIn('aria-pressed="false" disabled',markup)
+        self.assertIn('data-native-mode="continuous"',markup)
         self.assertIn("&lt;bad&gt;",markup)
         self.assertNotIn("<bad>",markup)
         self.assertIn("Android-App",markup)
@@ -114,6 +114,7 @@ class VoiceTestContracts(unittest.TestCase):
         self.assertNotIn("users",public)
         self.assertNotIn("secret",public["devices"][0]["telemetry"])
         self.assertEqual(public["devices"][0]["telemetry"]["bluetooth"],"connected")
+        self.assertEqual(public["devices"][0]["voice_mode"],"wake")
 
     def test_no_browser_wakeword_loop_and_csrf_native_controls(self):
         js=(APP/"voice-test.js").read_text()
@@ -123,9 +124,9 @@ class VoiceTestContracts(unittest.TestCase):
         self.assertNotIn("chooseMode(",js)
         self.assertIn('postForm("voice_device_mode"',js)
         self.assertIn('postForm("voice_devices"',js)
-        self.assertIn('["mute","wake"]',js)
-        self.assertIn('update_device({"device_id":[identifier],"setting":["muted"]',server)
-        self.assertIn('target not in ("mute","wake")',server)
+        self.assertIn('["mute","wake","continuous"]',js)
+        self.assertIn('set_native_microphone_mode(identifier,target)',server)
+        self.assertIn('target not in ("mute","wake","continuous")',server)
         self.assertIn('kind[0] != "turn"',server)
         self.assertNotIn('run_voice(TOKEN,pcm=payload,wake=',server)
 

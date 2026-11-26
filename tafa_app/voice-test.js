@@ -93,13 +93,19 @@
     const status = el("voice-native-status");
     for (const button of nativeModes) {
       const selected = button.dataset.nativeMode;
-      button.setAttribute("aria-pressed", String(!!device && selected !== "continuous" &&
-        (selected === "mute") === !!device.muted));
-      button.disabled = nativeBusy || !device?.online || selected === "continuous";
+      const current=!device?"":device.muted?"mute":
+        device.voice_mode==="continuous"?"continuous":"wake";
+      button.setAttribute("aria-pressed", String(!!device && selected===current));
+      const version=(telemetry.app_version||"0.0.0").split(".").map(v=>Number.parseInt(v,10)||0);
+      const supported=version[0]>1||(version[0]===1&&
+        (version[1]>2||(version[1]===2&&version[2]>=1)));
+      button.disabled = nativeBusy || !device?.online || (selected==="continuous"&&!supported);
     }
     el("voice-native-word").textContent = device?.word || "—";
     el("voice-native-microphone").textContent = telemetry.microphone || (device ? (
-      device.muted ? tr("Stumm", "Muted") : tr("Rufwort", "Wake word")) : "—");
+      device.muted ? tr("Stumm", "Muted") :
+      device.voice_mode==="continuous" ? tr("Immer an", "Always on") :
+      tr("Rufwort", "Wake word")) : "—");
     el("voice-native-audio").textContent = telemetry.audio || "—";
     el("voice-native-bluetooth").textContent = telemetry.bluetooth || "—";
     el("voice-native-indicator").textContent = device ? (
@@ -142,7 +148,7 @@
     } finally {deviceLoading=false;}
   }
   async function setNativeMode(next) {
-    if (nativeBusy || !["mute","wake"].includes(next)) return;
+    if (nativeBusy || !["mute","wake","continuous"].includes(next)) return;
     const selected=devices.find(item=>item.device_id===deviceSelect.value);
     if (!selected || !selected.online) return;
     nativeBusy=true;
