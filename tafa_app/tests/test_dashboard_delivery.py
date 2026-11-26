@@ -19,7 +19,7 @@ def validators():
     src=path.read_text(encoding="utf-8")
     module=ast.parse(src)
     names={"MODULES","ROLE_DOMAINS","DEFAULT_MODULES","PRESENTATION_DEFAULTS","ENTITY","PIPELINE"}
-    funcs={"default_dashboard","validate_dashboard"}
+    funcs={"default_dashboard","validate_dashboard","migrate_saved_dashboard"}
     nodes=[]
     for node in module.body:
         if isinstance(node,ast.Assign) and any(
@@ -47,6 +47,32 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn("assist",clean["modules"])
         self.assertEqual(clean["bindings"]["lights"],[])
         self.assertEqual(clean["type"],"custom:tafa-home-dashboard")
+
+    def test_legacy_dashboard_is_repaired_without_overwriting_valid_choices(self):
+        legacy=self.runtime["default_dashboard"]()
+        legacy["modules"]=["assist","fuel","retired_feature"]
+        legacy["bindings"]["fuel_volume"]=["sensor.oil_actual"]
+        legacy["bindings"]["obsolete_role"]=["sensor.not_used"]
+        legacy["presentation"]["unusedSetting"]=True
+        legacy["unknown_legacy_key"]="leave in snapshot"
+        restored=self.runtime["migrate_saved_dashboard"](legacy)
+        self.assertEqual(restored["modules"],["assist","fuel"])
+        self.assertEqual(restored["bindings"]["fuel_volume"],["sensor.oil_actual"])
+        self.assertEqual(restored["presentation"]["captions"],True)
+        self.assertNotIn("obsolete_role",restored["bindings"])
+        self.assertNotIn("unknown_legacy_key",restored)
+        backend=(HA/"dashboard_config.py").read_text()
+        self.assertIn('dashboard_backup_store(hass).async_save(existing)',backend)
+        self.assertIn('migrate_saved_dashboard(data)',backend)
+
+    def test_central_voice_sources_offer_dashboard_fallback_links(self):
+        backend=(HA/"dashboard_config.py").read_text()
+        self.assertIn('"heizoel": "fuel_volume"',backend)
+        self.assertIn('"vorlauf": "heating_temperature"',backend)
+        self.assertIn('linked_source_bindings(hass)',backend)
+        panel=(HA/"frontend/panel.js").read_text()
+        self.assertIn("_effectiveConfig()",panel)
+        self.assertIn('result.linked_bindings||{}',panel)
 
     def test_entity_bindings_are_per_role_and_strictly_checked(self):
         raw=self.runtime["default_dashboard"]()
