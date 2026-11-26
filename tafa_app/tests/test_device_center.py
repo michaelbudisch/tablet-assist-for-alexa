@@ -116,7 +116,9 @@ class DeviceCenterTests(unittest.TestCase):
         self.assertIn("HTTP 403", page)
         self.assertNotIn("Bearer secret", page)
         self.assertNotIn("https://secret.internal", page)
-        self.assertNotIn('class="pair-form"', page)
+        self.assertIn('name="action" value="room_create"', page)
+        self.assertIn('type="submit" disabled', page)
+        self.assertNotIn('name="action" value="room_pair"', page)
 
 
 if __name__ == "__main__":
