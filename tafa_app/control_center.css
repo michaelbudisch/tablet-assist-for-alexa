@@ -233,3 +233,35 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;co
 .connection-field select{display:block;width:100%;padding:10px 12px;border:1px solid #becbd7;border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
 .connection-field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 @media(max-width:700px){.connection-group{padding:13px}.connection-group .connection-grid{grid-template-columns:1fr}}
+
+/* Speech-test dashboard: separate action tab, browser-only microphone. */
+.voice-nav-action{margin-left:auto;background:var(--accent-strong);color:#fff;gap:8px;border:1px solid #ffffff22}
+.voice-nav-action:hover,.voice-nav-action[aria-selected="true"]{background:var(--accent);color:#fff;text-decoration:none}
+.voice-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;align-items:start}
+.voice-box{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:var(--shadow);min-width:0}
+.voice-box h3{font-size:17px;margin:0}.voice-box-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.voice-quiet{color:var(--muted);font-size:12px;font-weight:650}
+.voice-mode-box{grid-column:1/-1}.voice-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.voice-modes button{min-height:49px;border:1px solid var(--line);background:var(--surface-alt);border-radius:10px;color:var(--ink);font-weight:730}
+.voice-modes button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+.voice-indicator{font-size:12px;font-weight:730;color:var(--muted);background:var(--neutral-bg);border-radius:999px;padding:6px 11px}
+.voice-indicator[data-listening="true"]{background:var(--good-bg);color:var(--good)}
+.voice-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.voice-live{background:var(--surface-alt);border:1px solid var(--line);border-radius:10px;padding:12px;margin:14px 0 0;font-size:13px}
+.voice-route{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 16px;color:var(--accent-strong);font-size:12px;font-weight:740}
+.voice-route span:nth-child(even){color:var(--muted)}
+.voice-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:9px}
+.voice-facts>div{background:var(--surface-alt);border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-width:0}
+.voice-facts small,.voice-timings small{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+.voice-facts strong{font-size:13px;overflow-wrap:anywhere}
+.voice-device-info{margin-top:15px}.voice-device-info summary{cursor:pointer;font-weight:700}.voice-device-info li{font-size:13px;margin:6px 0}
+.voice-history{grid-column:1/-1}.voice-history-list{min-height:130px;max-height:520px;overflow:auto;display:grid;gap:9px;align-content:start}
+.voice-turn{border:1px solid var(--line);border-radius:10px;background:var(--surface-alt);padding:12px 14px;overflow-wrap:anywhere}
+.voice-turn-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
+.voice-turn p{margin:8px 0;color:var(--ink)}.voice-turn p:nth-of-type(2){font-weight:620}.voice-turn small{font-size:11px;color:var(--muted)}
+.voice-text-form{margin-top:17px}.voice-text-form label{display:block;font-size:13px;font-weight:690;margin-bottom:7px}
+.voice-text-form>div{display:flex;gap:8px}.voice-text-form input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:10px;color:var(--ink)}
+.voice-timings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.voice-timings>div{border:1px solid var(--line);background:var(--surface-alt);padding:13px;border-radius:10px;min-width:0}
+.voice-timings strong{font-size:18px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.voice-board{grid-template-columns:1fr}.voice-box,.voice-history,.voice-mode-box{grid-column:1}.voice-text-form>div{flex-wrap:wrap}.voice-text-form input{flex-basis:100%}.voice-nav-action{margin-left:auto}}

@@ -7,12 +7,12 @@ import html
 
 
 def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
-                     cards, picker, connection_panel, import_panel, devices_panel, checks, options, setup, pipeline, links, latest,
+                     cards, picker, connection_panel, import_panel, devices_panel, voice_panel, checks, options, setup, pipeline, links, latest,
                      cache_info, note, install, retry_button, remove_button, mode):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
     esc = lambda value: html.escape(str(value or ""), quote=True)
-    allowed_tabs = ("overview", "connections", "setup", "devices", "maintenance")
+    allowed_tabs = ("overview", "connections", "setup", "devices", "maintenance", "voice")
     if default_tab not in allowed_tabs:
         default_tab = "overview"
 
@@ -105,6 +105,10 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
         f'aria-controls="{key}" aria-selected="false">{esc(title)}</a>'
         for key,title in nav_items
     )
+    nav += ('<a href="#voice" class="tab-link voice-nav-action" id="tab-voice" role="tab" '
+            'aria-controls="voice" aria-selected="false">'
+            '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8A8.5 8.5 0 0 1 12.5 20a8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z"/></svg>'
+            '<span>' + esc(t("Jetzt sprechen", "Speak now")) + '</span></a>')
     docs = "".join((
         f'<a href="{esc(repo)}/blob/main/docs/app.md" target="_blank" rel="noopener">Deutsch</a>',
         f'<a href="{esc(repo)}/blob/main/docs/en/app.md" target="_blank" rel="noopener">English</a>',
@@ -119,6 +123,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 <meta name="color-scheme" content="light dark"><title>TAFA · Control Center</title>
 <link rel="stylesheet" href="assets/control-center.css?v={version}">
 <script src="assets/control-center.js?v={version}" defer></script>
+<script src="assets/voice-test.js?v={version}" defer></script>
 </head>
 <body data-default-tab="{default_tab}">
 <div class="shell">
@@ -244,6 +249,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <p class="subtle">{t("Dein privates Dashboard wird nicht installiert oder verändert.","Your private dashboard is not installed or modified.")}</p>
   </section>
 </section>
+{voice_panel}
 </main>
 <footer><span>TAFA <span aria-hidden="true">·</span> {version}</span>
   <span>{t("Konfiguration über Home Assistant","Configuration in Home Assistant")}</span></footer>

@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.45 — Voice test dashboard in the Control Center
+
+- Add a right-aligned **Speak now** action, opening a dedicated Voice test tab with an explicit microphone switch (Muted / Wake phrase / Continuous).
+- Keep microphone capture browser-local and limited to the visible page. Browser wake mode uses local Whisper STT to recognize a spoken "Jarvis" / "Hey Jarvis" / "Alexa" phrase; it does not change Android wake-word settings.
+- Run the existing **TAFA Lokal** Assist pipeline (STT → conversation → TTS) through authorized Supervisor WebSocket calls. Add push-to-talk, text questions, live status, in-page conversation log, safe TTS audio replay and measured stage timings.
+- Show actual HA router entity IDs and backend telemetry when available; unknown values remain blank. No recordings or transcripts are persisted, and no existing automations or pipelines are edited.
+- Reject arbitrary pipelines, external audio destinations and oversized recordings; maintain administrator-only Ingress and CSRF protection.
+
 ## 0.3.44 — GPU-first connections and discoverable CPU/GPU Wyoming entities
 - Keep **JSON quick setup at the top of Connections**, including file-only import and explicit review before apply.
 - Reorganize Connections into **1. GPU / AI (preferred), 2. CPU fallback, 3. Alexa (optional)**. Place the existing `gpu_stt_host` fast-check IP first, with explicit **Wyoming TCP :10300 / 0.8 s** explanation. Keep the independent Qwen TTS health check.

@@ -21,7 +21,7 @@ class ControlCenterLayoutTests(unittest.TestCase):
         opts.update(kw)
         return opts
 
-    def test_five_accessible_tabs_in_both_languages(self):
+    def test_six_accessible_tabs_in_both_languages(self):
         configs=self.mock_view()
         with patch.object(server,"choose_speech_source",return_value=configs["choose_speech_source"]),\
              patch.object(server,"external_piper_ready",return_value=True),\
@@ -35,8 +35,8 @@ class ControlCenterLayoutTests(unittest.TestCase):
              patch.object(server,"recent_stt_backend",return_value=None):
             de=server.display(lang="de",default_tab="connections")
             en=server.display(lang="en",default_tab="setup")
-        self.assertEqual(de.count('role="tab"'),5)
-        self.assertEqual(de.count('role="tabpanel"'),5)
+        self.assertEqual(de.count('role="tab"'),6)
+        self.assertEqual(de.count('role="tabpanel"'),6)
         self.assertIn('data-default-tab="connections"',de)
         self.assertIn('data-default-tab="setup"',en)
         self.assertIn("Wartung &amp; Hilfe",de)
@@ -44,6 +44,10 @@ class ControlCenterLayoutTests(unittest.TestCase):
         self.assertIn('href="#connections"',de)
         self.assertLess(de.index('id="tab-connections"'),de.index('id="tab-setup"'))
         self.assertIn('id="manifest-file"',de)
+        self.assertIn('id="tab-voice"',de)
+        self.assertIn('id="tafa-voice-test"',de)
+        self.assertIn('data-voice-mode="continuous"',de)
+        self.assertIn('src="assets/voice-test.js?v=',de)
         self.assertLess(de.index('id="manifest-file"'),de.index('id="tafa-connections"'))
         self.assertIn("Schnelleinrichtung per JSON",de)
         self.assertNotIn('<textarea id="manifest-json"',de)

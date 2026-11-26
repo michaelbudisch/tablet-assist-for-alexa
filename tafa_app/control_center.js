@@ -1,7 +1,7 @@
 /* Accessible, progressive-enhancement tabs. Never removes or resets form fields. */
 (() => {
   "use strict";
-  const ids = ["overview", "connections", "setup", "devices", "maintenance"];
+  const ids = ["overview", "connections", "setup", "devices", "maintenance", "voice"];
   const tabs = ids.map(id => document.getElementById("tab-" + id));
   const panels = ids.map(id => document.getElementById(id));
   if (tabs.some(tab => !tab) || panels.some(panel => !panel)) return;

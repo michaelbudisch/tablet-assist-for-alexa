@@ -21,3 +21,11 @@ Use **TAFA Control Center → Settings** for day-to-day configuration. All contr
 **Hotfix 0.3.19:** Rebuild/update TAFA to fix the missing Wyoming picker module in the 0.3.18 Docker image. Saved settings are retained and no Android update is needed.
 
 **App 0.3.20:** The Control Center now has one grouped settings editor (Piper, Wyoming CPU/GPU, Qwen, Ollama, Alexa, voice and advanced sources). The technical HA Configuration editor remains available for recovery and to choose `speech_mode=external` *before the first launch* if local CPU models should never download. Save and restart TAFA; there is no second settings store.
+
+### Voice test in TAFA Control Center (0.3.45)
+
+Open **Speak now** at the far right of the Control Center navigation. Use **Muted** (manual push-to-talk remains available), **Wake word** (browser audio is transcribed through Whisper; not the Android native wakeword engine), or **Always on** (the visible browser page automatically listens for the next utterance). Microphone access requires HTTPS and explicit browser permission. Recording stops when the page is hidden or you switch away.
+
+The **TAFA Lokal** Assist pipeline is used without changing your other assistants, devices, automations or configuration. The page displays the current pipeline, recognized question, answer, measured STT/conversation/TTS stages, and available HA router attributes. Audio can be replayed through the browser only; this is not an Alexa/Echo output test. Conversation history is retained only in the current browser page and clears on reload. No microphone recordings or transcripts are written to disk.
+
+**Security:** Only administrator Ingress sessions may use the test; every request has CSRF validation, audio is capped at 30 seconds, and TTS playback is restricted to Home Assistant's local TTS proxy. Spoken commands run real HA Assist intents and may control your configured devices, just as in the normal Assist pipeline.

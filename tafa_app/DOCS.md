@@ -76,3 +76,11 @@ Under **TAFA → Devices → Voice test** the UI reports whether a complete Assi
 ## Automatically select Wyoming STT providers
 
 Open **TAFA Control Center → Automatically discover Wyoming STT** as an HA administrator. The two dropdowns show currently registered enabled Wyoming speech entities. Select **CPU** (Proxmox / local HA) and **GPU** (Windows worker), using *two different IDs*. Save, then **restart the TAFA App** to synchronize. Unrelated configuration is preserved. If the GPU entry is absent, add **Wyoming Protocol** at the GPU worker LAN host, TCP 10300, under **Settings → Devices & services**; merely setting the Qwen TTS URL on port 10502 does not enable GPU Whisper. You can still edit the fields manually through **Apps → TAFA → Configuration**; that native Supervisor options page uses a static schema and cannot offer dynamic entity choices.
+
+## Control Center: speech diagnostics
+
+**TAFA → Speak now** is the browser-only voice test area. Muted disables automatic listening; a manual push-to-talk is still available. Wake-word mode recognizes short spoken phrases using the configured Whisper STT (not a native Android wakeword engine). Continuous mode repeats listening while the page is visible and stops when the tab is hidden. It never changes the TAFA Device Bridge microphone settings.
+
+The test calls only the existing **TAFA Lokal** pipeline through HA's Supervisor WebSocket. Live entity data is read from the registered STT, TTS and conversation routers; unavailable figures are shown as unavailable, not estimated. During each explicit speech/text test, stage transitions provide STT, conversation, TTS and full pipeline timings, while the streaming TTS entity may report first-audio latency. Recording duration and browser playback are separate from backend totals.
+
+The conversation log is transient browser state, limited to 20 recent entries per page. Browser playback uses a short-lived audio reference restricted to the HA TTS proxy path. If HTTPS/microphone permission or the pipeline is unavailable, use text testing and inspect the diagnostic status. This feature does **not** remotely change tablet/Alexa output or permanently change Home Assistant Assist pipelines.
