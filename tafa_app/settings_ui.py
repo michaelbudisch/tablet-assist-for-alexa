@@ -29,7 +29,7 @@ TEXT_FIELDS = (
 BOOL_FIELDS = ("chime", "learning_enabled", "reminders_enabled")
 FORM_FIELDS = frozenset((*CHOICES, *TEXT_FIELDS, *BOOL_FIELDS))
 ROUTING_FIELDS = frozenset(("cpu_stt", "gpu_stt", "llm_agent"))
-SETTINGS_FIELDS = FORM_FIELDS - ADDRESS_FIELDS - ROUTING_FIELDS
+SETTINGS_FIELDS = FORM_FIELDS - ADDRESS_FIELDS - ROUTING_FIELDS - frozenset(("sources_json", "rooms_json"))
 
 
 def _value(options, key):
@@ -129,10 +129,10 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 <details><summary>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</summary>
 {select("mp3_profile",t("Durchsage-Klang", "Announcement sound"),[(i,i.title()) for i in CHOICES["mp3_profile"]])}
 {check("chime",t("Hinweiston verwenden", "Use chime"))}
-{field("rooms_json",t("Alexa-Raumzuordnung (JSON, erweitert)", "Alexa room mapping (JSON, advanced)"))}
+<p class="muted">{t("Alexa-Ausgaberäume und Benachrichtigungen unter Funktionen & Datenquellen zuordnen.", "Assign Alexa output rooms and notification services under Features & sources.")}</p>
 </details>
-<details><summary>5 · {t("Daten und Erweiterungen", "Data and advanced options")}</summary>
-{field("sources_json",t("Home-Assistant-Datenquellen (JSON)", "Home Assistant data sources (JSON)"))}
+<details><summary>5 · {t("Erweiterungen", "Extensions")}</summary>
+<p class="muted">{t("Sensoren lassen sich über den Reiter Funktionen & Datenquellen ohne JSON zuordnen.", "Configure sensors without JSON in the Features & sources tab.")}</p>
 {field("search_base",t("SearXNG-Adresse (optional, z. B. http://192.168.1.50:8888)", "SearXNG server (optional, e.g. http://192.168.1.50:8888)"))}
 <p class="muted">{t("Internetsuche wird nur bei einer ausdrücklichen Suchanfrage verwendet. Ohne SearXNG bleiben alle anderen Funktionen aktiv.", "Internet search runs only for explicit queries. Everything else works without SearXNG.")}</p>
 {check("learning_enabled",t("Lernfunktionen aktivieren", "Enable learning features"))}
