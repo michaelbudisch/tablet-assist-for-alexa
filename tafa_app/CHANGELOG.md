@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.33 — TAFA voice management integrated into the original dashboard layout
+- Selecting the existing TAFA bottom/side navigation item now opens all TAFA voice service controls inside the dashboard's existing header, clock, theme and navigation, without switching to an unrelated full-page control center.
+- Reuse the original household dashboard design tokens for responsive status, device management, announcements, learning, setup and voice-service sub-navigation; no duplicate header or fixed-width light Home Assistant cards.
+- Preserve the optional standalone voice management URL (`/tablet_assist_for_alexa?view=voice`) with the same visual styling, reachable through a link in the embedded voice view.
+- Keep the voice component instance across regular Home Assistant state and dashboard clock updates so text, microphone and device interactions are not interrupted.
+- Existing automations, Jarvis backups, device bindings, native TAFA routers and voice pipelines remain unchanged.
+
+
 ## 0.3.32 — use the original TAFA dashboard navigation instead of a second toolbar
 - Remove the redundant dark top toolbar from the built-in Dashboard landing. Its only visible header, quick-action settings gear and bottom navigation now belong to the main dashboard, like the original local Kiosk view.
 - The existing TAFA bottom navigation entry opens the Voice services view directly. The existing settings gear opens the admin-only, centrally persisted Dashboard configuration. Secondary Voice and Edit views show only a compact back/save/cancel strip while active.

@@ -108,3 +108,6 @@ Das öffentliche Dashboard nutzt bewusst keine privaten Sensor-IDs oder altspezi
 
 
 **Ab TAFA 0.3.32 / Integration 0.4.17:** Die zusätzliche Leiste über dem Dashboard entfällt. **TAFA** in der unteren Navigation führt direkt zu den Sprachdiensten, das **Zahnrad** in der Dashboard-Kopfzeile öffnet für Administratoren die zentrale Geräte-/Modulkonfiguration. Zurück/Speichern/Abbrechen erscheinen nur in diesen Unteransichten. Die Funktionen und Zuordnungen bleiben erhalten.
+
+
+**TAFA 0.3.33 / Integration 0.4.18:** Mit **TAFA** in der unteren Dashboard-Navigation öffnen sich Geräteverwaltung, Alexa-Durchsagen, Sprachstatus, Datenquellen und optionale Lernfunktionen direkt **innerhalb der Dashboard-Oberfläche**. Alle Karten, Buttons und Tabs übernehmen die Dashboard-Farben und -Abstände. Für die unabhängige Nutzung gibt es in den Sprachdiensten einen Link zur separaten Ansicht `/tablet_assist_for_alexa?view=voice`, die dieselbe Gestaltung verwendet. Die Einstellungen bleiben im HA-Backend erhalten und Änderungen an Automatisierungen sind nicht nötig.

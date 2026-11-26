@@ -1,3 +1,6 @@
+## TAFA App 0.3.33 / integration 0.4.18 — voice services styled and embedded
+- The TAFA dashboard navigation now opens voice management within the existing dashboard layout, preserving its header, clock, bottom/side navigation and teal dark theme. The standalone view remains available by direct link and shares its new visual design. No automations or existing voice pipelines changed.
+
 ## TAFA App 0.3.32 / integration 0.4.17 — remove duplicate dashboard toolbar
 - Use the dashboard's native navigation and settings gear for Voice services and HA-stored configuration instead of an additional always-visible toolbar. Subviews retain contextual Back/Save/Cancel controls.
 

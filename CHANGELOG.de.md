@@ -1,5 +1,11 @@
 # Changelog
 
+## TAFA-App 0.3.33 / HA-Integration 0.4.18 — Sprachdienste im Dashboard-Design
+- Der vorhandene TAFA-Menüpunkt öffnet die Sprachdienste wieder innerhalb des Dashboards, mit derselben Kopfzeile, Uhr und Navigation wie die übrigen Bereiche.
+- Geräteverwaltung, Ansagen, Datenquellen, Lernfunktion und Sprach-Status nutzen dieselben dunklen Karten, Abstände und türkisfarbenen Akzente wie das ursprüngliche TAFA Dashboard. Die Ansicht wird beim Aktualisieren der HA-Sensoren nicht neu aufgebaut.
+- Die unabhängig aufrufbaren Sprachdienste bleiben unter `/tablet_assist_for_alexa?view=voice` erreichbar. Keine bestehenden Automatisierungen oder Jarvis-Pipelines geändert.
+
+
 ## TAFA-App 0.3.32 / HA-Integration 0.4.17 — doppelte Kopfzeile entfernt
 - Das ausgelieferte TAFA Dashboard zeigt keine zusätzliche Leiste mit „Dashboard / Sprachdienste / Dashboard einrichten“ mehr. Stattdessen steuern die vorhandene TAFA-Navigation unten und das Zahnrad in der Dashboard-Kopfzeile diese Funktionen.
 - Der zurückführende Bedienbereich mit Speichern/Abbrechen erscheint nur während der Einrichtung oder beim Öffnen der Sprachdienste.

@@ -1,6 +1,6 @@
 /* TAFA Dashboard: built-in, cross-device, admin-configurable Home Assistant panel. */
-import "./dashboard.js?v=0.4.17";
-import "./voice_tools.js?v=0.4.17";
+import "./dashboard.js?v=0.4.18";
+import "./voice_tools.js?v=0.4.18";
 const DEFAULT={type:"custom:tafa-home-dashboard",version:1,title:"TAFA Dashboard",
   language:"auto",theme:"dark",accent:"teal",density:"comfortable",gridSign:"import",
   modules:["weather","lights","energy","ev","heating","heatpump","fuel",
@@ -29,10 +29,10 @@ const CSS=":host{display:block;min-height:100%;background:#0e1520;color:#e9f3fa;
 class TabletAssistPanel extends HTMLElement {
   constructor(){
     super();this.attachShadow({mode:"open"});this._config=structuredClone(DEFAULT);
-    this._mode="home";this._loaded=false;this._loading=null;this._editing=false;
+    this._mode=new URLSearchParams(window.location.search).get("view")==="voice"?"voice":"home";this._loaded=false;this._loading=null;this._editing=false;
     this._dirty=false;this._message="";this._panel=null;this._hass=null;this._lang="de";
   }
-  set panel(p){this._panel=p;if(this._voice)this._voice.panel=p;}
+  set panel(p){this._panel=p;if(this._voice)this._voice.panel=p;if(this._home)this._home.panel=p;}
   set hass(h){
     this._hass=h;this._lang=String(h?.locale?.language||h?.language||"de").startsWith("de")?"de":"en";
     if(this._home)this._home.hass=h;
@@ -122,7 +122,7 @@ class TabletAssistPanel extends HTMLElement {
       wrapper.append(editor);host.append(wrapper);this._editor=editor;return;
     }
     const d=document.createElement("tafa-integrated-dashboard");
-    d.setConfig(this._config);d.hass=this._hass;
+    d.setConfig(this._config);d.panel=this._panel;d.hass=this._hass;
     d.addEventListener("tafa-open-voice-tools",()=>{this._mode="voice";this._editing=false;this._render();});
     d.addEventListener("tafa-open-dashboard-editor",()=>{
       if(!this._hass?.user?.is_admin)return;

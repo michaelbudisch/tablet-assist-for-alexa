@@ -110,7 +110,7 @@ async def async_setup_entry(hass, entry):
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
         sidebar_title="TAFA Dashboard", sidebar_icon="mdi:view-dashboard-outline",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.17",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.18",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()

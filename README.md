@@ -106,3 +106,6 @@ TAFA Dashboard is now the default HA integration sidebar panel, based on the por
 
 
 **TAFA App 0.3.32 / integration 0.4.17:** No duplicate top toolbar on the integrated dashboard home view. The native bottom TAFA navigation opens Voice services; the native settings gear opens admin-only HA-persisted dashboard configuration. Contextual Back/Save/Cancel actions only appear while inside a subview.
+
+
+**TAFA App 0.3.33 / integration 0.4.18:** The TAFA entry in the native dashboard navigation now renders voice service management in place, retaining dashboard navigation and visual styling. Status, devices, Alexa announcements, sources and learning use the same card and accent system. A standalone voice view remains available at `/tablet_assist_for_alexa?view=voice`. No automation migration is required.

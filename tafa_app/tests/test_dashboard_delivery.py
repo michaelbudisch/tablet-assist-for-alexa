@@ -105,7 +105,7 @@ class DashboardDelivery(unittest.TestCase):
     def test_native_sidebar_opens_dashboard_not_old_voice_landing(self):
         src=(HA/"__init__.py").read_text()
         self.assertIn('sidebar_title="TAFA Dashboard"',src)
-        self.assertIn('module_url="/tablet_assist_for_alexa/panel.js?v=0.4.17"',src)
+        self.assertIn('module_url="/tablet_assist_for_alexa/panel.js?v=0.4.18"',src)
         self.assertIn("async_get_dashboard",src)
         self.assertIn("async_set_dashboard",src)
         for js in ["panel.js","dashboard.js","dashboard_model.js","voice_tools.js"]:
@@ -114,10 +114,27 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('document.createElement("tafa-integrated-dashboard")',panel)
         self.assertIn('document.createElement("tablet-assist-voice-tools")',panel)
         self.assertIn('type:"tablet_assist_for_alexa/dashboard/set"',panel)
-        self.assertIn("dashboard.js?v=0.4.17",panel)
+        self.assertIn("dashboard.js?v=0.4.18",panel)
         dashboard=(HA/"frontend/dashboard.js").read_text()
-        self.assertIn("./dashboard_model.js?v=0.4.17",dashboard)
+        self.assertIn("./dashboard_model.js?v=0.4.18",dashboard)
         self.assertIn("tafa-open-voice-tools",dashboard)
+        # "TAFA" now stays in the native dashboard navigation, not in a
+        # separate fullscreen page with an unrelated header.
+        self.assertIn('const voice=document.createElement("tablet-assist-voice-tools")',dashboard)
+        self.assertIn("voice.embedded=true",dashboard)
+        self.assertIn("this.voiceTools?.isConnected",dashboard)
+        self.assertNotIn('if(id==="assist"&&this.cfg.modules.includes("assist"))',dashboard)
+        self.assertIn("d.panel=this._panel",panel)
+        self.assertIn('window.location.search',panel)
+        self.assertIn('get("view")==="voice"',panel)
+        voice=(HA/"frontend/voice_tools.js").read_text()
+        self.assertIn("TAFA_VOICE_STYLE",voice)
+        self.assertIn(":host([embedded])",voice)
+        self.assertIn("var(--card,#1b2430)",voice)
+        self.assertIn("var(--acc,#38c5ae)",voice)
+        self.assertIn("voice-standalone-link",voice)
+        self.assertIn("view=voice",voice)
+
         self.assertIn('tafa-open-dashboard-editor',dashboard)
         self.assertIn('d.addEventListener("tafa-open-dashboard-editor"',panel)
         self.assertNotIn('className="toolbar"',panel)
@@ -131,10 +148,10 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('tafa-integrated-dashboard-editor',panel)
 
     def test_version_and_docs_consistent(self):
-        self.assertIn('version: "0.3.32"',(APP/"config.yaml").read_text())
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.17")
-        self.assertIn('"version": "0.4.17"',(HA/"manifest.json").read_text())
-        self.assertIn("0.3.32",(APP/"CHANGELOG.md").read_text())
+        self.assertIn('version: "0.3.33"',(APP/"config.yaml").read_text())
+        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.18")
+        self.assertIn('"version": "0.4.18"',(HA/"manifest.json").read_text())
+        self.assertIn("0.3.33",(APP/"CHANGELOG.md").read_text())
 
 
 if __name__=="__main__":
