@@ -34,7 +34,7 @@ from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
 from voice_test_view import render_voice_panel, public_device_snapshot
 from voice_test import run_voice, voice_status, load_audio, VoiceTestError, MAX_AUDIO
-from device_center import read_device_data, render_device_center, update_device, set_native_microphone_mode, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
+from device_center import read_device_data, render_device_center, update_device, set_native_microphone_mode, set_native_followup_limit, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
@@ -658,6 +658,24 @@ class Handler(BaseHTTPRequestHandler):
                     return self.respond_json({"error":"Tablet update unavailable"},503)
                 except (ValueError,TypeError,KeyError):
                     return self.respond_json({"error":"Invalid native microphone request"},400)
+            if action=="voice_device_followups":
+                if (set(fields) - {"csrf","lang","tab","action","device_id","limit"}
+                        or len(fields.get("device_id",[]))!=1 or len(fields.get("limit",[]))!=1):
+                    return self.respond_json({"error":"Invalid follow-up limit"},400)
+                identifier=fields["device_id"][0]
+                raw=fields["limit"][0]
+                if not re.fullmatch(r"-?[0-9]{1,3}",raw):
+                    return self.respond_json({"error":"Invalid follow-up limit"},400)
+                try:
+                    set_native_followup_limit(identifier,int(raw))
+                    state=read_device_data()
+                    if state.get("error"):
+                        raise RuntimeError("Device status unavailable")
+                    return self.respond_json(public_device_snapshot(state))
+                except (OSError,TimeoutError,RuntimeError):
+                    return self.respond_json({"error":"Tablet update unavailable"},503)
+                except (ValueError,TypeError,KeyError):
+                    return self.respond_json({"error":"Invalid follow-up limit"},400)
             if action=="voice_status":
                 if set(fields) - {"csrf","lang","tab","action"}:
                     return self.respond_json({"error":"Invalid voice status request"},400)

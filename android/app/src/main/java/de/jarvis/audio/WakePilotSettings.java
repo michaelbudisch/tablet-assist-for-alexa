@@ -148,6 +148,9 @@ final class WakePilotSettings {
             if(device.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)bluetooth=true;
         details.put("bluetooth",bluetooth?"connected":"disconnected");
         details.put("control_channel",channel);
+        int local=FollowupPolicy.localLimit(ctx.getSharedPreferences(MainActivity.PREF,0)
+            .getInt(FollowupPolicy.LOCAL_LIMIT,0));
+        details.put("local_followup_limit",local);
         BatteryManager battery=(BatteryManager)ctx.getSystemService(Context.BATTERY_SERVICE);
         if(battery!=null){
             int percent=battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);

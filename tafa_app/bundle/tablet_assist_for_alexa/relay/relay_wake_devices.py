@@ -30,7 +30,7 @@ VALID = {"followup_limit": (-1, 100), "strict": (1, 3), "cooldown": (3, 30), "ho
          "pause_ms": (900, 3200), "mic_gain": (50, 200),
          "brightness": (1, 100)}
 TELEMETRY = {"wake_status", "microphone", "audio", "bluetooth", "battery",
-             "app_version", "display", "control_channel"}
+             "app_version", "display", "control_channel", "local_followup_limit"}
 
 
 class WakeDeviceView(HomeAssistantView):
@@ -219,12 +219,14 @@ class WakeDevices:
                 return {"accepted": True}
             if action == "report":
                 report = payload.get("telemetry")
-                if not isinstance(report, dict) or len(report) > 8 or any(
+                if not isinstance(report, dict) or len(report) > 9 or any(
                         k not in TELEMETRY for k in report):
                     raise ValueError("Invalid telemetry")
                 sanitized = {}
                 for key, value in report.items():
-                    if key == "battery" and type(value) is int and 0 <= value <= 100:
+                    if key == "local_followup_limit" and type(value) is int and -1 <= value <= 100:
+                        sanitized[key] = value
+                    elif key == "battery" and type(value) is int and 0 <= value <= 100:
                         sanitized[key] = value
                     elif isinstance(value, str) and len(value) <= 80:
                         sanitized[key] = value

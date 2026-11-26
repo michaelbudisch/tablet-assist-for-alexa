@@ -17,13 +17,27 @@ def public_device_snapshot(state):
         if not isinstance(observed, dict):
             observed = {}
         telemetry = {}
-        for key in ("wake_status", "microphone", "audio", "bluetooth", "app_version"):
+        for key in ("wake_status", "microphone", "audio", "bluetooth", "app_version", "control_channel"):
             value = observed.get(key)
             if isinstance(value, str):
                 telemetry[key] = value[:100]
         battery = observed.get("battery")
         if type(battery) is int and 0 <= battery <= 100:
             telemetry["battery"] = battery
+        local_limit = observed.get("local_followup_limit")
+        if type(local_limit) is int and -1 <= local_limit <= 100:
+            telemetry["local_followup_limit"] = local_limit
+        raw_control = item.get("control")
+        control = {}
+        if isinstance(raw_control, dict):
+            channel = raw_control.get("channel")
+            if channel in ("websocket", "poll", "inactive"):
+                control["channel"] = channel
+            for key in ("revision", "ack_revision", "latency_ms", "requested_at", "applied_at"):
+                value = raw_control.get(key)
+                if type(value) is int and 0 <= value <= 9999999999999:
+                    control[key] = value
+            control["pending"] = raw_control.get("pending") is True
         devices.append({
             "device_id": identifier,
             "room": str(item.get("room") or "Tablet")[:48],
@@ -32,6 +46,8 @@ def public_device_snapshot(state):
             "voice_mode": "continuous" if item.get("voice_mode") == "continuous" else "wake",
             "word": str(item.get("word") or "")[:32],
             "telemetry": telemetry,
+            "control": control,
+            "followup_limit": item.get("followup_limit", -1) if type(item.get("followup_limit")) is int else -1,
         })
     return {"devices": devices}
 
@@ -76,9 +92,27 @@ def render_voice_panel(lang, csrf, device_state):
         <div><small>{t("Audioplayer", "Audio player")}</small><strong id="voice-native-audio">—</strong></div>
         <div><small>Bluetooth</small><strong id="voice-native-bluetooth">—</strong></div>
       </div>
+      <div class="voice-facts">
+        <div><small>{t("Steuerkanal", "Control channel")}</small><strong id="voice-control-channel">—</strong></div>
+        <div><small>{t("Bestätigung", "Acknowledgment")}</small><strong id="voice-control-confirm">—</strong></div>
+        <div><small>{t("Umschaltzeit HA → Tablet → HA", "Switch time HA → tablet → HA")}</small><strong id="voice-control-latency">—</strong></div>
+        <div><small>{t("Letzte Übernahme", "Last applied")}</small><strong id="voice-control-last">—</strong></div>
+      </div>
+      <div class="voice-actions">
+        <label for="voice-followups-select">{t("Anschlussfragen · HA-Obergrenze", "Follow-ups · HA ceiling")}</label>
+        <select id="voice-followups-select" aria-label="{t("Anschlussfragen begrenzen", "Limit follow-up questions")}">
+          <option value="-1">{t("App-Einstellung (keine zusätzliche Grenze)", "App setting (no extra limit)")}</option>
+          <option value="0">{t("Aus", "Off")}</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="5">5</option><option value="10">10</option><option value="20">20</option>
+          <option value="50">50</option><option value="100">100</option>
+        </select>
+        <button type="button" class="btn btn-outline" id="voice-followups-save">{t("Grenze speichern", "Save ceiling")}</button>
+      </div>
+      <p class="subtle" id="voice-followups-effective">{t("App-Grenze wird geladen", "Loading app limit")}</p>
       <p id="voice-native-status" class="voice-live" role="status" aria-live="polite">{t("Lade Gerätestatus", "Loading device status")}</p>
-      <p class="subtle">{t("Status wird nur bei geöffneter Sprachsteuerungsseite aktualisiert. Die Android-App meldet Betriebsphasen, aber derzeit keine einzelnen End-to-End-Latenzen.",
-         "Status refreshes only while this voice page is open. Android reports stages but not separate end-to-end latency measurements yet.")}</p>
+      <p class="subtle">{t("Die Umschaltzeit misst Home Assistant vom Speichern des Befehls bis zur Bestätigung der Android-App über die authentifizierte Geräteschnittstelle. Das ist eine Steuerungs-Rundlaufzeit, keine Audio- oder KI-Latenz. Die App muss für unbegrenzte Anschlussfragen selbst auf „Unbegrenzt“ gestellt sein; eine HA-Grenze kann nur einschränken.",
+         "Switch time is measured from saving the command in HA until the Android app acknowledges the applied setting through the authenticated device API. This is a control round trip, not audio or AI latency. Unlimited follow-ups must be explicitly enabled in the Android app; HA can only restrict its limit.")}</p>
     </section>
 
     <section class="voice-box">

@@ -90,6 +90,7 @@
   function showDevice() {
     const device = devices.find(item => item.device_id === deviceSelect.value);
     const telemetry = device?.telemetry || {};
+    const control = device?.control || {};
     const status = el("voice-native-status");
     for (const button of nativeModes) {
       const selected = button.dataset.nativeMode;
@@ -106,6 +107,31 @@
       device.muted ? tr("Stumm", "Muted") :
       device.voice_mode==="continuous" ? tr("Immer an", "Always on") :
       tr("Rufwort", "Wake word")) : "—");
+    const channel=control.channel || telemetry.control_channel;
+    el("voice-control-channel").textContent=!device?.online?tr("Offline","Offline"):
+      channel==="websocket"?"WebSocket":channel==="poll"?tr("500-ms-Abgleich","500 ms fallback"):
+      channel==="inactive"?tr("Nicht aktiv","Inactive"):tr("Noch unbekannt","Not yet reported");
+    const acked=Number.isInteger(control.ack_revision)&&
+      control.ack_revision===control.revision;
+    el("voice-control-confirm").textContent=control.pending?tr("Wird übertragen","Pending"):
+      acked?tr("Vom Tablet bestätigt","Acknowledged by tablet"):
+      tr("Noch keine Bestätigung","No acknowledgment yet");
+    el("voice-control-latency").textContent=Number.isInteger(control.latency_ms)&&
+      !control.pending?ms(control.latency_ms):"—";
+    el("voice-control-last").textContent=Number.isInteger(control.applied_at)?
+      new Date(control.applied_at).toLocaleTimeString():"—";
+    const followups=el("voice-followups-select");
+    const selectedLimit=Number.isInteger(device?.followup_limit)?device.followup_limit:-1;
+    followups.value=String(selectedLimit);
+    if(followups.value==="")followups.value="-1";
+    const local=Number.isInteger(telemetry.local_followup_limit)?telemetry.local_followup_limit:null;
+    el("voice-followups-effective").textContent=local===null?
+      tr("App-Grenze noch nicht gemeldet. Für unbegrenzt in der App ausdrücklich „Unbegrenzt“ wählen.",
+         "App limit not reported yet. Explicitly choose Unlimited in the Android app."):
+      tr("App-Grenze: ","App limit: ")+(local===-1?tr("Unbegrenzt","Unlimited"):String(local))+
+      " · "+tr("HA-Grenze: ","HA ceiling: ")+(selectedLimit===-1?tr("App-Einstellung","App setting"):String(selectedLimit));
+    followups.disabled=!device?.online||nativeBusy;
+    el("voice-followups-save").disabled=!device?.online||nativeBusy;
     el("voice-native-audio").textContent = telemetry.audio || "—";
     el("voice-native-bluetooth").textContent = telemetry.bluetooth || "—";
     el("voice-native-indicator").textContent = device ? (
@@ -158,13 +184,29 @@
       const updated=await postForm("voice_device_mode",{device_id:selected.device_id,mode:next});
       renderDevices(updated);
       el("voice-native-status").textContent=tr(
-        "Gespeichert · Android übernimmt die Einstellung bei der nächsten Synchronisierung",
-        "Saved · Android applies the setting on its next sync");
+        "Gespeichert · warte auf Android-Bestätigung",
+        "Saved · waiting for Android acknowledgment");
     } catch(_) {
       el("voice-native-status").textContent=tr(
         "Änderung fehlgeschlagen · bisherige Einstellung bleibt aktiv",
         "Update failed · previous setting remains active");
     } finally {nativeBusy=false;showDevice();}
+  }
+  async function saveFollowups(){
+    if(nativeBusy)return;
+    const device=devices.find(item=>item.device_id===deviceSelect.value);
+    if(!device||!device.online)return;
+    const value=Number(el("voice-followups-select").value);
+    if(!Number.isInteger(value)||value < -1||value >100)return;
+    nativeBusy=true;
+    try{
+      const updated=await postForm("voice_device_followups",{
+        device_id:device.device_id,limit:String(value)});
+      renderDevices(updated);
+    }catch(error){
+      el("voice-native-status").textContent=tr("Anschlussfragen konnten nicht gespeichert werden",
+        "Could not save follow-up setting");
+    }finally{nativeBusy=false;showDevice();}
   }
   function downsample(chunks, sampleRate) {
     const sourceLength = chunks.reduce((count, chunk) => count + chunk.length, 0);
@@ -350,6 +392,7 @@
   }
   nativeModes.forEach(button=>button.addEventListener("click",()=>setNativeMode(button.dataset.nativeMode)));
   deviceSelect.addEventListener("change",showDevice);
+  el("voice-followups-save").addEventListener("click",()=>void saveFollowups());
   el("voice-once").addEventListener("click",()=>{runOnce();});
   el("voice-stop").addEventListener("click",()=>stopLoop(tr("Browser-Aufnahme beendet", "Browser recording stopped")));
   el("voice-refresh").addEventListener("click",()=>{void refresh();void loadDevices();});

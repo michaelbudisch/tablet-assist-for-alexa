@@ -82,6 +82,14 @@ def set_native_microphone_mode(identifier, mode):
     return "Native microphone mode saved."
 
 
+def set_native_followup_limit(identifier, limit):
+    """Restrict an enrolled tablet's follow-ups; -1 defers to the app."""
+    if not DEVICE_ID.fullmatch(identifier) or type(limit) is not int or not -1 <= limit <= 100:
+        raise ValueError("Invalid follow-up ceiling")
+    ws_call("configure", device_id=identifier, settings={"followup_limit": limit})
+    return "Follow-up ceiling saved."
+
+
 def create_room(fields):
     """Create an audio room before any tablet is enrolled."""
     room = fields.get("room", [""])[0].strip()
