@@ -30,7 +30,7 @@ class TabletAssistPanel extends HTMLElement {
   constructor(){
     super();this.attachShadow({mode:"open"});this._config=structuredClone(DEFAULT);
     this._mode=new URLSearchParams(window.location.search).get("view")==="voice"?"voice":"home";this._loaded=false;this._loading=null;this._editing=false;
-    this._dirty=false;this._message="";this._panel=null;this._hass=null;this._lang="de";
+    this._dirty=false;this._message="";this._panel=null;this._hass=null;this._lang="de";this._linkedBindings={};
   }
   set panel(p){this._panel=p;if(this._voice)this._voice.panel=p;if(this._home)this._home.panel=p;}
   set hass(h){
@@ -49,7 +49,7 @@ class TabletAssistPanel extends HTMLElement {
       try{
         const result=await this._hass.callWS({type:"tablet_assist_for_alexa/dashboard/get"});
         if(!result||typeof result.config!=="object")throw Error("No dashboard config");
-        this._config=result.config;this._loaded=true;this._message="";
+        this._config=result.config;this._linkedBindings=result.linked_bindings||{};this._loaded=true;this._message="";
       }catch(e){this._message=TEXT[this._lang].unavailable+": "+String(e?.message||e).slice(0,110);}
       finally{this._loading=null;if(this.isConnected)this._render();}
     })();
@@ -65,6 +65,16 @@ class TabletAssistPanel extends HTMLElement {
       this._editing=false;this._message=TEXT[this._lang].saved;
     }catch(e){this._message=String(e?.message||e).slice(0,170);}
     this._render();
+  }
+  _effectiveConfig(){
+    const raw=this._config,bindings={...raw.bindings};
+    // Dedicated dashboard picks have priority; the HA source list fills only
+    // empty roles and never persists over a user's custom card bindings.
+    for(const [role,ids] of Object.entries(this._linkedBindings||{})){
+      if((!Array.isArray(bindings[role])||!bindings[role].length)&&Array.isArray(ids)&&ids.length)
+        bindings[role]=ids;
+    }
+    return {...raw,bindings};
   }
   _button(label,action){
     const el=document.createElement("button");el.textContent=label;
@@ -122,7 +132,7 @@ class TabletAssistPanel extends HTMLElement {
       wrapper.append(editor);host.append(wrapper);this._editor=editor;return;
     }
     const d=document.createElement("tafa-integrated-dashboard");
-    d.setConfig(this._config);d.panel=this._panel;d.hass=this._hass;
+    d.setConfig(this._effectiveConfig());d.panel=this._panel;d.hass=this._hass;
     d.addEventListener("tafa-open-voice-tools",()=>{this._mode="voice";this._editing=false;this._render();});
     d.addEventListener("tafa-open-dashboard-editor",()=>{
       if(!this._hass?.user?.is_admin)return;
