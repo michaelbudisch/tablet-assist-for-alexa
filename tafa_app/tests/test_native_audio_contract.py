@@ -102,7 +102,10 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn('KeepaliveRetry.delayMs(failures)',service)
         self.assertIn('current.setLooping(true)',service)
         self.assertIn('current.setVolume(1, 1)',service)
-        self.assertIn('keepalive.setEnabled(prefs.getBoolean("keepalive_enabled",false))',player)
+        self.assertIn('getBoolean("keepalive_enabled",false)',player)
+        self.assertIn('keepalive.setEnabled(!AudioOutputMode.TABLET.equals(AudioOutputMode.get(this))',player)
+        self.assertIn('registerOnSharedPreferenceChangeListener(outputPreferenceListener)',player)
+        self.assertIn('ready=!busy&&selectedOutput()!=null',player)
         self.assertIn("enrollmentIo.scheduleWithFixedDelay",player)
         self.assertNotIn("enabled = false;",service.split("void pauseForFocus()",1)[1].split("void close()",1)[0])
 

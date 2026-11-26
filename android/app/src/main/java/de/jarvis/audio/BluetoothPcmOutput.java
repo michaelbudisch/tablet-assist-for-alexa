@@ -46,6 +46,7 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
 
     @Override public void open(PcmFormat format)throws Exception {
         this.format=format;check();
+        if(outputDevice()==null&&AudioOutputMode.AUTO.equals(mode))outputType=AudioOutputMode.select(manager,mode);
         if(outputDevice()==null)throw new IOException("error_route_unavailable");
         int mask=format.channels==1?AudioFormat.CHANNEL_OUT_MONO:AudioFormat.CHANNEL_OUT_STEREO;
         int minimum=AudioTrack.getMinBufferSize(format.sampleRate,mask,AudioFormat.ENCODING_PCM_16BIT);
