@@ -1,6 +1,6 @@
 # TAFA: one speech path, one management UI
 
-**TAFA App 0.3.38 / HA integration 0.4.22 / Device Bridge 1.0.3**
+**TAFA App 0.3.39 / HA integration 0.4.23 / Device Bridge 1.0.3**
 
 ## Architecture
 

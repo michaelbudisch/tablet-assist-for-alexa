@@ -115,7 +115,7 @@ class DeviceCenterTests(unittest.TestCase):
                           side_effect=RuntimeError("TAFA WebSocket: unauthorized")):
             state = panel.read_device_data()
         self.assertEqual(state["error"], "TAFA WebSocket: unauthorized")
-        self.assertIn("Raumkopplung", panel.render_device_center("de", "csrf", state))
+        self.assertIn("TAFA WebSocket: unauthorized", panel.render_device_center("de", "csrf", state))
         self.assertIn('type="submit" disabled',
                       panel.render_device_center("de", "csrf", state))
 

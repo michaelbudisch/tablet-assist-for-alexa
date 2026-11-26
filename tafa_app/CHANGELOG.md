@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.39 — Fix empty room-user list on clean installations
+- Repair "Geräte & Multiroom": query native tablets, HA room users and rooms through a single authenticated HA-admin WebSocket API rather than two Supervisor-proxied REST endpoints that returned HTTP 400.
+- Keep existing Android audio/wakeword REST endpoints and other personal automations unchanged.
+- The native TAFA admin command validates room creation, explicit pairing, device setting changes and rejects non-admin users; Supervisor credentials remain server-side.
+- First install: update App, restart Home Assistant Core once to load integration 0.4.23, then refresh TAFA and choose a newly created non-admin user.
+
+
 ## 0.3.38 — Guided multiroom creation on clean HA servers
 - Create a native room before a tablet enrolls, then assign the enrolled tablet to that existing room.
 - Give fresh installations a four-step setup guide: dedicated non-admin HA user, room, native tablet registration, pairing.
