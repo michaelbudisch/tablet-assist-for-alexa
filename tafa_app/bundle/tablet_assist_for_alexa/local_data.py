@@ -5,6 +5,8 @@ import re
 from homeassistant.util import dt as dt_util
 from homeassistant.auth.permissions.const import POLICY_READ, POLICY_CONTROL
 from .sources import METRICS, UNITS, WASTE_LABELS
+from .web_search import SEARCH_PATTERN, FOLLOW_PATTERN, NUMBERS, query_searxng
+from time import monotonic
 from .local_intents import classify, WASTE_KEYS, has, normalize
 from .weather_data import weather, numeric, WEATHER_KEYS
 from .shopping import shopping, parse_shopping
@@ -30,7 +32,7 @@ def collection_dates(state,today):
 class LocalData:
     def __init__(self,hass,cfg,reminders,learning=None):
         self.learning=learning;self.followups=Followups()
-        self.hass=hass;self.cfg=cfg;self.reminders=reminders;self.sources=cfg.get("sources",{});self.shop_lock=asyncio.Lock()
+        self.hass=hass;self.cfg=cfg;self.reminders=reminders;self.sources=cfg.get("sources",{});self.shop_lock=asyncio.Lock();self.search_sessions={}
 
     async def source(self,key,context,write=False):
         entity=self.sources.get(key)
@@ -82,7 +84,31 @@ class LocalData:
         if kind in ("waschmaschine","waermepumpe"):result+=" Aus der Leistung allein lässt sich der Betriebszustand nicht sicher erkennen."
         return result
 
+    def search_context(self, key):
+        state = self.search_sessions.get(key)
+        if state and state["expires"] > monotonic():
+            return state
+        self.search_sessions.pop(key, None)
+        return None
+
     async def handle(self,key,text,context):
+        # Native Android speech and dashboard typed queries share SearXNG.
+        # A missing server is a normal optional-feature state.
+        query = SEARCH_PATTERN.match(text.strip())
+        if query:
+            result = await query_searxng(self.hass, self.cfg.get("search_base", ""), query.group(1))
+            self.search_sessions[key] = {"results": result["results"], "expires": monotonic() + 720}
+            return result["message"], False
+        follow = FOLLOW_PATTERN.match(text.strip())
+        context_results = self.search_context(key)
+        if follow and context_results:
+            token = follow.group(1).lower()
+            index = int(token) if token.isdigit() else NUMBERS.get(token, 0)
+            matches = context_results.get("results", [])
+            if index and index <= len(matches):
+                item = matches[index-1]
+                return "Treffer " + str(index) + ": " + item["title"] + ". Den Link kannst du in der TAFA-Infobox öffnen.", False
+            return "Diese Treffer-Nummer gibt es in der letzten Suche nicht.", False
         request=parse_shopping(text)
         kind=None
         if request is None:
