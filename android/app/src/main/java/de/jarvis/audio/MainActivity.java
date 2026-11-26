@@ -81,7 +81,8 @@ public class MainActivity extends Activity {
         tokenInput = findViewById(R.id.token);
         allowHttp = findViewById(R.id.allow_http);
         roomAudio = findViewById(R.id.room_audio_enabled);
-        roomAudio.setChecked(prefs.getBoolean("room_audio_enabled",false));
+        roomAudio.setChecked(true);
+        roomAudio.setEnabled(false);
         setupMessage = findViewById(R.id.setup_message);
         searchButton = findViewById(R.id.search);
         searchMessage = findViewById(R.id.search_message);
@@ -130,7 +131,7 @@ public class MainActivity extends Activity {
                     stopService(new Intent(this, CameraRelayService.class));
                     stopDiscovery();
                     prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).remove("room_audio_enabled").remove("wake_choice").apply();
-                    roomAudio.setChecked(false);
+                    roomAudio.setChecked(true);
                     tokenInput.setText(""); urlInput.setText("");
                     searchResults.removeAllViews(); searchMessage.setText("");
                     setupMessage.setText(R.string.credentials_removed);
@@ -409,26 +410,16 @@ public class MainActivity extends Activity {
         SeekBar pause=findViewById(R.id.native_pause_slider);
         TextView pauseLabel=findViewById(R.id.native_pause_label);
         Button test=findViewById(R.id.native_assist_test);
-        enabled.setChecked(preferences.getBoolean("native_assist_enabled",false));
-        followups.setChecked(preferences.getBoolean("native_followup_enabled",false));
-        followups.setEnabled(enabled.isChecked());
+        // No transport mode switch or local follow-up cap. HA manages
+        // per-device follow-up limits; direct native capture is mandatory.
+        enabled.setChecked(true);
+        enabled.setVisibility(View.GONE);
+        followups.setVisibility(View.GONE);
+        preferences.edit().putBoolean("native_assist_enabled",true)
+            .putBoolean("room_audio_enabled",true).apply();
         int value=Math.max(900,Math.min(3200,preferences.getInt("native_pause_ms",1700)));
         pause.setProgress((value-900)/100);
         pauseLabel.setText(getString(R.string.native_pause_label,value));
-        enabled.setOnCheckedChangeListener((button,isChecked)->{
-            if(isChecked&&!roomAudio.isChecked()){
-                button.setChecked(false);
-                Toast.makeText(this,R.string.native_assist_requirements,Toast.LENGTH_LONG).show();
-                return;
-            }
-            preferences.edit().putBoolean("native_assist_enabled",isChecked).apply();
-            followups.setEnabled(isChecked);
-            if(WakeWordService.running)startService(
-                new Intent(this,WakeWordService.class).setAction(WakeWordService.NATIVE_SETTINGS));
-            refreshNativeAssistStatus();
-        });
-        followups.setOnCheckedChangeListener((button,isChecked)->
-            preferences.edit().putBoolean("native_followup_enabled",isChecked).apply());
         pause.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             @Override public void onProgressChanged(SeekBar bar,int progress,boolean fromUser){
                 int ms=900+100*progress;
@@ -439,9 +430,7 @@ public class MainActivity extends Activity {
             @Override public void onStopTrackingTouch(SeekBar bar){}
         });
         test.setOnClickListener(v->{
-            if(!WakeWordService.running||
-                    !preferences.getBoolean("native_assist_enabled",false)||
-                    !AudioService.running){
+            if(!WakeWordService.running||!AudioService.running){
                 Toast.makeText(this,R.string.native_assist_requirements,Toast.LENGTH_LONG).show();
                 return;
             }
@@ -454,7 +443,7 @@ public class MainActivity extends Activity {
         TextView current=findViewById(R.id.native_assist_status);
         if(current==null)return;
         String stage=WakeWordService.status;
-        if(!getSharedPreferences(PREF,0).getBoolean("native_assist_enabled",false)){
+        if(!WakeWordService.running){
             current.setText(R.string.native_assist_inactive);
         }else if(stage.startsWith("native_error:")){
             current.setText(getString(R.string.native_state_error)+": "+stage.substring(13));
@@ -485,8 +474,7 @@ public class MainActivity extends Activity {
         }else current.setText(stage.startsWith("listening:")?
             getString(R.string.native_state_ready):stage);
         Button test=findViewById(R.id.native_assist_test);
-        if(test!=null)test.setEnabled(WakeWordService.running&&AudioService.running
-            &&getSharedPreferences(PREF,0).getBoolean("native_assist_enabled",false));
+        if(test!=null)test.setEnabled(WakeWordService.running&&AudioService.running);
     }
 
     private boolean saveConnectionForWake(){
@@ -622,7 +610,7 @@ public class MainActivity extends Activity {
             if (token.isEmpty() && !prefs.contains("secret")) throw new IllegalArgumentException("token_required");
             if (token.isEmpty() && !base.equals(HaAddress.normalize(prefs.getString("base", ""))))
                 throw new IllegalArgumentException("token_server_changed");
-            var edit = prefs.edit().putString("base", base).putBoolean("room_audio_enabled",roomAudio.isChecked());
+            var edit = prefs.edit().putString("base", base).putBoolean("room_audio_enabled",true);
             if(CameraRelayService.running&&(!base.equals(prefs.getString("base",""))||!token.isEmpty()))
                 stopService(new Intent(this,CameraRelayService.class));
             if (HaAddress.isHttp(base)) edit.putString(HTTP_CONSENT, base); else edit.remove(HTTP_CONSENT);

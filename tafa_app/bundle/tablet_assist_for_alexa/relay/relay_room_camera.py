@@ -15,7 +15,7 @@ from .relay_frames import MAX_IMAGE
 from .relay_room_camera_store import RoomCameraStore
 
 KEY = "room_cameras"
-API = "/api/jarvis_echo_relay/room_camera"
+API = "/api/tablet_assist_for_alexa/room_camera"
 
 
 class RoomCameraHub:

@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 /** Authenticated device settings, dynamically stored in the HA integration. */
 final class WakePilotSettings {
-    static final String ENDPOINT="/api/jarvis_tablet_audio/wake_devices";
+    static final String ENDPOINT="/api/tablet_assist_for_alexa/wake_devices";
     static final String[] CHOICES={"hey_jarvis","jarvis","alexa","all"};
     static final String[] DISPLAY={"Hey Jarvis","Jarvis","Alexa","Alle drei"};
     private WakePilotSettings(){}
@@ -18,11 +18,12 @@ final class WakePilotSettings {
         final boolean muted;
         final String word;
         final String room;
-        final int strictness,cooldownSeconds,holdSeconds;
-        Snapshot(boolean muted,String word,String room,int strictness,int cooldownSeconds,int holdSeconds){
+        final int strictness,cooldownSeconds,holdSeconds,followupLimit;
+        Snapshot(boolean muted,String word,String room,int strictness,int cooldownSeconds,int holdSeconds,int followupLimit){
             this.muted=muted;this.word=word;this.room=room;
             this.strictness=strictness;
             this.cooldownSeconds=cooldownSeconds;this.holdSeconds=holdSeconds;
+            this.followupLimit=followupLimit;
         }
     }
 
@@ -87,12 +88,14 @@ final class WakePilotSettings {
             dev.optString("room","Jarvis Tablet"),
             clamp(dev.getInt("strict"),1,3),
             clamp(dev.getInt("cooldown"),3,30),
-            clamp(dev.getInt("hold"),10,90)
+            clamp(dev.getInt("hold"),10,90),
+            clamp(dev.optInt("followup_limit",5),-1,100)
         );
         ctx.getSharedPreferences(MainActivity.PREF,0).edit()
             .putBoolean("wake_muted",s.muted).putString("wake_choice",s.word)
             .putInt("wake_strict",s.strictness).putInt("wake_cooldown",s.cooldownSeconds)
-            .putInt("wake_hold",s.holdSeconds).apply();
+            .putInt("wake_hold",s.holdSeconds)
+            .putInt("native_followup_limit",s.followupLimit).apply();
         return s;
     }
 

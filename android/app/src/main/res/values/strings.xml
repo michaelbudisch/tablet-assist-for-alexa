@@ -149,8 +149,8 @@
     <string name="camera_image_error">Camera image could not be prepared. Stop and restart the HA camera.</string>
     <string name="camera_notification_channel">Camera image delivery</string>
     <string name="camera_notification_text">Camera active · sending images to Home Assistant</string>
-    <string name="room_audio_enabled">Room audio (experimental)</string>
-    <string name="room_audio_help">Requires a dedicated Home Assistant user for this room. Enable only after provisioning the room in Home Assistant. Restart the player to apply.</string>
+    <string name="room_audio_enabled">Multiroom Bluetooth playback (TAFA standard)</string>
+    <string name="room_audio_help">TAFA uses one audio path: microphone → Home Assistant → this tablet → Bluetooth. Pair a room once in TAFA Dashboard → TAFA → Devices.</string>
     <string name="camera_refresh_label">Camera refresh interval</string>
     <string name="camera_refresh_help">Stored on this tablet. Changes apply during the next capture cycle. Actual delivery may be slower depending on capture, upload and server load.</string>
     <plurals name="camera_refresh_interval">
@@ -160,7 +160,7 @@
     <string name="app_version">Version %1$s · Build %2$d</string>
     <string name="wake_label">OPTIONAL / VOICE EXPERIMENT</string>
     <string name="wake_title">Native wakeword recognition</string>
-    <string name="wake_description">Recognizes Alexa, Jarvis or Hey Jarvis locally. Home Assistant receives a wakeword event and the dashboard handles the question. The configured handoff pause releases the microphone for Whisper.</string>
+    <string name="wake_description">Wakeword recognition runs in the foreground even when the tablet screen is off. After a match, audio goes directly to Home Assistant. Set follow-up limits in TAFA Dashboard → TAFA → Devices.</string>
     <string name="wake_privacy">Optional German model (~45 MB). Download it once on this device. Recognition audio stays local. Turn off the dashboard’s own wakeword detector before using native recognition; Alexa may also trigger an Echo.</string>
     <string name="wake_select">Choose a wakeword</string>
     <string name="wake_install">Download German offline model (~45 MB)</string>
@@ -209,7 +209,7 @@
     <string name="connection_start">Save &amp; start player</string>
     <string name="connection_start_help">Only using wakeword recognition? Switch to Wakeword and start it there; the same connection is saved.</string>
     <string name="bluetooth_advanced_title">Bluetooth options</string>
-    <string name="room_settings_title">Room audio</string>
+    <string name="room_settings_title">TAFA direct Bluetooth multiroom</string>
     <string name="wake_model_eyebrow">01 / PREPARE</string>
     <string name="wake_model_title">Offline speech model</string>
     <string name="wake_device_title">Device &amp; room</string>
@@ -227,14 +227,14 @@
     <string name="brand_product" translatable="false">Device Bridge</string>
     <string name="native_assist_eyebrow">OPTIONAL · NEW</string>
     <string name="native_assist_title">Native voice conversation</string>
-    <string name="native_assist_description">After Hey Jarvis, record the next question inside this Android app and stream it directly to Home Assistant Whisper. Replies play through the existing Multiroom Bluetooth player. The original wakeword-only behavior remains available.</string>
-    <string name="native_assist_switch">After wakeword, listen for a full question</string>
-    <string name="native_followup_switch">Allow up to two short follow-up questions without wakeword</string>
+    <string name="native_assist_description">The built-in foreground wakeword service sends questions directly to Home Assistant Assist. Replies return to this tablet and play over Bluetooth. No dashboard window is required.</string>
+    <string name="native_assist_switch">TAFA direct voice transport (always enabled)</string>
+    <string name="native_followup_switch">Follow-up questions are configured per device in Home Assistant</string>
     <string name="native_pause_label">End-of-speech pause: %1$d ms</string>
     <string name="native_assist_test">Test native question without wakeword</string>
     <string name="native_assist_inactive">Native speech input off</string>
-    <string name="native_assist_requirements">Enable Multiroom audio in Connect, pair this tablet in TAFA, then start both the player and wakeword detection.</string>
-    <string name="native_assist_privacy">Off by default. Only after a detected wakeword (or manual test) the microphone streams 16 kHz PCM to your configured Home Assistant until speech ends. No recordings are stored. The microphone is released during AI processing and speaker playback. Switch off or mute to stop. LAN HTTP is unencrypted; use trusted HTTPS where possible.</string>
+    <string name="native_assist_requirements">Start the Bluetooth player, pair this tablet with an HA room and start native wakeword detection.</string>
+    <string name="native_assist_privacy">Speech is transmitted to your configured Home Assistant only after a wakeword or a manual test, and is not stored. Stop or mute the foreground wakeword service to stop listening.</string>
     <string name="native_state_ready">Ready for Hey Jarvis</string>
     <string name="native_state_connecting">Connecting to Home Assistant…</string>
     <string name="native_state_followup">Listening for a follow-up question…</string>

@@ -105,7 +105,7 @@ class DashboardDelivery(unittest.TestCase):
     def test_native_sidebar_opens_dashboard_not_old_voice_landing(self):
         src=(HA/"__init__.py").read_text()
         self.assertIn('sidebar_title="TAFA Dashboard"',src)
-        self.assertIn('module_url="/tablet_assist_for_alexa/panel.js?v=0.4.18"',src)
+        self.assertIn('module_url="/tablet_assist_for_alexa/panel.js?v=0.4.19"',src)
         self.assertIn("async_get_dashboard",src)
         self.assertIn("async_set_dashboard",src)
         for js in ["panel.js","dashboard.js","dashboard_model.js","voice_tools.js"]:
@@ -114,9 +114,9 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('document.createElement("tafa-integrated-dashboard")',panel)
         self.assertIn('document.createElement("tablet-assist-voice-tools")',panel)
         self.assertIn('type:"tablet_assist_for_alexa/dashboard/set"',panel)
-        self.assertIn("dashboard.js?v=0.4.18",panel)
+        self.assertIn("dashboard.js?v=0.4.19",panel)
         dashboard=(HA/"frontend/dashboard.js").read_text()
-        self.assertIn("./dashboard_model.js?v=0.4.18",dashboard)
+        self.assertIn("./dashboard_model.js?v=0.4.19",dashboard)
         self.assertIn("tafa-open-voice-tools",dashboard)
         # "TAFA" now stays in the native dashboard navigation, not in a
         # separate fullscreen page with an unrelated header.
@@ -149,10 +149,10 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('tafa-integrated-dashboard-editor',panel)
 
     def test_version_and_docs_consistent(self):
-        self.assertIn('version: "0.3.33"',(APP/"config.yaml").read_text())
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.18")
-        self.assertIn('"version": "0.4.18"',(HA/"manifest.json").read_text())
-        self.assertIn("0.3.33",(APP/"CHANGELOG.md").read_text())
+        self.assertIn('version: "0.3.34"',(APP/"config.yaml").read_text())
+        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.19")
+        self.assertIn('"version": "0.4.19"',(HA/"manifest.json").read_text())
+        self.assertIn("0.3.34",(APP/"CHANGELOG.md").read_text())
 
 
 if __name__=="__main__":

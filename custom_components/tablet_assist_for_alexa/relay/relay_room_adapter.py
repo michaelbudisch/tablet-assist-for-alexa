@@ -30,8 +30,8 @@ def quiet_now(settings, now):
 
 
 class RoomAudioView(HomeAssistantView):
-    url = "/api/jarvis_echo_relay/room_audio"
-    name = "api:jarvis_echo_relay:room_audio"
+    url = "/api/tablet_assist_for_alexa/room_audio"
+    name = "api:tablet_assist_for_alexa:room_audio"
     requires_auth = True
 
     async def post(self, request):
@@ -86,8 +86,8 @@ class RoomAudioAdminView(HomeAssistantView):
     The administrator is authenticated by HA. No credentials, microphone
     recordings or room session tokens are returned to the panel.
     """
-    url = "/api/jarvis_tablet_audio/room_admin"
-    name = "api:jarvis_tablet_audio:room_admin"
+    url = "/api/tablet_assist_for_alexa/room_admin"
+    name = "api:tablet_assist_for_alexa:room_admin"
     requires_auth = True
 
     async def post(self, request):
@@ -245,12 +245,26 @@ async def setup_room_audio(hass, entry):
     transport = RoomAudioTransport()
     store = Store(hass, 1, DOMAIN + ".room_audio." + entry.entry_id)
     saved = await store.async_load()
+    migrated = False
+    if not saved:
+        # Safe, read-only import of established multiroom pairings.
+        for legacy in hass.config_entries.async_entries("jarvis_tablet_audio"):
+            old = await Store(hass, 1, "jarvis_tablet_audio.room_audio." + legacy.entry_id).async_load()
+            if isinstance(old, dict) and isinstance(old.get("rooms"), dict):
+                saved = old
+                migrated = True
+                break
     for room, principal in (saved or {}).get("rooms", {}).items():
         try:
             transport.provision(room, principal)
         except ValueError:
             continue
     transport.settings = {r: v for r, v in (saved or {}).get("settings", {}).items() if r in transport.rooms and isinstance(v, dict)}
+    if migrated:
+        # Persist only authorized, validated room assignments; do not rely on
+        # the continued presence of the legacy integration after migration.
+        await store.async_save({"rooms": transport.rooms.copy(),
+                                "settings": transport.settings.copy()})
     data[KEY] = transport
     from .relay_room_camera import setup_room_cameras
     cameras = await setup_room_cameras(hass, entry, transport)

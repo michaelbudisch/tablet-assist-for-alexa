@@ -1,5 +1,12 @@
 # Changelog
 
+## TAFA-App 0.3.34 / HA-Integration 0.4.19 / Android 1.0.2
+- Ein einziger Sprachweg: Tablet-Mikrofon → Home Assistant („TAFA Lokal“) → Antwort auf dem gleichen Tablet per Bluetooth, inklusive Multiroom.
+- Anschlussfragen pro Tablet in TAFA → Geräte einstellen: 0 bis 100 oder unbegrenzt (−1, bis zur Gesprächspause). Der alte feste App-Grenzwert entfällt.
+- Der Mikrofon-Button in der Dashboard-Kopfzeile schaltet native Android-Rufworterkennung stumm/frei; bei mehreren Tablets mit expliziter Raumauswahl.
+- TAFA erhält eigene authentifizierte REST-Endpunkte, übernimmt alte Gerätepaarungen lesend und verändert keine Automatisierungen.
+
+
 ## TAFA-App 0.3.33 / HA-Integration 0.4.18 — Sprachdienste im Dashboard-Design
 - Der vorhandene TAFA-Menüpunkt öffnet die Sprachdienste wieder innerhalb des Dashboards, mit derselben Kopfzeile, Uhr und Navigation wie die übrigen Bereiche.
 - Geräteverwaltung, Ansagen, Datenquellen, Lernfunktion und Sprach-Status nutzen dieselben dunklen Karten, Abstände und türkisfarbenen Akzente wie das ursprüngliche TAFA Dashboard. Die Ansicht wird beim Aktualisieren der HA-Sensoren nicht neu aufgebaut.

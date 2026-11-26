@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.34 — native tablet voice and Bluetooth multiroom as sole conversation transport
+- Authenticated, TAFA-owned REST endpoints receive native microphone settings and return per-room audio; stored legacy HA room/device pairings are read-only imported on first run.
+- Per-device HA setting followup_limit=0..100 or -1 (unlimited until silence) replaces the fixed Android app cap.
+- Dashboard microphone control now remotely mutes/unmutes Android wakeword capture; for multiple registered tablets, a room must be chosen first.
+- Android Device Bridge 1.0.2 uses only native capture → HA Assist „TAFA Lokal“ → tablet Bluetooth Multiroom. Old browser and input_text command/status audio modes are removed.
+- Camera and existing automations are left unchanged. Android CI builds a debug APK; a drop-in update of the signed production APK still requires the original signing key.
+
+
 ## 0.3.33 — TAFA voice management integrated into the original dashboard layout
 - Selecting the existing TAFA bottom/side navigation item now opens all TAFA voice service controls inside the dashboard's existing header, clock, theme and navigation, without switching to an unrelated full-page control center.
 - Reuse the original household dashboard design tokens for responsive status, device management, announcements, learning, setup and voice-service sub-navigation; no duplicate header or fixed-width light Home Assistant cards.

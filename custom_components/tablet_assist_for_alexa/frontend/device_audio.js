@@ -50,7 +50,7 @@ export const roomSlug=value=>String(value||"tablet").toLowerCase().replaceAll("Ã
   .replace(/[^a-z0-9_-]+/g,"_").replace(/^_+|_+$/g,"").slice(0,64)||"tablet";
 
 export async function fetchAudioPairings(hass){
-  return hass.callApi("POST","jarvis_tablet_audio/room_admin",{action:"list"});
+  return hass.callApi("POST","tablet_assist_for_alexa/room_admin",{action:"list"});
 }
 const el=(tag,text)=>{
   const node=document.createElement(tag);
@@ -98,7 +98,7 @@ export function renderAudioPairing({container,hass,device,audio,language,onChang
     cameraToggle.onchange=async()=>{
       cameraToggle.disabled=true;cameraFeedback.textContent="";
       try{
-        await hass.callApi("POST","jarvis_tablet_audio/room_admin",{
+        await hass.callApi("POST","tablet_assist_for_alexa/room_admin",{
           action:"camera",room:current.room,device_id:deviceId,enabled:cameraToggle.checked
         });
         cameraFeedback.textContent=t.cameraSaved;
@@ -150,7 +150,7 @@ export function renderAudioPairing({container,hass,device,audio,language,onChang
     if(ownerId&&ownerId!==userId){if(!window.confirm(t.transfer))return;transfer_device=true;}
     btn.disabled=true;status.textContent="";
     try{
-      await hass.callApi("POST","jarvis_tablet_audio/room_admin",{
+      await hass.callApi("POST","tablet_assist_for_alexa/room_admin",{
         action:"pair",device_id:deviceId,user_id:userId,room,replace,transfer_device
       });
       status.textContent=t.success;
@@ -253,7 +253,7 @@ export function renderSpeechTest({container,hass,device,audio,pipelines,language
     }
     send.disabled=true;let id="";
     const rpc=async(operation,params={})=>hass.callApi("POST",admin?
-      "jarvis_tablet_audio/room_admin":"jarvis_echo_relay/room_audio",
+      "tablet_assist_for_alexa/room_admin":"tablet_assist_for_alexa/room_audio",
       admin?{action:"test",room:current.room,device_id:device.device_id,operation,...params}:
         {action:operation,...params});
     try{

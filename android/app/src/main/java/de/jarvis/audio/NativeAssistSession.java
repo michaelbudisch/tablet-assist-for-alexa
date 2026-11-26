@@ -30,12 +30,12 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 
 /**
- * Optional foreground native microphone → HA Assist pipeline → the existing
- * authenticated Multiroom Android player.
+ * Direct foreground microphone → HA Assist → authenticated TAFA
+ * Multiroom Android Bluetooth player.
  *
  * A session is started only after an explicitly enabled offline wake detector.
  * There is no always-on streaming, no recordings stored on disk and no token
- * in logs. The legacy wake-only mode is the default.
+ * in logs. There is no legacy browser-microphone fallback.
  */
 final class NativeAssistSession extends WebSocketListener implements AutoCloseable {
     interface Listener {
@@ -89,10 +89,6 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 if(!AudioService.running||!AudioService.haConnected)
                     throw new IOException("tablet_player_offline");
                 SharedPreferences prefs=context.getSharedPreferences(MainActivity.PREF,0);
-                if(!prefs.getBoolean("native_assist_enabled",false))
-                    throw new IOException("native_assist_off");
-                if(!prefs.getBoolean("room_audio_enabled",false))
-                    throw new IOException("multiroom_required");
                 haBase=HaAddress.validateStored(prefs.getString("base",""),
                     prefs.getString(MainActivity.HTTP_CONSENT,""));
                 bearer=MainActivity.decrypt(prefs.getString("secret",""));
@@ -110,7 +106,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
 
     private JSONObject roomApi(JSONObject body) throws Exception {
         if(ended.get())throw new IOException("cancelled");
-        HttpURLConnection conn=(HttpURLConnection)new URL(haBase+"/api/jarvis_echo_relay/room_audio").openConnection();
+        HttpURLConnection conn=(HttpURLConnection)new URL(haBase+"/api/tablet_assist_for_alexa/room_audio").openConnection();
         try{
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(4500);conn.setReadTimeout(9500);
@@ -172,20 +168,15 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         if(list==null)throw new IOException("pipeline_list_empty");
         JSONArray items=list.optJSONArray("pipelines");
         if(items==null)throw new IOException("pipeline_list_empty");
-        SharedPreferences prefs=context.getSharedPreferences(MainActivity.PREF,0);
-        String requested=prefs.getString("native_pipeline_id","");
-        JSONObject chosen=null,first=null;
+        JSONObject chosen=null;
         for(int i=0;i<items.length();i++){
             JSONObject p=items.optJSONObject(i);
             if(p==null||p.optString("id").isEmpty()||p.isNull("stt_engine")||
                     p.isNull("tts_engine")||p.optString("stt_engine").isEmpty()||
                     p.optString("tts_engine").isEmpty())continue;
-            if(first==null)first=p;
-            if(p.optString("id").equals(requested)){chosen=p;break;}
-            if(chosen==null&&p.optString("name").equalsIgnoreCase("TAFA Lokal"))chosen=p;
+            if(p.optString("name").equalsIgnoreCase("TAFA Lokal")){chosen=p;break;}
         }
-        if(chosen==null)chosen=first;
-        if(chosen==null)throw new IOException("no_stt_tts_pipeline");
+        if(chosen==null)throw new IOException("tafa_lokal_pipeline_missing");
         JSONObject input=new JSONObject().put("sample_rate",SAMPLE_RATE).put("no_vad",true);
         if(!wakeWord.isEmpty())input.put("wake_word_phrase",wakeWord);
         JSONObject cmd=new JSONObject().put("id",WS_RUN).put("type","assist_pipeline/run")

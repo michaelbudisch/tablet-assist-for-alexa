@@ -18,13 +18,13 @@ DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
 DEFAULTS = {"muted": False, "word": "Hey Jarvis",
-            "strict": 1, "cooldown": 12, "hold": 50}
-VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90)}
+            "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": 5}
+VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90), "followup_limit": (-1, 100)}
 
 
 class WakeDeviceView(HomeAssistantView):
-    url = "/api/jarvis_tablet_audio/wake_devices"
-    name = "api:jarvis_tablet_audio:wake_devices"
+    url = "/api/tablet_assist_for_alexa/wake_devices"
+    name = "api:tablet_assist_for_alexa:wake_devices"
     requires_auth = True
 
     async def post(self, request):
@@ -69,7 +69,7 @@ class WakeDevices:
 
     @staticmethod
     def public(device):
-        return {k: v for k, v in device.items() if k != "user_id"}
+        return {**DEFAULTS, **{k: v for k, v in device.items() if k != "user_id"}}
 
     async def save(self):
         await self.store.async_save({"devices": self.devices})
@@ -162,13 +162,25 @@ async def setup_wake_devices(hass, entry):
     if data.get(KEY):
         return
     store = Store(hass, 1, DOMAIN + ".wake_devices." + entry.entry_id)
-    saved = await store.async_load() or {}
-    raw = saved.get("devices", {})
+    saved = await store.async_load()
+    migrated = False
+    if not saved:
+        # Import existing, HA-authenticated tablet enrollment without deleting
+        # or modifying legacy Jarvis storage. Once saved here, TAFA is owner.
+        for legacy in hass.config_entries.async_entries("jarvis_tablet_audio"):
+            old = await Store(hass, 1, "jarvis_tablet_audio.wake_devices." + legacy.entry_id).async_load()
+            if isinstance(old, dict) and isinstance(old.get("devices"), dict):
+                saved = old
+                migrated = True
+                break
+    raw = (saved or {}).get("devices", {})
     devices = {}
     for identifier, device in raw.items():
         if DEVICE_ID.fullmatch(identifier) and isinstance(device, dict):
             if isinstance(device.get("user_id"), str):
-                devices[identifier] = device
+                devices[identifier] = {**DEFAULTS, **device}
+    if migrated:
+        await store.async_save({"devices": devices})
     data[KEY] = WakeDevices(hass, store, devices)
     if not data.get("wake_devices_view_registered"):
         hass.http.register_view(WakeDeviceView())

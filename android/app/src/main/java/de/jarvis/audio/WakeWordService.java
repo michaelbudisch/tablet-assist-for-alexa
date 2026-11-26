@@ -21,9 +21,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Experimental, explicitly enabled, offline wakeword recognition.
- * Only the matched phrase is sent to the configured Home Assistant.
- * Raw microphone audio and ordinary speech are never uploaded or saved.
+ * Foreground, on-device wakeword detector for the one TAFA speech transport.
+ * Speech is sent to the authenticated HA Assist websocket only after wakeword
+ * detection (or explicit manual test). Nothing is saved as a recording.
  */
 public final class WakeWordService extends Service implements RecognitionListener {
     static final String START="de.jarvis.audio.WAKE_START",STOP="de.jarvis.audio.WAKE_STOP",
@@ -245,19 +245,11 @@ public final class WakeWordService extends Service implements RecognitionListene
         // Release the Vosk recorder before opening a separate native recorder.
         releaseRecognizer();
         status="detected: "+hit;
-        var prefs=getSharedPreferences(MainActivity.PREF,0);
-        boolean nativeEnabled=prefs.getBoolean("native_assist_enabled",false)
-            &&prefs.getBoolean("room_audio_enabled",false);
-        if(nativeEnabled){
-            holdUntil=0;
-            nativeConversationId="";nativeFollowupCount=0;
-            // Native mode owns the entire turn. Do not wake the browser as well.
-            beginNativeAssist(hit,false);
-        }else{
-            holdUntil=now+holdSeconds*1000L;
-            sendWakeEvent(hit);
-            main.postDelayed(rearm,holdSeconds*1000L);
-        }
+        holdUntil=0;
+        nativeConversationId="";nativeFollowupCount=0;
+        // The native capture owns the complete request. Do not launch
+        // a competing browser or old wake-event microphone path.
+        beginNativeAssist(hit,false);
     }
 
     /** Launch only while the explicitly started foreground wake service runs. */
@@ -266,10 +258,8 @@ public final class WakeWordService extends Service implements RecognitionListene
         // Exclusive recorder ownership, including the follow-up after playback.
         releaseRecognizer();
         var prefs=getSharedPreferences(MainActivity.PREF,0);
-        if(!prefs.getBoolean("native_assist_enabled",false)||
-                !prefs.getBoolean("room_audio_enabled",false)){
-            holdUntil=0;main.postDelayed(rearm,300);return;
-        }
+        // TAFA supports one speech mode: native microphone → HA Assist
+        // and authenticated multiroom Bluetooth playback.
         status=nextQuestion?"native_followup":"native_connecting";
         final NativeAssistSession[] holder=new NativeAssistSession[1];
         NativeAssistSession session=new NativeAssistSession(this,hit,
@@ -297,8 +287,10 @@ public final class WakeWordService extends Service implements RecognitionListene
                             nativeConversationId="";
                             if(!status.startsWith("native_error:"))status="native_no_reply";
                         }
-                        if(answered&&prefs.getBoolean("native_followup_enabled",false)
-                                &&nativeFollowupCount<2){
+                        // HA owns this limit per registered tablet:
+                        // 0=disabled, 1..100=allowed follow-ups, -1=unlimited.
+                        int limit=prefs.getInt("native_followup_limit",5);
+                        if(FollowupPolicy.shouldContinue(answered,nativeFollowupCount,limit)){
                             nativeFollowupCount++;
                             main.removeCallbacks(followup);
                             main.postDelayed(followup,850);
@@ -332,18 +324,6 @@ public final class WakeWordService extends Service implements RecognitionListene
             releaseRecognizer();
             main.postDelayed(rearm,1000);
         }
-    }
-
-    private void sendWakeEvent(String word){
-        new Thread(()->{
-            try{
-                boolean routed=WakePilotSettings.sendWake(this,word);
-                status=routed?"sent: "+word:"wake_suppressed: "+word;
-            }catch(Exception e){
-                Log.w(TAG,"HA multiroom wake routing failed",e);
-                status="delivery_error: "+e.getClass().getSimpleName();
-            }
-        },"JarvisWakeEvent").start();
     }
 
     @Override public void onDestroy(){

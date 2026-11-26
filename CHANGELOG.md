@@ -1,3 +1,6 @@
+## TAFA App 0.3.34 / HA 0.4.19 / Android 1.0.2 — direct audio only
+- One conversation transport: native Android → HA Assist TAFA Lokal → authenticated room-scoped Android player → Bluetooth. Follow-up limits per device configurable from Home Assistant (0–100 or unlimited). Dashboard microphone control and safe multiroom room picker. Legacy room pairing read-only migration.
+
 ## TAFA App 0.3.33 / integration 0.4.18 — voice services styled and embedded
 - The TAFA dashboard navigation now opens voice management within the existing dashboard layout, preserving its header, clock, bottom/side navigation and teal dark theme. The standalone view remains available by direct link and shares its new visual design. No automations or existing voice pipelines changed.
 

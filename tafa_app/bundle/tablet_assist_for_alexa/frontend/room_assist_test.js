@@ -87,7 +87,7 @@
     }
     setMode(mode){if(mode!=="dashboard")return;if(mode===this.mode||!["native","dashboard"].includes(mode))return;this.stop("Bereit");this.mode=mode;save(this.cfg,"mode",mode);this.state("Bereit",mode==="dashboard"?"Im Dashboard · Mikrofon aus":"Nativer Android-Assistent");this.report("mode|"+mode);this.setNativeWake(false);}
     nativeAudioReady(){return this._roomStatus?.ready===true&&Date.now()-(this._roomStatusAt||0)<7000;}
-    roomRpc(data){return this.cfg.admin_room?this.h.callApi("POST","jarvis_tablet_audio/room_admin",{action:"test",room:this.cfg.admin_room,device_id:this.cfg.device_id,operation:data.action,...Object.fromEntries(Object.entries(data).filter(([key])=>key!=="action"))}):this.h.callApi("POST","jarvis_echo_relay/room_audio",data);}
+    roomRpc(data){return this.cfg.admin_room?this.h.callApi("POST","tablet_assist_for_alexa/room_admin",{action:"test",room:this.cfg.admin_room,device_id:this.cfg.device_id,operation:data.action,...Object.fromEntries(Object.entries(data).filter(([key])=>key!=="action"))}):this.h.callApi("POST","tablet_assist_for_alexa/room_audio",data);}
     async refreshRoom(){
       if(!this.card.isConnected)return;
       if(this._roomRefreshPromise)return this._roomRefreshPromise;

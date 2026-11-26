@@ -109,3 +109,5 @@ TAFA Dashboard is now the default HA integration sidebar panel, based on the por
 
 
 **TAFA App 0.3.33 / integration 0.4.18:** The TAFA entry in the native dashboard navigation now renders voice service management in place, retaining dashboard navigation and visual styling. Status, devices, Alexa announcements, sources and learning use the same card and accent system. A standalone voice view remains available at `/tablet_assist_for_alexa?view=voice`. No automation migration is required.
+
+**TAFA App 0.3.34 / HA 0.4.19 / Android 1.0.2:** The only conversation route is native Android foreground capture (screen off supported) → HA Assist TAFA Lokal → tablet Bluetooth multiroom. No browser microphone or legacy input_text playback. Set 0–100 or unlimited follow-up turns per device in Dashboard → TAFA → Devices; the dashboard mic icon mutes/unmutes the native recorder and prompts for a room where multiple tablets exist. Old HA pairing data is imported read-only. Existing Android installation upgrades need the matching signing key.
