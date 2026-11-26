@@ -18,7 +18,7 @@ DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
 DEFAULTS = {"muted": False, "word": "Hey Jarvis",
-            "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": 5}
+            "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1}
 VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90), "followup_limit": (-1, 100)}
 
 

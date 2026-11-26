@@ -102,10 +102,10 @@ class DashboardDelivery(unittest.TestCase):
             self.assertNotIn("sensor.michas",body)
             self.assertNotIn("http://192.168.",body)
 
-    def test_native_sidebar_opens_dashboard_not_old_voice_landing(self):
+    def test_no_sidebar_dashboard_is_created(self):
         src=(HA/"__init__.py").read_text()
-        self.assertIn('sidebar_title="TAFA Dashboard"',src)
-        self.assertIn('module_url="/tablet_assist_for_alexa/panel.js?v=0.4.20"',src)
+        self.assertNotIn('sidebar_title="TAFA Dashboard"',src)
+        self.assertNotIn("async_register_panel(",src)
         self.assertIn("async_get_dashboard",src)
         self.assertIn("async_set_dashboard",src)
         self.assertIn('if legacy_present else PLATFORMS',src)

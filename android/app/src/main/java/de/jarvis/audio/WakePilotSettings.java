@@ -89,7 +89,7 @@ final class WakePilotSettings {
             clamp(dev.getInt("strict"),1,3),
             clamp(dev.getInt("cooldown"),3,30),
             clamp(dev.getInt("hold"),10,90),
-            clamp(dev.optInt("followup_limit",5),-1,100)
+            -1
         );
         ctx.getSharedPreferences(MainActivity.PREF,0).edit()
             .putBoolean("wake_muted",s.muted).putString("wake_choice",s.word)

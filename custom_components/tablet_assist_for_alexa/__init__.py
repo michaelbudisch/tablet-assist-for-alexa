@@ -11,7 +11,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components import frontend, panel_custom
 
 from .const import DOMAIN, ROOMS, settings
 from .app_settings import async_sync_from_app
@@ -114,12 +113,8 @@ async def async_setup_entry(hass, entry):
     data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
     await hass.config_entries.async_forward_entry_setups(entry, active_platforms)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
-    await panel_custom.async_register_panel(
-        hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
-        sidebar_title="TAFA Dashboard", sidebar_icon="mdi:view-dashboard-outline",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.20",
-        config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
-    )
+    # No extra TAFA sidebar/dashboard. The Supervisor App is the only
+    # configuration and speech-control user interface.
     await reminders.load()
     entry.async_on_unload(entry.add_update_listener(_reload))
     return True
@@ -144,5 +139,4 @@ async def async_unload_entry(hass, entry):
         if data:
             data.reminders.close()
         hass.services.async_remove(DOMAIN, "announce")
-        frontend.async_remove_panel(hass, DOMAIN)
     return ok

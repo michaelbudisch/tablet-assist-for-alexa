@@ -48,7 +48,6 @@ public final class WakeWordService extends Service implements RecognitionListene
     private final Runnable rearm=this::startRecognition;
     private NativeAssistSession nativeSession;
     private String nativeConversationId="";
-    private int nativeFollowupCount=0;
     private final Runnable followup=()->beginNativeAssist("",true);
 
     @Override public IBinder onBind(Intent intent){return null;}
@@ -94,7 +93,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             if(enabled&&!muted&&nativeSession==null){
                 main.removeCallbacks(rearm);
                 releaseRecognizer();
-                holdUntil=0;nativeConversationId="";nativeFollowupCount=0;
+                holdUntil=0;nativeConversationId="";
                 beginNativeAssist("",false);
             }
             return START_NOT_STICKY;
@@ -181,7 +180,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 releaseRecognizer();
                 if(nativeSession!=null){nativeSession.close();nativeSession=null;}
                 main.removeCallbacks(followup);
-                nativeConversationId="";nativeFollowupCount=0;
+                nativeConversationId="";
                 triggerGate.reset();
             }
             status="muted";
@@ -194,7 +193,7 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     private void startRecognition(){
         main.removeCallbacks(rearm);
-        if(!enabled||model==null||loading||muted||nativeSession!=null||nativeFollowupCount>0)return;
+        if(!enabled||model==null||loading||muted||nativeSession!=null)return;
         long remaining=holdUntil-SystemClock.elapsedRealtime();
         if(remaining>0){
             main.postDelayed(rearm,Math.max(500,remaining));
@@ -246,7 +245,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         releaseRecognizer();
         status="detected: "+hit;
         holdUntil=0;
-        nativeConversationId="";nativeFollowupCount=0;
+        nativeConversationId="";
         // The native capture owns the complete request. Do not launch
         // a competing browser or old wake-event microphone path.
         beginNativeAssist(hit,false);
@@ -287,15 +286,12 @@ public final class WakeWordService extends Service implements RecognitionListene
                             nativeConversationId="";
                             if(!status.startsWith("native_error:"))status="native_no_reply";
                         }
-                        // HA owns this limit per registered tablet:
-                        // 0=disabled, 1..100=allowed follow-ups, -1=unlimited.
-                        int limit=prefs.getInt("native_followup_limit",5);
-                        if(FollowupPolicy.shouldContinue(answered,nativeFollowupCount,limit)){
-                            nativeFollowupCount++;
+                        // Continue until silence, mute, stop, or missing Assist reply.
+                        if(answered){
                             main.removeCallbacks(followup);
                             main.postDelayed(followup,850);
                         }else {
-                            nativeFollowupCount=0;
+                            
                             holdUntil=0;
                             main.postDelayed(rearm,650);
                         }
