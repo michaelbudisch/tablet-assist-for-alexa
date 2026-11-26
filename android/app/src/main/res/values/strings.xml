@@ -147,7 +147,7 @@
     <string name="camera_relay_count">%1$d images sent · last at %2$s</string>
     <string name="camera_setup_required">Save your HA address and token in audio setup first. Camera access does not require a running audio player.</string>
     <string name="camera_upload_error">Image delivery interrupted · retrying. Check Wi-Fi and HA. Old images expire in HA after 15 seconds.</string>
-    <string name="camera_auth_error">Camera access denied. Enable the camera for this room under Apps → TAFA → Devices &amp; multiroom and use this room user's HA token. No admin token is needed.</string>
+    <string name="camera_auth_error">Camera access denied. Enable the camera for this room under Apps → TAFA → Devices &amp; multiroom and use the HA token for that room user. No admin token is needed.</string>
     <string name="camera_integration_missing">TAFA camera endpoint not found. Update the TAFA integration on this HA server and restart Home Assistant Core. No separate Jarvis receiver is needed.</string>
     <string name="camera_pairing_error">Another tablet is already streaming to this TAFA room. Stop its camera stream before starting this one.</string>
     <string name="camera_image_error">Camera image could not be prepared. Stop and restart the HA camera.</string>
