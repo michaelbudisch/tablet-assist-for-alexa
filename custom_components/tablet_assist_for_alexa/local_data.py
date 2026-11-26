@@ -91,7 +91,7 @@ class LocalData:
         # Some native microphones start a new conversation_id for a follow-up.
         # Recover only within the SAME authenticated user and the SAME device.
         # An anonymous or unassigned device must not inherit another search.
-        if key[0] and key[1]:
+        if isinstance(key, tuple) and len(key) >= 2 and key[0] and key[1]:
             for previous, value in reversed(list(self.search_sessions.items())):
                 if previous[:2] == key[:2] and value["expires"] > monotonic():
                     self.search_sessions[key] = value
