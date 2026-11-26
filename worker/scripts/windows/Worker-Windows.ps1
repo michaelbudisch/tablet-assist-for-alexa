@@ -70,7 +70,37 @@ function Ask-YesNo([string]$Question,[bool]$DefaultYes=$false) {
   $label=if($DefaultYes){' [J/n]'}else{' [j/N]'}
   $reply=(Read-Host ($Question+$label)).Trim()
   if(-not $reply){return $DefaultYes}
-  return ($reply -match '^(?i:j|ja|y|yes)
+  return ($reply.ToLowerInvariant() -in @('j','ja','y','yes'))
+}
+function Setup-Vision {
+  Check-Docker
+  Write-Host 'Vision wird zusammen mit dem lokalen Ollama-Backend eingerichtet.'
+  Compose -Arguments @('--profile','vision','up','-d','--build','ollama','vision')
+  $settings=Get-Settings
+  $model=[string]$settings['VISION_MODEL']
+  if(-not $model){$model='qwen3-vl:4b-instruct'}
+  if($model -notin @('qwen3-vl:2b-instruct','qwen3-vl:4b-instruct','qwen3-vl:8b-instruct','gemma3:4b')){
+    throw 'VISION_MODEL in .env wird von TAFA nicht unterstuetzt.'
+  }
+  Write-Host 'Der Vision-Container startet, benoetigt aber ein installiertes Vision-Modell.'
+  if(Ask-YesNo ("Vision-Modell "+$model+" herunterladen? (mehrere GB, nur nach Zustimmung)")) {
+    & docker compose --profile vision exec -T ollama ollama pull $model
+    if($LASTEXITCODE -ne 0){throw 'Vision-Modelldownload fehlgeschlagen. Bitte Docker/Ollama pruefen.'}
+  }
+}
+function Start-Configured {
+  Check-Docker
+  Compose -Arguments @('--profile','stream','up','-d','whisper','qwen-stream')
+  $known=@(& docker compose --profile '*' ps --all --services 2>$null)
+  if($LASTEXITCODE -ne 0){throw 'Dockerstatus nicht lesbar.'}
+  $known=@($known | ForEach-Object {$_.Trim()} | Where-Object {$_})
+  if($known -contains 'vision'){
+    Compose -Arguments @('--profile','vision','up','-d','ollama','vision')
+  }
+  if($known -contains 'ollama-gateway' -or ($known -contains 'ollama' -and $known -notcontains 'vision')){
+    Compose -Arguments @('--profile','llm','up','-d','ollama','ollama-gateway')
+  }
+}
 function Setup-Ollama {
   Check-Docker
   Compose -Arguments @('--profile','llm','up','-d','ollama','ollama-gateway')
