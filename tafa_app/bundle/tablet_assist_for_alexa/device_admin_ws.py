@@ -39,6 +39,8 @@ async def perform_device_admin(hass, user, msg):
                 "devices": sorted(devices, key=lambda d: (d["room"].casefold(), d["device_id"])),
                 "rooms": sorted(rooms, key=lambda r: r["room"])}
     if action == "delete_device":
+        if msg.get("confirmed") is not True:
+            raise ValueError("Explicit confirmation required")
         identifier = msg.get("device_id")
         if not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier):
             raise ValueError("Invalid tablet ID")
@@ -74,6 +76,8 @@ async def perform_device_admin(hass, user, msg):
     # A room can still be deleted when its former HA user has been
     # disabled/deleted. Ownership must match the persisted room record.
     if action in ("unpair", "delete_room"):
+        if msg.get("confirmed") is not True:
+            raise ValueError("Explicit confirmation required")
         if transport.rooms.get(room) != principal:
             raise ValueError("Room or ownership changed")
         if action == "unpair":
@@ -160,6 +164,7 @@ async def perform_device_admin(hass, user, msg):
     vol.Optional("device_id"): str,
     vol.Optional("transfer_device"): bool,
     vol.Optional("camera_enabled"): bool,
+    vol.Optional("confirmed"): bool,
     vol.Optional("settings"): dict,
 })
 @websocket_api.async_response

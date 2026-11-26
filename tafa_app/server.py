@@ -31,7 +31,7 @@ from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from control_center_view import render_dashboard
-from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera
+from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
@@ -682,6 +682,15 @@ class Handler(BaseHTTPRequestHandler):
                 tab="devices"
             elif action=="room_camera":
                 msg=set_room_camera(fields)
+                tab="devices"
+            elif action=="room_unpair":
+                msg=unpair_device(fields)
+                tab="devices"
+            elif action=="room_delete":
+                msg=delete_room(fields)
+                tab="devices"
+            elif action=="device_delete":
+                msg=remove_device(fields)
                 tab="devices"
             elif action=="settings":
                 changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
