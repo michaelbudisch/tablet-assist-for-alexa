@@ -124,7 +124,7 @@ class JarvisConversation(conversation.ConversationEntity):
     def supported_languages(self):
         return ["de", "de-DE"]
 
-    def _announce_response(self, user_input, message):
+    def _announce_response(self, user_input, message, chat_log=None):
         """Short-lived HA event for authorized dashboards, including native Android Assist.
 
         The entity mapping is shared with voice queries. No household IDs are
@@ -145,7 +145,7 @@ class JarvisConversation(conversation.ConversationEntity):
                 event["topic"] = "search"
                 search = self._local_data.search_context(
                     (getattr(user_input.context, "user_id", None), user_input.device_id,
-                     getattr(user_input, "conversation_id", None)))
+                     chat_log.conversation_id if chat_log is not None else None))
                 # Conversation IDs may be assigned after this input is made.
                 if search:
                     event["results"] = search.get("results", [])[:10]
@@ -157,7 +157,7 @@ class JarvisConversation(conversation.ConversationEntity):
     def _reply(self, user_input, chat_log, message, keep=False):
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(message)
-        self._announce_response(user_input, message)
+        self._announce_response(user_input, message, chat_log)
         chat_log.async_add_assistant_content_without_tools(
             conversation.AssistantContent(agent_id=self.entity_id, content=message)
         )
@@ -390,7 +390,7 @@ class JarvisConversation(conversation.ConversationEntity):
         try:
             speech = result.response.as_dict().get("speech", {}).get("plain", {}).get("speech", "")
             if isinstance(speech, str):
-                self._announce_response(user_input, speech)
+                self._announce_response(user_input, speech, chat_log)
         except Exception:
             _LOGGER.debug("TAFA LLM visual response unavailable", exc_info=True)
         return conversation.ConversationResult(
