@@ -84,7 +84,7 @@ class Fixture:
 class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
-        cls.action = load_action()
+        cls.action = staticmethod(load_action())
 
     async def test_new_non_admin_user_appears_without_tablets(self):
         hass = Fixture()
