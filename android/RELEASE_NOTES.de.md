@@ -1,9 +1,13 @@
 # TAFA Device Bridge 1.1.0
 
-- Der optionale lautlose Bluetooth-Keepalive ist direkt auf der Statusseite beim Player sichtbar, einschließlich Live-Status.
-- Automatische Wiederaufnahme nach Bluetooth-Unterbrechungen, Audio-Routenwechseln, Fokusverlust oder Playerfehlern mit 3–30 Sekunden Wiederholungsabstand. Keine Änderung der Systemlautstärke und kein eigener Audiofokus.
-- Nach erfolgreicher nativer Audioverbindung meldet sich das Tablet auch ohne Rufwortdienst im TAFA-Geräteregister an und hält seinen Onlinestatus aktuell.
-- Native Assist-Verarbeitung, unbegrenzte Anschlussfragen, Geräteverwaltung und die vorhandene benutzergebundene Bluetooth-Audioverbindung bleiben erhalten.
-- Signierte Release-APK **TAFA-Device-Bridge-1.0.5.apk**, Versionscode **18**, mit bisheriger App-ID de.jarvis.audio und bisherigem Signaturzertifikat. Über die vorhandene App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+Die App wurde auf drei klare Hauptbereiche umgestellt:
 
-Keepalive bleibt pro Tablet optional und läuft nur bei gestartetem Player. Er kann Echo-Ansagen nach Leerlauf verringern, garantiert deren Unterdrückung aber nicht. Passende aktuelle TAFA-/HA-Komponenten werden benötigt. Praktische Bluetooth-, Mikrofon- und Mehrgerätetests auf echten Tablets stehen aus.
+- **Status** – nur Informationen zu Home Assistant, Bluetooth, aktuellem Audio-/Assist-Zustand, Rufwort, Keepalive, Kamera, Bewegungsschalter und Akku.
+- **Verbinden** – Home Assistant suchen, Serveradresse und Token des dedizierten HA-Raumnutzers einrichten. Fehlermeldungen bleiben hier sichtbar.
+- **Einstellungen** – alle Bedienoptionen: Audioplayer, Echo-Bluetooth, lautloses Keepalive, Rufwort/Vosk-Modell, Mikrofon/Assist, Display-Freigabe, Kameralinse, Bildintervall, Bewegungserkennung und Kamera-Start/Stopp, Hilfe und Diagnose.
+
+Die separate Kamera-Testvorschau entfällt aus der App. Die Kameraübertragung bleibt ein explizit gestarteter Vordergrunddienst und die Benachrichtigung öffnet nun die Einstellungen. Die Bildbewegung wird weiter als TAFA-Bewegungs-Binärsensor in Home Assistant bereitgestellt, sofern die Kamera mit aktivierter Bewegungsoption Bilder liefert. Der Schalter wirkt auch bei laufendem Kameradienst.
+
+Native Assist, unbegrenzte Folgefragen, das bestehende Bluetooth-Keepalive (mit automatischem Wiederholversuch), Zugangsdatenverschlüsselung und die stabile Gerätekennung bleiben erhalten. Es werden keine Automatisierungen in Home Assistant angelegt oder verändert.
+
+**Veröffentlichungsstatus:** Das Repository enthält Quellcode und CI-Debug-Builds. Ein mit dem bestehenden Release-Schlüssel signiertes **1.1.0-APK** ist noch nicht bereitgestellt. Ein direktes Update über die installierte App erfordert exakt dasselbe Signaturzertifikat (Paket `de.jarvis.audio`), Versionscode **20**. Keine vorhandene App deinstallieren, um Zugangsdaten/Identität zu erhalten. Tests am echten Echo und Tablet bleiben erforderlich.

@@ -1,9 +1,13 @@
 # TAFA Device Bridge 1.1.0
 
-- Optional silent Bluetooth keepalive is directly visible on the Status/player card, including live state.
-- Automatic recovery after Bluetooth interruptions, route changes, audio-focus loss or player errors, with a 3–30 second retry delay. System volume is unchanged and no separate audio focus is requested.
-- Successful native audio connection enrolls the tablet in TAFA and keeps its online status current even without the wakeword service running.
-- Native Assist processing, unlimited follow-ups, device management and the existing authenticated per-user Bluetooth audio connection are retained.
-- Signed release APK **TAFA-Device-Bridge-1.0.5.apk**, version code **18**, with the existing de.jarvis.audio application ID and signing certificate. Install over the existing app to preserve credentials and device identity.
+The native app now has three focused tabs:
 
-Keepalive remains optional per tablet and runs only while the player is active. It may reduce Echo idle announcements but cannot guarantee suppression. Compatible current TAFA/HA components are required. Physical Bluetooth, microphone and multi-device testing on real tablets remains outstanding.
+- **Status** – information only: HA, Bluetooth, current player/Assist/wakeword state, keepalive, camera, motion toggle and battery.
+- **Connect** – discover/configure Home Assistant and the dedicated room user's token; connection errors appear here.
+- **Settings** – all controls in one place: player, Echo Bluetooth, silent keepalive, wakeword/Vosk model, microphone/Assist, display permission, camera lens, frame interval, motion detection, start/stop, help and diagnostics.
+
+The separate local camera preview/test screen is removed from normal operation. Opt-in camera streaming still requires explicit user start and is shown as a foreground notification opening Settings. Frame-based movement continues to be exposed as a TAFA Home Assistant motion binary sensor while motion reporting is enabled and recent frames exist. The toggle takes effect during streaming.
+
+Native Assist, unlimited follow-ups, automatic Bluetooth keepalive recovery, encrypted credentials and stable device identity are retained. No HA automations are created or changed.
+
+**Distribution:** The repository includes source and CI debug builds. A **1.1.0 APK signed with the existing release certificate has not yet been supplied**. In-place updates require the original certificate for the unchanged application ID `de.jarvis.audio`, version code **20**. Do not uninstall the existing app if preserving credentials and device identity matters. Real Echo/tablet validation is still outstanding.
