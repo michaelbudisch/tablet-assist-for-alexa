@@ -28,8 +28,9 @@ from speech_source import (choose as choose_speech_source,
                            setup_settings, setup_settings_values, connection_status)
 from model_store import inventory as local_model_inventory, remove_local_models
 from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
-from settings_ui import render_settings_form, save_settings_form
+from settings_ui import render_settings_form, save_settings_form, render_connection_form, save_connection_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
+from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
 from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
@@ -512,6 +513,7 @@ def display(message="",lang="de",default_tab="overview",review=None):
     latest=recent_stt_backend(TOKEN) if TOKEN else None
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     import_panel=render_panel(lang,CSRF,review=review)
+    connection_panel=render_connection_form({**load_options(),**preferences},lang,CSRF,checks=checks)
     device_state = read_device_data()
     if device_state.get("error") or device_state.get("room_error"):
         LOG.warning("TAFA device endpoints: wake=%s room=%s",
@@ -522,7 +524,7 @@ def display(message="",lang="de",default_tab="overview",review=None):
         pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
-        cards=cards, picker=picker, import_panel=import_panel, devices_panel=devices_panel, checks=checks,
+        cards=cards, picker=picker, connection_panel=connection_panel, import_panel=import_panel, devices_panel=devices_panel, checks=checks,
         options={**load_options(), **preferences}, setup=setup,
         links=links, latest=latest, cache_info=cache_info,
         note=note, install=install, retry_button=retry_button,
@@ -542,6 +544,17 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length",str(len(content)))
         self.end_headers()
         self.wfile.write(content)
+    def respond_json(self,payload,status_code=200):
+        body=json.dumps(payload,separators=(",",":")).encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type","application/json; charset=utf-8")
+        self.send_header("Cache-Control","no-store")
+        self.send_header("X-Content-Type-Options","nosniff")
+        self.send_header("Content-Security-Policy","default-src 'none'; frame-ancestors 'none'")
+        self.send_header("Content-Length",str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         if not self.allowed():return self.send_error(403)
         path=urlsplit(self.path).path
@@ -577,14 +590,23 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
         tab=fields.get("tab",["maintenance"])[0]
-        if tab not in ("overview","setup","devices","connections","maintenance"):
+        if tab not in ("overview","connections","setup","devices","maintenance"):
             tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
+            if action=="connection_probe":
+                # Short, read-only request from a typing event. Strict
+                # destination validation in connection_probes prevents SSRF.
+                key=fields.get("field",[""])[0]
+                value=fields.get("value",[""])[0]
+                if (key not in ADDRESS_FIELDS or len(fields.get("field",[]))!=1
+                        or len(fields.get("value",[]))!=1 or len(value)>256):
+                    return self.respond_json({"status":"invalid","detail":"invalid_input"},400)
+                return self.respond_json(probe_connection(key,value))
             if action=="manifest_preview":
                 payload=fields.get("manifest_json",[""])[0]
                 review=preview_import(payload,load_options())
-                self.respond(display(lang=lang,default_tab="setup",review=review))
+                self.respond(display(lang=lang,default_tab="connections",review=review))
                 return
             elif action=="manifest_apply":
                 manifest=consume_import(fields.get("ticket",[""])[0])
@@ -659,7 +681,7 @@ class Handler(BaseHTTPRequestHandler):
                     )
                 if isinstance(notes,list):
                     msg+=" | ".join(str(item)[:160] for item in notes[:4])
-                tab="setup"
+                tab="connections"
             elif action=="restart_core":
                 if fields.get("confirmation",[""])[0]!="RESTART":
                     raise ValueError("Core restart requires confirmation RESTART")
@@ -696,6 +718,11 @@ class Handler(BaseHTTPRequestHandler):
                 changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
                 activate_configured_services()
                 msg="Einstellungen gespeichert. TAFA übernimmt die Änderung automatisch. / Settings saved; TAFA is applying changes automatically."
+            elif action=="connection_settings":
+                save_connection_form(TOKEN,fields)
+                activate_configured_services()
+                tab="connections"
+                msg="Verbindungsadressen gespeichert. / Connection addresses saved."
             elif action=="wyoming":
                 choices=discover_wyoming_stt(TOKEN)
                 selection=save_wyoming_selection(TOKEN,
