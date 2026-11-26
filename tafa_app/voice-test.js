@@ -346,6 +346,16 @@
     if(document.hidden){chooseMode("mute");audio.pause();}
     else if(window.location.hash==="#voice")refresh();
   });
+  // Home Assistant tab navigation uses history.replaceState, which does not
+  // fire hashchange. Also watch the actual panel visibility to release the
+  // microphone immediately whenever another Control Center tab is selected.
+  const voicePanel = document.getElementById("voice");
+  if (voicePanel) {
+    new MutationObserver(() => {
+      if (voicePanel.hidden) {chooseMode("mute");audio.pause();}
+      else refresh();
+    }).observe(voicePanel,{attributes:true,attributeFilter:["hidden"]});
+  }
   window.addEventListener("hashchange",()=>{
     if(window.location.hash!=="#voice"){chooseMode("mute");audio.pause();}
     else refresh();
