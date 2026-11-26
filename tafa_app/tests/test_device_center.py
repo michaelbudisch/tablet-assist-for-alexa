@@ -42,12 +42,51 @@ class DeviceCenterTests(unittest.TestCase):
                 "device_id": ID, "room": "<img src=x onerror=evil>",
                 "online": True, "word": "Jarvis",
                 "telemetry": {"audio": "<script>alert(1)</script>"}}],
-            "rooms": [], "users": [{"id": "user1", "name": "Raum 1"}],
+            "rooms": [{"room": "buero", "user_id": "user1"}],
+            "users": [{"id": "user1", "name": "Raum 1"}],
             "error": ""})
         self.assertNotIn("<img", html)
         self.assertNotIn("<script", html)
-        pair = html.split('class="pair-form"', 1)[1].split('</form>', 1)[0]
+        self.assertIn('name="action" value="room_create"', html)
+        pair = html.split('name="action" value="room_pair"', 1)[1].split('</form>', 1)[0]
         self.assertEqual(pair.count('name="device_id"'), 1)
+
+    def test_create_room_without_any_tablet(self):
+        with patch.object(panel, "ha_call", return_value={"created": True}) as api:
+            self.assertIn("Raum angelegt", panel.create_room({
+                "room": ["buero"], "user_id": ["user1"]}))
+            self.assertEqual(api.call_args.args[1],
+                {"action": "create", "room": "buero", "user_id": "user1"})
+        page = panel.render_device_center("de", "nonce", {
+            "devices": [], "rooms": [],
+            "users": [{"id": "user1", "name": "Room user"}],
+            "error": "", "room_error": ""})
+        self.assertIn("Neuen Raum anlegen", page)
+        self.assertIn('name="action" value="room_create"', page)
+        self.assertNotIn('name="action" value="room_pair"', page)
+
+    def test_empty_server_explains_missing_user(self):
+        page = panel.render_device_center("de", "nonce", {
+            "devices": [], "rooms": [], "users": [],
+            "error": "", "room_error": ""})
+        self.assertIn("Neuen Raum anlegen", page)
+        self.assertIn("Nicht-Admin-Benutzer", page)
+        self.assertIn("Zuerst einen eigenen", page)
+        self.assertNotIn('name="action" value="room_create"', page)
+
+    def test_reject_invalid_room_name(self):
+        for room in ("BÜRO", "../bad", "", "q"*65):
+            with self.assertRaises(ValueError):
+                panel.create_room({"room": [room], "user_id": ["user1"]})
+
+    def test_owner_transfer_requires_explicit_checkbox(self):
+        with patch.object(panel, "ha_call", return_value={}) as api:
+            panel.pair_device({"device_id": [ID], "room": ["buero"],
+                "user_id": ["user1"], "transfer_device": ["1"]})
+            self.assertTrue(api.call_args.args[1]["transfer_device"])
+        with self.assertRaises(ValueError):
+            panel.pair_device({"device_id": [ID], "room": ["buero"],
+                "user_id": ["user1"], "transfer_device": ["true"]})
 
     def test_unavailable_backend_is_safe(self):
         with patch.object(panel, "ha_call", side_effect=OSError("secrets")):
