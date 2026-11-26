@@ -68,7 +68,7 @@
     <string name="diagnostics">Diagnostics</string>
     <string name="keepalive_title">Keep Bluetooth awake</string>
     <string name="keepalive_option">Keep Echo Bluetooth connection active</string>
-    <string name="keepalive_location">The keepalive switch is now directly on the Status page below Start player.</string>
+    <string name="keepalive_location">Player and keepalive are under Settings → Echo &amp; audio player.</string>
     <string name="keepalive_retrying">Keepalive reconnecting automatically…</string>
     <string name="keepalive_help">While the player runs, a silent local audio loop keeps Bluetooth media active. Can reduce Echo’s “Playing from…” announcements, but is not guaranteed. Automatically retries if Bluetooth drops. May affect Alexa music or battery usage.</string>
     <string name="keepalive_one">Use either this keepalive or the HA dashboard keepalive. Turn it off if normal Alexa playback is affected.</string>
@@ -199,9 +199,7 @@
     <string name="nav_voice">Wakeword</string>
     <string name="nav_help">Help</string>
     <string name="section_status_title">Your device at a glance</string>
-    <string name="section_status_description">Audio playback, native microphone and camera in one place.</string>
     <string name="section_connection_title">Connect your home</string>
-    <string name="section_connection_description">Home Assistant, access token and Bluetooth. Set up once on this device.</string>
     <string name="section_voice_title">A wakeword for your room</string>
     <string name="section_voice_description">Optional local recognition. You choose when the microphone is active.</string>
     <string name="section_help_title">Help &amp; diagnostics</string>
@@ -255,4 +253,25 @@
     <string name="native_state_no_reply">No answer; waiting for wakeword</string>
     <string name="native_state_error">Native Assist error</string>
     <string name="native_busy_notification">Jarvis voice request in progress</string>
+    <string name="nav_settings">Settings</string>
+    <string name="section_settings_title">Everything in one place</string>
+    <string name="section_settings_description">Voice, Bluetooth, microphone, display and camera for this tablet.</string>
+    <string name="section_status_description">Live connection, voice and camera state – information only.</string>
+    <string name="section_connection_description">Find Home Assistant and set the server address and room-user token.</string>
+    <string name="settings_audio_group">AUDIO &amp; BLUETOOTH</string>
+    <string name="settings_audio_title">Echo &amp; audio player</string>
+    <string name="settings_audio_help">Pair your Echo in Android, start the TAFA player, then optionally keep Bluetooth media active silently.</string>
+    <string name="settings_display_group">DISPLAY</string>
+    <string name="settings_display_title">Remote brightness</string>
+    <string name="settings_display_help">Grant permission here. Control brightness and dimming in the TAFA Control Center; this does not reliably power the display on or off.</string>
+    <string name="settings_permission_granted">Permission granted</string>
+    <string name="settings_permission_missing">Permission not granted</string>
+    <string name="settings_motion_help">Send image changes to Home Assistant: motion binary sensor for this TAFA room while fresh images arrive. Not person/object recognition.</string>
+    <string name="status_speech_label">VOICE &amp; ASSIST</string>
+    <string name="status_keepalive_label">Bluetooth keepalive</string>
+    <string name="status_room_label">Tablet room</string>
+    <string name="status_battery_label">Battery</string>
+    <string name="status_motion_description">Motion sensor: available only while camera is streaming</string>
+    <string name="status_motion_on">Motion detection enabled (HA sensor available during camera upload)</string>
+    <string name="status_motion_off">Motion detection disabled</string>
 </resources>

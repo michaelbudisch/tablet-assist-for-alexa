@@ -22,7 +22,6 @@ public class CameraRelayService extends Service {
     private CameraUploadClient upload;
     private PowerManager.WakeLock wake;
     private volatile boolean active;
-    private boolean motionEnabled;
     private int retries;
     private String lens;
     private long captureStarted;
@@ -42,7 +41,9 @@ public class CameraRelayService extends Service {
         Context localized=AppLanguage.wrap(this);
         NotificationManager notifications=getSystemService(NotificationManager.class);
         notifications.createNotificationChannel(new NotificationChannel("camera",localized.getString(R.string.camera_notification_channel),NotificationManager.IMPORTANCE_LOW));
-        PendingIntent open=PendingIntent.getActivity(this,50,new Intent(this,CameraActivity.class),PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent open=PendingIntent.getActivity(this,50,
+                new Intent(this,MainActivity.class).putExtra("open_section","settings"),
+                PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop=PendingIntent.getService(this,51,new Intent(this,CameraRelayService.class).setAction("stop"),PendingIntent.FLAG_IMMUTABLE);
         Notification notification=new Notification.Builder(this,"camera").setContentTitle(localized.getString(R.string.camera_relay_title))
                 .setContentText(localized.getString(R.string.camera_notification_text)).setSmallIcon(R.drawable.ic_notification)
@@ -60,7 +61,6 @@ public class CameraRelayService extends Service {
             upload=new CameraUploadClient(prefs.getString("base",""),MainActivity.decrypt(prefs.getString("secret","")),prefs.getString(MainActivity.HTTP_CONSENT,""),device);
             lens=prefs.getString("camera_lens_id","");
             if(lens.isEmpty())lens=CameraPreviewController.lenses(this).get(0).id;
-            motionEnabled=prefs.getBoolean("camera_motion",false);
             wake=getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"EchoRelay:Camera");
             active=true;running=true;sent=0;lastSent=0;status="camera_relay_starting";renewWake.run();
             main.postDelayed(this::open,500);
@@ -76,8 +76,12 @@ public class CameraRelayService extends Service {
                 io.execute(()->{
                     String outcome="camera_relay_active";
                     try{
-                        CameraJpeg.Frame frame=CameraJpeg.prepare(snapshot.jpeg,motionEnabled);
-                        Boolean changed=motionEnabled?motion.changed(frame.gray):null;
+                        // Opt-in can change while the foreground service runs.
+                        boolean motionNow=getSharedPreferences(MainActivity.PREF,0)
+                                .getBoolean("camera_motion",false);
+                        CameraJpeg.Frame frame=CameraJpeg.prepare(snapshot.jpeg,motionNow);
+                        if(!motionNow)motion.clear();
+                        Boolean changed=motionNow?motion.changed(frame.gray):null;
                         if(!active)return;
                         upload.upload(frame,snapshot.capturedAt,changed,getSharedPreferences(MainActivity.PREF,0).getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT));
                         if(active){sent++;lastSent=System.currentTimeMillis();}

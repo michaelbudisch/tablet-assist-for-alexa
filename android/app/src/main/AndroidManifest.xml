@@ -21,6 +21,5 @@
         <service android:name=".AudioService" android:exported="false" android:foregroundServiceType="mediaPlayback"/>
         <service android:name=".CameraRelayService" android:exported="false" android:foregroundServiceType="camera"/>
         <activity android:name=".TokenScanActivity" android:exported="false" android:windowSoftInputMode="stateAlwaysHidden"/>
-        <activity android:name=".CameraActivity" android:exported="false"/>
     </application>
 </manifest>

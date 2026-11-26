@@ -8,6 +8,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.os.BatteryManager;
+import android.hardware.camera2.CameraCharacteristics;
+import android.provider.Settings;
+import java.util.ArrayList;
 import android.os.Bundle;
 import android.os.Build;
 import android.os.Handler;
@@ -34,7 +38,11 @@ public class MainActivity extends Activity {
         public void run() { refreshStatus(); handler.postDelayed(this, 1000); }
     };
     private EditText urlInput, tokenInput;
-    private CheckBox allowHttp, roomAudio;
+    private CheckBox allowHttp;
+    private Spinner cameraLens, cameraRefresh;
+    private ArrayList<CameraPreviewController.Lens> availableCameras=new ArrayList<>();
+    private static final int CAMERA_PERMISSION=220;
+    private boolean pendingCameraStart=false;
     private String consentForAddress = "";
     private TextView setupMessage, searchMessage;
     private Button searchButton;
@@ -80,9 +88,6 @@ public class MainActivity extends Activity {
         urlInput = findViewById(R.id.server_address);
         tokenInput = findViewById(R.id.token);
         allowHttp = findViewById(R.id.allow_http);
-        roomAudio = findViewById(R.id.room_audio_enabled);
-        roomAudio.setChecked(true);
-        roomAudio.setEnabled(false);
         setupMessage = findViewById(R.id.setup_message);
         searchButton = findViewById(R.id.search);
         searchMessage = findViewById(R.id.search_message);
@@ -107,8 +112,6 @@ public class MainActivity extends Activity {
 
         findViewById(R.id.bluetooth_settings).setOnClickListener(v -> startActivity(new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)));
         findViewById(R.id.scan_token).setOnClickListener(v -> scanToken());
-        findViewById(R.id.camera_open).setOnClickListener(v -> startActivity(new Intent(this, CameraActivity.class)));
-        findViewById(R.id.camera_main_stop).setOnClickListener(v -> stopService(new Intent(this, CameraRelayService.class)));
         findViewById(R.id.player_start).setOnClickListener(v -> startPlayer());
         findViewById(R.id.player_stop).setOnClickListener(v -> {
             stopService(new Intent(this, AudioService.class));
@@ -131,7 +134,6 @@ public class MainActivity extends Activity {
                     stopService(new Intent(this, CameraRelayService.class));
                     stopDiscovery();
                     prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).remove("room_audio_enabled").remove("wake_choice").apply();
-                    roomAudio.setChecked(true);
                     tokenInput.setText(""); urlInput.setText("");
                     searchResults.removeAllViews(); searchMessage.setText("");
                     setupMessage.setText(R.string.credentials_removed);
@@ -145,6 +147,7 @@ public class MainActivity extends Activity {
         });
         initializeNativeWake();
         initializeNativeAssistControls();
+        initializeCameraSettings();
         languageButton(R.id.language_de, "de");
         languageButton(R.id.language_en, "en");
         didAutoSearch = state != null && state.getBoolean("did_auto_search", false);
@@ -154,54 +157,44 @@ public class MainActivity extends Activity {
 
     private void initializeNavigation(Bundle state) {
         String initial = getSharedPreferences(PREF, 0).contains("secret") ? "status" : "connection";
-        for (String section : new String[]{"status", "connection", "voice", "help"}) {
-            int id = section.equals("status") ? R.id.nav_status : section.equals("connection")
-                    ? R.id.nav_connection : section.equals("voice") ? R.id.nav_voice : R.id.nav_help;
+        for (String section : new String[]{"status", "connection", "settings"}) {
+            int id = section.equals("status") ? R.id.nav_status
+                    : section.equals("connection") ? R.id.nav_connection : R.id.nav_settings;
             findViewById(id).setOnClickListener(v -> showSection(section, true));
         }
-        findViewById(R.id.edit_connection).setOnClickListener(v -> showSection("connection", true));
-        findViewById(R.id.open_voice).setOnClickListener(v -> showSection("voice", true));
         findViewById(R.id.connection_start).setOnClickListener(v -> {
-            startPlayer();
-            showSection("status", true);
+            if (startPlayer()) showSection("status", true);
         });
-        bindDisclosure(R.id.wake_advanced_toggle, R.id.wake_advanced,
-                R.string.wake_advanced_title, R.string.wake_advanced_collapse,
-                state != null && state.getBoolean("wake_advanced_open", false));
+        findViewById(R.id.diagnostics_toggle).setOnClickListener(v -> toggle(R.id.diagnostics_text));
         if (state != null) {
             findViewById(R.id.diagnostics_text).setVisibility(
                     state.getBoolean("diagnostics_open", false) ? View.VISIBLE : View.GONE);
-            boolean helpOpen = state.getBoolean("help_open", false);
-            findViewById(R.id.help_details).setVisibility(helpOpen ? View.VISIBLE : View.GONE);
-            ((Button)findViewById(R.id.help_toggle)).setText(helpOpen ? R.string.help_collapse : R.string.help_expand);
+            boolean helpOpen=state.getBoolean("help_open",false);
+            findViewById(R.id.help_details).setVisibility(helpOpen?View.VISIBLE:View.GONE);
+            ((Button)findViewById(R.id.help_toggle)).setText(helpOpen?
+                    R.string.help_collapse:R.string.help_expand);
         }
-        showSection(state == null ? initial : state.getString("visible_section", initial), false);
-    }
-
-    private void bindDisclosure(int buttonId, int panelId, int closedText, int openText, boolean open) {
-        Button button = findViewById(buttonId);
-        findViewById(panelId).setVisibility(open ? View.VISIBLE : View.GONE);
-        button.setText(open ? openText : closedText);
-        button.setOnClickListener(v -> {
-            boolean expanded = toggle(panelId);
-            button.setText(expanded ? openText : closedText);
-        });
+        String restored = state == null ? getIntent().getStringExtra("open_section") :
+                state.getString("visible_section", initial);
+        showSection(restored == null ? initial : restored, false);
     }
 
     private void showSection(String section, boolean scrollToTop) {
+        // Keep old saved tabs from releases <=1.0.6 compatible.
+        if ("voice".equals(section) || "help".equals(section)) section = "settings";
         if (!section.equals("status") && !section.equals("connection")
-                && !section.equals("voice") && !section.equals("help")) section = "status";
-        selectedSection = section;
-        int[] panels = {R.id.section_status, R.id.section_connection, R.id.section_voice, R.id.section_help};
-        int[] tabs = {R.id.nav_status, R.id.nav_connection, R.id.nav_voice, R.id.nav_help};
-        int[] titles = {R.string.section_status_title, R.string.section_connection_title,
-                R.string.section_voice_title, R.string.section_help_title};
-        int[] descriptions = {R.string.section_status_description, R.string.section_connection_description,
-                R.string.section_voice_description, R.string.section_help_description};
-        String[] keys = {"status", "connection", "voice", "help"};
-        for (int i = 0; i < keys.length; i++) {
-            boolean active = keys[i].equals(section);
-            findViewById(panels[i]).setVisibility(active ? View.VISIBLE : View.GONE);
+                && !section.equals("settings")) section = "status";
+        selectedSection=section;
+        int[] panels={R.id.section_status,R.id.section_connection,R.id.section_settings};
+        int[] tabs={R.id.nav_status,R.id.nav_connection,R.id.nav_settings};
+        int[] titles={R.string.section_status_title,R.string.section_connection_title,
+                      R.string.section_settings_title};
+        int[] descriptions={R.string.section_status_description,R.string.section_connection_description,
+                             R.string.section_settings_description};
+        String[] keys={"status","connection","settings"};
+        for (int i=0;i<keys.length;i++) {
+            boolean active=keys[i].equals(section);
+            findViewById(panels[i]).setVisibility(active?View.VISIBLE:View.GONE);
             findViewById(tabs[i]).setSelected(active);
             if (active) {
                 ((TextView)findViewById(R.id.section_heading)).setText(titles[i]);
@@ -209,15 +202,16 @@ public class MainActivity extends Activity {
             }
         }
         if (scrollToTop) {
-            View focused = getCurrentFocus();
-            if (focused != null) {
-                android.view.inputmethod.InputMethodManager keyboard =
-                        getSystemService(android.view.inputmethod.InputMethodManager.class);
-                if (keyboard != null) keyboard.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+            View focused=getCurrentFocus();
+            if (focused!=null) {
+                android.view.inputmethod.InputMethodManager keyboard=
+                    getSystemService(android.view.inputmethod.InputMethodManager.class);
+                if (keyboard!=null)keyboard.hideSoftInputFromWindow(focused.getWindowToken(),0);
                 focused.clearFocus();
             }
             findViewById(R.id.page_content).requestFocus();
-            findViewById(R.id.main_scroll).post(() -> ((ScrollView)findViewById(R.id.main_scroll)).scrollTo(0, 0));
+            findViewById(R.id.main_scroll).post(()->
+                    ((ScrollView)findViewById(R.id.main_scroll)).scrollTo(0,0));
         }
     }
 
@@ -530,6 +524,15 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grants){
         super.onRequestPermissionsResult(requestCode,permissions,grants);
+        if(requestCode==CAMERA_PERMISSION){
+            boolean pending=pendingCameraStart;
+            pendingCameraStart=false;
+            if(pending&&grants.length>0&&grants[0]==PackageManager.PERMISSION_GRANTED)
+                requestCameraRelay();
+            else if(pending)((TextView)findViewById(R.id.camera_relay_status))
+                    .setText(R.string.camera_denied);
+            return;
+        }
         if(requestCode!=WAKE_MICROPHONE_PERMISSION)return;
         if(grants.length>0&&grants[0]==PackageManager.PERMISSION_GRANTED)startNativeWake();
         else wakeStatus.setText(R.string.wake_permission);
@@ -537,15 +540,15 @@ public class MainActivity extends Activity {
 
     private void configureColumns() {
         int width = getResources().getConfiguration().screenWidthDp;
-        int tabColumns = getResources().getConfiguration().fontScale >= 1.3f || width < 360 ? 2 : 4;
+        int tabColumns = getResources().getConfiguration().fontScale >= 1.3f || width < 360 ? 1 : 3;
         GridLayout navigation = findViewById(R.id.section_tabs);
         navigation.setColumnCount(tabColumns);
-        int[] tabIds = {R.id.nav_status, R.id.nav_connection, R.id.nav_voice, R.id.nav_help};
+        int[] tabIds = {R.id.nav_status, R.id.nav_connection, R.id.nav_settings};
         for (int i = 0; i < tabIds.length; i++) {
             GridLayout.LayoutParams tab = new GridLayout.LayoutParams(
                     GridLayout.spec(i / tabColumns), GridLayout.spec(i % tabColumns, 1f));
             tab.width = 0;
-            tab.height = dp(tabColumns == 2 ? 56 : 48);
+            tab.height = dp(tabColumns == 1 ? 52 : 48);
             tab.setMargins(dp(2), dp(2), dp(2), dp(2));
             findViewById(tabIds[i]).setLayoutParams(tab);
         }
@@ -607,7 +610,7 @@ public class MainActivity extends Activity {
         if (!http || !normalizedInput().equals(consentForAddress)) allowHttp.setChecked(false);
     }
 
-    private void startPlayer() {
+    private boolean startPlayer() {
         setupMessage.setText("");
         try {
             String base = HaAddress.validate(urlInput.getText().toString(), allowHttp.isChecked() && normalizedInput().equals(consentForAddress));
@@ -627,7 +630,12 @@ public class MainActivity extends Activity {
                 requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
             stopService(new Intent(this, AudioService.class));
             startForegroundService(new Intent(this, AudioService.class));
-        } catch (Exception e) { setupMessage.setText(AppLanguage.error(this, e)); }
+            return true;
+        } catch (Exception e) {
+            setupMessage.setText(AppLanguage.error(this, e));
+            showSection("connection", true);
+            return false;
+        }
     }
 
     private void searchHomeAssistant() {
@@ -660,11 +668,111 @@ public class MainActivity extends Activity {
         if (searchButton != null) searchButton.setText(R.string.search);
     }
 
+    /** Single consented camera upload service. No local preview/test screen. */
+    private void initializeCameraSettings() {
+        var prefs=getSharedPreferences(PREF,0);
+        cameraLens=findViewById(R.id.camera_lens);
+        cameraRefresh=findViewById(R.id.camera_refresh_rate);
+        Spinner refreshSpinner=cameraRefresh;
+        int[] seconds=CameraRefresh.options();
+        ArrayList<String> labels=new ArrayList<>();
+        int chosen=0,selected=CameraRefresh.normalize(
+                prefs.getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT));
+        for(int i=0;i<seconds.length;i++){
+            labels.add(getResources().getQuantityString(
+                    R.plurals.camera_refresh_interval,seconds[i],seconds[i]));
+            if(seconds[i]==selected)chosen=i;
+        }
+        refreshSpinner.setAdapter(BridgeChoices.create(this,labels));
+        refreshSpinner.setSelection(chosen);
+        refreshSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int pos,long id){
+                prefs.edit().putInt(CameraRefresh.KEY,seconds[pos]).apply();
+            }
+        });
+        ((CheckBox)findViewById(R.id.camera_motion)).setChecked(
+                prefs.getBoolean("camera_motion",false));
+        ((CheckBox)findViewById(R.id.camera_motion)).setOnCheckedChangeListener(
+                (button,checked)->prefs.edit().putBoolean("camera_motion",checked).apply());
+        try {
+            availableCameras=new ArrayList<>(CameraPreviewController.lenses(this));
+            ArrayList<String> devices=new ArrayList<>();
+            String saved=prefs.getString("camera_lens_id","");
+            int chosenLens=0;
+            for(int i=0;i<availableCameras.size();i++){
+                CameraPreviewController.Lens lens=availableCameras.get(i);
+                int name=lens.facing==CameraCharacteristics.LENS_FACING_FRONT?
+                        R.string.camera_front:
+                        lens.facing==CameraCharacteristics.LENS_FACING_BACK?
+                        R.string.camera_rear:R.string.camera_external;
+                devices.add(getString(name)+" · "+(i+1));
+                if(lens.id.equals(saved))chosenLens=i;
+            }
+            cameraLens.setAdapter(BridgeChoices.create(this,devices));
+            if(!devices.isEmpty()) cameraLens.setSelection(chosenLens);
+            cameraLens.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+                public void onNothingSelected(AdapterView<?> parent){}
+                public void onItemSelected(AdapterView<?> parent,View view,int pos,long id){
+                    if(pos>=0&&pos<availableCameras.size())
+                        prefs.edit().putString("camera_lens_id",
+                                availableCameras.get(pos).id).apply();
+                }
+            });
+        }catch(Exception error) {
+            availableCameras.clear();
+            ((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_unavailable);
+        }
+        findViewById(R.id.camera_relay_start).setOnClickListener(v->requestCameraRelay());
+        findViewById(R.id.camera_relay_stop).setOnClickListener(v->
+                stopService(new Intent(this,CameraRelayService.class)));
+    }
+
+    private void requestCameraRelay() {
+        if(CameraRelayService.running||availableCameras.isEmpty())return;
+        if(!getSharedPreferences(PREF,0).contains("secret")){
+            ((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_setup_required);
+            showSection("connection",true);
+            return;
+        }
+        if(checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED){
+            pendingCameraStart=true;
+            requestPermissions(new String[]{Manifest.permission.CAMERA},CAMERA_PERMISSION);
+            return;
+        }
+        pendingCameraStart=false;
+        try{
+            startForegroundService(new Intent(this,CameraRelayService.class).setAction("start"));
+            ((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_relay_starting);
+        }catch(Exception failure){
+            ((TextView)findViewById(R.id.camera_relay_status)).setText(R.string.camera_error);
+        }
+    }
+
     private void refreshStatus() {
         refreshWakeConfigUi();
         refreshBridgeOverview();
         ((TextView)findViewById(R.id.camera_main_status)).setText(CameraActivity.relayMessage(this));
-        findViewById(R.id.camera_main_stop).setVisibility(CameraRelayService.running?View.VISIBLE:View.GONE);
+        boolean cameraRunning=CameraRelayService.running;
+        findViewById(R.id.camera_relay_start).setEnabled(!cameraRunning&&!availableCameras.isEmpty());
+        findViewById(R.id.camera_relay_stop).setEnabled(cameraRunning);
+        cameraLens.setEnabled(!cameraRunning);
+        ((TextView)findViewById(R.id.camera_relay_status)).setText(CameraActivity.relayMessage(this));
+        ((TextView)findViewById(R.id.status_room)).setText(
+                getSharedPreferences(PREF,0).getString("wake_room_name","").isEmpty()?
+                getString(R.string.not_checked):
+                getSharedPreferences(PREF,0).getString("wake_room_name",""));
+        BatteryManager battery=getSystemService(BatteryManager.class);
+        int charge=battery==null?-1:battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        ((TextView)findViewById(R.id.status_battery)).setText(charge<0?
+                getString(R.string.not_checked):charge+"%");
+        ((TextView)findViewById(R.id.status_motion)).setText(
+                getSharedPreferences(PREF,0).getBoolean("camera_motion",false)?
+                R.string.status_motion_on:R.string.status_motion_off);
+        ((TextView)findViewById(R.id.display_permission_status)).setText(
+                Settings.System.canWrite(this)?R.string.settings_permission_granted:
+                                             R.string.settings_permission_missing);
+
         String raw = AudioService.ui;
         String stage = raw;
         if (raw.contains("|") && !raw.startsWith("ready|") && !raw.startsWith("no_bluetooth|") && !raw.startsWith("connection_error|"))
@@ -749,7 +857,6 @@ public class MainActivity extends Activity {
         state.putString(HTTP_CONSENT, allowHttp.isChecked() ? consentForAddress : "");
         state.putBoolean("did_auto_search", didAutoSearch);
         state.putString("visible_section", selectedSection);
-        state.putBoolean("wake_advanced_open", findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE);
         state.putBoolean("help_open", findViewById(R.id.help_details).getVisibility() == View.VISIBLE);
         state.putBoolean("diagnostics_open", findViewById(R.id.diagnostics_text).getVisibility() == View.VISIBLE);
         super.onSaveInstanceState(state);

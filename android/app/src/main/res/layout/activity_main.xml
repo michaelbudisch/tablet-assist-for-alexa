@@ -18,15 +18,13 @@
             </LinearLayout>
         </LinearLayout>
         <TextView style="@style/Body" android:text="@string/app_tagline" android:textSize="13sp" android:layout_marginTop="0dp" android:layout_marginBottom="18dp" />
-        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="4dp" android:background="@drawable/bg_navigation" android:id="@+id/section_tabs" android:columnCount="4">
+        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="4dp" android:background="@drawable/bg_navigation" android:id="@+id/section_tabs" android:columnCount="3">
             <Button android:id="@+id/nav_status" style="@style/Tab" android:text="@string/nav_status" />
             <Button android:id="@+id/nav_connection" style="@style/Tab" android:text="@string/nav_connection" />
-            <Button android:id="@+id/nav_voice" style="@style/Tab" android:text="@string/nav_voice" />
-            <Button android:id="@+id/nav_help" style="@style/Tab" android:text="@string/nav_help" />
+            <Button android:id="@+id/nav_settings" style="@style/Tab" android:text="@string/nav_settings" />
         </GridLayout>
         <TextView style="@style/Heading" android:text="@string/section_status_title" android:id="@+id/section_heading" android:textSize="26sp" android:layout_marginTop="24dp" android:accessibilityHeading="true" />
         <TextView style="@style/Body" android:text="@string/section_status_description" android:id="@+id/section_description" android:layout_marginTop="6dp" android:layout_marginBottom="18dp" />
-        <TextView android:id="@+id/setup_message" style="@style/Body" android:textColor="@color/warn" android:accessibilityLiveRegion="polite" android:layout_marginTop="0dp" android:layout_marginBottom="4dp" android:includeFontPadding="false" />
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_status">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/columns">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/setup_column">
@@ -34,42 +32,46 @@
                         <TextView style="@style/Eyebrow" android:text="@string/player_section" />
                         <TextView android:id="@+id/player_status" style="@style/Heading" android:text="@string/status_stopped" android:textSize="26sp" android:accessibilityLiveRegion="polite" />
                         <TextView android:id="@+id/player_description" style="@style/Body" android:text="@string/status_stopped_help" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp">
-                            <TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/label_bluetooth" />
-                            <TextView android:id="@+id/bluetooth_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_connected" />
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                                                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
                             <TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/label_ha" />
-                            <TextView android:id="@+id/ha_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_checked" />
+                            <TextView android:id="@+id/ha_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_checked" android:accessibilityLiveRegion="polite" />
                         </LinearLayout>
-                        <Button android:id="@+id/player_start" style="@style/Primary" android:text="@string/player_start" />
-                        <Button android:id="@+id/player_stop" style="@style/Action" android:text="@string/player_stop" />
-                        <TextView style="@style/Heading" android:text="@string/keepalive_title" android:layout_marginTop="12dp" />
-                        <CheckBox android:id="@+id/keepalive" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/keepalive_option" android:textColor="@color/ink" android:textSize="14sp" />
-                        <TextView android:id="@+id/keepalive_status" style="@style/Body" android:text="@string/keepalive_off" android:textColor="@color/accent" android:accessibilityLiveRegion="polite" />
-                        <TextView style="@style/Body" android:text="@string/keepalive_help" android:textSize="12sp" />
-                        <Button android:id="@+id/edit_connection" style="@style/Quiet" android:text="@string/edit_connection" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
+                            <TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/label_bluetooth" />
+                            <TextView android:id="@+id/bluetooth_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_connected" android:accessibilityLiveRegion="polite" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
+                            <TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/status_keepalive_label" />
+                            <TextView android:id="@+id/keepalive_status" style="@style/Body" android:layout_width="wrap_content" android:text="@string/keepalive_off" android:accessibilityLiveRegion="polite" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
+                            <TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/status_room_label" />
+                            <TextView android:id="@+id/status_room" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_checked" android:accessibilityLiveRegion="polite" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
+                            <TextView style="@style/Body" android:layout_width="0dp" android:layout_weight="1" android:text="@string/status_battery_label" />
+                            <TextView android:id="@+id/status_battery" style="@style/Body" android:layout_width="wrap_content" android:text="@string/not_checked" android:accessibilityLiveRegion="polite" />
+                        </LinearLayout>
+
                     </LinearLayout>
                 </LinearLayout>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/player_column">
                     <LinearLayout style="@style/Card">
-                        <TextView style="@style/Eyebrow" android:text="@string/voice_overview_eyebrow" />
+                        <TextView style="@style/Eyebrow" android:text="@string/status_speech_label" />
                         <TextView style="@style/Heading" android:text="@string/wake_stopped" android:id="@+id/overview_wake_status" />
-                        <TextView style="@style/Body" android:text="@string/voice_overview_help" />
-                        <Button android:id="@+id/open_voice" style="@style/Action" android:text="@string/open_voice" />
+                        <TextView android:id="@+id/native_assist_status" style="@style/Body" android:text="@string/native_assist_inactive" android:accessibilityLiveRegion="polite" />
                     </LinearLayout>
                     <LinearLayout style="@style/Card">
-                        <TextView style="@style/Eyebrow" android:text="@string/camera_optional" />
-                        <TextView style="@style/Heading" android:text="@string/camera_title" />
-                        <TextView style="@style/Body" android:text="@string/camera_intro" />
-                        <Button android:id="@+id/camera_open" style="@style/Action" android:text="@string/camera_open" />
-                        <TextView android:id="@+id/camera_main_status" style="@style/Body" android:text="@string/camera_relay_off" />
-                        <Button android:id="@+id/camera_main_stop" style="@style/Action" android:text="@string/camera_relay_stop" android:visibility="gone" />
+                        <TextView style="@style/Eyebrow" android:text="@string/camera_relay_title" />
+                        <TextView android:id="@+id/camera_main_status" style="@style/Body" android:text="@string/camera_relay_off" android:accessibilityLiveRegion="polite" />
+                        <TextView android:id="@+id/status_motion" style="@style/Body" android:text="@string/status_motion_description" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_connection">
+        <TextView android:id="@+id/setup_message" style="@style/Body" android:textColor="@color/warn" android:accessibilityLiveRegion="polite" android:layout_marginTop="0dp" android:layout_marginBottom="4dp" android:includeFontPadding="false" />
+
             <LinearLayout style="@style/Card">
                 <TextView style="@style/Eyebrow" android:text="@string/step_server" />
                 <TextView style="@style/Heading" android:text="@string/server_title" />
@@ -96,21 +98,19 @@
                 <Button android:id="@+id/connection_start" style="@style/Primary" android:text="@string/connection_start" />
                 <TextView style="@style/Body" android:text="@string/connection_start_help" android:textSize="12sp" />
             </LinearLayout>
-            <LinearLayout style="@style/Card">
-                <TextView style="@style/Eyebrow" android:text="@string/step_bluetooth" />
-                <TextView style="@style/Heading" android:text="@string/bluetooth_title" />
-                <TextView style="@style/Body" android:text="@string/bluetooth_help" />
-                <Button android:id="@+id/bluetooth_settings" style="@style/Action" android:text="@string/bluetooth_settings" />
-                <TextView style="@style/Body" android:text="@string/keepalive_location" android:textSize="12sp" />
-                <TextView style="@style/Body" android:text="@string/keepalive_one" android:textSize="12sp" />
-            </LinearLayout>
-            <LinearLayout style="@style/Card">
-                <TextView style="@style/Heading" android:text="@string/room_settings_title" android:layout_marginTop="0dp" />
-                <CheckBox android:id="@+id/room_audio_enabled" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/room_audio_enabled" />
-                <TextView style="@style/Body" android:text="@string/room_audio_help" android:textSize="12sp" />
-            </LinearLayout>
         </LinearLayout>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_voice">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_settings">
+            <LinearLayout style="@style/Card">
+                <TextView style="@style/Eyebrow" android:text="@string/settings_audio_group" />
+                <TextView style="@style/Heading" android:text="@string/settings_audio_title" />
+                <TextView style="@style/Body" android:text="@string/settings_audio_help" />
+                <Button android:id="@+id/bluetooth_settings" style="@style/Action" android:text="@string/bluetooth_settings" />
+                <Button android:id="@+id/player_start" style="@style/Primary" android:text="@string/player_start" />
+                <Button android:id="@+id/player_stop" style="@style/Action" android:text="@string/player_stop" />
+                <CheckBox android:id="@+id/keepalive" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/keepalive_option" android:textColor="@color/ink" android:textSize="14sp" />
+                <TextView style="@style/Body" android:text="@string/keepalive_help" android:textSize="12sp" />
+            </LinearLayout>
+
             <LinearLayout style="@style/Card">
                 <TextView style="@style/Eyebrow" android:text="@string/wake_model_eyebrow" />
                 <TextView style="@style/Heading" android:text="@string/wake_model_title" />
@@ -138,8 +138,8 @@
                 <TextView android:id="@+id/wake_device_id" style="@style/Body" android:textIsSelectable="true" android:textSize="12sp" />
             </LinearLayout>
             <LinearLayout style="@style/Card">
-                <Button android:id="@+id/wake_advanced_toggle" style="@style/Disclosure" android:text="@string/wake_advanced_title" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/wake_advanced" android:visibility="gone">
+                <TextView style="@style/Heading" android:text="@string/wake_advanced_title" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/wake_advanced">
                     <TextView style="@style/Body" android:text="@string/wake_strict_help" android:textSize="12sp" />
                     <TextView android:id="@+id/wake_strict_label" style="@style/Body" android:text="@string/wake_strict_label" />
                     <SeekBar android:id="@+id/wake_strict_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="2" android:progress="0" />
@@ -159,13 +159,30 @@
                 <TextView android:id="@+id/native_pause_label" style="@style/Body" android:text="@string/native_pause_label" />
                 <SeekBar android:id="@+id/native_pause_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="23" android:progress="8" />
                 <Button android:id="@+id/native_assist_test" style="@style/Action" android:text="@string/native_assist_test" />
+                <TextView style="@style/Body" android:text="@string/native_assist_privacy" android:textSize="12sp" />
+            </LinearLayout>            <LinearLayout style="@style/Card">
+                <TextView style="@style/Eyebrow" android:text="@string/settings_display_group" />
+                <TextView style="@style/Heading" android:text="@string/settings_display_title" />
+                <TextView style="@style/Body" android:text="@string/settings_display_help" />
                 <Button android:id="@+id/display_permission" style="@style/Action" android:text="@string/display_permission" />
                 <TextView style="@style/Body" android:text="@string/display_permission_help" android:textSize="12sp" />
-                <TextView android:id="@+id/native_assist_status" style="@style/Body" android:text="@string/native_assist_inactive" android:textSize="12sp" android:accessibilityLiveRegion="polite" />
-                <TextView style="@style/Body" android:text="@string/native_assist_privacy" android:textSize="12sp" />
+                <TextView android:id="@+id/display_permission_status" style="@style/Body" android:accessibilityLiveRegion="polite" />
             </LinearLayout>
-        </LinearLayout>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_help">
+            <LinearLayout style="@style/Card">
+                <TextView style="@style/Eyebrow" android:text="@string/camera_optional" />
+                <TextView style="@style/Heading" android:text="@string/camera_relay_title" />
+                <TextView style="@style/Body" android:text="@string/camera_relay_help" />
+                <TextView style="@style/Body" android:text="@string/camera_select" android:labelFor="@+id/camera_lens" />
+                <Spinner android:id="@+id/camera_lens" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown" style="@style/Choice" />
+                <TextView style="@style/Body" android:text="@string/camera_refresh_label" android:labelFor="@+id/camera_refresh_rate" />
+                <Spinner android:id="@+id/camera_refresh_rate" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown" style="@style/Choice" />
+                <CheckBox android:id="@+id/camera_motion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/camera_motion_option" android:textColor="@color/ink" />
+                <TextView style="@style/Body" android:text="@string/settings_motion_help" android:textSize="12sp" />
+                <Button android:id="@+id/camera_relay_start" style="@style/Primary" android:text="@string/camera_relay_start" />
+                <Button android:id="@+id/camera_relay_stop" style="@style/Action" android:text="@string/camera_relay_stop" />
+                <TextView android:id="@+id/camera_relay_status" style="@style/Body" android:text="@string/camera_relay_off" android:accessibilityLiveRegion="polite" />
+                <TextView style="@style/Body" android:text="@string/camera_privacy_note" android:textSize="12sp" />
+            </LinearLayout>
             <LinearLayout style="@style/Card">
                 <TextView style="@style/Heading" android:text="@string/help_title" android:layout_marginTop="0dp" />
                 <Button android:id="@+id/help_toggle" style="@style/Action" android:text="@string/help_expand" />
@@ -183,8 +200,7 @@
                 <TextView style="@style/Body" android:text="@string/diagnostics_help" />
                 <Button android:id="@+id/diagnostics_toggle" style="@style/Action" android:text="@string/diagnostics" />
                 <TextView android:id="@+id/diagnostics_text" style="@style/Body" android:textSize="12sp" android:fontFamily="monospace" android:visibility="gone" android:textIsSelectable="true" />
-            </LinearLayout>
-        </LinearLayout>
+            </LinearLayout>        </LinearLayout>
         <TextView style="@style/Body" android:text="@string/footer" android:id="@+id/footer" android:textSize="11sp" android:gravity="center" android:layout_marginTop="18dp" android:layout_marginBottom="12dp" />
     </LinearLayout>
 </ScrollView>

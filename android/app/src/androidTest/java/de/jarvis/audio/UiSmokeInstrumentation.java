@@ -60,12 +60,15 @@ public class UiSmokeInstrumentation extends Instrumentation {
                 check(!((CheckBox) german.findViewById(R.id.keepalive)).isChecked(), "Keepalive defaults off");
                 check(german.getString(R.string.app_name).equals("TAFA Device Bridge"), "Rebranded app name");
                 check(german.findViewById(R.id.section_connection).getVisibility() == View.VISIBLE, "First setup opens Connect");
-                german.findViewById(R.id.nav_voice).performClick();
-                check(german.findViewById(R.id.section_voice).getVisibility() == View.VISIBLE, "Wakeword navigation opens");
+                german.findViewById(R.id.nav_settings).performClick();
+                check(german.findViewById(R.id.section_settings).getVisibility() == View.VISIBLE, "Settings navigation opens");
                 check(german.findViewById(R.id.section_connection).getVisibility() == View.GONE, "Only selected section is shown");
-                check(german.findViewById(R.id.wake_advanced).getVisibility() == View.GONE, "Advanced voice settings start collapsed");
-                german.findViewById(R.id.wake_advanced_toggle).performClick();
-                check(german.findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE, "Voice settings expand");
+                check(german.findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE,
+                        "Wakeword fine tuning is directly visible in Settings");
+                check(german.findViewById(R.id.camera_relay_start).getVisibility()==View.VISIBLE,
+                        "Camera controls are included in Settings");
+                check(german.findViewById(R.id.display_permission).getVisibility()==View.VISIBLE,
+                        "Display permission is included in Settings");
                 german.findViewById(R.id.nav_connection).performClick();
                 int orientation = ((LinearLayout) german.findViewById(R.id.columns)).getOrientation();
                 check(orientation == (layout.equals("tablet") ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL), "Responsive layout");
@@ -76,7 +79,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
                 address.setText("http://192.168.1.21:8123");
                 check(!consent.isChecked(), "Changing the origin resets HTTP consent");
                 ((EditText) german.findViewById(R.id.token)).setText("header.payload.test-signature");
-                german.findViewById(R.id.nav_voice).performClick();
+                german.findViewById(R.id.nav_settings).performClick();
                 check(((EditText)german.findViewById(R.id.token)).getText().toString().equals("header.payload.test-signature"), "Tab switches retain unsaved token in memory");
             });
             screenshot(german, "de-" + layout);
@@ -84,7 +87,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
             screenshot(german, "de-" + layout + "-status");
             runOnMainSync(() -> german.findViewById(R.id.nav_connection).performClick());
             screenshot(german, "de-" + layout + "-connection");
-            runOnMainSync(() -> german.findViewById(R.id.nav_voice).performClick());
+            runOnMainSync(() -> german.findViewById(R.id.nav_settings).performClick());
 
             ActivityMonitor languageChange = addMonitor(MainActivity.class.getName(), null, false);
             runOnMainSync(() -> german.findViewById(R.id.language_en).performClick());
@@ -95,18 +98,19 @@ public class UiSmokeInstrumentation extends Instrumentation {
             Activity english = screen;
             runOnMainSync(() -> {
                 check(english.getString(R.string.player_start).equals("Start player"), "English resources");
-                check(english.findViewById(R.id.section_voice).getVisibility() == View.VISIBLE, "Selected tab survives language change");
-                check(english.findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE, "Expanded settings survive recreation");
+                check(english.findViewById(R.id.section_settings).getVisibility() == View.VISIBLE, "Selected tab survives language change");
+                check(english.findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE, "Settings remain visible after recreation");
                 check(((EditText) english.findViewById(R.id.token)).getText().toString().equals("header.payload.test-signature"), "Language change retains unsaved token in memory");
                 check(((EditText) english.findViewById(R.id.server_address)).getText().toString().equals("http://192.168.1.21:8123"), "Address survives language change");
                 check(!((CheckBox) english.findViewById(R.id.allow_http)).isChecked(), "Consent remains reset after language change");
                 ((EditText) english.findViewById(R.id.token)).setText("");
-                english.findViewById(R.id.nav_status).performClick();
+                english.findViewById(R.id.nav_settings).performClick();
                 english.findViewById(R.id.player_start).performClick();
-                check(((TextView) english.findViewById(R.id.setup_message)).getText().toString().equals(english.getString(R.string.http_consent_required)), "Localized HTTP error");
-                english.findViewById(R.id.nav_help).performClick();
+                check(((TextView) english.findViewById(R.id.setup_message)).getText().toString()
+                        .equals(english.getString(R.string.http_consent_required)), "Localized HTTP error");
                 english.findViewById(R.id.help_toggle).performClick();
-                check(english.findViewById(R.id.help_details).getVisibility() == View.VISIBLE, "Help opens");
+                check(english.findViewById(R.id.help_details).getVisibility()==View.VISIBLE,
+                        "Help is part of Settings");
                 CheckBox keepalive = english.findViewById(R.id.keepalive);
                 keepalive.setChecked(true);
                 check(english.getSharedPreferences(MainActivity.PREF, 0).getBoolean("keepalive_enabled", false), "Keepalive choice persists");
@@ -122,27 +126,18 @@ public class UiSmokeInstrumentation extends Instrumentation {
             screenshot(english, "en-" + layout);
             runOnMainSync(() -> ((ScrollView) english.findViewById(R.id.page_content).getParent()).fullScroll(View.FOCUS_DOWN));
             waitForIdleSync();
-            screenshot(english, "en-" + layout + "-help");
-            ActivityMonitor cameraScreen = addMonitor(CameraActivity.class.getName(), null, false);
+            screenshot(english, "en-" + layout + "-settings");
             runOnMainSync(() -> {
+                english.findViewById(R.id.nav_settings).performClick();
+                Spinner intervals=english.findViewById(R.id.camera_refresh_rate);
+                check(intervals.getAdapter().getCount()==5,
+                        "Camera refresh options retained directly in Settings");
+                check(english.findViewById(R.id.camera_motion).getVisibility()==View.VISIBLE,
+                        "Motion detection switch is in Settings");
                 english.findViewById(R.id.nav_status).performClick();
-                english.findViewById(R.id.camera_open).performClick();
+                check(english.findViewById(R.id.section_settings).getVisibility()==View.GONE,
+                        "Status is a read-only information panel");
             });
-            Activity camera = waitForMonitorWithTimeout(cameraScreen, 10000);
-            removeMonitor(cameraScreen);
-            check(camera != null, "Camera settings open from Status");
-            waitForIdleSync();
-            runOnMainSync(() -> {
-                Spinner intervals = camera.findViewById(R.id.camera_refresh_rate);
-                check(intervals.getAdapter().getCount() == 5, "Camera interval choices retained");
-                intervals.requestRectangleOnScreen(new android.graphics.Rect(0, 0,
-                        intervals.getWidth(), intervals.getHeight()), true);
-            });
-            waitForIdleSync();
-            runOnMainSync(() -> camera.findViewById(R.id.camera_refresh_rate).performClick());
-            screenshot(camera, "camera-choices-" + layout);
-            sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
-            runOnMainSync(() -> camera.findViewById(R.id.camera_back).performClick());
             result.putString("stream", "UI smoke passed: TAFA branding, navigation, disclosure/recreation, DE/EN, responsive layout, HTTP consent, transient token, keepalive opt-in and no-Bluetooth cleanup.\n");
             finish(Activity.RESULT_OK, result);
         } catch (Throwable error) {

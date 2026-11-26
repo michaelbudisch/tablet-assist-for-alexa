@@ -68,7 +68,7 @@
     <string name="diagnostics">Diagnose</string>
     <string name="keepalive_title">Bluetooth wach halten</string>
     <string name="keepalive_option">Echo-Bluetooth-Verbindung aktiv halten</string>
-    <string name="keepalive_location">Der Keepalive-Schalter ist auf der Statusseite direkt unter „Player starten“ sichtbar.</string>
+    <string name="keepalive_location">Player und Keepalive befinden sich unter Einstellungen → Echo &amp; Audioplayer.</string>
     <string name="keepalive_retrying">Keepalive verbindet sich automatisch erneut …</string>
     <string name="keepalive_help">Solange der Player läuft, hält eine lautlose Audioschleife Bluetooth-Medien aktiv. Kann wiederholte Echo-Ansagen reduzieren, aber nicht garantiert verhindern. Verbindet sich nach Bluetooth-Aussetzern automatisch erneut. Kann Alexa-Musik und Akkuverbrauch beeinflussen.</string>
     <string name="keepalive_one">Verwende entweder diesen Keepalive oder den HA-Dashboard-Keepalive. Bei Störungen der normalen Alexa-Wiedergabe ausschalten.</string>
@@ -199,9 +199,7 @@
     <string name="nav_voice">Rufwort</string>
     <string name="nav_help">Hilfe</string>
     <string name="section_status_title">Dein Gerät im Überblick</string>
-    <string name="section_status_description">Audiowiedergabe, natives Mikrofon und Kamera an einem Ort.</string>
     <string name="section_connection_title">Dein Zuhause verbinden</string>
-    <string name="section_connection_description">Home Assistant, Zugriffstoken und Bluetooth. Einmal auf diesem Gerät einrichten.</string>
     <string name="section_voice_title">Ein Rufwort für deinen Raum</string>
     <string name="section_voice_description">Optionale lokale Erkennung. Du entscheidest, wann das Mikrofon aktiv ist.</string>
     <string name="section_help_title">Hilfe &amp; Diagnose</string>
@@ -253,4 +251,25 @@
     <string name="native_state_no_reply">Keine Antwort; warte auf Rufwort</string>
     <string name="native_state_error">Fehler bei nativer Spracheingabe</string>
     <string name="native_busy_notification">Jarvis verarbeitet eine Sprachanfrage</string>
+    <string name="nav_settings">Einstellungen</string>
+    <string name="section_settings_title">Alles an einem Ort</string>
+    <string name="section_settings_description">Sprache, Bluetooth, Mikrofon, Display und Kamera für dieses Tablet.</string>
+    <string name="section_status_description">Live-Verbindung und aktueller Sprach-/Kamerastatus – keine Einstellungen.</string>
+    <string name="section_connection_description">Home Assistant suchen, Adresse und Raumnutzer-Token einrichten.</string>
+    <string name="settings_audio_group">AUDIO &amp; BLUETOOTH</string>
+    <string name="settings_audio_title">Echo &amp; Audioplayer</string>
+    <string name="settings_audio_help">Echo in Android koppeln, den TAFA-Player starten und die lautlose Bluetooth-Verbindung optional aktiv halten.</string>
+    <string name="settings_display_group">BILDSCHIRM</string>
+    <string name="settings_display_title">Helligkeit fernsteuern</string>
+    <string name="settings_display_help">Berechtigung hier erteilen. Helligkeit und Dimmen im TAFA Control Center steuern; vollständiges Display-Ein/Aus kann Android damit nicht zuverlässig ermöglichen.</string>
+    <string name="settings_permission_granted">Berechtigung erteilt</string>
+    <string name="settings_permission_missing">Berechtigung noch nicht erteilt</string>
+    <string name="settings_motion_help">Bildbewegung an Home Assistant melden: Bewegungs-Binärsensor im TAFA-Raum, solange frische Kamerabilder ankommen. Keine Personen-/Objekterkennung.</string>
+    <string name="status_speech_label">SPRACHE &amp; ASSIST</string>
+    <string name="status_keepalive_label">Bluetooth-Keepalive</string>
+    <string name="status_room_label">Tablet-Raum</string>
+    <string name="status_battery_label">Akku</string>
+    <string name="status_motion_description">Bewegungssensor: nur mit aktiver Kamera verfügbar</string>
+    <string name="status_motion_on">Bewegungserkennung eingeschaltet (HA-Sensor bei Bildübertragung verfügbar)</string>
+    <string name="status_motion_off">Bewegungserkennung ausgeschaltet</string>
 </resources>
