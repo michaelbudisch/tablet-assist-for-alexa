@@ -1,11 +1,9 @@
 # TAFA Device Bridge 1.0.5
 
-- Silent Bluetooth keepalive is now visible on the Status/player card and automatically recovers from Bluetooth interruptions with bounded retries.
-- Successful native Bluetooth playback connection triggers background tablet enrollment in HA, even without the wakeword service. This makes the tablet appear in Devices & multiroom for remote controls and pairing.
-- Native voice processing through Home Assistant Assist and the existing Bluetooth audio transport; no open browser dashboard required.
-- Follow-up questions continue until silence, mute or stop instead of the previous two-question limit.
-- HA-managed per-device speech pause and digital microphone gain, plus tablet, battery and Bluetooth telemetry.
-- Optional display brightness adjustment after explicit Android special access. This does not physically power the screen off.
-- Android version **1.0.5**, version code **18**, unchanged application ID `de.jarvis.audio`. An in-place update needs an APK signed with the original signing certificate; CI debug builds are not compatible signed updates.
+- Optional silent Bluetooth keepalive is directly visible on the Status/player card, including live state.
+- Automatic recovery after Bluetooth interruptions, route changes, audio-focus loss or player errors, with a 3–30 second retry delay. System volume is unchanged and no separate audio focus is requested.
+- Successful native audio connection enrolls the tablet in TAFA and keeps its online status current even without the wakeword service running.
+- Native Assist processing, unlimited follow-ups, device management and the existing authenticated per-user Bluetooth audio connection are retained.
+- Signed release APK **TAFA-Device-Bridge-1.0.5.apk**, version code **18**, with the existing de.jarvis.audio application ID and signing certificate. Install over the existing app to preserve credentials and device identity.
 
-Compatible current TAFA/HA components and a complete Assist pipeline with STT/TTS are required. Physical microphone, Bluetooth and multi-device testing on real tablets remains outstanding.
+Keepalive remains optional per tablet and runs only while the player is active. It may reduce Echo idle announcements but cannot guarantee suppression. Compatible current TAFA/HA components are required. Physical Bluetooth, microphone and multi-device testing on real tablets remains outstanding.

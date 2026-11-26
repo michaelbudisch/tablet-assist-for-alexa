@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.0.3
+# TAFA Device Bridge · Android 1.0.5
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -8,14 +8,14 @@ Die Android-Geräteanbindung für TAFA: Home-Assistant-Audio über Bluetooth, op
 
 ## Download und Update
 
-[Signierte APK 1.0.3 herunterladen](downloads/TAFA-Device-Bridge-1.0.3.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.0.3) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Über die vorhandene signierte App installieren.
+[Signierte APK 1.0.5 herunterladen](downloads/TAFA-Device-Bridge-1.0.5.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.0.5) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Über die vorhandene signierte App installieren.
 
-App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Einstellungen, heruntergeladenes Modell und dauerhafte Multiroom-Gerätekennung bleiben erhalten. Android 1.0.3 verwendet Versionscode **16**. Vor dem Update nicht deinstallieren. Die Verbindung nutzt die kompatiblen TAFA-/HA-Geräteschnittstellen.
+App-ID de.jarvis.audio, Signatur, Verschlüsselungsalias, Einstellungen, heruntergeladenes Modell und dauerhafte Multiroom-Gerätekennung bleiben erhalten. Android 1.0.5 verwendet Versionscode **18**. Vor dem Update nicht deinstallieren. Die Verbindung nutzt die kompatiblen TAFA-/HA-Geräteschnittstellen.
 
 ## Einstellungen finden
 
-- **Status:** Audioverbindung, Playersteuerung, Mikrofonstatus und Kamerazugang.
-- **Verbinden:** HA-Adresse, Token-QR-Scan, Bluetooth und Raum-Audio; Keepalive liegt in den aufklappbaren Bluetooth-Optionen.
+- **Status:** Audioverbindung, Playersteuerung, sichtbarer Bluetooth-Keepalive mit Live-Status, Mikrofonstatus und Kamerazugang.
+- **Verbinden:** HA-Adresse, Token-QR-Scan, Bluetooth und Raum-Audio.
 - **Rufwort:** Offline-Modell, Erkennungssteuerung, Gerät/Raum und aufklappbare Feineinstellungen.
 - **Hilfe:** Einrichtungstipps, Hintergrundbetrieb, Diagnose und Entfernen der Zugangsdaten.
 
@@ -31,7 +31,7 @@ Deutsch und Englisch im Kopfbereich wählen. Ein Bereichswechsel erhält ungespe
 
 HTTPS prüft das Serverzertifikat. Lokales HTTP erfordert ausdrückliche Freigabe für die genaue lokale IP und den Port; Token, Audio und freigegebene Kamerabilder werden dann unverschlüsselt im LAN übertragen. Ein Adresswechsel setzt die Freigabe zurück.
 
-## Native Sprache und Geräteverwaltung (1.0.3)
+## Native Sprache und Geräteverwaltung (1.0.5)
 
 Die Spracherkennung wird weiterhin bewusst auf dem Tablet gestartet. Unter **Rufwort** das etwa 45 MB große deutsche Vosk-Modell herunterladen, Mikrofonzugriff erlauben und Hey Jarvis, Jarvis, Alexa oder alle drei wählen. Die Rufworterkennung läuft lokal; anschließend wird die gesprochene Frage als 16-kHz-PCM an Home Assistant Assist übertragen. Ein Browser-Dashboard ist dafür nicht erforderlich.
 
@@ -50,11 +50,11 @@ Passende aktuelle TAFA-/HA-Komponenten werden separat benötigt. Bei lokalem HTT
 
 Die Kamera unter **Status** öffnen. Auswahl, HA-Übertragung und lokale Vorschau sind getrennte Karten. Beim Verlassen der Vorschau werden lokale Bilder gelöscht; eine ausdrücklich gestartete Übertragung als Vordergrunddienst kann bis zum Stoppen weiterlaufen. Berechtigungen werden bei Bedarf angefragt. Bildintervalle 1/2/3/5/10 Sekunden und optionale Bewegungserkennung bleiben verfügbar.
 
-Keepalive ist standardmäßig aus. Die stille Schleife bei laufendem Player kann Echo-Ansagen nach Leerlauf verringern, aber Alexa-Musik und Akku beeinflussen. Nur eine Keepalive-Quelle gleichzeitig verwenden. Nach Neustart startet nichts automatisch.
+Der Keepalive-Schalter ist direkt unter Status beim Player zu finden und standardmäßig aus. Nach Bluetooth-Unterbrechungen, Routenwechseln oder Fehlern versucht er die Wiederaufnahme mit 3–30 Sekunden Abstand. Die stille Schleife bei laufendem Player kann Echo-Ansagen nach Leerlauf verringern, aber Alexa-Musik und Akku beeinflussen. Nur eine Keepalive-Quelle gleichzeitig verwenden. Nach Neustart startet nichts automatisch.
 
 ## Build und Signatur
 
-JDK 17, Android-Plattform 35 und Build Tools 36.0.0 verwenden. build.ps1 -Configuration Release -Check ausführen, danach sign-release.ps1 mit -KeystorePath und -Alias. Standardausgabe: **dist/TAFA-Device-Bridge-1.0.3.apk**. Das Skript vergleicht das ursprüngliche 0.7.1-Zertifikat; private Schlüssel werden nicht mitgeliefert.
+JDK 17, Android-Plattform 35 und Build Tools 36.0.0 verwenden. build.ps1 -Configuration Release -Check ausführen, danach sign-release.ps1 mit -KeystorePath und -Alias. Standardausgabe: **dist/TAFA-Device-Bridge-1.0.5.apk**. Das Skript vergleicht das ursprüngliche 0.7.1-Zertifikat; private Schlüssel werden nicht mitgeliefert.
 
 Build, JVM-Tests, Lint und Handy-/Tablet-UI-Instrumentierung werden lokal validiert. Physische Bluetooth- und Mehrgerätetests bleiben nötig. Siehe [Versionshinweise](RELEASE_NOTES.de.md) und [Drittanbieterhinweise](THIRD_PARTY_NOTICES.de.md).
 

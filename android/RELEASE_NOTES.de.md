@@ -1,9 +1,9 @@
-# TAFA Device Bridge 1.0.3
+# TAFA Device Bridge 1.0.5
 
-- Native Sprachverarbeitung über Home Assistant Assist und die vorhandene Bluetooth-Audioverbindung; ein geöffnetes Browser-Dashboard ist nicht erforderlich.
-- Anschlussfragen bis Stille, Stummschaltung oder Stopp statt der bisherigen Beschränkung auf zwei Folgefragen.
-- Sprechpause und digitale Mikrofonverstärkung über die gerätebezogene HA-Steuerung; Tablet-, Akku- und Bluetoothstatus.
-- Optionale Displayhelligkeitssteuerung nach ausdrücklicher Android-Sonderfreigabe. Keine physische Bildschirm-Abschaltung.
-- Signierte Release-APK **TAFA-Device-Bridge-1.0.3.apk**, Versionscode **16**, mit bisheriger App-ID de.jarvis.audio und bisherigem Signaturzertifikat. Über die vorhandene App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+- Der optionale lautlose Bluetooth-Keepalive ist direkt auf der Statusseite beim Player sichtbar, einschließlich Live-Status.
+- Automatische Wiederaufnahme nach Bluetooth-Unterbrechungen, Audio-Routenwechseln, Fokusverlust oder Playerfehlern mit 3–30 Sekunden Wiederholungsabstand. Keine Änderung der Systemlautstärke und kein eigener Audiofokus.
+- Nach erfolgreicher nativer Audioverbindung meldet sich das Tablet auch ohne Rufwortdienst im TAFA-Geräteregister an und hält seinen Onlinestatus aktuell.
+- Native Assist-Verarbeitung, unbegrenzte Anschlussfragen, Geräteverwaltung und die vorhandene benutzergebundene Bluetooth-Audioverbindung bleiben erhalten.
+- Signierte Release-APK **TAFA-Device-Bridge-1.0.5.apk**, Versionscode **18**, mit bisheriger App-ID de.jarvis.audio und bisherigem Signaturzertifikat. Über die vorhandene App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
 
-Passende aktuelle TAFA-/HA-Komponenten und eine vollständige Assist-Pipeline mit STT/TTS werden vorausgesetzt. Praktische Mikrofon-, Bluetooth- und Mehrgerätetests auf echten Tablets stehen aus.
+Keepalive bleibt pro Tablet optional und läuft nur bei gestartetem Player. Er kann Echo-Ansagen nach Leerlauf verringern, garantiert deren Unterdrückung aber nicht. Passende aktuelle TAFA-/HA-Komponenten werden benötigt. Praktische Bluetooth-, Mikrofon- und Mehrgerätetests auf echten Tablets stehen aus.
