@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.3.48 — Instant native microphone push and follow-up settings
+
+- Native Device Bridge 1.2.2 subscribes to a private, device-scoped, authenticated HA WebSocket control stream. Mute, wake-word, continuous, and follow-up changes reach the tablet without periodic HTTP waits.
+- A 500-ms failover check runs only when the WebSocket is offline; a healthy channel uses a 12-s configuration/health reconciliation without continuous polling.
+- Device page exposes the HA follow-up ceiling, while the Android app offers 0–100 and explicitly opt-in unlimited questions until silence/errors/mute; Home Assistant may lower that limit at any time.
+- Control Center refreshes its visible device status every second; no second browser wakeword loop.
+- The README, personal dashboards, Assist pipelines and HA automations are unchanged.
+
+
 ## 0.3.47 — Native Device Bridge microphone controls, native Always-on mode and diagnostics
 
 - Replace the Control Center browser wakeword/continuous Whisper loop with administrator-only controls for an enrolled native Android TAFA Device Bridge. Stumm/Rufwort sets the existing device's `muted` state through the authenticated HA WebSocket device-admin API; no synthetic wakeword request or duplicate browser capture.

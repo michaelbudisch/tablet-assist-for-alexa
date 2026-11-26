@@ -152,10 +152,10 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('tafa-integrated-dashboard-editor',panel)
 
     def test_version_and_docs_consistent(self):
-        self.assertIn('version: "0.3.47"',(APP/"config.yaml").read_text())
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.26")
-        self.assertIn('"version": "0.4.26"',(HA/"manifest.json").read_text())
-        self.assertIn("0.3.47",(APP/"CHANGELOG.md").read_text())
+        self.assertIn('version: "0.3.48"',(APP/"config.yaml").read_text())
+        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.27")
+        self.assertIn('"version": "0.4.27"',(HA/"manifest.json").read_text())
+        self.assertIn("0.3.48",(APP/"CHANGELOG.md").read_text())
 
 
 if __name__=="__main__":

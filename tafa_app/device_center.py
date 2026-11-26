@@ -14,6 +14,7 @@ ROOM = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
 FIELDS = {
     "strict": (int, 1, 3), "cooldown": (int, 3, 30),
     "hold": (int, 10, 90), "pause_ms": (int, 900, 3200),
+    "followup_limit": (int, -1, 100),
     "mic_gain": (int, 50, 200), "brightness": (int, 1, 100),
     "muted": (bool,), "voice_mode": (str,), "screen_awake": (bool,),
     "display_control_enabled": (bool,), "room": (str,),
@@ -53,7 +54,7 @@ def update_device(fields):
             raise ValueError("Invalid switch value")
         value = raw == "true"
     elif kind is int:
-        if not re.fullmatch(r"[0-9]{1,4}", raw):
+        if not re.fullmatch(r"-?[0-9]{1,4}" if key == "followup_limit" else r"[0-9]{1,4}", raw):
             raise ValueError("Invalid numeric setting")
         value = int(raw)
         if not FIELDS[key][1] <= value <= FIELDS[key][2]:
@@ -242,6 +243,7 @@ def render_device_center(lang, csrf, state):
                      '<div class="device-settings">'+
                      setting(device,"muted",t("Mikrofon stumm","Mute microphone"),kind="boolean")+
                      setting(device,"voice_mode",t("Nativer Sprachmodus","Native speech mode"),choices=("wake","continuous"))+
+                     setting(device,"followup_limit",t("Anschlussfragen (HA-Grenze: -1 = App)","Follow-up ceiling (-1 = app setting)"),choices=(-1,0,1,2,3,5,10,20,50,100))+
                      setting(device,"word",t("Rufwort","Wake phrase"),choices=WORDS)+
                      setting(device,"strict",t("Rufwort-Bestätigung","Wake confirmation"),lo=1,hi=3)+
                      setting(device,"cooldown",t("Rufwort-Sperrzeit (s)","Wake cooldown (s)"),lo=3,hi=30)+

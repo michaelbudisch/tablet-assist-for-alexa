@@ -390,7 +390,7 @@
   });
   // Status polling never starts the browser microphone or a second wakeword
   // recognizer. Suppress it when the page is hidden or another tab is selected.
-  setInterval(()=>{if(activePage())void loadDevices();},8000);
+  setInterval(()=>{if(activePage())void loadDevices();},1000);
   setInterval(()=>{if(activePage())void refresh();},20000);
   if(window.location.hash==="#voice"){void refresh();void loadDevices();}
 })();
