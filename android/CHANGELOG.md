@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.2.2 · Instant HA settings and extended follow-ups
+- Authenticated per-device HA WebSocket for microphone and conversation settings; immediate acknowledgement and REST reconciliation while disconnected.
+- Optional local limits of 1–100 additional questions or explicitly unlimited; HA may reduce the local ceiling. Silence, errors and mute end follow-ups.
+- Load the offline wakeword model on demand when switching from Always on.
+- Version code 23; signed with the original update certificate.
+- Validation: 46 JVM tests, Android lint without errors, UI-test compilation and three documentation checks. Physical tablet/Echo testing remains outstanding.
+
 ## 1.2.1 · Three native microphone modes and complete utterance replay
 - Device-level Muted / Wake word / Always on selector in Android and TAFA Control Center; requires integration 0.4.26+.
 - Optional local sound activity detection without a wakeword. Keep the detected utterance in bounded RAM until speech ends and replay it in full to HA Assist.

@@ -1,11 +1,13 @@
 # TAFA Device Bridge 1.2.2
 
+**Signierter Build:** TAFA-Device-Bridge-1.2.2.apk verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode 23. Über die vorhandene App installieren. Prüfung: 46 Unit-Tests erfolgreich, Android Lint ohne Fehler, UI-Tests kompiliert und drei Dokumentationsprüfungen bestanden. Ein Praxistest auf Tablet/Echo steht noch aus.
+
 - **Sofortige HA-Steuerung:** Die App empfängt Mikrofon- und Gesprächseinstellungen über einen authentifizierten, nur für das registrierte Tablet zugänglichen Home-Assistant-WebSocket. Andere Geräte oder fremde HA-Nutzer können diese Gerätesteuerung nicht abonnieren.
 - **Ausfallabsicherung:** Ohne WebSocket wird alle 500 ms der aktuelle Mikrofonstatus abgeglichen. Bei aktiver Push-Verbindung entfällt diese ständige Abfrage; nach einem Neustart werden alle Einstellungen erneut geladen.
 - **Längere Gespräche:** In der App sind 1–100 oder unbegrenzte Anschlussfragen auswählbar. „Unbegrenzt“ muss ausdrücklich aktiviert werden; Stille, Fehler und Stumm schalten wieder in die normale Erkennung. In HA lässt sich die Obergrenze pro Tablet verringern.
 - **Moduswechsel:** Das lokale Rufwortmodell lädt bei Bedarf, auch wenn der Dienst ursprünglich im Modus „Immer an“ gestartet wurde.
 - **Update:** gleiche Android-App-ID `de.jarvis.audio`, Versionscode 23. Zum Überschreiben der bisherigen Installation ist wieder dasselbe Signaturzertifikat erforderlich. Keine neue zweite App installieren.
-- **Stand:** Quellcode und automatisierte Tests; reale Reaktionszeit und Hintergrundnutzung müssen auf dem Tablet geprüft werden.
+- **Stand:** Signierter Release; reale Reaktionszeit und Hintergrundnutzung müssen auf dem Tablet geprüft werden.
 
 # TAFA Device Bridge 1.2.1
 

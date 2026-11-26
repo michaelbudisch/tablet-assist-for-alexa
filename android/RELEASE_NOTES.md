@@ -1,11 +1,13 @@
 # TAFA Device Bridge 1.2.2
 
+**Signed build:** TAFA-Device-Bridge-1.2.2.apk uses the existing signing certificate, application ID de.jarvis.audio and version code 23. Install over the current app. Validation: 46 JVM tests passed, Android lint without errors, UI-test compilation and three documentation checks. Physical tablet/Echo testing remains outstanding.
+
 - **Instant HA control:** An authenticated, per-enrolled-device Home Assistant WebSocket pushes microphone and conversation settings directly to the tablet.
 - **500-ms fallback:** Fast REST reconciliation runs only while the push channel is unavailable; a connected tablet avoids constant HTTP requests.
 - **Extended conversations:** Choose 1–100 or opt-in unlimited wakeword-free follow-ups. Silence, errors and mute end the session. HA may restrict each tablet's local ceiling.
 - **Wake/continuous switching:** The local wakeword model loads on demand if switching out of Always on.
 - **In-place upgrades:** Same Android package `de.jarvis.audio`, version code 23. Use the existing signing certificate to replace an installed release; do not install a separate debug app.
-- Source and CI build; device latency must be tested in the field.
+- Signed release; device latency must be tested in the field.
 
 # TAFA Device Bridge 1.2.1
 
