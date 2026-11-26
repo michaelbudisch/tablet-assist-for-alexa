@@ -78,5 +78,42 @@ class ControlCenterLayoutTests(unittest.TestCase):
                       server.display(default_tab="unknown-tab"))
 
 
+    def test_voice_script_is_served_by_ingress_asset_handler(self):
+        """Regression: packaged voice-test.js must be downloadable, not HTTP 404."""
+        import io
+        class FakeHandler(server.Handler):
+            def __init__(self, path):
+                self.path=path
+                self.wfile=io.BytesIO()
+                self.response_code=None
+                self.headers_sent={}
+            def allowed(self):
+                return True
+            def send_response(self, code, message=None):
+                self.response_code=code
+            def send_header(self, name, value):
+                self.headers_sent[name]=value
+            def end_headers(self):
+                pass
+            def send_error(self, code, message=None, explain=None):
+                self.response_code=code
+
+        for url, filename, mime in [
+            ("/assets/voice-test.js?v=0.3.46","voice-test.js","text/javascript; charset=utf-8"),
+            ("/assets/control-center.js?v=0.3.46","control_center.js","text/javascript; charset=utf-8"),
+            ("/assets/control-center.css?v=0.3.46","control_center.css","text/css; charset=utf-8"),
+        ]:
+            with self.subTest(url=url):
+                handler=FakeHandler(url)
+                handler.do_GET()
+                self.assertEqual(handler.response_code,200)
+                self.assertEqual(handler.headers_sent.get("Content-Type"),mime)
+                self.assertEqual(handler.headers_sent.get("X-Content-Type-Options"),"nosniff")
+                self.assertEqual(handler.wfile.getvalue(),(APP/filename).read_bytes())
+        missing=FakeHandler("/assets/not-allowed.js")
+        missing.do_GET()
+        self.assertEqual(missing.response_code,404)
+
+
 if __name__=="__main__":
     unittest.main()

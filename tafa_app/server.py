@@ -53,7 +53,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.45"
+APP_VERSION="0.3.46"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -565,6 +565,7 @@ class Handler(BaseHTTPRequestHandler):
         path=urlsplit(self.path).path
         assets={"/assets/control-center.css":("control_center.css","text/css; charset=utf-8"),
                 "/assets/control-center.js":("control_center.js","text/javascript; charset=utf-8"),
+                "/assets/voice-test.js":("voice-test.js","text/javascript; charset=utf-8"),
                 "/assets/brand.svg":("brand.svg","image/svg+xml")}
         if path in assets:
             filename,mimetype=assets[path]

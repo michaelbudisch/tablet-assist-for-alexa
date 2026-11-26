@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.46 — Voice test JavaScript delivery hotfix
+
+- Serve `/assets/voice-test.js` through the existing allowlisted Ingress asset handler. This fixes HTTP 404 in the Control Center's "Jetzt sprechen" tab even though the file was packaged in the Docker image.
+- Add an actual HTTP handler regression test that checks the JavaScript response, MIME type, and missing-file behavior; no broader asset exposure or configuration change.
+- Existing TAFA installation settings, integrations, dashboard entries, Assist pipelines and automations remain unchanged by this patch.
+
 ## 0.3.45 — Voice test dashboard in the Control Center
 
 - Add a right-aligned **Speak now** action, opening a dedicated Voice test tab with an explicit microphone switch (Muted / Wake phrase / Continuous).
