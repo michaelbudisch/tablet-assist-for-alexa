@@ -63,8 +63,18 @@ public class UiSmokeInstrumentation extends Instrumentation {
                 german.findViewById(R.id.nav_settings).performClick();
                 check(german.findViewById(R.id.section_settings).getVisibility() == View.VISIBLE, "Settings navigation opens");
                 check(german.findViewById(R.id.section_connection).getVisibility() == View.GONE, "Only selected section is shown");
-                check(german.findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE,
-                        "Wakeword fine tuning is directly visible in Settings");
+                check(!german.findViewById(R.id.wake_advanced).isShown(),"Advanced settings start collapsed");
+                View advanced=german.findViewById(R.id.section_settings).findViewWithTag("settings_group_3");
+                check(advanced!=null,"Advanced settings group exists");
+                advanced.performClick();
+                check(german.findViewById(R.id.wake_advanced).isShown(),"Advanced controls expand");
+                View audioGroup=german.findViewById(R.id.section_settings).findViewWithTag("settings_group_0");
+                audioGroup.performClick();
+                Spinner output=german.findViewById(R.id.audio_output_mode);
+                check(output.isShown()&&output.getAdapter().getCount()==3,"Three audio output modes");
+                check(output.getSelectedItemPosition()==0,"Automatic output default");
+                check(!german.findViewById(R.id.wake_advanced).isShown(),"Only one settings group expands");
+                audioGroup.performClick();
                 check(german.findViewById(R.id.camera_relay_start).getVisibility()==View.VISIBLE,
                         "Camera controls are included in Settings");
                 check(german.findViewById(R.id.display_permission).getVisibility()==View.VISIBLE,

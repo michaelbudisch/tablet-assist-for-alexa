@@ -217,6 +217,7 @@ public class MainActivity extends Activity {
         for(int i=0;i<groups.length;i++){
             final int selected=i;
             Button header=new Button(this,null,0,R.style.Action);
+            header.setTag("settings_group_"+i);
             header.setText(getString(titles[i])+"  ▾");
             header.setAllCaps(false);header.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);
             settings.addView(header,new LinearLayout.LayoutParams(-1,dp(52)));
@@ -649,6 +650,8 @@ public class MainActivity extends Activity {
                 !"continuous".equals(getSharedPreferences(PREF,0).getString("native_voice_mode","wake"))){
             pendingNativeQuestion=false;
             showSection("settings",true);
+            View voiceGroup=findViewById(R.id.section_settings).findViewWithTag("settings_group_1");
+            if(voiceGroup!=null&&!wakeInstall.isShown())voiceGroup.performClick();
             wakeStatus.setText(R.string.wake_model_missing);
             Toast.makeText(this,R.string.wake_model_missing,Toast.LENGTH_LONG).show();
             return;

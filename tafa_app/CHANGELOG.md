@@ -1,5 +1,10 @@
 # TAFA App changelog
 
+## 0.4.40 — Audioausgabe pro Tablet
+
+- Automatisch, nur Bluetooth oder nur Tablet im Control Center auswählbar.
+- Einstellung wird pro Gerät gespeichert und über den authentifizierten Gerätekanal synchronisiert. Benötigt Device Bridge 1.2.4 für die native Wiedergabe.
+
 ## 0.4.39 — SearXNG-Diagnose und Rezept-Fallback
 
 - Suchdiagnose unterscheidet gelieferte Ergebnisse, darstellbare HTTPS-Treffer und nicht antwortende Suchmaschinen.
