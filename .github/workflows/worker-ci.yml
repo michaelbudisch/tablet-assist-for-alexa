@@ -59,6 +59,7 @@ jobs:
         run: |
           Set-Content -Path worker/.env -Value 'LAN_IP=192.168.50.20' -Encoding utf8NoBOM
           & ./worker/scripts/windows/Worker-Windows.ps1 -Action Info
+          Set-Location $env:GITHUB_WORKSPACE
           if ($LASTEXITCODE -ne 0) { throw 'Export failed' }
           $manifest = Get-Content worker/tafa-worker.json -Raw | ConvertFrom-Json
           $txt = Get-Content worker/GPU-Worker-Verbindungsdaten.txt -Raw
@@ -70,6 +71,7 @@ jobs:
           }
           $device = $manifest.device_id
           & ./worker/scripts/windows/Worker-Windows.ps1 -Action Info
+          Set-Location $env:GITHUB_WORKSPACE
           if ($LASTEXITCODE -ne 0) { throw 'Second export failed' }
           $manifest = Get-Content worker/tafa-worker.json -Raw | ConvertFrom-Json
           if ($manifest.device_id -ne $device) { throw 'Worker ID changed unexpectedly' }
