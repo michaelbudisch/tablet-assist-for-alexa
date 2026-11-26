@@ -100,9 +100,9 @@ class LocalData:
             result = await query_searxng(self.hass, self.cfg.get("search_base", ""), term)
             # SearXNG sometimes finds a dish but not its longer '... Rezept'
             # phrase. Only retry empty *valid* search results, not server errors.
-            if not result["results"] and "keine passenden Treffer" in result["message"] and re.search(r"\\brezept\\w*\\b", term, re.I):
-                simpler = re.sub(r"\\brezept\\w*\\b", " ", term, flags=re.I)
-                simpler = re.sub(r"\\s+", " ", simpler).strip()
+            if not result["results"] and "keine passenden Treffer" in result["message"] and re.search(r"\brezept\w*\b", term, re.I):
+                simpler = re.sub(r"\brezept\w*\b", " ", term, flags=re.I)
+                simpler = re.sub(r"\s+", " ", simpler).strip()
                 if len(simpler) >= 2 and simpler != term:
                     retry = await query_searxng(self.hass, self.cfg.get("search_base", ""), simpler)
                     if retry["results"]:
@@ -126,12 +126,12 @@ class LocalData:
                         + ". Ich öffne den Lesemodus im Dashboard. "
                         "Du kannst auch sagen: Lies das Rezept vor, oder: Zurück zu den Treffern."), True
             return "Diese Treffer-Nummer gibt es in der letzten Suche nicht.", True
-        if context_results and re.match(r"^(?:zurück|zurueck|zeige|zeig)(?:\\s+(?:zu|zur|zu den|die|mir|wieder))*\\s+(?:suche|suchergebnisse|ergebnisse|treffer)\\s*[.!?]?$", text.strip(), re.I):
+        if context_results and re.match(r"^(?:zurück|zurueck|zeige|zeig)(?:\s+(?:zu|zur|zu den|die|mir|wieder))*\s+(?:suche|suchergebnisse|ergebnisse|treffer)\s*[.!?]?$", text.strip(), re.I):
             context_results["selected"] = -1
             context_results["article"] = None
             return "Hier sind die Suchtreffer. Welche Nummer soll ich öffnen?", True
         if context_results and context_results.get("selected", -1) >= 0 and re.match(
-                r"^(?:lies|lese|erzähl|erzaehl|erkläre|erklaere|fass|fasse)\\b.*\\b(?:rezept|artikel|seite|inhalt)\\b", text.strip(), re.I):
+                r"^(?:lies|lese|erzähl|erzaehl|erkläre|erklaere|fass|fasse)\b.*\b(?:rezept|artikel|seite|inhalt)\b", text.strip(), re.I):
             from .web_article import read_public_article
             item = context_results["results"][context_results["selected"]]
             try:
