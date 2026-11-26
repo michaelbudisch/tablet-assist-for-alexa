@@ -9,7 +9,7 @@ import urllib.request
 
 from speech_source import load_options, private_http_origin, setup_settings_values
 from endpoint_checks import suggested_gpu_stt_host
-from connection_probes import ADDRESS_FIELDS
+from connection_ui import render_connection_form, validate_connection_form, CONNECTION_FIELDS, ADDRESS_FIELDS
 from wyoming_picker import SUPERVISOR_OPTIONS
 
 CHOICES = {
@@ -27,7 +27,8 @@ TEXT_FIELDS = (
 )
 BOOL_FIELDS = ("chime", "learning_enabled", "reminders_enabled")
 FORM_FIELDS = frozenset((*CHOICES, *TEXT_FIELDS, *BOOL_FIELDS))
-SETTINGS_FIELDS = FORM_FIELDS - ADDRESS_FIELDS
+ROUTING_FIELDS = frozenset(("cpu_stt", "gpu_stt", "llm_agent"))
+SETTINGS_FIELDS = FORM_FIELDS - ADDRESS_FIELDS - ROUTING_FIELDS
 
 
 def _value(options, key):
@@ -94,24 +95,6 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
         return (f'<label class="toggle"><input type="checkbox" name="{name}" value="1"'
                 f'{" checked" if options.get(name) is True else ""}> {label}</label>')
 
-    def stt_picker(name, label):
-        selected = _value(options, name)
-        entries = [("", t("Keine", "None"))]
-        for item in wyoming:
-            name_label = item.get("name") or item["id"]
-            label_text = name_label + (" · " + item["id"] if name_label != item["id"] else "")
-            entries.append((item["id"], label_text))
-        if selected and selected not in {x[0] for x in entries}:
-            entries.append((selected, selected + " · " + t("momentan nicht gefunden", "currently unavailable")))
-        return select(name, label, entries, selected)
-
-    recent = ""
-    if latest and latest.get("backend") in ("zusatzrechner", "homeserver"):
-        label = t("GPU-Whisper", "GPU Whisper") if latest["backend"] == "zusatzrechner" else t("CPU-/Homeserver", "CPU/homeserver")
-        duration = latest.get("duration_ms")
-        duration_label = (" · " + str(round(duration)) + " ms") if isinstance(duration, (int, float)) else ""
-        recent = '<p class="muted">' + t("Letzte Spracherkennung: ", "Last speech recognition: ") + esc(label + duration_label) + '</p>'
-
     return f"""
 <section id="tafa-settings" class="settings-card">
 <h2>{t("Sprachassistent und KI", "Voice assistant and AI")}</h2>
@@ -120,28 +103,25 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
 <input type="hidden" name="lang" value="{esc(lang)}"><input type="hidden" name="tab" value="setup">
-<div id="wyoming-picker"><p class="muted">{esc(note)}</p>{recent}<p class="muted">{t("Wyoming in Home Assistant hinzufügen und anschließend die Entitäten unten zuordnen.", "Add Wyoming in Home Assistant, then assign the entities below.")} <a href="/config/integrations" target="_top">{t("Geräte & Dienste", "Devices & services")}</a></p></div>
-<details open><summary>1 · {t("GPU-Sprachverarbeitung und KI", "GPU speech and AI")}</summary>
-{stt_picker("gpu_stt",t("GPU-Whisper / Windows (optional)", "GPU Whisper / Windows (optional)"))}
-{field("llm_agent",t("Text-KI: Home-Assistant-Gesprächsentität", "Text AI: Home Assistant conversation entity"),
- t("Ollama zuerst unter Geräte & Dienste hinzufügen. Beispiel: conversation.ollama.", "Add Ollama in Devices & services first. Example: conversation.ollama."),"conversation.ollama")}
-{select("voice_variant",t("Qwen-Stimmvariante", "Qwen voice variant"),
- [(i,t("Standard", "Default") if i == "default" else i) for i in CHOICES["voice_variant"]])}
-</details>
-<details open><summary>2 · {t("CPU-Fallback / Homeserver", "CPU fallback / home server")}</summary>
+<details open><summary>1 · {t("GPU und CPU – Ausgabe und Fallback", "GPU and CPU – output and fallback")}</summary>
 {select("speech_mode",t("Wo läuft Piper?", "Where does Piper run?"),
  [("setup",t("Einrichtung: zunächst keinen Sprachserver starten", "Setup: do not start speech yet")),
   ("local",t("In der TAFA-App (mit CPU-Fallback)", "Inside TAFA (CPU fallback)")),
   ("external",t("Extern auf Proxmox", "External Proxmox server"))])}
-{stt_picker("cpu_stt",t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox"))}
-</details>
-<details open><summary>3 · {t("Sprachrouting und Gesprächsverhalten", "Speech routing and conversation")}</summary>
 {select("hardware_profile",t("Sprachausgabe", "Speech output"),
- [("automatic",t("Automatisch: GPU, sonst Piper", "Automatic: GPU then Piper")),
-  ("cpu",t("Immer Piper verwenden", "Always use Piper"))])}
+ [("automatic",t("GPU/Qwen bevorzugen; bei Ausfall Piper", "Prefer GPU Qwen; use Piper on failure")),
+  ("cpu",t("Nur Piper/CPU verwenden", "Use only Piper/CPU"))])}
+<p class="muted">{t("GPU-IP und CPU-/GPU-Wyoming-Entitäten findest du gesammelt unter Verbindungen. Die GPU-IP ist nur eine schnelle Vorprüfung, Wyoming übernimmt die Spracherkennung.", "GPU IP and CPU/GPU Wyoming entities are grouped under Connections. The IP is a fast precheck; Wyoming handles recognition.")}</p>
+</details>
+<details><summary>2 · {t("KI und Gesprächsverhalten", "AI and conversation behavior")}</summary>
 {select("conversation_mode",t("Gesprächsverhalten", "Conversation behavior"),
  [("intelligent",t("Intelligent (empfohlen)", "Intelligent (recommended)")),
   ("automatic",t("Automatisch", "Automatic")),("manual",t("Manuell", "Manual"))])}
+<p class="muted">{t("Den Ollama-/Text-KI-Gesprächsassistenten wählst du unter Verbindungen.", "Choose the Ollama/text AI conversation agent under Connections.")}</p>
+</details>
+<details><summary>3 · {t("Stimme und Klang", "Voice and sound")}</summary>
+{select("voice_variant",t("Qwen-Stimmvariante", "Qwen voice variant"),
+ [(i,t("Standard", "Default") if i == "default" else i) for i in CHOICES["voice_variant"]])}
 {select("live_profile",t("Klangprofil", "Sound profile"),
  [(i,i.title()) for i in CHOICES["live_profile"]])}
 </details>
@@ -163,95 +143,13 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 """
 
 
-CONNECTION_FIELDS = ("external_piper_base", "gpu_base", "gpu_stt_host",
-                     "mp3_base", "public_audio_base")
 
-
-def render_connection_form(options, lang, csrf, checks=None):
-    """Edit addresses in Connections, without repeating them in AI settings."""
-    en = lang == "en"
-    t = lambda de, eng: eng if en else de
-    esc = lambda value: html.escape(str(value or ""), quote=True)
-    checks = checks or {}
-    definitions = (
-        ("external_piper_base", "Piper · Proxmox", "http://192.168.1.50:5000",
-         t("Privater Piper-Dienst, HTTP mit Port.", "Private Piper service, HTTP with port.")),
-        ("gpu_base", "Qwen · TTS", "http://192.168.1.60:10502",
-         t("GPU-TTS-Worker, HTTP mit Port.", "GPU TTS worker, HTTP with port.")),
-        ("gpu_stt_host", t("GPU-Schnellerkennung (IP-Adresse)", "Quick GPU detection (IP address)"), "192.168.1.60",
-         t("LAN-IP oder .local-Hostname von GPU-Whisper. TCP 10300 wird vor der Spracherkennung mit 0,8 s Zeitlimit geprüft; bei Nichterreichbarkeit wird der CPU-Fallback gewählt.", "GPU Whisper LAN IP or .local hostname. TCP 10300 is checked before recognition with a 0.8 s timeout; if unreachable, CPU fallback is selected.")),
-        ("mp3_base", "Alexa · MP3", "http://192.168.1.50:5001",
-         t("Privater MP3-Generator, HTTP mit Port.", "Private MP3 generator, HTTP with port.")),
-        ("public_audio_base", "Alexa · HTTPS", "https://audio.example.org",
-         t("Öffentlicher Domainname. DNS und TLS werden geprüft, nicht der Abruf von Amazon aus.", "Public domain. DNS and TLS are checked, not Amazon's external retrieval.")),
-    )
-    cards = {}
-    for key, label, placeholder, detail in definitions:
-        value = _value(options, key)
-        if key == "gpu_stt_host" and not value:
-            value = suggested_gpu_stt_host(options.get("gpu_base", ""))
-        state = str(checks.get(key, "missing"))
-        if state not in ("ready", "reachable", "offline", "invalid", "not_ready",
-                         "missing", "configured_unchecked", "unused"):
-            state = "unverified"
-        cards[key] = (
-            '<div class="connection-field">'
-            f'<label for="connection-{key}">{esc(label)}</label>'
-            f'<input id="connection-{key}" name="{key}" type="text" '
-            f'value="{esc(value)}" placeholder="{esc(placeholder)}" '
-            f'data-connection-probe="{key}" maxlength="256" autocomplete="off" spellcheck="false">'
-            f'<p class="field-help">{esc(detail)}</p>'
-            f'<p class="probe-feedback" role="status" aria-live="polite" data-probe-result="{key}" '
-            f'data-state="{esc(state)}">{t("Gespeicherter Status", "Saved status")}: {esc(state)}</p>'
-            '</div>'
-        )
-    groups = ((t("GPU-Zusatzrechner", "GPU worker"), ("gpu_stt_host", "gpu_base")),
-              (t("CPU-Fallback / Homeserver", "CPU fallback / home server"), ("external_piper_base",)),
-              (t("Alexa-Audioausgabe", "Alexa audio output"), ("mp3_base", "public_audio_base")))
-    grouped = "".join(f'<section class="connection-group"><h3>{esc(title)}</h3><div class="connection-grid">' + "".join(cards[key] for key in keys) + "</div></section>" for title, keys in groups)
-    return (
-        '<section class="settings-card connection-editor">'
-        f'<h2>{t("Serveradressen", "Service addresses")}</h2>'
-        f'<p>{t("Adressen direkt bearbeiten. Nach dem Tippen wird die jeweilige Verbindung geprüft; erst Speichern übernimmt den Wert.", "Edit service addresses here. Checks run after typing; only Save stores the new values.")}</p>'
-        '<form id="tafa-connections" action="./" method="post">'
-        f'<input type="hidden" name="csrf" value="{esc(csrf)}">'
-        f'<input type="hidden" name="lang" value="{esc(lang)}">'
-        '<input type="hidden" name="tab" value="connections">'
-        + grouped +
-        f'<p class="subtle">{t("Ein erfolgreicher Test bestätigt nicht den gesamten Sprachweg. Für Alexa-HTTPS kann TAFA das Zertifikat prüfen, aber keinen externen Amazon-Abruf bestätigen.", "A successful connection test does not prove the complete voice route. Alexa HTTPS certificate checking cannot confirm Amazon can download the file.")}</p>'
-        f'<div class="form-actions"><span class="form-actions-note">{t("Ungespeicherte Änderungen bleiben nur in diesem Formular.", "Changes are not applied until saved.")}</span>'
-        f'<button class="btn btn-primary" type="submit" name="action" value="connection_settings">{t("Verbindungen speichern", "Save connections")}</button></div>'
-        '</form></section>'
-    )
-
-
-def validate_connection_form(fields, current):
-    """Strictly accept the address fields; preserve AI settings on save."""
-    expected = frozenset(CONNECTION_FIELDS)
-    if not expected.issubset(fields) or set(fields) - expected - {"csrf", "lang", "action", "tab"}:
-        raise ValueError("Incomplete or unexpected connection settings")
-    if any(len(parts) != 1 for parts in fields.values()):
-        raise ValueError("Duplicate connection field")
-    update = {}
-    for key in CONNECTION_FIELDS:
-        value = fields[key][0]
-        if not isinstance(value, str) or len(value) > 256:
-            raise ValueError("Invalid address: " + key)
-        value = value.strip()
-        if key == "gpu_stt_host" and value:
-            private_http_origin("http://" + value + ":10300")
-        elif key not in ("public_audio_base", "gpu_stt_host") and value:
-            private_http_origin(value)
-        update[key] = value
-    setup_settings_values({**current, **update})
-    return update
-
-
-def save_connection_form(token, fields):
+def save_connection_form(token, fields, available=()):
+    """Store only Connection form fields in existing Supervisor App options."""
     if not token:
         raise RuntimeError("Supervisor authentication unavailable")
     current = load_options()
-    changes = validate_connection_form(fields, current)
+    changes = validate_connection_form(fields, current, available)
     return save_app_changes(token, changes)
 
 
@@ -282,12 +180,6 @@ def validate_settings_form(fields, current, available):
     if update["speech_mode"] == "external":
         private_http_origin(candidate.get("external_piper_base", ""))
     setup_settings_values(candidate)
-    valid = {item["id"] for item in available}
-    for key in ("cpu_stt", "gpu_stt"):
-        if update[key] and update[key] not in valid and update[key] != current.get(key, ""):
-            raise ValueError("Wyoming entity is not registered: " + key)
-    if update["cpu_stt"] and update["cpu_stt"] == update["gpu_stt"]:
-        raise ValueError("CPU and GPU Wyoming providers must differ")
     return update
 
 
