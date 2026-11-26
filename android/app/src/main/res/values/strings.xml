@@ -199,9 +199,7 @@
     <string name="nav_voice">Wakeword</string>
     <string name="nav_help">Help</string>
     <string name="section_status_title">Your device at a glance</string>
-    <string name="section_status_description">Audio playback, native microphone and camera in one place.</string>
     <string name="section_connection_title">Connect your home</string>
-    <string name="section_connection_description">Home Assistant, access token and Bluetooth. Set up once on this device.</string>
     <string name="section_voice_title">A wakeword for your room</string>
     <string name="section_voice_description">Optional local recognition. You choose when the microphone is active.</string>
     <string name="section_help_title">Help &amp; diagnostics</string>

@@ -199,9 +199,7 @@
     <string name="nav_voice">Rufwort</string>
     <string name="nav_help">Hilfe</string>
     <string name="section_status_title">Dein Gerät im Überblick</string>
-    <string name="section_status_description">Audiowiedergabe, natives Mikrofon und Kamera an einem Ort.</string>
     <string name="section_connection_title">Dein Zuhause verbinden</string>
-    <string name="section_connection_description">Home Assistant, Zugriffstoken und Bluetooth. Einmal auf diesem Gerät einrichten.</string>
     <string name="section_voice_title">Ein Rufwort für deinen Raum</string>
     <string name="section_voice_description">Optionale lokale Erkennung. Du entscheidest, wann das Mikrofon aktiv ist.</string>
     <string name="section_help_title">Hilfe &amp; Diagnose</string>
