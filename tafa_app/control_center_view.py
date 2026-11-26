@@ -180,7 +180,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
   <div class="section-heading">
     <p class="kicker">{t("VERBINDUNGEN","CONNECTIONS")}</p>
     <h2>{t("Server und Komponenten verbinden","Connect servers and components")}</h2>
-    <p>{t("JSON für die Schnelleinrichtung importieren oder Serveradressen manuell bearbeiten.","Import JSON for quick setup or edit service addresses manually.")}</p>
+    <p>{t("Zuerst JSON-Schnelleinrichtung oder anschließend GPU/KI, CPU-Fallback und Alexa manuell zuordnen.","Start with JSON quick setup, or manually configure GPU/AI, CPU fallback and Alexa below.")}</p>
   </div>
   {import_panel}
   {connection_panel}

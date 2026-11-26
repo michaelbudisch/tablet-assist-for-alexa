@@ -38,7 +38,8 @@ class NativeAudioContract(unittest.TestCase):
         service=read("android/app/src/main/java/de/jarvis/audio/WakeWordService.java")
         self.assertIn("if(answered){",service)
         self.assertNotIn("nativeFollowupCount",service)
-        self.assertNotIn("native_followup_limit",service)
+        self.assertIn('prefs.getInt("native_followup_limit",-1)',service)
+        self.assertIn("FollowupPolicy.effectiveLimit(",service)
         self.assertNotIn("native_followup_enabled",service)
     def test_dashboard_microphone_is_a_real_ha_toggle(self):
         src=read("custom_components/tablet_assist_for_alexa/frontend/dashboard.js")
@@ -117,9 +118,9 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn("R.id.section_settings",main)
 
     def test_version_contract(self):
-        self.assertIn('version: "0.3.42"',read("tafa_app/config.yaml"))
+        self.assertIn('version: "0.3.44"',read("tafa_app/config.yaml"))
         self.assertEqual(read("VERSION").strip(),"0.4.25")
-        self.assertEqual(read("android/VERSION").strip(),"1.1.0")
+        self.assertEqual(read("android/VERSION").strip(),"1.2.0")
 
 if __name__=="__main__":
     unittest.main()

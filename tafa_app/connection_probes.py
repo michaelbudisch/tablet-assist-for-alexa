@@ -83,7 +83,7 @@ def _probe_whisper(value):
     private_http_origin("http://" + value + ":10300")
     ip = _resolve(value, 10300, public=False)[0]
     try:
-        with socket.create_connection((ip, 10300), timeout=1.5):
+        with socket.create_connection((ip, 10300), timeout=0.8):
             return {"status": "reachable", "detail": "tcp_only"}
     except (OSError, TimeoutError):
         return {"status": "offline", "detail": "no_response"}

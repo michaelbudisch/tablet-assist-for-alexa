@@ -21,10 +21,15 @@ class SettingsUI(unittest.TestCase):
         return {k: [v] for k,v in defaults.items()}
 
     def test_full_form_validates_and_preserves_existing_keys(self):
-        form = self.form(cpu_stt="stt.cpu", gpu_stt="stt.gpu")
-        current = {"custom_future_setting": "preserve"}
+        form = self.form()
+        current = {"custom_future_setting": "preserve",
+                   "cpu_stt":"stt.cpu","gpu_stt":"stt.gpu",
+                   "llm_agent":"conversation.ollama"}
         update = validate_settings_form(form,current,[{"id":"stt.cpu"},{"id":"stt.gpu"}])
-        self.assertEqual(update["cpu_stt"],"stt.cpu")
+        self.assertNotIn("cpu_stt",update)
+        self.assertNotIn("gpu_stt",update)
+        self.assertNotIn("llm_agent",update)
+        self.assertEqual({**current,**update}["cpu_stt"],"stt.cpu")
         self.assertEqual({**current,**update}["custom_future_setting"],"preserve")
         self.assertFalse(update["chime"])
 
@@ -94,42 +99,83 @@ class SettingsUI(unittest.TestCase):
         en=render_settings_form(options,rows,"en","csrf","1 detected")
         self.assertIn("Sprachassistent und KI",de)
         self.assertIn("Voice assistant and AI",en)
-        self.assertIn('value="stt.cpu" selected',de)
-        self.assertIn("CPU &amp; &lt;Whisper&gt;",de)
-        self.assertIn('id="wyoming-picker"',de)
-        self.assertLess(de.index('name="gpu_stt"'),de.index('name="cpu_stt"'))
-        self.assertEqual(de.count('name="gpu_stt"'),1)
-        self.assertEqual(de.count('name="cpu_stt"'),1)
+        self.assertNotIn('name="cpu_stt"',de)
+        self.assertNotIn('name="gpu_stt"',de)
+        self.assertNotIn('name="llm_agent"',de)
+        panel=render_connection_form(options,"de","csrf",wyoming=rows)
+        self.assertIn('value="stt.cpu" selected',panel)
+        self.assertIn("CPU &amp; &lt;Whisper&gt;",panel)
+        self.assertIn('name="cpu_stt"',panel)
+        self.assertIn('name="gpu_stt"',panel)
         self.assertEqual(de.count('name="action" value="settings"'),1)
         self.assertNotIn('name="gpu_base"',de)
         self.assertNotIn('name="gpu_stt_host"',de)
         self.assertNotIn('name="mp3_base"',de)
         self.assertNotIn('name="public_audio_base"',de)
 
-    def test_connection_form_only_edits_addresses_and_checks_values(self):
+    def test_connection_form_groups_services_and_wyoming_choices(self):
         options = {"gpu_base":"http://192.168.1.30:10502",
+                   "gpu_stt_host":"192.168.1.30","gpu_stt":"stt.gpu",
+                   "cpu_stt":"stt.cpu","llm_agent":"conversation.ollama",
                    "public_audio_base":"https://tafa.example.org"}
-        html = render_connection_form(options,"de","csrf",checks={"gpu_base":"ready"})
-        self.assertIn('name="gpu_base"',html)
-        self.assertLess(html.index('name="gpu_stt_host"'),html.index('name="external_piper_base"'))
-        self.assertLess(html.index('name="external_piper_base"'),html.index('name="mp3_base"'))
-        self.assertIn("GPU-Schnellerkennung",html)
-        self.assertIn('data-connection-probe="gpu_base"',html)
-        self.assertIn('data-connection-probe="public_audio_base"',html)
-        self.assertIn('name="action" value="connection_settings"',html)
-        self.assertNotIn('name="llm_agent"',html)
-        self.assertNotIn('name="rooms_json"',html)
+        providers=[{"id":"stt.gpu","name":"GPU Whisper"},
+                   {"id":"stt.cpu","name":"CPU Whisper"}]
+        page = render_connection_form(options,"de","csrf",
+                                      checks={"gpu_base":"ready","gpu_stt_host":"reachable"},
+                                      wyoming=providers,
+                                      latest={"backend":"zusatzrechner","duration_ms":430})
+        for name in ("gpu_stt_host","gpu_base","gpu_stt","llm_agent",
+                     "external_piper_base","cpu_stt","mp3_base","public_audio_base"):
+            self.assertIn('name="'+name+'"',page)
+        self.assertLess(page.index("1 · GPU / KI"),page.index("2 · CPU-Fallback"))
+        self.assertLess(page.index("2 · CPU-Fallback"),page.index("3 · Alexa"))
+        self.assertIn('value="stt.gpu" selected',page)
+        self.assertIn('value="stt.cpu" selected',page)
+        self.assertIn("0,8 Sekunden",page)
+        self.assertIn("Letzte Spracherkennung",page)
+        self.assertIn('name="action" value="connection_settings"',page)
+        self.assertNotIn('name="hardware_profile"',page)
+        self.assertNotIn('name="rooms_json"',page)
+
+    def test_connection_save_validates_entity_roles_and_preserves_unrelated(self):
+        current = {"hardware_profile":"automatic",
+                   "conversation_mode":"intelligent","rooms_json":"{}",
+                   "sources_json":"{}","speech_mode":"local",
+                   "custom_setting":"unchanged"}
         fields = {name:[""] for name in (
-            "external_piper_base","gpu_base","gpu_stt_host","mp3_base","public_audio_base")}
-        fields.update({"gpu_base":["http://192.168.1.30:10502"],
-                       "public_audio_base":["https://tafa.example.org"]})
-        updated = validate_connection_form(fields,{"llm_agent":"conversation.ollama"})
-        self.assertEqual(updated["gpu_base"],"http://192.168.1.30:10502")
-        self.assertNotIn("llm_agent",updated)
+            "gpu_stt_host","gpu_base","gpu_stt","llm_agent",
+            "external_piper_base","cpu_stt","mp3_base","public_audio_base")}
+        fields.update({"gpu_stt_host":["192.168.1.30"],
+                       "gpu_base":["http://192.168.1.30:10502"],
+                       "gpu_stt":["stt.gpu"],"cpu_stt":["stt.cpu"],
+                       "llm_agent":["conversation.ollama"]})
+        available=[{"id":"stt.gpu"},{"id":"stt.cpu"}]
+        changes=validate_connection_form(fields,current,available)
+        self.assertEqual(changes["gpu_stt_host"],"192.168.1.30")
+        self.assertEqual(changes["llm_agent"],"conversation.ollama")
+        self.assertNotIn("hardware_profile",changes)
+        self.assertEqual({**current,**changes}["custom_setting"],"unchanged")
         with self.assertRaises(ValueError):
-            validate_connection_form({**fields,"llm_agent":["conversation.other"]},{})
+            validate_connection_form({**fields,"gpu_stt":["stt.cpu"]},current,available)
         with self.assertRaises(ValueError):
-            validate_connection_form({**fields,"gpu_base":["http://8.8.8.8:10502"]},{})
+            validate_connection_form({**fields,"gpu_stt":["stt.invented"]},current,available)
+        with self.assertRaises(ValueError):
+            validate_connection_form({**fields,"gpu_base":["http://8.8.8.8:10502"]},current,available)
+        with self.assertRaises(ValueError):
+            validate_connection_form({**fields,"conversation_mode":["manual"]},current,available)
+        with self.assertRaises(ValueError):
+            validate_connection_form({**fields,"llm_agent":["sensor.incorrect"]},current,available)
+
+    def test_existing_wyoming_selection_survives_temporary_discovery_failure(self):
+        current={"gpu_stt":"stt.working_gpu","cpu_stt":"stt.working_cpu"}
+        fields={key:[""] for key in (
+            "gpu_stt_host","gpu_base","gpu_stt","llm_agent",
+            "external_piper_base","cpu_stt","mp3_base","public_audio_base")}
+        fields["gpu_stt"]=["stt.working_gpu"]
+        fields["cpu_stt"]=["stt.working_cpu"]
+        changes=validate_connection_form(fields,current,[])
+        self.assertEqual(changes["gpu_stt"],"stt.working_gpu")
+        self.assertEqual(changes["cpu_stt"],"stt.working_cpu")
 
 
 if __name__=="__main__":
