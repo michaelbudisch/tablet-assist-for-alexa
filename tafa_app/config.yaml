@@ -41,6 +41,10 @@ options:
   mp3_profile: natural
   chime: false
   sources_json: "{}"
+  search_base: ""
+  family_name_man: ""
+  family_name_woman: ""
+  family_name_child: ""
   learning_enabled: false
   reminders_enabled: false
   reminder_room: ""
@@ -62,6 +66,10 @@ schema:
   mp3_profile: list(natural|studio|announcement)
   chime: bool
   sources_json: str
+  search_base: str
+  family_name_man: str
+  family_name_woman: str
+  family_name_child: str
   learning_enabled: bool
   reminders_enabled: bool
   reminder_room: str
