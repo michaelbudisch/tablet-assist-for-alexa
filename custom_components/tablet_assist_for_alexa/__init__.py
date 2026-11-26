@@ -23,6 +23,7 @@ from .reminders import Reminders
 from .local_data import LocalData
 from .learning import Learning
 from .learning_ws import learning_command
+from .web_search import search_command
 from homeassistant.components import websocket_api
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -37,6 +38,7 @@ ANNOUNCE_SCHEMA = vol.Schema({
 
 async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, learning_command)
+    websocket_api.async_register_command(hass, search_command)
     websocket_api.async_register_command(hass, async_sync_from_app)
     websocket_api.async_register_command(hass, device_admin_command)
     websocket_api.async_register_command(hass, device_settings_subscribe)
