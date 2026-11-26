@@ -60,6 +60,8 @@ Du kannst mit einer CPU-Lösung anfangen und den GPU-Worker später ergänzen. D
 
 ## TAFA installieren
 
+**Schnellstart für neue Nutzer:** TAFA als Home-Assistant-App installieren → im Control Center zwischen **Lokal** und **Extern** für CPU-Sprachdienste wählen → Home Assistant Core nach Installation der Integration einmal neu starten → aktuelle **TAFA Device Bridge** auf Android verbinden → **TAFA Lokal** und Bluetooth-Ausgabe mit einer echten Frage testen. **Ein neuer TAFA-Start befindet sich zunächst im Einrichtungsmodus und lädt keine CPU-Modelle automatisch.** Der GPU Worker ist optional; seine JSON-Verbindungsdaten werden unter **TAFA → Verbindungen** importiert.
+
 Der **[Schritt-für-Schritt-Einrichtungsleitfaden](docs/setup-guide.md)** beschreibt die verschiedenen Installationswege und die Verbindung der Komponenten. Befehle, IP-Adressen und Netzwerkkonfiguration stehen in den jeweiligen Anleitungen – nicht mehr im Mittelpunkt dieser Projektvorstellung.
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
@@ -74,7 +76,7 @@ Der **[Schritt-für-Schritt-Einrichtungsleitfaden](docs/setup-guide.md)** beschr
 
 TAFA wird aktiv weiterentwickelt. Das integrierte Dashboard und der native Sprachweg sind im Projekt enthalten; eine frische Installation und die Audioausgabe sollten auf der jeweiligen Hardware geprüft werden. **Der Android-Quellcode kann neuer sein als die zuletzt veröffentlichte signierte APK.** Für ein Update über die vorhandene Device Bridge muss die APK mit *demselben Zertifikat* signiert sein. Eine Debug-APK aus GitHub Actions ist kein Ersatz für eine bereits signierte App.
 
-Im Quellcode der Device Bridge 1.2.1 ist der optionale native Modus **„Immer an“** enthalten: Er erkennt Sprachaktivität ohne Rufwort und kann dabei auch durch Hintergrundgespräche ausgelöst werden. Der bewährte Rufwortmodus bleibt die Standardeinstellung. Siehe [Android-Installation](android/README.de.md).
+In der signierten Device Bridge 1.2.1 ist der optionale native Modus **„Immer an“** enthalten: Er erkennt Sprachaktivität ohne Rufwort und kann dabei auch durch Hintergrundgespräche ausgelöst werden. Der bewährte Rufwortmodus bleibt die Standardeinstellung. Siehe [Android-Installation](android/README.de.md).
 
 ## Datenschutz und Kompatibilität
 

@@ -62,6 +62,8 @@ You can start with the CPU setup and add a GPU worker later. The services are de
 
 ## Get started
 
+**Fresh-install quick start:** Install the TAFA Home Assistant App → choose **Local** or **External** CPU speech in Control Center → restart HA Core after the integration is installed → connect the current **TAFA Device Bridge** on Android → verify **TAFA Lokal** and actual Bluetooth speaker playback. **New TAFA installs begin in setup mode and do not download CPU models until speech mode is selected.** The optional GPU worker exports a JSON manifest imported via **TAFA → Connections**.
+
 The **[step-by-step setup guide](docs/en/setup-guide.md)** covers installation choices and connecting the components. Installation commands and network configuration live in the dedicated guides rather than on this project overview.
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)

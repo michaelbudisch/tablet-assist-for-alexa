@@ -4,6 +4,8 @@
 
 Native Anbindung des Tablets an Home Assistant: Rufwort und Assist, Bluetooth-Ausgabe, Kamera und Bewegungserkennung – mit einer übersichtlichen Oberfläche. Android 9+.
 
+**Erstinstallation:** Zuerst [TAFA in Home Assistant einrichten](../docs/setup-guide.md), dann für jedes Tablet einen eigenen Nicht-Admin-HA-Benutzer anlegen. In der Device Bridge die HA-Basisadresse und Zugangsdaten unter **Verbinden** hinterlegen. Die HA-App enthält keine Android-APK; die signierte Device Bridge wird separat installiert.
+
 ## Drei übersichtliche Tabs
 
 **Status** zeigt die Verbindungen und Aktivitäten und bietet direkt **Verbinden**, **Jetzt sprechen**, **Rufwort starten**, **Gespräch beenden** und **Kamera starten**. Jetzt sprechen startet eine Frage ohne Rufwort; fehlende Zugangsdaten führen zu Verbinden, ein fehlendes Rufwort-Modell zu Einstellungen.

@@ -35,7 +35,7 @@
 
 
 ## TAFA-App 0.3.29 / Integration 0.4.14 — das auslieferbare TAFA Dashboard
-- Deine lokale Kiosk-Version wurde als Referenz geprüft; ihre privaten Sensor-IDs und Jarvis-Dateien werden nicht veröffentlicht. Die portable, vom Original-Design abgeleitete TAFA-Home-Oberfläche ist direkt in die Integration eingebaut und öffnet sich jetzt standardmäßig statt der bisherigen TAFA Sprachzentrale.
+- Als Referenz diente eine lokale Kiosk-Version; haushaltsspezifische Sensor-IDs und private Jarvis-Dateien werden nicht veröffentlicht. Die portable, vom Original-Design abgeleitete TAFA-Home-Oberfläche ist direkt in die Integration eingebaut und öffnet sich jetzt standardmäßig statt der bisherigen TAFA Sprachzentrale.
 - Die Sprachzentrale ist als Unterbereich **Sprachdienste** erreichbar, inklusive Geräteverwaltung, Ansagen und Lernfunktionen. Keine Automatisierungen werden verändert.
 - Admins können Module aktivieren und Entitäten über die integrierte Oberfläche auswählen; die Konfiguration wird geräteübergreifend in Home Assistant gespeichert.
 

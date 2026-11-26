@@ -1,31 +1,32 @@
-# TAFA Home Assistant App 0.3.20 — release candidate
+# TAFA Home Assistant App
 
-The Ingress Control Center installs and safely upgrades one unified HA integration. Choose local Piper/Faster-Whisper (default), or external Proxmox Piper/Whisper with `speech_mode=external` and `external_piper_base=http://PROXMOX-IP:5000` in the App Configuration before starting. External mode skips local model processes and downloads. the Android Device Bridge stays unchanged. [English guide](../docs/en/app.md) · [Deutsche Anleitung](../docs/app.md).
+[English App guide](../docs/en/app.md) · [Deutsche App-Anleitung](../docs/app.md) · [Full setup](../docs/en/setup-guide.md) · [Project](../README.md)
 
-No private dashboard is shipped. A Home Assistant Core restart is required after first install or backend update. Clean HA OS and hardware tests are still pending.
+TAFA contains a **Control Center**, the integrated `tablet_assist_for_alexa` Home Assistant backend, the portable TAFA dashboard and optional local CPU Piper/Faster-Whisper. The App version is defined in [`config.yaml`](config.yaml); the HA integration has its own version in [`manifest.json`](../custom_components/tablet_assist_for_alexa/manifest.json). Do not assume they are the same version.
 
-Use **TAFA Control Center → Settings** for day-to-day configuration. All controls write the existing Supervisor App options, just like the technical **Apps → TAFA → Configuration** editor (advanced fallback; App restart required). Built-in HA configuration flows remain available for Marketplace-only installations. On upgrade, restart HA Core once to load integration 0.4.4, then restart TAFA to synchronize existing settings. Advanced source and room mappings are optional JSON fields.
+## Fresh installation
 
-**New in 0.3.13:** Administrators pair registered tablets directly in **TAFA → Devices → Multiroom audio**. Select an existing non-admin HA user and room; status shows audio offline/online/ready without YAML. Use the same HA user token on the Android Device Bridge; enable Multiroom audio and start its player. Existing room settings remain in place. [Full steps](../docs/en/setup-guide.md).
+1. Back up Home Assistant (Home Assistant OS 2026.11+, amd64/aarch64). Under **Settings → Apps → Install app → Repositories**, add `https://github.com/michaelbudisch/tablet-assist-for-alexa`, then install and start **TAFA**.
+2. A new instance starts with `speech_mode=setup`; **no CPU models download until you choose** Local or External in **TAFA → Settings**. Local starts bundled CPU Piper/Faster-Whisper; External uses a separately configured CPU speech server.
+3. In **TAFA → Connections**, enter CPU Piper and Wyoming settings for external mode; add **Wyoming Protocol** for external STT in **HA → Devices & services** (CPU host, port 10300) and select the resulting actual `stt.*` entity. Local mode uses TAFA's built-in CPU speech engines.
+4. The App safely provisions **one** unified HA integration. **Restart HA Core once** after installation or a backend update, then restart TAFA as required. Check **TAFA Lokal** in **Settings → Voice assistants**: **Tablet Assist Sprachrouter** (STT), **Tablet Assist Gespraechsrouter** (conversation), **Tablet Assist Stream** (TTS).
+5. Install the [signed Android Device Bridge](../android/README.md), connect a dedicated non-admin HA room user, pair Android Bluetooth/Echo if needed and test an actual question. Use [Devices & Multiroom](../homeassistant/examples/MULTIROOM.md) for multiple tablets.
 
-**New in 0.3.14:** Open **TAFA → Devices → Voice test** on a trusted HTTPS Home Assistant page, and use **Speak once** to test the full STT/Assist/TTS path to the paired tablet. See [setup instructions](../docs/en/setup-guide.md).
+## Control Center
 
-**App 0.3.15:** **TAFA → Devices → Voice test → Test speech output** now works from private HTTP with the selected Qwen/Piper TTS engine and confirmed Android room playback. Browser microphone questions still need HTTPS.
+- **Overview:** system and speech route status.
+- **Connections:** **Quick setup via JSON**, GPU host/fast availability check, GPU Wyoming, Qwen and Ollama, **CPU fallback** Piper/Wyoming, optional Alexa MP3 URLs.
+- **Settings:** local/external speech mode, voice and conversation behavior, optional features. Server/IP fields are in **Connections**, not Settings.
+- **Devices & Multiroom:** room pairing, registered tablets and camera permissions.
+- **Maintenance & Help:** backend status, downloads and diagnostics.
+- **Speak now:** independent browser microphone/text test with Muted/Wake word/Always on, transient transcript and stage timing. Browser microphone requires **HTTPS/localhost**; playback is **in the browser**, not automatically on Android/Echo.
 
-**New in 0.3.16:** External Proxmox mode now checks the complete Home Assistant Assist pipeline before reporting ready. When Wyoming STT is missing, configure it in HA. A single Wyoming STT provider is chosen automatically; with multiple providers, set `cpu_stt` in TAFA App options. The App retries automatically. See [native Android setup](../docs/en/setup-guide.md).
+The **native Android wakeword microphone** runs independently of the browser page; its mute/wake/always-on mode is controlled on the tablet and by its HA-backed settings. Browser timing and HTTP/TCP endpoint reachability do **not** prove actual Echo media playback.
 
-**Fix in 0.3.17 / integration 0.4.9:** A freshly configured Ollama conversation entity initially has HA state `unknown`, which previously caused TAFA to refuse its first question. Update the App, restart Home Assistant Core once for the integration update, and restart the App to sync your selected `llm_agent`. No new Android APK is needed.
+## Updates and alternatives
 
-**New in 0.3.18:** Under **TAFA Control Center → Automatically discover Wyoming STT**, select detected Home Assistant Wyoming speech entities from two dropdowns (**CPU** for Proxmox and **GPU** for Windows). The entries are saved to TAFA App Configuration without overwriting unrelated settings; **restart the TAFA App** to apply. If GPU Whisper is missing, install **Wyoming Protocol** in HA with GPU host and port 10300 first. The regular **Apps → TAFA → Configuration** static form still allows manually editing these fields.
+The App updates only its **own unchanged managed integration**, preserving a rollback in `<HA config>/.tafa/rollback`. It never overwrites a manually or Marketplace-managed integration. Do **not** install or update the same backend through both Marketplace and App. Existing automations and private dashboards are not silently replaced. HA Core must restart after backend updates.
 
-**Hotfix 0.3.19:** Rebuild/update TAFA to fix the missing Wyoming picker module in the 0.3.18 Docker image. Saved settings are retained and no Android update is needed.
+A separate [Proxmox CPU server](../docs/en/proxmox.md), [GPU worker](../docs/en/worker.md), [Ollama](../docs/en/setup-guide.md) and [Alexa MP3 HTTPS](../docs/en/proxmox.md) remain optional. CPU Whisper and Piper fallback do **not** automatically provide a CPU fallback for Ollama text AI.
 
-**App 0.3.20:** The Control Center now has one grouped settings editor (Piper, Wyoming CPU/GPU, Qwen, Ollama, Alexa, voice and advanced sources). The technical HA Configuration editor remains available for recovery and to choose `speech_mode=external` *before the first launch* if local CPU models should never download. Save and restart TAFA; there is no second settings store.
-
-### Voice test in TAFA Control Center (0.3.45)
-
-Open **Speak now** at the far right of the Control Center navigation. Use **Muted** (manual push-to-talk remains available), **Wake word** (browser audio is transcribed through Whisper; not the Android native wakeword engine), or **Always on** (the visible browser page automatically listens for the next utterance). Microphone access requires HTTPS and explicit browser permission. Recording stops when the page is hidden or you switch away.
-
-The **TAFA Lokal** Assist pipeline is used without changing your other assistants, devices, automations or configuration. The page displays the current pipeline, recognized question, answer, measured STT/conversation/TTS stages, and available HA router attributes. Audio can be replayed through the browser only; this is not an Alexa/Echo output test. Conversation history is retained only in the current browser page and clears on reload. No microphone recordings or transcripts are written to disk.
-
-**Security:** Only administrator Ingress sessions may use the test; every request has CSRF validation, audio is capped at 30 seconds, and TTS playback is restricted to Home Assistant's local TTS proxy. Spoken commands run real HA Assist intents and may control your configured devices, just as in the normal Assist pipeline.
+**Security:** TAFA LAN worker endpoints need no additional TAFA API token, but HA access tokens and normal HA permissions are still required for tablet connections. Keep unauthenticated model endpoints on a restricted trusted LAN; never publish them as public services.

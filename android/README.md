@@ -4,6 +4,8 @@
 
 Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback, camera and image-motion detection in one compact app. Android 9+.
 
+**First-time setup:** First [configure TAFA in Home Assistant](../docs/en/setup-guide.md), then create a dedicated non-admin HA user for each tablet. Enter the HA base URL and credentials under Device Bridge **Connect**. The signed Android APK is installed separately from the Home Assistant App.
+
 ## Three simple tabs
 
 **Status** shows connections and activity, with **Connect**, **Speak now**, **Start wakeword**, **End conversation** and **Start camera** quick actions. Speak now starts a question without a wakeword; missing credentials open Connect, and a missing wakeword model opens Settings.

@@ -110,7 +110,7 @@ Das öffentliche Dashboard nutzt bewusst keine privaten Sensor-IDs oder altspezi
 
 **TAFA 0.3.30 / Integration 0.4.15:** Wenn der externe Piper-Sprachserver während der Erstinstallation noch nicht erreichbar ist, kann in der TAFA-HA-Integration ausdrücklich `dashboard_only` gewählt werden. Die Oberfläche einschließlich zentraler Gerätezuordnungen läuft dann bereits; die Spracherkennung und -ausgabe werden später über den Proxmox- bzw. GPU-JSON-Import angeschlossen. Der gewöhnliche Sprachmodus verlangt weiterhin den Piper-Gesundheitstest.
 
-**TAFA 0.3.31 / Integration 0.4.16:** Das integrierte Dashboard und der Editor verwenden eigene Komponentennamen. Deine bereits installierte Lovelace-Vorschau `tafa-home-dashboard` und das neue TAFA Dashboard können damit gleichzeitig geöffnet werden, ohne sich im Browser gegenseitig zu ersetzen.
+**TAFA 0.3.31 / Integration 0.4.16:** Das integrierte Dashboard und der Editor verwenden eigene Komponentennamen. Eine bereits installierte Lovelace-Vorschau `tafa-home-dashboard` und das neue TAFA Dashboard können damit gleichzeitig geöffnet werden, ohne sich im Browser gegenseitig zu ersetzen.
 
 
 **Ab TAFA 0.3.32 / Integration 0.4.17:** Die zusätzliche Leiste über dem Dashboard entfällt. **TAFA** in der unteren Navigation führt direkt zu den Sprachdiensten, das **Zahnrad** in der Dashboard-Kopfzeile öffnet für Administratoren die zentrale Geräte-/Modulkonfiguration. Zurück/Speichern/Abbrechen erscheinen nur in diesen Unteransichten. Die Funktionen und Zuordnungen bleiben erhalten.
