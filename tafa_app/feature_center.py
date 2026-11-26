@@ -35,6 +35,8 @@ FEATURES = (
     ("battery", "Batteriespeicher", "Battery storage", "Speicherwerte und Ladezustand", "Storage readings and state of charge", (), "battery"),
     ("lights", "Licht & Räume", "Lights & rooms", "Leuchten und Temperaturen", "Lights and room temperatures", (), "lights"),
     ("assist", "Sprachassistent", "Voice assistant", "TAFA Device Bridge und Sprachfunktionen", "Device Bridge and speech tools", (), "assist"),
+    ("search", "Internetsuche & Wissen", "Web search & knowledge", "SearXNG optional, Wissens-Infoboxen integriert", "Optional SearXNG and knowledge cards", (), "assist"),
+    ("visuals", "Infoboxen & Navigation", "Cards & navigation", "Hausdaten, Kontextwechsel und Rückkehr", "Home data, context navigation and return", (), "assist"),
 )
 BY_FEATURE = {item[0]: item for item in FEATURES}
 SOURCES = {key for item in FEATURES for key in item[5]}
@@ -241,8 +243,16 @@ def render_feature_center(options, lang, csrf, entities, can_read, active=None):
                     f'<input type="hidden" name="feature_id" value="{_esc(feature_id)}">'
                     + "".join(source_fields) +
                     f'<button class="btn btn-primary" type="submit">{t("Zuordnungen speichern", "Save sources")}</button></form>')
+            if can_read and not any(ordered_candidates(key, entities) for key in keys):
+                form += '<p class="subtle">' + t("Noch keine passenden Entitäten gefunden. Zuerst eine Home-Assistant-Integration oder einen Sensor hinzufügen.", "No compatible entities yet. Install a Home Assistant integration or sensor first.") + ' <a href="/config/integrations" target="_top">' + t("Geräte & Dienste", "Devices & services") + '</a></p>'
         else:
             form = f'<p class="subtle">{t("Geräte und Sensoren anschließend im TAFA-Dashboard-Editor auswählen.", "Choose devices and sensors in the TAFA dashboard editor after enabling.")}</p>'
+            if feature_id == "search":
+                form = ('<p>' + (t("SearXNG verbunden. Suchtreffer erscheinen im TAFA-Dashboard.", "SearXNG connected. Results appear in the dashboard.") if options.get("search_base")
+                               else t("Für Internetsuche SearXNG installieren und unter Einstellungen → Erweiterungen die lokale Serveradresse eingeben. Wissensantworten funktionieren auch ohne SearXNG.", "To enable web search install SearXNG and enter the local server URL in Settings → Extensions. Knowledge cards work without it."))
+                        + '</p><a class="btn btn-outline" href="#setup">' + t("Suchserver einrichten", "Configure search server") + '</a>')
+            elif feature_id == "visuals":
+                form = '<p>' + t("Infoboxen, Dauer und Rückkehr werden im Dashboard-Editor unter Anzeige & Navigation eingestellt.", "Manage cards, duration and return navigation in the dashboard editor under Display & navigation.") + '</p>'
         button = ('<form action="./" method="post">'
                   f'<input type="hidden" name="csrf" value="{_esc(csrf)}">'
                   f'<input type="hidden" name="lang" value="{_esc(lang)}">'
