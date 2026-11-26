@@ -4,16 +4,18 @@
 
 > **Worker 1.9.0 schema update:** The local `/detect` response adds `genders` with coarse, fallible apparent presentation categories `man`, `woman`, `unknown`. This is not actual gender or identity recognition. Keep existing `.env` and model volumes; rebuild vision and update the HA backend together. [HA automations](ha-automations.md).
 
-The repository includes Jarvis GPU Worker 2.2.2, with token-free LAN APIs and an easier Windows setup. Models are not bundled; build and first startup download them separately. Windows requires Docker Desktop with WSL2 and NVIDIA drivers. Linux requires Docker Engine/Compose and NVIDIA Container Toolkit. Allow enough SSD space for models. Only trusted private-network access; never expose service ports publicly. Real GPU inference and Linux setup have not been tested end-to-end.
+The repository includes TAFA GPU Worker 2.2.5, with token-free LAN APIs and an easier Windows setup. Models are not bundled; build and first startup download them separately. Windows requires Docker Desktop with WSL2 and NVIDIA drivers. Linux requires Docker Engine/Compose and NVIDIA Container Toolkit. Allow enough SSD space for models. Only trusted private-network access; never expose service ports publicly. Real GPU inference and Linux setup have not been tested end-to-end.
+
+**New 2.2.5:** `01-Installieren.bat` optionally configures Ollama (separate approval for downloading the model). `04-Verbindungsdaten.bat` writes the TAFA JSON import plus an address TXT. **CPU Whisper** uses Wyoming Protocol; **Piper** supplies CPU TTS fallback. [Quick start](../../worker/README.md) · [Detailed guide](../../worker/docs/README.md).
 
 ## 1. Configuration
 
-On Windows, run **00-Konfiguration.bat** and then **01-Installieren.bat** from the `worker/` directory. **02-Starten.bat** starts the default services; **03-Neustarten.bat** restarts running containers; **04-Verbindungsdaten.bat** creates a local text report with the LAN IP and ports. `Setup.ps1` remains supported for compatibility.
+On Windows, run **00-Konfiguration.bat** and then **01-Installieren.bat** from the `worker/` directory. **02-Starten.bat** starts the default services; **03-Neustarten.bat** restarts running containers; **04-Verbindungsdaten.bat** creates a local text report with the LAN IP and ports. `scripts/windows/Setup.ps1` remains supported for compatibility.
 
 Linux from worker:
 
 ```bash
-bash setup-linux.sh
+bash scripts/linux/setup-linux.sh
 ```
 
 These setup methods create a local .env **without a token** and preserve any existing .env. Restrict port 10300 to HA, port 10502 to HA and the CPU speech server, and port 11434 (if using Ollama) to HA.
@@ -26,7 +28,7 @@ docker compose up -d --build whisper
 docker compose --profile stream up -d --build qwen-stream
 ```
 
-Streaming supports /health, /stream (24 kHz PCM s16le mono), and /synthesize. The former non-streaming profile tts uses port 10501; do not run both TTS models at once. Prepare voice variants locally; see [worker reference](../../worker/README.md).
+Streaming supports /health, /stream (24 kHz PCM s16le mono), and /synthesize. The former non-streaming profile tts uses port 10501; do not run both TTS models at once. Prepare voice variants locally; see [worker reference](../../worker/docs/README.md).
 
 Optional local LLM:
 
@@ -39,11 +41,11 @@ Ollama shares the GPU. Test services one at a time with limited VRAM. Use the pr
 
 ## Optional: vision
 
-The vision profile shares Ollama, port 10503 restricted to HA. [Setup and API](../../worker/README.md#optional-vision-180). HA camera selection is separate.
+The vision profile shares Ollama, port 10503 restricted to HA. [Setup and API](../../worker/docs/README.md#optional-vision-180). HA camera selection is separate.
 
 ## 3. Connect GPU Whisper, CPU fallback and Ollama to Home Assistant
 
-**Windows:** `04-Verbindungsdaten.bat` now generates and opens a complete **German and English** onboarding TXT using the actual GPU `LAN_IP` from `.env`. The Proxmox CPU server is separate; its IP cannot be inferred.
+**Windows:** `04-Verbindungsdaten.bat` generates the TAFA JSON and an address TXT using the actual GPU `LAN_IP` from `.env`. The Proxmox CPU server is separate; its IP cannot be inferred.
 
 1. **Install GPU Whisper via Wyoming Protocol:** HA → **Settings → Devices & services → Add integration → Wyoming Protocol**; host = `GPU-IP`, port = `10300`. Find the new real `stt.*` entity ID. In **Apps → TAFA → Configuration**, set `gpu_stt` to it and `gpu_stt_host` to the bare GPU IP (no URL scheme or port).
 2. **Install CPU Whisper via Wyoming Protocol:** Add a **second** Wyoming integration for the Proxmox speech server at its own IP and port `10300`. Set `cpu_stt` to this separate `stt.*` entity. The CPU and GPU STT IDs must differ. One Wyoming STT provider may be auto-selected; with two providers, select both IDs explicitly.

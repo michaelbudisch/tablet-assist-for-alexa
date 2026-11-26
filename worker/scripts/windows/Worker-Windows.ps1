@@ -1,12 +1,14 @@
 # Windows TAFA GPU worker management - no API tokens.
 [CmdletBinding()]
-param([ValidateSet('Prepare','Install','Start','Restart','Info')][string]$Action='Prepare')
+param([ValidateSet('Prepare','Install','Start','Restart','Info','Ollama')][string]$Action='Prepare')
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
-Set-Location -LiteralPath $PSScriptRoot
-$EnvFile=Join-Path $PSScriptRoot '.env'
-$Report=Join-Path $PSScriptRoot 'tafa-worker.json'
-$WorkerIdFile=Join-Path $PSScriptRoot '.tafa-worker-id'
+$WorkerRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+Set-Location -LiteralPath $WorkerRoot
+$EnvFile=Join-Path $WorkerRoot '.env'
+$Report=Join-Path $WorkerRoot 'tafa-worker.json'
+$TextReport=Join-Path $WorkerRoot 'GPU-Worker-Verbindungsdaten.txt'
+$WorkerIdFile=Join-Path $WorkerRoot '.tafa-worker-id'
 function Get-Settings {
   $result=@{}
   if(Test-Path -LiteralPath $EnvFile) {
@@ -64,6 +66,19 @@ function Compose([string[]]$Arguments) {
   & docker compose @Arguments
   if($LASTEXITCODE -ne 0){throw 'Docker Compose fehlgeschlagen. Obige Ausgabe beachten.'}
 }
+function Ask-YesNo([string]$Question) {
+  $reply=Read-Host ($Question+' [j/N]')
+  return ($reply.Trim() -match '^(?i:j|ja|y|yes)$')
+}
+function Setup-Ollama {
+  Check-Docker
+  Compose -Arguments @('--profile','llm','up','-d','ollama','ollama-gateway')
+  Write-Host 'Ollama ist gestartet. Ein Textmodell wird nur nach Zustimmung heruntergeladen.'
+  if(Ask-YesNo 'Textmodell qwen3:4b-instruct herunterladen? (groesserer Download)') {
+    & docker compose --profile llm exec -T ollama ollama pull qwen3:4b-instruct
+    if($LASTEXITCODE -ne 0){throw 'Ollama-Modelldownload fehlgeschlagen.'}
+  }
+}
 function Write-Report {
   $settings=Get-Settings
   $ip=[string]$settings['LAN_IP']
@@ -111,8 +126,53 @@ function Write-Report {
   }
   $json=$manifest | ConvertTo-Json -Depth 7
   [IO.File]::WriteAllText($Report,[string]$json,(New-Object Text.UTF8Encoding($false)))
+  # The TXT and JSON are generated from one manifest snapshot.
+  $whisperState=if($manifest['services']['wyoming_stt']['enabled']){'aktiv'}else{'nicht gestartet'}
+  $qwenState=if($manifest['services']['qwen_tts']['enabled']){'aktiv'}else{'nicht gestartet'}
+  $ollamaState=if($manifest['services']['ollama']['enabled']){'aktiv'}else{'nicht gestartet'}
+  $modelText=if($selectedModel){$selectedModel}else{'kein Modell erkannt'}
+  $lines=@(
+    'TAFA GPU Worker - Verbindungsdaten'
+    '=================================='
+    ('GPU-LAN-IP: '+$manifest['host'])
+    ('Worker-ID: '+$manifest['device_id'])
+    ''
+    '1. GPU Whisper / Wyoming (STT)'
+    ('   Host: '+$manifest['services']['wyoming_stt']['host'])
+    ('   Port: '+$manifest['services']['wyoming_stt']['port'])
+    ('   Status: '+$whisperState)
+    '   Home Assistant: Geraete & Dienste > Wyoming Protocol hinzufuegen.'
+    '   TAFA > Verbindungen: GPU-Schnellerkennung = GPU-LAN-IP.'
+    '   TAFA > Einstellungen: passende GPU-Wyoming-STT-Entitaet auswaehlen.'
+    ''
+    '2. Qwen (Sprachausgabe / TTS)'
+    ('   Adresse: '+$manifest['services']['qwen_tts']['url'])
+    ('   Status: '+$qwenState)
+    '   TAFA > Verbindungen: Qwen-TTS-Adresse.'
+    ''
+    '3. Ollama (Text-KI, optional)'
+    ('   Adresse: '+$manifest['services']['ollama']['url'])
+    ('   Status: '+$ollamaState)
+    ('   Modell: '+$modelText)
+    '   Home Assistant: Geraete & Dienste > Ollama hinzufuegen.'
+    '   TAFA > Einstellungen: Ollama-Gespraechsentitaet auswaehlen.'
+    ''
+    '4. Automatische Einrichtung'
+    '   TAFA > Verbindungen > Schnelleinrichtung per JSON.'
+    '   Datei: tafa-worker.json'
+    ''
+    '5. CPU-Fallback auf Proxmox (nicht Teil des GPU-Exports)'
+    '   Whisper (STT): Wyoming Protocol auf dem CPU-Server, TCP 10300.'
+    '   Piper (TTS): HTTP-Adresse auf dem CPU-Server (typisch Port 5000).'
+    '   Die CPU-IP wird hier nicht geraten oder aus GPU-Adressen abgeleitet.'
+    ''
+    'Nicht gestartete GPU-Dienste sind im JSON als disabled gekennzeichnet.'
+    'Keine Passwoerter oder API-Tokens enthalten.'
+  )
+  [IO.File]::WriteAllText($TextReport,($lines -join [Environment]::NewLine)+[Environment]::NewLine,(New-Object Text.UTF8Encoding($false)))
   Write-Host ('TAFA Import-JSON: '+$Report) -ForegroundColor Cyan
-  Write-Host 'In TAFA > Einrichtung > JSON importieren. Die Datei enthaelt keine Tokens.'
+  Write-Host ('Adressuebersicht: '+$TextReport) -ForegroundColor Cyan
+  Write-Host 'In TAFA > Verbindungen > Schnelleinrichtung per JSON importieren.'
 }
 try {
   Ensure-Env
@@ -122,10 +182,15 @@ try {
       Check-Docker
       Compose -Arguments @('--profile','stream','config','--quiet')
       Compose -Arguments @('--profile','stream','up','-d','--build','whisper','qwen-stream')
+      if(Ask-YesNo 'Optional Ollama als Text-KI mit einrichten?') { Setup-Ollama }
     }
     'Start' {
       Check-Docker
       Compose -Arguments @('--profile','stream','up','-d','whisper','qwen-stream')
+      $known=@(& docker compose --profile llm ps --all --services 2>$null)
+      if($LASTEXITCODE -eq 0 -and ($known -contains 'ollama')) {
+        Compose -Arguments @('--profile','llm','up','-d','ollama','ollama-gateway')
+      }
     }
     'Restart' {
       Check-Docker
@@ -139,10 +204,11 @@ try {
       }
     }
     'Info' { Write-Host 'Aktualisiere Verbindungsdaten.' }
+    'Ollama' { Setup-Ollama }
   }
   Write-Report
   if($Action -in @('Prepare','Install','Start')){
-    Write-Host '04-Verbindungsdaten.bat oeffnet die TAFA-Importdatei tafa-worker.json.' -ForegroundColor Cyan
+    Write-Host '04-Verbindungsdaten.bat oeffnet die TXT; JSON liegt daneben.' -ForegroundColor Cyan
   }
   Write-Host 'Fertig.' -ForegroundColor Green
   exit 0

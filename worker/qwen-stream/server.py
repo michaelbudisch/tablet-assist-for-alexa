@@ -117,7 +117,7 @@ def pcm_chunks(text, ref=None):
 
 @app.get('/health')
 def health():
-    return jsonify(ready=True, worker_version='2.2.4', backend='faster-qwen', busy=lock.locked(), rate=RATE, model=MODEL, voice_mode=MODE, speaker=SPEAKER if MODE in ('fast', 'styled') else None, voice_id=VOICE_ID, speech_cleanup=SPEECH_CLEANUP, sentence_splitting=SPEECH_SPLIT, supports_cancel=True)
+    return jsonify(ready=True, worker_version='2.2.5', backend='faster-qwen', busy=lock.locked(), rate=RATE, model=MODEL, voice_mode=MODE, speaker=SPEAKER if MODE in ('fast', 'styled') else None, voice_id=VOICE_ID, speech_cleanup=SPEECH_CLEANUP, sentence_splitting=SPEECH_SPLIT, supports_cancel=True)
 
 
 def validated_text():
@@ -138,7 +138,7 @@ def cancel():
     busy = lock.locked()
     if busy:
         cancel_event.set()
-    return jsonify(cancel_requested=busy, worker_version='2.2.4'), 202
+    return jsonify(cancel_requested=busy, worker_version='2.2.5'), 202
 
 
 @app.post('/stream')

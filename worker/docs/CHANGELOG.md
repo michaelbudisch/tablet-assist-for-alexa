@@ -1,5 +1,12 @@
 # GPU worker changelog
 
+## 2.2.5
+
+- Optional Ollama setup integrated into `01-Installieren.bat`; model download requires separate consent.
+- `tafa-worker.json` and `GPU-Worker-Verbindungsdaten.txt` generated from the same service snapshot, including IP, ports and service status.
+- Move setup/test scripts under `scripts/`, detailed guides/changelogs under `docs/`; update launchers, packaging and CI.
+- Keep ports, JSON schema, model volumes and existing Home Assistant systems unchanged.
+
 ## 2.2.4
 
 - Replace the verbose connection TXT with machine-readable `tafa-worker.json`. Save a stable worker ID across LAN IP changes and export only running Whisper/Qwen/Ollama endpoints. No credentials or model changes.
@@ -42,7 +49,7 @@
 - Added offline tests, container build inclusion and documentation; real RTX/GPU timings require deployment and a locally authorized clip.
 
 
-**English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
+**English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../../README.md)
 
 ## 2.0.0
 

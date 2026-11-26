@@ -21,19 +21,19 @@ jobs:
       - name: Install lightweight test dependencies
         run: python -m pip install -r worker/vision/requirements.txt
       - name: Python syntax
-        run: python -m compileall -q worker/vision worker/qwen-stream worker/ops worker/tools worker/check_release.py homeassistant/custom_components/jarvis_tablet_audio
+        run: python -m compileall -q worker/vision worker/qwen-stream worker/ops worker/tools worker/tests homeassistant/custom_components/jarvis_tablet_audio
       - name: PowerShell setup script syntax
         shell: pwsh
         run: |
           $tokens=$null; $errors=$null
-          [System.Management.Automation.Language.Parser]::ParseFile("worker/Worker-Windows.ps1",[ref]$tokens,[ref]$errors) | Out-Null
+          [System.Management.Automation.Language.Parser]::ParseFile("worker/scripts/windows/Worker-Windows.ps1",[ref]$tokens,[ref]$errors) | Out-Null
           if ($errors.Count) { $errors | Format-List; exit 1 }
       - name: Windows launcher Compose argument smoke test
         shell: pwsh
         run: |
           $parseErrors = $null
           $tokens = $null
-          $ast = [System.Management.Automation.Language.Parser]::ParseFile("worker/Worker-Windows.ps1", [ref]$tokens, [ref]$parseErrors)
+          $ast = [System.Management.Automation.Language.Parser]::ParseFile("worker/scripts/windows/Worker-Windows.ps1", [ref]$tokens, [ref]$parseErrors)
           if ($parseErrors.Count) { throw 'PowerShell launcher syntax error' }
           $composeFunction = $ast.Find({ param($node)
             $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Compose'
@@ -50,10 +50,46 @@ jobs:
           if (($script:captured -join '|') -ne ($expected -join '|')) {
             throw "Compose argument forwarding failed: $($script:captured -join ' ')"
           }
-          $launcher = Get-Content worker/Worker-Windows.ps1 -Raw
+          $launcher = Get-Content worker/scripts/windows/Worker-Windows.ps1 -Raw
           if ($launcher -match '(?m)^\s*Compose\s+@\(') {
             throw 'An unbound positional Compose splat remains'
           }
+      - name: Generate both connection reports without starting services
+        shell: pwsh
+        run: |
+          Set-Content -Path worker/.env -Value 'LAN_IP=192.168.50.20' -Encoding utf8NoBOM
+          & ./worker/scripts/windows/Worker-Windows.ps1 -Action Info
+          Set-Location $env:GITHUB_WORKSPACE
+          if ($LASTEXITCODE -ne 0) { throw 'Export failed' }
+          $manifest = Get-Content worker/tafa-worker.json -Raw | ConvertFrom-Json
+          $txt = Get-Content worker/GPU-Worker-Verbindungsdaten.txt -Raw
+          if ($manifest.schema -ne 'tafa-connection-v1' -or $manifest.host -ne '192.168.50.20') {
+            throw 'Invalid JSON header or host'
+          }
+          if ($txt -notmatch '192\.168\.50\.20' -or $txt -notmatch '10300' -or $txt -notmatch '10502' -or $txt -notmatch '11434') {
+            throw 'TXT does not contain matching host and ports'
+          }
+          $device = $manifest.device_id
+          & ./worker/scripts/windows/Worker-Windows.ps1 -Action Info
+          Set-Location $env:GITHUB_WORKSPACE
+          if ($LASTEXITCODE -ne 0) { throw 'Second export failed' }
+          $manifest = Get-Content worker/tafa-worker.json -Raw | ConvertFrom-Json
+          if ($manifest.device_id -ne $device) { throw 'Worker ID changed unexpectedly' }
+      - name: Validate generated JSON against TAFA importer
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          sys.path.insert(0, 'tafa_app')
+          from import_manifest import validate
+          raw=Path('worker/tafa-worker.json').read_text(encoding='utf-8')
+          manifest=validate(raw)
+          assert manifest['kind']=='gpu_worker'
+          assert manifest['host']=='192.168.50.20'
+          txt=Path('worker/GPU-Worker-Verbindungsdaten.txt').read_text(encoding='utf-8')
+          assert manifest['services']['qwen_tts']['url'] in txt
+          assert manifest['services']['ollama']['url'] in txt
+          PY
       - name: Vision API and queue tests
         working-directory: worker/vision
         run: python -m unittest -v test_server test_sequence_benchmark test_priority_gate
@@ -66,14 +102,14 @@ jobs:
       - name: Whisper WAV quality tests
         working-directory: worker/tools
         run: python -m unittest -v test_check_audio test_benchmark_ring_video
-      - name: Release validation and package test
+      - name: Release validation and export tests
         working-directory: worker
-        run: python -m unittest -v test_release
+        run: python -m unittest discover -s tests -v
       - name: Resolve worker version
         id: worker_version
         run: echo "version=$(cat worker/VERSION)" >> "$GITHUB_OUTPUT"
       - name: Build secret-safe release ZIP
-        run: python worker/check_release.py --package "./jarvis-gpu-worker-${{ steps.worker_version.outputs.version }}.zip"
+        run: python worker/tools/check_release.py --package "./jarvis-gpu-worker-${{ steps.worker_version.outputs.version }}.zip"
       - name: Upload release ZIP
         uses: actions/upload-artifact@v4
         with:

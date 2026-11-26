@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/../.."
 if [[ -e .env ]]; then echo 'Existing .env preserved.'; exit 0; fi
 command -v docker >/dev/null || { echo 'Install Docker Engine, Compose and NVIDIA Container Toolkit first.' >&2; exit 1; }
 docker info >/dev/null

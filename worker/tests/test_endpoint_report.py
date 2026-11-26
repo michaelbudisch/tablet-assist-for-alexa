@@ -2,8 +2,8 @@
 import unittest
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parent
-SCRIPT=(ROOT/"Worker-Windows.ps1").read_text(encoding="utf-8")
+ROOT=Path(__file__).resolve().parents[1]
+SCRIPT=(ROOT/"scripts/windows/Worker-Windows.ps1").read_text(encoding="utf-8")
 
 
 class ManifestExportTests(unittest.TestCase):
@@ -13,12 +13,16 @@ class ManifestExportTests(unittest.TestCase):
                        "enabled=$hasOllama", "enabled=$hasWhisper",
                        "ConvertTo-Json", "TryParse", "Invoke-RestMethod"):
             self.assertIn(marker,SCRIPT)
-        self.assertNotIn("GPU-Worker-Verbindungsdaten.txt",SCRIPT)
+        self.assertIn("GPU-Worker-Verbindungsdaten.txt",SCRIPT)
+        self.assertIn("WriteAllText($TextReport",SCRIPT)
+        self.assertIn("Setup-Ollama",SCRIPT)
         bat=(ROOT/"04-Verbindungsdaten.bat").read_text()
-        self.assertIn("tafa-worker.json",bat)
+        self.assertIn("GPU-Worker-Verbindungsdaten.txt",bat)
+        self.assertIn("scripts\\windows\\Worker-Windows.ps1",bat)
         ignore=(ROOT/".gitignore").read_text()
         self.assertIn("tafa-worker.json",ignore)
         self.assertIn(".tafa-worker-id",ignore)
+        self.assertIn("GPU-Worker-Verbindungsdaten.txt",ignore)
 
 
 if __name__=="__main__":

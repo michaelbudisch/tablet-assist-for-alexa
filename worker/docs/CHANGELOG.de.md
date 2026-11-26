@@ -1,5 +1,12 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.5
+
+- Installation bietet Ollama optional direkt in `01-Installieren.bat` an; Modelldownload nur mit ausdrücklicher Bestätigung.
+- `tafa-worker.json` und `GPU-Worker-Verbindungsdaten.txt` werden beim Refresh aus denselben Daten erstellt. Die TXT zeigt IP, Ports und Dienststatus.
+- Setup-/Testskripte nach `scripts/`, ausführliche Readmes und Changelogs nach `docs/` verschoben; Launcher, ZIP-Builder und CI-Pfade angepasst.
+- Keine Änderungen an Ports, JSON-Schema, gespeicherten Modellen oder bestehender Home-Assistant-Installation.
+
 ## 2.2.4
 
 - `04-Verbindungsdaten.bat` erstellt jetzt `tafa-worker.json` mit stabiler Worker-ID und tatsächlich gestarteten Whisper-, Qwen- und Ollama-Endpunkten. Ein Reimport identifiziert denselben Worker auch bei neuer IP. Keine Tokens oder Modelländerungen.

@@ -1,13 +1,13 @@
 """Worker release gate and opt-in secret-safe ZIP builder.
 
-Run: python worker/check_release.py [--package /path/to/output.zip]
+Run: python worker/tools/check_release.py [--package /path/to/output.zip]
 """
 import argparse
 from pathlib import Path
 import re
 import zipfile
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 ALLOWED = {".py", ".md", ".yaml", ".yml", ".json", ".txt", ".ps1", ".sh",
            ".service", ".template", ".bat"}
 ALLOWED_NAMES = {".gitignore", "Dockerfile", "VERSION"}
@@ -21,11 +21,11 @@ def validate():
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     if not VERSION_RE.fullmatch(version):
         raise RuntimeError("VERSION must contain one semver value")
-    for name in ("README.md", "README.de.md"):
+    for name in ("README.md", "docs/README.md", "docs/README.de.md"):
         title = (ROOT / name).read_text(encoding="utf-8").splitlines()[0]
         if version not in title:
             raise RuntimeError(f"{name} heading does not contain {version}")
-    for name in ("CHANGELOG.md", "CHANGELOG.de.md"):
+    for name in ("docs/CHANGELOG.md", "docs/CHANGELOG.de.md"):
         if f"## {version}" not in (ROOT / name).read_text(encoding="utf-8"):
             raise RuntimeError(f"{name} lacks changelog entry {version}")
     compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")

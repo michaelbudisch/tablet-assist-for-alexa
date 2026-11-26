@@ -14,3 +14,5 @@ __pycache__/
 
 tafa-worker.json
 .tafa-worker-id
+
+GPU-Worker-Verbindungsdaten.txt

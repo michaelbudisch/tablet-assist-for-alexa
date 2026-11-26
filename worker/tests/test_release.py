@@ -1,14 +1,16 @@
 """Static release validation without hardware dependencies."""
 import unittest
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import check_release
 
 
 class ReleaseTests(unittest.TestCase):
     def test_no_required_gpu_or_mp3_api_tokens(self):
-        root = Path(__file__).resolve().parents[1]
+        root = Path(__file__).resolve().parents[2]
         public = (
             "worker/compose.yaml",
             "worker/qwen/server.py",
@@ -26,7 +28,7 @@ class ReleaseTests(unittest.TestCase):
                 self.assertNotIn("X-API-Key", source)
         for name in ("00-Konfiguration.bat", "01-Installieren.bat",
                      "02-Starten.bat", "03-Neustarten.bat",
-                     "04-Verbindungsdaten.bat", "05-Ollama-Einrichten.bat", "Worker-Windows.ps1"):
+                     "04-Verbindungsdaten.bat", "scripts/windows/05-Ollama-Einrichten.bat", "scripts/windows/Worker-Windows.ps1"):
             self.assertTrue((check_release.ROOT / name).is_file(), name)
 
     def test_version_and_changelog(self):
@@ -43,7 +45,9 @@ class ReleaseTests(unittest.TestCase):
                 self.assertTrue(any(n.endswith("/vision/server.py") for n in paths))
                 self.assertTrue(any(n.endswith("/ops/server.py") for n in paths))
                 self.assertTrue(any(n.endswith("/01-Installieren.bat") for n in paths))
-                self.assertTrue(any(n.endswith("/Worker-Windows.ps1") for n in paths))
+                self.assertTrue(any(n.endswith("/docs/README.de.md") for n in paths))
+                self.assertTrue(any(n.endswith("/scripts/linux/setup-linux.sh") for n in paths))
+                self.assertTrue(any(n.endswith("/scripts/windows/Worker-Windows.ps1") for n in paths))
 
 
 if __name__ == "__main__":

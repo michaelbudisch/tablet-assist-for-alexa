@@ -1,18 +1,28 @@
-# Jarvis GPU Worker 2.2.4
+# TAFA GPU Worker 2.2.5
 
-[English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+[English](README.md) | **Deutsch** · [Projektübersicht](../../README.de.md)
 
 ## Installation ohne Tokens (Windows)
 
-Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erstellen; mit **01-Installieren.bat** die Whisper- und Qwen-Streaming-Container bauen und starten. **02-Starten.bat** startet die Standarddienste, **03-Neustarten.bat** startet bereits laufende Dienste neu; **04-Verbindungsdaten.bat** erzeugt eine kurze `GPU-Worker-Verbindungsdaten.txt` mit IP-Endpunkten und den zugehörigen Eingabestellen, **ohne Tokens**. `Setup.ps1` bleibt als kompatibler Einstieg verfügbar. Vorhandene `.env` und Modell-Volumes bleiben unangetastet. Kein Eingriff in Android-App oder Dashboard.
+Mit **00-Konfiguration.bat** eine `.env` nur mit LAN-IP und Modelloptionen erstellen; mit **01-Installieren.bat** Whisper/Qwen und optional Ollama einrichten. **02-Starten.bat** startet die Standarddienste, **03-Neustarten.bat** startet bereits laufende Dienste neu; **04-Verbindungsdaten.bat** erzeugt eine kurze `GPU-Worker-Verbindungsdaten.txt` mit IP-Endpunkten und den zugehörigen Eingabestellen, **ohne Tokens**. `scripts/windows/Setup.ps1` bleibt als kompatibler Einstieg verfügbar. Vorhandene `.env` und Modell-Volumes bleiben unangetastet. Kein Eingriff in Android-App oder Dashboard.
 
 **Sicherheit:** Diese HTTP-Schnittstellen akzeptieren Anfragen ohne zusätzlichen Worker-Schlüssel. Die Docker-Ports werden an die konfigurierte private `LAN_IP` gebunden. In der Windows-Firewall ausschließlich den Home-Assistant- und gegebenenfalls Proxmox-Server zulassen; keine Gastnetze, VPN-Weiterleitung, Reverse-Proxies auf Generator-Ports oder Router-Portfreigaben. Ein öffentlicher HTTPS-Proxy darf ausschließlich kurze, zufällig benannte MP3-Dateien per GET anbieten.
 
 
 
+## 2.2.5 – Installation und Verbindungsdateien
+
+**Einfacher Einstieg:** Im Worker-Hauptordner `01-Installieren.bat` starten. Das Script erzeugt eine fehlende `.env`, installiert Whisper/Qwen und bietet **Ollama optional während der Installation** an. Ein Modelldownload erfolgt nur nach gesonderter Zustimmung. Bestehende `.env` und Modellvolumes bleiben erhalten.
+
+`04-Verbindungsdaten.bat` erzeugt gemeinsam **`tafa-worker.json`** (direkt unter **TAFA → Verbindungen → Schnelleinrichtung per JSON** importieren) und **`GPU-Worker-Verbindungsdaten.txt`** (Adressen, Ports, Status und Ziel-Einstellungen) und öffnet die TXT. Beide Dateien entstehen aus demselben aktuellen Dienste-Status und bleiben lokal, ohne Token. Die IP stammt aus `.env`, eine CPU-/Proxmox-IP wird nicht geraten.
+
+Windows-Verwaltung: `scripts/windows/Worker-Windows.ps1`; spätere optionale Ollama-Nachinstallation: `scripts/windows/05-Ollama-Einrichten.bat`. Linux-Setup: `scripts/linux/setup-linux.sh`. Diagnose-PS1: `scripts/windows/tests/`. Das Verschieben von Dateien verändert keine laufenden Docker-Volumes.
+
+**CPU-Fallback:** Proxmox-Whisper läuft über Home Assistant Wyoming Protocol (Port 10300), Piper ist die CPU-Sprachausgabe (üblicherweise Port 5000). Beide sind getrennt von den GPU-Diensten; die GPU-JSON enthält keine erfundene Proxmox-IP.
+
 ## 2.2.4 – TAFA-Import per JSON
 
-Nach Installation erzeugt `04-Verbindungsdaten.bat` statt einer langen Textdatei die Datei **`tafa-worker.json`**. Sie enthält eine dauerhaft gespeicherte Rechnerkennung, die private IP und nur tatsächlich gestartete Wyoming-, Qwen- und optionale Ollama-Dienste. TAFA kann diese Datei im Control Center unter Einrichtung importieren, vorhandene Verbindungen zuordnen und dieselbe Rechnerkennung beim späteren Reimport nach IP-Änderung erkennen. Ollama braucht einen bereits installierten Textmodellnamen, andernfalls fordert TAFA eine bewusste Auswahl an. Die Kennung ist kein Zugriffstoken; keine Router-Portfreigaben einrichten. `.env` und Modelle werden nicht verändert.
+Historisch (2.2.4) erzeugte `04-Verbindungsdaten.bat` anstelle der TXT nur **`tafa-worker.json`**. Sie enthält eine dauerhaft gespeicherte Rechnerkennung, die private IP und nur tatsächlich gestartete Wyoming-, Qwen- und optionale Ollama-Dienste. TAFA kann diese Datei im Control Center unter Einrichtung importieren, vorhandene Verbindungen zuordnen und dieselbe Rechnerkennung beim späteren Reimport nach IP-Änderung erkennen. Ollama braucht einen bereits installierten Textmodellnamen, andernfalls fordert TAFA eine bewusste Auswahl an. Die Kennung ist kein Zugriffstoken; keine Router-Portfreigaben einrichten. `.env` und Modelle werden nicht verändert.
 
 ## 2.2.3 – Kurze Endpunktliste
 
@@ -33,7 +43,7 @@ Nach Installation erzeugt `04-Verbindungsdaten.bat` statt einer langen Textdatei
 
 **Assist-Pipeline TAFA Lokal:** STT = **Tablet Assist Sprachrouter** (GPU / CPU-Fallback), Gespraech = **Tablet Assist Gespraechsrouter** (Ollama-Agent), TTS = **Tablet Assist Stream** (Qwen / Piper-Fallback). Nach einer Frage die STT-Router-Attribute pruefen: `letztes_backend=zusatzrechner` bedeutet GPU, `homeserver` bedeutet CPU/Fallback. Auch die Android-Sprechpause (ca. 1700 ms) und Ollama-Antwortzeit beeinflussen die Gesamtdauer.
 
-Der Windows-Standardinstaller startet Ollama nicht automatisch. Optional im Worker-Ordner: `docker compose --profile llm up -d ollama ollama-gateway`; ein Textmodell muss bereits installiert sein oder bewusst installiert werden. Alle Ports **nur im vertrauenswuerdigen LAN** ohne Router-Freigaben nutzen.
+Der Windows-Installer bietet Ollama optional an; ohne Zustimmung wird es nicht gestartet. Optional im Worker-Ordner: `docker compose --profile llm up -d ollama ollama-gateway`; ein Textmodell muss bereits installiert sein oder bewusst installiert werden. Alle Ports **nur im vertrauenswuerdigen LAN** ohne Router-Freigaben nutzen.
 
 ## 2.2.1 – Strukturierte produktive Ring-Bildfolge
 
@@ -43,7 +53,7 @@ Vorhandene .env und Modellvolumes beibehalten. Nur Vision neu bauen: `docker com
 
 ### Home Assistant (Backend 1.6.2)
 
-Die strukturierte Ring-Auswertung ist im aktuellen Integrationsstand enthalten. Übernimm die Integration als Ganzes bzw. das CI-Overlay `jarvis-ring-backend-1.6.2` für kompatible 1.6.x-Installationen. Die normale Tablet-Einzelbildanalyse bleibt unverändert. `describe_camera` mit `mode: ring_video` verwendet zwölf Bilder; bei unsicherem Lieferhinweis vier höher aufgelöste Bilder, bei Fehlern die bisherigen Rückfallwege. Automatische A/B-Tests laufen nicht mehr im Produktionspfad. Beispielkonfiguration und Einrichtung: [Ring-Lieferhinweise](../homeassistant/examples/RING.de.md).
+Die strukturierte Ring-Auswertung ist im aktuellen Integrationsstand enthalten. Übernimm die Integration als Ganzes bzw. das CI-Overlay `jarvis-ring-backend-1.6.2` für kompatible 1.6.x-Installationen. Die normale Tablet-Einzelbildanalyse bleibt unverändert. `describe_camera` mit `mode: ring_video` verwendet zwölf Bilder; bei unsicherem Lieferhinweis vier höher aufgelöste Bilder, bei Fehlern die bisherigen Rückfallwege. Automatische A/B-Tests laufen nicht mehr im Produktionspfad. Beispielkonfiguration und Einrichtung: [Ring-Lieferhinweise](../../homeassistant/examples/RING.de.md).
 
 ## 2.0.0 – Abschluss und Betrieb
 
@@ -77,9 +87,9 @@ eine lokale 16-Bit-PCM-WAV-Datei auf Stille, Übersteuerung und zu kurze
 Aufnahmen. Es lädt oder speichert nichts. Die VAD- und End-of-Speech-
 Einstellungen bleiben bei Home Assistant bzw. dem Sprachclient.
 
-**Freigabeprüfung:** `python check_release.py` kontrolliert VERSION,
+**Freigabeprüfung:** `python tools/check_release.py` kontrolliert VERSION,
 Dokumentation und Docker-Tags. Mit
-`python check_release.py --package ../jarvis-gpu-worker-2.0.0.zip`
+`python tools/check_release.py --package ../jarvis-gpu-worker-2.0.0.zip`
 entsteht ein Release-ZIP ohne `.env`, Schlüssel, Testaudio oder Cachedateien.
 Vorhandene `.env` und Modell-Volumes unbedingt behalten. Vor dem Betrieb
 Docker-Konfiguration prüfen und nur benötigte Container neu bauen.
@@ -90,9 +100,9 @@ echten Praxistest auf dem GPU-Rechner.
 
 
 
-> **Schema-Update zu Worker 1.9.0:** Der lokale `/detect`-Endpunkt liefert zusätzlich `genders` mit den groben, unsicheren Erscheinungskategorien `man`, `woman`, `unknown`. Keine tatsächliche Geschlechts- oder Identitätsfeststellung. Vorhandene `.env` und Modellvolumes beibehalten, nur Vision neu bauen; HA-Backend gemeinsam aktualisieren. [HA-Automationen](../docs/ha-automations.md).
+> **Schema-Update zu Worker 1.9.0:** Der lokale `/detect`-Endpunkt liefert zusätzlich `genders` mit den groben, unsicheren Erscheinungskategorien `man`, `woman`, `unknown`. Keine tatsächliche Geschlechts- oder Identitätsfeststellung. Vorhandene `.env` und Modellvolumes beibehalten, nur Vision neu bauen; HA-Backend gemeinsam aktualisieren. [HA-Automationen](../../docs/ha-automations.md).
 
-Der bestehende Vision-Container bietet zusätzlich die ausdrücklich aktivierbare strukturierte Bewegungsauswertung. [Proaktive Einrichtung](../docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen). Es wird kein weiterer Container und kein zusätzliches Modell benötigt.
+Der bestehende Vision-Container bietet zusätzlich die ausdrücklich aktivierbare strukturierte Bewegungsauswertung. [Proaktive Einrichtung](../../docs/echo-relay-dashboard.md#bewegungsgesteuerte-aktionen). Es wird kein weiterer Container und kein zusätzliches Modell benötigt.
 
 Das Profil `vision` ergänzt Ollama um ausdrücklich angeforderte Einzelbildbeschreibungen; Qwen3 4B Instruct, Whisper und TTS bleiben unverändert. Standard: `qwen3-vl:4b-instruct` (Ollama >= 0.12.7); Alternativen: `qwen3-vl:2b-instruct`, `qwen3-vl:8b-instruct`, `gemma3:4b`. Update am GPU-PC, nicht auf Proxmox: bestehende `.env` und Volumes behalten.
 
@@ -103,7 +113,7 @@ docker compose exec ollama ollama pull qwen3-vl:4b-instruct
 docker compose exec vision python -m unittest -v test_server
 ```
 
-Test mit einem eigenen unkritischen JPEG/PNG: `.\Test-Vision.ps1 -ImagePath C:\Bilder\test.png`. Anderes Modell lokal pullen, `VISION_MODEL` in .env setzen und `docker compose --profile vision up -d --no-deps vision` ausführen. Textmodell bleibt erhalten, Ollama lädt maximal ein Modell gleichzeitig, Vision fordert keep_alive 0 an. Modellwechsel können Zeit kosten; VRAM mit `nvidia-smi` prüfen.
+Test mit einem eigenen unkritischen JPEG/PNG: `.\scripts\windows\tests\Test-Vision.ps1 -ImagePath C:\Bilder\test.png`. Anderes Modell lokal pullen, `VISION_MODEL` in .env setzen und `docker compose --profile vision up -d --no-deps vision` ausführen. Textmodell bleibt erhalten, Ollama lädt maximal ein Modell gleichzeitig, Vision fordert keep_alive 0 an. Modellwechsel können Zeit kosten; VRAM mit `nvidia-smi` prüfen.
 
 API: GET `/health` und POST `/describe` auf Privat-LAN-Port 10503, JSON `{"image":"<base64 JPEG/PNG>","mode":"scene"}`; Modi scene, objects, object_in_hand; optional model aus obiger Liste. Maximal 2 MiB/12 MP, intern auf 1280 px verkleinert, Metadaten entfernt. Antwort description, model, mode, limitation. Keine URL-/Stream-Aufnahme, freie Prompts oder Gerätebefehle, allgemeine Beschreibungen sichtbarer Personen, Kleidung und Gegenstände, keine Namenszuordnung oder Gesichtserkennung oder persistente Bilder. Nur Bilder, deren Verwendung erlaubt ist. Firewall auf HA beschränken; HTTP unverschlüsselt; keine Router-Portfreigabe. HA-Kameraauswahl und Android-Kameraübertragung sind über die Echo-Relay-Integration verfügbar. Beschreibungen können falsch sein. Mit `docker compose --profile vision stop vision` deaktivieren, keine Volumes löschen.
 
@@ -143,7 +153,7 @@ docker compose --profile stream up -d --build --no-deps qwen-stream
 docker compose --profile stream logs -f qwen-stream
 ```
 
-Beim ersten Start erzeugt VoiceDesign eine neue synthetische Referenz und speichert sie im bestehenden Volume `qwen-data` unter `/models/jarvis-voices/<voice_id>.wav`. Das Design-Modell läuft in einem separaten Prozess und wird vor dem Laden von Base beendet. Base benötigt einen zusätzlichen Modelldownload. Dieselbe Beschreibung und Varianten-ID verwenden künftig dieselbe Referenz auch nach Neustarts. Eine andere Varianten-ID (z. B. `2`) erstellt eine neue Referenz; zurück auf `1` wählt die alte. Die Stimme ist eine neu erzeugte, eigenständige Stimme, nicht exakt die letzte Design-Ausgabe. Nur synthetische Referenzen, keine fremden Sprachaufnahmen. Klang und Prosodie können weiterhin etwas variieren. Sobald `Faster Qwen ready on port 10502` erscheint, `Test-Voice.ps1` und `Test-Stream.ps1` ausführen; die Ergebnisse verschiedener neuer Sätze vergleichen. HA kann alte identische Texte zwischenspeichern. Keine Änderungen in HA nötig. Wenn VRAM knapp ist, auf 0.6B Base oder den vorherigen Modus `design` bzw. `fast` zurückwechseln und nur den Streaming-Container neu erstellen. Keine Volumes löschen. GPU-Laufzeit nicht hier verifiziert.
+Beim ersten Start erzeugt VoiceDesign eine neue synthetische Referenz und speichert sie im bestehenden Volume `qwen-data` unter `/models/jarvis-voices/<voice_id>.wav`. Das Design-Modell läuft in einem separaten Prozess und wird vor dem Laden von Base beendet. Base benötigt einen zusätzlichen Modelldownload. Dieselbe Beschreibung und Varianten-ID verwenden künftig dieselbe Referenz auch nach Neustarts. Eine andere Varianten-ID (z. B. `2`) erstellt eine neue Referenz; zurück auf `1` wählt die alte. Die Stimme ist eine neu erzeugte, eigenständige Stimme, nicht exakt die letzte Design-Ausgabe. Nur synthetische Referenzen, keine fremden Sprachaufnahmen. Klang und Prosodie können weiterhin etwas variieren. Sobald `Faster Qwen ready on port 10502` erscheint, `scripts/windows/tests/Test-Voice.ps1` und `scripts/windows/tests/Test-Stream.ps1` ausführen; die Ergebnisse verschiedener neuer Sätze vergleichen. HA kann alte identische Texte zwischenspeichern. Keine Änderungen in HA nötig. Wenn VRAM knapp ist, auf 0.6B Base oder den vorherigen Modus `design` bzw. `fast` zurückwechseln und nur den Streaming-Container neu erstellen. Keine Volumes löschen. GPU-Laufzeit nicht hier verifiziert.
 
 
 Quellen: https://github.com/QwenLM/Qwen3-TTS#voice-design-then-clone · https://github.com/andimarafioti/faster-qwen3-tts
@@ -178,7 +188,7 @@ Dokumentation: https://docs.ollama.com/docker · https://www.home-assistant.io/i
 
 # Jarvis GPU Worker v1.2.0 – Stimmprofile
 
-Bestehende `.env` behalten. Dateien überschreiben. Der Standard `fast` bleibt unverändert. Für eine neue synthetische Stimme in `.env` einmal `STREAM_VOICE_MODE=design` ergänzen (alternativ `styled` für Ryan mit Stilvorgabe oder `fast` für den bisherigen Modus). Optional `STREAM_VOICE_STYLE=...` als einzeilige Beschreibung. Nicht den Schlüssel teilen. Nur ein TTS-Modell gleichzeitig laden. `docker compose --profile stream up -d --build --no-deps qwen-stream` erstellt nur den Streaming-Container neu. `./Test-Voice.ps1` lokal abspielen; `./Test-Stream.ps1` misst Latenzen. Bei Speicherfehlern `STREAM_VOICE_MODE=fast` setzen und denselben Compose-Befehl erneut ausführen. Modelle bleiben im Volume. VoiceDesign kann zwischen Anfragen leicht variieren. Neue Profile noch nicht auf der Ziel-GPU geprüft. Die HA-API bleibt kompatibel. Bei gleichlautenden Antworten kann HA altes Audio aus dem Cache verwenden.
+Bestehende `.env` behalten. Dateien überschreiben. Der Standard `fast` bleibt unverändert. Für eine neue synthetische Stimme in `.env` einmal `STREAM_VOICE_MODE=design` ergänzen (alternativ `styled` für Ryan mit Stilvorgabe oder `fast` für den bisherigen Modus). Optional `STREAM_VOICE_STYLE=...` als einzeilige Beschreibung. Nicht den Schlüssel teilen. Nur ein TTS-Modell gleichzeitig laden. `docker compose --profile stream up -d --build --no-deps qwen-stream` erstellt nur den Streaming-Container neu. `./scripts/windows/tests/Test-Voice.ps1` lokal abspielen; `./scripts/windows/tests/Test-Stream.ps1` misst Latenzen. Bei Speicherfehlern `STREAM_VOICE_MODE=fast` setzen und denselben Compose-Befehl erneut ausführen. Modelle bleiben im Volume. VoiceDesign kann zwischen Anfragen leicht variieren. Neue Profile noch nicht auf der Ziel-GPU geprüft. Die HA-API bleibt kompatibel. Bei gleichlautenden Antworten kann HA altes Audio aus dem Cache verwenden.
 
 
 ---
@@ -192,10 +202,10 @@ Nur `compose.yaml` im vorhandenen Ordner ersetzen. Die vorhandene `.env` nicht �
 
 ## Installation am Windows-Hauptrechner
 1. Aktuellen NVIDIA-Treiber und Docker Desktop (WSL2-Backend, Linux-Container) installieren. Docker öffnen. Netzwerkprofil Privat; nur an das vertrauenswürdige Heimnetz anbinden.
-2. ZIP entpacken. Im entpackten Ordner PowerShell öffnen. `nvidia-smi` und `docker version` prüfen. `powershell -NoProfile -File .\Setup.ps1` ausführen. Falls die Skriptausführung blockiert ist, die Datei erst prüfen und die Anweisungen daraus in PowerShell ausführen; keine systemweite Richtlinie lockern. Die lokale IPv4-Adresse des Hauptrechners auswählen. `.env` nicht teilen. IP per DHCP-Reservierung stabil halten.
+2. ZIP entpacken. Im entpackten Ordner PowerShell öffnen. `nvidia-smi` und `docker version` prüfen. `powershell -NoProfile -File .\scripts/windows/Setup.ps1` ausführen. Falls die Skriptausführung blockiert ist, die Datei erst prüfen und die Anweisungen daraus in PowerShell ausführen; keine systemweite Richtlinie lockern. Die lokale IPv4-Adresse des Hauptrechners auswählen. `.env` nicht teilen. IP per DHCP-Reservierung stabil halten.
 3. Windows-Firewall: TCP 10300 ausschließlich von Home Assistant erlauben; TCP 10501 ausschließlich von CPU-Sprachserver (eigene LAN-IP) erlauben. Für den lokalen Test ist keine Freigabe für andere Geräte nötig. Prüfe auch etwaige bestehende Docker-Firewallregeln. Keine Router-Portweiterleitungen. Wyoming hat selbst keine Authentifizierung.
 4. Whisper starten: `docker compose up -d --build whisper`. `docker compose logs -f whisper` (Strg+C beendet nur die Logansicht). Erstmaliger Image-Build und Modelldownload können aufwendig sein. Nach Bereitschaft Home Assistant Wyoming mit Windows-IP, Port 10300 verbinden; neue STT-Entität ermitteln. In der Sprachzentrale als STT-Zusatzrechner eintragen, Profil Automatisch. Das bestehende Whisper Tiny bleibt Reserve. Die Umschaltung bei abgeschaltetem PC separat testen.
-5. Qwen separat starten: `docker compose --profile tts up -d --build qwen`. `docker compose --profile tts logs -f qwen`. Erst nach "Qwen ready" den Test mit `powershell -NoProfile -File .\Test-Qwen.ps1` durchführen. WAV wird lokal abgespielt. Der Test benutzt die Modellstimme Ryan, die auch Deutsch sprechen kann; sie ist nicht primär deutsch trainiert. Die 1.7B-VoiceDesign-Variante ist optional, nicht der Startwert. Beide Dienste können um 12 GB VRAM konkurrieren. Erst einzeln testen, dann gemeinsam. Bei OOM `docker compose --profile tts stop qwen` oder das andere Modell stoppen. LM Studio in dieser Version noch nicht enthalten.
+5. Qwen separat starten: `docker compose --profile tts up -d --build qwen`. `docker compose --profile tts logs -f qwen`. Erst nach "Qwen ready" den Test mit `powershell -NoProfile -File .\scripts\windows\tests\Test-Qwen.ps1` durchführen. WAV wird lokal abgespielt. Der Test benutzt die Modellstimme Ryan, die auch Deutsch sprechen kann; sie ist nicht primär deutsch trainiert. Die 1.7B-VoiceDesign-Variante ist optional, nicht der Startwert. Beide Dienste können um 12 GB VRAM konkurrieren. Erst einzeln testen, dann gemeinsam. Bei OOM `docker compose --profile tts stop qwen` oder das andere Modell stoppen. LM Studio in dieser Version noch nicht enthalten.
 6. Stoppen: `docker compose --profile tts down` (ohne `-v`, damit Modelle erhalten bleiben). Erneuter Start: `docker compose up -d whisper` bzw. `docker compose --profile tts up -d qwen`. 
 
 ## Proxmox-TTS-Router (vorbereitet, noch nicht einschalten)
@@ -215,7 +225,7 @@ docker compose --profile stream up -d --build qwen-stream
 docker compose logs -f qwen-stream
 ```
 
-Port 10502 nur vom vertrauenswürdigen lokalen Home Assistant erreichbar machen; kein Internet-Portforwarding. `Test-Stream.ps1` misst Zeit bis HTTP-Antwort/erste Bytes; Container-Log misst erste generierte PCM-Daten. Erster Durchlauf kann CUDA-Graph-Capture enthalten. Danach erneut testen. Rückkehr: `docker compose stop qwen-stream; docker compose --profile tts up -d qwen`. Die GPU- und Docker-Laufzeit sind auf Zielhardware noch nicht getestet. Die native Android-Wiedergabe muss separat geprüft werden.
+Port 10502 nur vom vertrauenswürdigen lokalen Home Assistant erreichbar machen; kein Internet-Portforwarding. `scripts/windows/tests/Test-Stream.ps1` misst Zeit bis HTTP-Antwort/erste Bytes; Container-Log misst erste generierte PCM-Daten. Erster Durchlauf kann CUDA-Graph-Capture enthalten. Danach erneut testen. Rückkehr: `docker compose stop qwen-stream; docker compose --profile tts up -d qwen`. Die GPU- und Docker-Laufzeit sind auf Zielhardware noch nicht getestet. Die native Android-Wiedergabe muss separat geprüft werden.
 
 ## v1.1.1: Kompatibilitätsfix
 
@@ -227,7 +237,7 @@ docker compose --profile stream up -d --build --no-deps qwen-stream
 docker compose --profile stream logs -f qwen-stream
 ```
 
-Nach `Faster Qwen ready on port 10502` mit Strg+C die Logansicht beenden und `./Test-Stream.ps1` ausführen. Keine Volumes löschen. Keine Zugangsdaten teilen. Der Fix wurde statisch geprüft, nicht auf einer GPU ausgeführt.
+Nach `Faster Qwen ready on port 10502` mit Strg+C die Logansicht beenden und `./scripts/windows/tests/Test-Stream.ps1` ausführen. Keine Volumes löschen. Keine Zugangsdaten teilen. Der Fix wurde statisch geprüft, nicht auf einer GPU ausgeführt.
 
 Referenz: https://github.com/andimarafioti/faster-qwen3-tts/blob/main/README.md
 
@@ -238,4 +248,4 @@ Mit Jarvis Tablet Audio 1.5.0 lassen sich unter **KI & Leistung** installierte T
 
 Der LAN-Aufruf `GET /runtime` meldet ausschließlich unterstützte installierte und geladene Modelle. `POST /describe` erlaubt begrenzte Werte für `keep_alive` und `num_ctx` und liefert Zeitmessungen. HA übergibt gespeicherte Einstellungen und aktualisiert den bestehenden Ollama-Gesprächsagenten, ohne Prompts, Werkzeuge oder Verlauf zu verändern. Reine Kameraanzeigen umgehen beide Modelle. Änderungen gelten ab der nächsten Anfrage; die erste Anfrage nach Leerlauf kann länger dauern. Bestehende `.env` und Volumes erhalten; beim Update nur Vision neu bauen. Kein APK-Update erforderlich.
 
-**Ollama optional nachinstallieren:** `05-Ollama-Einrichten.bat` startet den vorhandenen Ollama-Container samt lokalem Gateway. Der Download eines Textmodells wird separat bestätigt. Danach wird `tafa-worker.json` aktualisiert und kann in TAFA importiert werden.
+**Ollama optional nachinstallieren:** `scripts/windows/05-Ollama-Einrichten.bat` startet den vorhandenen Ollama-Container samt lokalem Gateway. Der Download eines Textmodells wird separat bestätigt. Danach wird `tafa-worker.json` aktualisiert und kann in TAFA importiert werden.
