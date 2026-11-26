@@ -1,115 +1,85 @@
-# TAFA — Tablet Assistant for Alexa
+<p align="center">
+  <img src="tafa_app/brand.svg" alt="TAFA" width="88">
+</p>
 
-**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and use the existing **TAFA Device Bridge 1.2.1** on your Android device. The native Android application is distributed separately as a signed APK.
+<h1 align="center">TAFA — Tablet Assist for Alexa</h1>
 
-**English** | [Deutsch](README.de.md)
+<p align="center"><strong>A local voice assistant for Home Assistant, with an Android tablet as the microphone and an Echo as the Bluetooth speaker.</strong></p>
 
-> **From App 0.3.24:** Fresh installations start in **setup mode without speech-model downloads**. Install the GPU Worker or Proxmox speech server, export its JSON, then preview and confirm it in **TAFA Control Center → Settings**. TAFA configures supported integrations and completes the TAFA Lokal Assist pipeline when its components are ready. A newly staged HA integration may need a separately authorized one-time Core restart; the approved import resumes afterwards.
+<p align="center"><strong>English</strong> · <a href="README.de.md">Deutsch</a></p>
 
+TAFA brings together native Android voice input, Home Assistant, local speech recognition, optional AI models, and voice output. It is designed for everyday use without keeping a Home Assistant dashboard or the Companion app open. The Android **TAFA Device Bridge** handles wake-word detection and speech capture in the background; Home Assistant handles the request and sends the spoken response back to the tablet.
+
+![TAFA system overview: Android device, Home Assistant, local CPU/GPU speech processing and Echo audio](docs/tafa-architecture.jpg)
+
+*Simplified architecture overview. The standard conversational audio path uses the Android device's Bluetooth connection to the Echo. Alexa announcements are a separate, optional path.*
+
+## What TAFA does
+
+| Area | Description |
+| --- | --- |
+| **Voice conversations** | Local wake-word detection on Android, audio sent to Home Assistant Assist, Whisper speech recognition, conversation handling and spoken replies. Optional follow-up questions. |
+| **Local AI** | Use Home Assistant's own intents for smart-home commands and optionally connect an Ollama language model for open questions. |
+| **Speech output** | Piper as a CPU option; optional GPU-based Qwen voice output. Replies play through the native Android player, including on a Bluetooth-connected Echo. |
+| **GPU and CPU** | Route speech recognition to a separate GPU worker when available, with a separately configured CPU fallback. |
+| **Multiroom** | Enrol multiple tablets, assign rooms, and manage native microphone and player status centrally in Home Assistant. |
+| **TAFA Dashboard** | An integrated Home Assistant dashboard with configurable modules for lights, weather, energy, EV charging, heating, appliances, cameras and more. Data depends on your existing HA entities. |
+| **Cameras and vision** | Optional Android camera bridge and local image analysis, enabled and configured separately. |
+| **Announcements** | Optional proactive MP3 announcements through Alexa notification services. This is **not** the Bluetooth audio path used for normal conversations. |
+
+TAFA is **not an Alexa replacement**: a paired Echo can still be used normally. For TAFA voice conversations it acts as a Bluetooth loudspeaker for the tablet; Alexa announcements are an independent integration.
+
+## How it works
+
+**The normal voice path**
+
+```text
+"Hey Jarvis" → TAFA Device Bridge (Android)
+             → Home Assistant Assist / TAFA Lokal
+             → Whisper STT (GPU or CPU)
+             → HA intent or optional local Ollama model
+             → Qwen / Piper TTS
+             → TAFA Android audio player → Bluetooth → Echo
+```
+
+Wake-word detection runs on the tablet, not by repeatedly sending audio to Whisper. The native Android service remains independent of the open dashboard. A separate **Speak once** control in the TAFA Control Center is a browser-based diagnostic test, not a second permanent wake-word engine.
+
+**Optional announcements:** home automation → generated MP3 → HTTPS/notification integration → Alexa. They are deliberately separate from conversational Bluetooth streaming.
+
+## Project components
+
+| Component | Role |
+| --- | --- |
+| **TAFA Home Assistant App** | Control Center, setup, service connections and optional bundled CPU speech services |
+| **TAFA integration** | Assist STT/TTS/conversation routing, connected tablets, multiroom, dashboard and optional voice/vision interfaces |
+| **TAFA Device Bridge** | Native Android background microphone, wake word, Assist WebSocket and Bluetooth audio playback |
+| **Proxmox speech server** | Optional separate CPU Whisper/Piper services, MP3 generation and proxy |
+| **GPU Worker** | Optional GPU Whisper, Ollama, Qwen streaming TTS and vision |
+
+You can start with the CPU setup and add a GPU worker later. The services are designed to be selected in the TAFA Control Center; hardware, models, and other HA integrations are not assumed to be present.
+
+## Get started
+
+The **[step-by-step setup guide](docs/en/setup-guide.md)** covers installation choices and connecting the components. Installation commands and network configuration live in the dedicated guides rather than on this project overview.
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.27**, HA integration **0.4.13**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+- [Home Assistant App installation](docs/en/app.md) · [Native Android app and compatible APKs](android/README.md)
+- [CPU speech server on Proxmox](docs/en/proxmox.md) · [Optional GPU worker](docs/en/worker.md)
+- [Multiroom setup](homeassistant/examples/MULTIROOM.md) · [Optional HA automations](docs/ha-automations.md)
+- [Marketplace-only integration](docs/en/marketplace.md) — an alternative to the App-managed integration, **not an additional copy**
+- [Security](docs/en/security.md) · [Release notes](CHANGELOG.md)
 
-**[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
+### Current development status
 
-## Proxmox: one combined speech and Nginx CT
+TAFA is an actively developed project. The integrated dashboard and native voice path are available in source, but new-device setup and physical audio behaviour should be verified on your hardware. **The Android source may be newer than the latest signed APK**: use a release signed with the *same certificate* as your installed Device Bridge for in-place updates; a CI debug APK is not a replacement for an existing release-signed app.
 
-A guided **one-line Proxmox host installer** creates one **new** unprivileged Debian LXC with Piper, Wyoming-Whisper, a private token-free MP3 generator, and an Nginx frontend. Existing containers and VMs remain untouched.
+The opt-in native **Always on** mode is present in Device Bridge 1.2.1 source; it listens for speech activity without a wake word and can also react to background conversations. The familiar wake-word mode remains the default. See [Android releases and installation](android/README.md).
 
-```bash
-curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
-```
+## Privacy and compatibility
 
-Run as root in an interactive **Proxmox host shell**. Choose the CT ID, storage, network, resources and optional GPU worker/HTTPS hostname, then explicitly confirm the CT ID. The guest console provides a persistent address/status banner. Use `tafa-info` for diagnostics and `tafa-setup` to complete Alexa HTTPS once DNS and routing are ready. [Complete guide](docs/en/proxmox.md).
+Speech processing can stay on your own network. Device Bridge uses an explicit foreground microphone service; cameras and remote access require separate setup and permissions. Optional internet-facing Alexa MP3 delivery should be configured deliberately. TAFA does not distribute private dashboards, household-specific entity IDs or credentials. Existing HA automations are not automatically replaced or migrated.
 
-## Quick start — Home Assistant OS
+This is an independent community project, not affiliated with Amazon or Home Assistant.
 
-1. Create a Home Assistant backup. Use a test installation first.
-2. Settings → Apps → Install app → Repositories: add `https://github.com/michaelbudisch/tablet-assist-for-alexa`.
-3. Install and start **TAFA**, then open its built-in Control Center (Ingress).
-4. TAFA stages **one** Home Assistant integration at `custom_components/tablet_assist_for_alexa`. Restart Home Assistant once to discover the new component.
-5. **Before starting the App**, select `speech_mode=local` (CPU Piper/Whisper bundled) or `speech_mode=external` with `external_piper_base=http://PROXMOX-IP:5000` in App Configuration. External mode skips all bundled CPU models. Then add Proxmox Wyoming STT (`PROXMOX-IP:10300`) in HA, select it in Apps → TAFA → Configuration, and create an Assist pipeline. Local mode retains automatic **TAFA Lokal** pipeline creation.
-6. Connect [TAFA Device Bridge 1.2.1](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
-
-[Full installation guide](docs/en/app.md) · [Multiroom guide](homeassistant/examples/MULTIROOM.md) · [Android instructions](android/README.md)
-
-## What the one App includes
-
-| Included | Function |
-|---|---|
-| TAFA Control Center | Ingress setup, real status and guidance |
-| Single HA integration | STT/TTS/conversation, HA local intents, optional announcements |
-| Native client compatibility | Authenticated `/api/jarvis_tablet_audio/wake_devices`, unchanged routed wake events |
-| Multiroom | Independent devices, room audio, optional authorized cameras and motion |
-| Vision interfaces | Optional external GPU worker, never enabled automatically |
-| Local CPU speech | Piper German TTS + Faster-Whisper German STT in the TAFA App container |
-| Automatic setup | HA config flow and a separate TAFA Lokal pipeline, without replacing existing pipelines |
-| Safe updates | Only app-owned, unmodified integration files can be updated; previous versions backed up |
-
-The GPU worker, Ollama and Alexa MP3 notifications are **optional**. The app does not bundle or redistribute those models, nor does it install the private dashboard. Model files for CPU speech are downloaded on first start and retained in the app's persistent data volume. Internet access is needed for that initial download.
-
-## Native wake-word handoff — important limitation
-
-Device Bridge 1.0.0 **sends only the recognized wake-word event** and releases its microphone; it does **not** stream the subsequent spoken question. A separate active Assist client (for example Home Assistant's voice interface with microphone permission) must record the question. The TAFA backend alone cannot capture audio that the unchanged Android app never transmits. Manual Assist works independently of wake-word handoff. Fully hands-free use with **only** the TAFA App and Device Bridge 1.0.0 is **not yet supported**. This is a blocker for a stable all-in-one voice release.
-
-## Marketplace alternative
-
-[![Marketplace integration](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration)
-
-Marketplace installs the **same unified TAFA integration 0.4.3**, including the public native-device and multiroom backend. Unlike the Home Assistant App, Marketplace does not provide bundled Piper and Whisper processes. Use your own accessible speech services with that installation. **Do not install the integration through both methods.** [Marketplace guide](docs/en/marketplace.md).
-
-## Safety and migration
-
-- No household-specific hostnames, passwords, images or private dashboard code are distributed. No microphone or camera is activated without the device owner's action and permissions.
-- On a new installation, TAFA maintains a manifest of its installed files and only upgrades copies it owns which have not been edited. It leaves HACS, manual and modified installations untouched. Backups are stored in the HA config's `.tafa/rollback` folder.
-- When an older `jarvis_tablet_audio` integration remains configured, the unified component avoids registering duplicate relay endpoints. Legacy setup is **not automatically migrated**; back up first and migrate separately.
-- The App and Marketplace use distinct installation mechanisms; the Android APK remains a separate client.
-
-## Documentation
-
-[App setup DE](docs/app.md) · [App setup EN](docs/en/app.md) · [Integration reference](docs/en/marketplace.md) · [Backend changes](docs/en/backend-roadmap.md) · [Security](docs/en/security.md) · [Optional GPU worker](docs/en/worker.md) · [Version history](CHANGELOG.md).
-
-## License
-
-Original project code: [MIT](LICENSE). External libraries, downloaded voice and ASR models are subject to their respective licenses (including Piper licensing). This independent project is not affiliated with Amazon or the Home Assistant project.
-
-**Tablet Multiroom (new):** Admins can now pair registered tablets directly in **TAFA → Devices**, choosing an existing non-admin HA user and audio room, with live connection status. No Developer tools/YAML. The Android 1.0.0 app is unchanged. [Guided setup](docs/en/setup-guide.md).
-
-**New: integrated voice test.** Under **TAFA → Devices → Voice test**, speak through the browser microphone and listen to the Qwen/Piper response on the paired tablet. Requires trusted HTTPS and a full Assist pipeline; Android app unchanged. [Instructions](docs/en/setup-guide.md).
-
-**New in App 0.3.15 / integration 0.4.7:** **TAFA → Devices → Voice test** includes audio-only Qwen/Piper to Android playback verification that works on local HTTP. The full microphone test still requires HTTPS. [Guide](docs/en/setup-guide.md).
-
-**New in TAFA 0.3.16 / integration 0.4.8:** External Proxmox setup checks for Wyoming STT and a complete Assist pipeline before reporting ready. A single Wyoming STT provider is selected automatically; with multiple providers, choose `cpu_stt` in TAFA App Configuration. See the optional native Android 1.0.1 microphone setup under **TAFA → Devices**. [Setup](docs/en/setup-guide.md).
-
-**New:** TAFA Control Center lets you assign discovered Wyoming STT entities to CPU/GPU dropdowns. **GPU Worker 2.2.2** provides a complete DE/EN setup and connection TXT (`04-Verbindungsdaten.bat`), including the separate Ollama conversation integration. [Setup guide](docs/en/setup-guide.md).
-
-**TAFA App 0.3.19 hotfix:** Add the missing Wyoming picker to the Docker build. Update/rebuild the TAFA App; the existing configuration and Android app remain unchanged.
-
-**TAFA 0.3.21 / GPU Worker 2.2.3:** TAFA now shows safe private endpoint reachability and the last observed STT routing backend where available. The worker-generated TXT contains only the three relevant GPU PC endpoints and their exact configuration destinations; Proxmox IP addresses are not assumed.
-
-**TAFA App 0.3.22:** The Control Center now uses four accessible responsive tabs (Overview, Settings, Connections, Maintenance & help), a calmer navy/teal palette with light/dark variants, and more compact system status and connection cards. Existing settings and backend endpoints remain unchanged.
-
-**TAFA 0.3.26 compatibility fix:** If HA Core is still running older integration code and a deleted Wyoming entry triggers `Previously mapped integration missing; review first`, TAFA retries the approved JSON import with the stale stored entry association cleared. Only this exact error triggers the retry. The permanent HA integration fix remains 0.4.12; restart HA Core to activate it. No worker changes are required.
-
-**TAFA 0.3.27 / HA integration 0.4.13:** JSON imports assign the imported GPU or CPU device to its actual Wyoming STT role. A stale opposite role is cleared only when it points to exactly the same entity; legitimate distinct providers are kept. The HA integration no longer automatically treats the only GPU provider as the CPU fallback. For a distinct external CPU fallback, also import the Proxmox speech server JSON. Restart HA Core after updating the integration.
-
-**TAFA 0.3.28:** Approved JSON imports now reconcile stale CPU/GPU Wyoming duplicates inside the final Supervisor settings write, using a freshly reloaded options snapshot. This fixes conflicts introduced between preview, HA registration, and saving, without changing distinct providers. Manual settings still reject duplicates; only user-approved worker/CT imports can clean the exact opposite-role alias.
-
-## TAFA Dashboard (App 0.3.29 / integration 0.4.14)
-
-TAFA Dashboard is now the default HA integration sidebar panel, based on the portable TAFA Home design rather than copying private household-specific Kiosk scripts. It offers configurable lights, solar and energy, batteries, EV, heating, heat pumps, fuel, appliances, cameras, weather, waste, shopping and Assist. HA administrators manage visible modules and select entity bindings in **Configure dashboard**; Home Assistant persists them for all users and tablets. The prior Voice Center remains accessible as **Voice services**, with device controls and announcements intact. No user automations or legacy Jarvis resources are changed.
-
-**TAFA 0.3.30 / integration 0.4.15:** A dashboard-only option in the HA config flow supports first installing the portable dashboard even when the Piper backend is not yet reachable. Home Assistant stores its entity bindings centrally. Normal voice-enabled setup still checks Piper /health and can be completed later through approved Proxmox/GPU JSON imports.
-
-**TAFA 0.3.31 / integration 0.4.16:** The built-in TAFA Dashboard and editor use distinct web component names from a separately installed `tafa-home-dashboard` Lovelace preview, preventing a registration collision when both are opened in the same browser session.
-
-
-**TAFA App 0.3.32 / integration 0.4.17:** No duplicate top toolbar on the integrated dashboard home view. The native bottom TAFA navigation opens Voice services; the native settings gear opens admin-only HA-persisted dashboard configuration. Contextual Back/Save/Cancel actions only appear while inside a subview.
-
-
-**TAFA App 0.3.33 / integration 0.4.18:** The TAFA entry in the native dashboard navigation now renders voice service management in place, retaining dashboard navigation and visual styling. Status, devices, Alexa announcements, sources and learning use the same card and accent system. A standalone voice view remains available at `/tablet_assist_for_alexa?view=voice`. No automation migration is required.
-
-**TAFA App 0.3.34 / HA 0.4.19 / Android 1.0.2:** The only conversation route is native Android foreground capture (screen off supported) → HA Assist TAFA Lokal → tablet Bluetooth multiroom. No browser microphone or legacy input_text playback. Android 1.2.0 defaults to a wakeword for every question and allows a local hard ceiling of 1–10 follow-ups in Settings → Native Assist; HA's per-device followup_limit may reduce that ceiling; the dashboard mic icon mutes/unmutes the native recorder and prompts for a room where multiple tablets exist. Old HA pairing data is imported read-only. Existing Android installation upgrades need the matching signing key.
-
-**TAFA 0.3.35 / HA 0.4.20:** While legacy Jarvis continues to own the camera integration during native audio migration, TAFA loads only STT/TTS/conversation platforms plus its independent audio/wake APIs, avoiding duplicate orphan camera/motion entities. Restart HA Core after upgrading.
+**License:** [MIT](LICENSE) for the project's original code. Third-party libraries and downloaded models have their own licenses.
