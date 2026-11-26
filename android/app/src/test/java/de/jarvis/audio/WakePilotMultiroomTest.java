@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 
 public class WakePilotMultiroomTest {
     @Test public void deviceSettingsUseOneDynamicEndpoint() {
-        assertEquals("/api/jarvis_tablet_audio/wake_devices",WakePilotSettings.ENDPOINT);
+        assertEquals("/api/tablet_assist_for_alexa/wake_devices",WakePilotSettings.ENDPOINT);
         assertEquals("hey_jarvis",WakePilotSettings.choiceFor("Hey Jarvis"));
         assertEquals("alexa",WakePilotSettings.choiceFor("Alexa"));
         assertEquals("Alle drei",WakePilotSettings.displayFor("all"));
