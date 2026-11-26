@@ -1,5 +1,5 @@
 // TAFA Home Dashboard — preview 0.2.0 (MIT)
-import {model} from './dashboard_model.js?v=0.4.20';
+import {model} from './dashboard_model.js?v=0.4.32';
 import {installTafaResponseOverlay} from './response_overlay.js?v=0.4.32';
 function makeDashboard(model){
 const {modules,roles,byId,byRole,normalize,escape:E,label,name,language,sum,value,area,candidates,eligible}=model;
