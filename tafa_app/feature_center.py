@@ -362,8 +362,8 @@ def save_announcement_room(fields, options, entities, notify_services):
     if set(fields) - allowed:
         raise ValueError("Invalid Alexa room form")
     room = _single(fields, "room_name")
-    if room not in ROOMS:
-        raise ValueError("Unknown announcement room")
+    if not 1 <= len(room) <= 48 or room != room.strip() or not re.fullmatch(r"[\w äöüÄÖÜß-]+", room):
+        raise ValueError("Invalid announcement room name")
     previous = json.loads(options.get("rooms_json", "{}") or "{}")
     if not isinstance(previous, dict):
         raise ValueError("Invalid existing room assignments")
@@ -412,7 +412,7 @@ def render_announcement_rooms(options, lang, csrf, entities, services):
     dnd = sorted(e["id"] for e in entities if e["id"].startswith("switch."))
     quiet = sorted(e["id"] for e in entities if e["id"].startswith("schedule."))
     forms = []
-    for room in sorted(ROOMS):
+    for room in sorted(set(ROOMS) | set(mappings)):
         current = mappings.get(room, {}) if isinstance(mappings.get(room), dict) else {}
         body = (
             combo("notify", current.get("notify", ""), services, t("Echo / Alexa-Benachrichtigung", "Echo / Alexa notify service")) +
@@ -429,10 +429,24 @@ def render_announcement_rooms(options, lang, csrf, entities, services):
                      '<input type="hidden" name="room_name" value="' + _esc(room) + '">'
                      + body + '<button type="submit" class="btn btn-primary">'
                      + t("Raum speichern", "Save room") + '</button></form></details>')
+    # Optional additional user-defined Alexa announcement room.
+    create = (
+        '<details class="feature-room"><summary>' + t("Weiteren Alexa-Raum hinzufügen", "Add another Alexa room") + '</summary>'
+        '<form action="./" method="post" class="feature-form">'
+        '<input type="hidden" name="csrf" value="' + _esc(csrf) + '">'
+        '<input type="hidden" name="lang" value="' + _esc(lang) + '">'
+        '<input type="hidden" name="tab" value="features">'
+        '<input type="hidden" name="action" value="feature_room">'
+        '<label class="feature-source"><span>' + t("Raumname", "Room name") + '</span>'
+        '<input name="room_name" type="text" maxlength="48" required placeholder="Flur"></label>'
+        + combo("notify", "", services, t("Alexa-Benachrichtigung", "Alexa notification"))
+        + '<input type="hidden" name="dnd" value=""><input type="hidden" name="quiet" value="">'
+        + '<button class="btn btn-primary" type="submit">' + t("Raum hinzufügen", "Add room") + '</button>'
+        '</form></details>')
     return ('<section class="feature-room-section"><h3>'
             + t("Alexa-Ausgaberäume", "Alexa output rooms")
             + '</h3><p>' + t("Alexa-Ankündigungen sind optional und benötigen einen in Home Assistant eingerichteten notify-Dienst. "
                              "Native TAFA-Tablets und deren Räume werden weiterhin unter Geräte & Multiroom gekoppelt.",
                              "Alexa announcements are optional and require a Home Assistant notify service. "
                              "Native TAFA tablets are still paired in Devices & multiroom.")
-            + '</p>' + "".join(forms) + '</section>')
+            + '</p>' + "".join(forms) + create + '</section>')
