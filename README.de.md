@@ -1,3 +1,5 @@
+![TAFA — Lokaler KI-Sprachassistent für Home Assistant](docs/assets/tafa-readme-banner.webp)
+
 <p align="center">
   <img src="tafa_app/brand.svg" alt="TAFA" width="88">
 </p>
@@ -9,10 +11,6 @@
 <p align="center"><a href="README.md">English</a> · <strong>Deutsch</strong></p>
 
 TAFA verbindet die native Spracheingabe auf Android, Home Assistant, lokale Spracherkennung, optionale KI-Modelle und Sprachausgabe. Im Alltag muss dafür weder das Home-Assistant-Dashboard noch die Companion-App geöffnet sein. Die **TAFA Device Bridge** erkennt das Rufwort und nimmt die Frage im Hintergrund auf. Home Assistant verarbeitet sie und sendet die gesprochene Antwort zurück an das Tablet.
-
-![TAFA-Systemübersicht mit Android-Gerät, Home Assistant, lokaler CPU-/GPU-Sprachverarbeitung und Echo-Ausgabe](docs/tafa-architecture.jpg)
-
-*Vereinfachte Architekturübersicht. Die normale KI-Sprachausgabe läuft vom Android-Gerät per Bluetooth zum Echo. Alexa-Ankündigungen verwenden einen separaten, optionalen Weg.*
 
 ## Was kann TAFA?
 
