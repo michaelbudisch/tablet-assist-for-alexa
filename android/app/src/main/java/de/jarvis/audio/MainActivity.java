@@ -465,9 +465,9 @@ public class MainActivity extends Activity {
         }
         limit.setAdapter(BridgeChoices.create(this,choices));
         int current=FollowupPolicy.localLimit(preferences.getInt(FollowupPolicy.LOCAL_LIMIT,0));
-        int initial=0;
-        for(int i=0;i<followupValues.length;i++)if(followupValues[i]==current)initial=i;
-        limit.setSelection(initial);
+        int initialFollowup=0;
+        for(int i=0;i<followupValues.length;i++)if(followupValues[i]==current)initialFollowup=i;
+        limit.setSelection(initialFollowup);
         limit.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             public void onNothingSelected(AdapterView<?> parent){}
             public void onItemSelected(AdapterView<?> parent,View view,int index,long id){
