@@ -13,17 +13,9 @@ from homeassistant.components import websocket_api
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .local_intents import SEARCH_PATTERN, FOLLOW_PATTERN, NUMBERS
 
 COMMAND = DOMAIN + "/search"
-SEARCH_PATTERN = re.compile(
-    r"^(?:(?:hey\s+)?(?:jarvis|tafa)[,\s]+)?(?:bitte\s+)?"
-    r"(?:such(?:e)?|recherchier(?:e)?)\s+(?:(?:bitte|mal)\s+)*"
-    r"(?:im\s+(?:internet|web)(?:\s+nach)?|online(?:\s+nach)?|nach)\s+(.{2,160})[.!?]?$", re.I)
-FOLLOW_PATTERN = re.compile(r"^(?:oeffne|öffne|zeig(?:e)?)\s+(?:treffer\s+)?(?:nummer\s+)?([1-9]|zehn|eins|zwei|drei|vier|fünf|fuenf|sechs|sieben|acht|neun)\b", re.I)
-NUMBERS = {"eins": 1, "zwei": 2, "drei": 3, "vier": 4, "fünf": 5, "fuenf": 5,
-           "sechs": 6, "sieben": 7, "acht": 8, "neun": 9, "zehn": 10}
-
-
 def validate_local_search_origin(raw):
     """Refuse arbitrary URLs, credentials, public destinations, and DNS names."""
     if raw == "":
