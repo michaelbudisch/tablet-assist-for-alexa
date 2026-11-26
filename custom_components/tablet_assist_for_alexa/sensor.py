@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import time
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 from datetime import timedelta
 from .tablet_entities import TabletMixin, setup_tablets
@@ -44,6 +45,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     from .const import DOMAIN
     from .relay.relay_wake_devices import KEY, SIGNAL
     from homeassistant.helpers.dispatcher import async_dispatcher_send
+    @callback
+    def refresh_stale(now):
+        async_dispatcher_send(hass, SIGNAL, None)
+
     entry.async_on_unload(async_track_time_interval(
-        hass, lambda now: async_dispatcher_send(hass, SIGNAL, None),
-        timedelta(seconds=30)))
+        hass, refresh_stale, timedelta(seconds=30)))

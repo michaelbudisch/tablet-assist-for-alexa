@@ -1,5 +1,6 @@
 """Common HA tablet entity identifiers, ownership and dynamic registration."""
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 from .const import DOMAIN
 from .relay.relay_wake_devices import KEY, SIGNAL, REGISTERED_SIGNAL
 
@@ -25,6 +26,7 @@ class TabletMixin:
         self.async_on_remove(async_dispatcher_connect(
             self.hass, SIGNAL, self._changed))
 
+    @callback
     def _changed(self, identifier):
         if identifier is None or identifier == self.device_id:
             self.async_write_ha_state()
@@ -32,6 +34,7 @@ class TabletMixin:
 def setup_tablets(hass, entry, add_entities, factory):
     controller = hass.data[DOMAIN][KEY]
     enrolled = set()
+    @callback
     def add(identifier=None):
         ids = [identifier] if identifier is not None else list(controller.devices)
         new = []
