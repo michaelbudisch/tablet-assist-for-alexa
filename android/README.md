@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.0.1
+# TAFA Device Bridge · Android 1.0.3
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -8,9 +8,9 @@ The Android companion for TAFA: Home Assistant audio through Bluetooth, optional
 
 ## Download and update
 
-[Download signed APK 1.0.1](downloads/TAFA-Device-Bridge-1.0.1.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.0.1) · [SHA-256 checksum](downloads/SHA256SUMS). Install over the existing signed app.
+[Download signed APK 1.0.3](downloads/TAFA-Device-Bridge-1.0.3.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.0.3) · [SHA-256 checksum](downloads/SHA256SUMS). Install over the existing signed app.
 
-The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Android 1.0.1 uses version code **14**. Do not uninstall before updating. The Home Assistant backend continues using its existing Echo Relay / Jarvis Tablet Audio identifiers.
+The original application ID de.jarvis.audio, certificate, encryption alias, preferences, downloaded model and persistent multiroom device ID are preserved. Android 1.0.3 uses version code **16**. Do not uninstall before updating. The connection uses the compatible TAFA/HA device interfaces.
 
 ## Find your settings
 
@@ -27,32 +27,24 @@ Choose German or English in the header. Section changes retain unsaved input; a 
 2. In HA, open **Profile → Security → Long-lived access tokens → Create token**. Name it **TAFA Device Bridge**, choose **Generate QR code** and scan it with the app. HA displays the token and QR code only once; scan before closing. Manual pasting is also available.
 3. Pair the Echo or Bluetooth speaker in Android, enable media audio and test normal playback.
 4. Press **Save & start player**. Allow notifications and keep the service notification active.
-5. Return to the compatible TAFA / Echo Relay dashboard for voice requests. The APK does not configure HA automatically.
+5. Start native voice processing under Wakeword. The APK does not configure the required HA backend automatically.
 
 HTTPS validates the server certificate. Local HTTP needs explicit permission for the precise local IP and port; token, audio and enabled camera images then travel unencrypted on the LAN. Changing the address resets permission.
 
-## Optional voice and dynamic multiroom
+## Native voice and device control (1.0.3)
 
-Open **Wakeword**, explicitly download the approximately 45 MB German Vosk model and allow microphone access when starting recognition. Choose Hey Jarvis, Jarvis, Alexa or all three. The notification offers Stop. Recognition audio stays local; only a wakeword event is sent to HA.
+Recognition is still explicitly started on the tablet. Under **Wakeword**, download the approximately 45 MB German Vosk model, allow microphone access and choose Hey Jarvis, Jarvis, Alexa or all three. Wakeword recognition stays local; the spoken question is then streamed as 16 kHz PCM to Home Assistant Assist. A browser dashboard is not required.
 
-The dynamic API from 0.9.0 is preserved: each installation has a persistent random ID. Enter a room name, start recognition, then select/pair the device in TAFA under **Voice & Audio**. There are no fixed numbered slots. Matching HA integration and TAFA dashboard are required separately.
+1. Under **Connect**, configure HA/token and the authenticated per-user room-audio connection. Pair the Bluetooth speaker and start the player.
+2. Assign the tablet to the correct user/room in the current TAFA device manager and confirm a test speech output.
+3. Start native recognition and ask a question, or use the manual test button. Home Assistant needs a complete Assist pipeline with STT and TTS.
+4. Further questions continue until silence, mute or stop. The old two-follow-up limit is removed.
 
-Fine-tuning controls confirmations (1–3), cooldown (3–30 s) and microphone handoff (10–90 s). Settings and mute synchronize per device with HA; lost HA settings connectivity releases the recorder. No dB threshold is provided.
+Wakeword, speech pause and digital microphone gain are managed through per-device HA settings. Tablet, battery and Bluetooth status are reported to HA. Each installation retains a persistent random device ID. Mute or Stop ends active microphone streaming; lost HA connectivity releases the recorder.
 
-Keep the compatible dashboard open for Whisper STT and turn off its competing wakeword detector. Words immediately after the wakeword can be lost during handoff. Alexa may also trigger a physical Echo. Fully hands-free operation with a closed dashboard is not guaranteed.
+Optional display control requires explicitly granting Android special access to modify system settings. It adjusts brightness rather than physically powering the screen off.
 
-## Experimental native spoken questions (1.0.1, opt-in)
-
-The existing **wakeword-only mode remains the default**. If you want to try native voice conversations:
-
-1. Under **Connect**, enable Multiroom audio and connect the existing non-admin tablet user. Start the audio player. Under **TAFA → Devices** in Home Assistant, assign this tablet to the same user's audio room, and confirm a successful **Test speech output**.
-2. Under **Wakeword**, install the offline Vosk model and start native wakeword detection (microphone permission required).
-3. Enable **After wakeword, listen for a full question** in the new **Native voice conversation** section. Optionally enable up to two follow-up questions and adjust the end-of-speech pause (900–3200 ms; default 1700 ms).
-4. Tap **Test native question without wakeword** to test microphone → Assist → reply, then try **Hey Jarvis** followed by a short pause and a spoken question. Playback continues through the existing Android/Bluetooth player. The app chooses an available complete **TAFA Lokal** Assist pipeline, or another configured STT+TTS pipeline.
-
-Audio is sent as 16 kHz PCM over the authenticated Home Assistant WebSocket **only for the question after a detected wakeword/manual test**. The microphone is released before the answer plays; no recording is saved by the app. An explicitly enabled follow-up window may reopen the mic after playback (at most twice), and times out on silence. Remote mute and Stop close active streaming. On the original disabled setting, only the matched wakeword event is forwarded, exactly as before. A compatible browser dashboard is **not needed** for the native mode. Local HTTP still exposes voice and credentials on your LAN; choose trusted HTTPS when possible.
-
-**Release status:** This feature is source/CI validation only until a signed Android 1.0.1 APK is built with the **original signing key** and tested on hardware. Android 1.0.1 keeps application ID \`de.jarvis.audio\` and increases versionCode to 14. An unsigned release or GitHub CI debug APK **cannot be installed over the currently signed app**. Do not uninstall your current app or replace its stored token to test this feature. Use \`build.ps1 -Configuration Release -Check\` and privately sign using \`sign-release.ps1\` with the original keystore before distribution.
+Compatible current TAFA/HA components are required separately. Explicit local-HTTP consent and unencrypted LAN transmission still apply. Physical microphone, Bluetooth and multi-device testing on real tablets remains necessary.
 
 ## Camera and Bluetooth keepalive
 
@@ -62,7 +54,7 @@ Keepalive defaults off. Its silent loop while the player runs may reduce Echo id
 
 ## Build and signing
 
-Use JDK 17, Android Platform 35 and Build Tools 36.0.0. Run build.ps1 -Configuration Release -Check, then sign-release.ps1 with -KeystorePath and -Alias. The default output is **dist/TAFA-Device-Bridge-1.0.1.apk**. The script checks the original 0.7.1 certificate; no private signing keys are included.
+Use JDK 17, Android Platform 35 and Build Tools 36.0.0. Run build.ps1 -Configuration Release -Check, then sign-release.ps1 with -KeystorePath and -Alias. The default output is **dist/TAFA-Device-Bridge-1.0.3.apk**. The script checks the original 0.7.1 certificate; no private signing keys are included.
 
 Build, JVM tests, lint and phone/tablet UI instrumentation are validated locally. Physical Bluetooth and multi-device testing remain necessary. See [release notes](RELEASE_NOTES.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
