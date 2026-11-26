@@ -228,6 +228,13 @@
     <string name="native_assist_eyebrow">OPTIONAL · NEU</string>
     <string name="native_assist_title">Native Sprachunterhaltung</string>
     <string name="native_assist_description">Der native Wakeword-Dienst sendet deine Fragen direkt an Home Assistant Assist. Die Antwort kommt über das Tablet und Bluetooth zurück – auch bei geschlossenem Dashboard.</string>
+    <string name="native_mic_mode_label">Natives Mikrofon: Betriebsmodus</string>
+    <string name="native_mic_mode_help">Stumm stoppt die Mikrofonaufnahme. Rufwort erkennt lokal dein gewähltes Rufwort. Immer an erkennt Sprache lokal ohne Rufwort; Gespräche im Raum können ungewollt auslösen. Während einer Antwort ist das Mikrofon pausiert. Keine dauerhaften Aufnahmen.</string>
+    <string-array name="native_mic_modes">
+        <item>Stumm</item>
+        <item>Rufwort</item>
+        <item>Immer an</item>
+    </string-array>
     <string name="native_assist_switch">Direkte TAFA-Sprachübertragung (immer aktiv)</string>
     <string name="native_followup_switch">Anschlussfragen werden pro Tablet in Home Assistant eingestellt</string>
     <string name="native_pause_label">Sprechpause bis Ende: %1$d ms</string>

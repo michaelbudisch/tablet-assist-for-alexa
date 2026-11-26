@@ -254,6 +254,7 @@ public class MainActivity extends Activity {
     private static final int WAKE_MICROPHONE_PERMISSION = 120;
     private static final String[] WAKE_KEYS={"hey_jarvis","jarvis","alexa","all"};
     private Spinner wakeChoice;
+    private Spinner nativeModeSelect;
     private EditText wakeRoomName;
     private Button wakeInstall;
     private TextView wakeStatus;
@@ -303,6 +304,17 @@ public class MainActivity extends Activity {
         },"JarvisWakeSettingsUpdate").start();
     }
 
+    private void remoteMicMode(String mode){
+        new Thread(()->{
+            try{WakePilotSettings.writeMode(this,mode);}
+            catch(Exception failure){
+                android.util.Log.w("JarvisWake","Unable to save native microphone mode",failure);
+                runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_save_error,
+                    failure.getClass().getSimpleName())));
+            }
+        },"TAFA-NativeMicMode").start();
+    }
+
     private void refreshWakeConfigUi(){
         if(wakeChoice==null||wakeSliderBeingDragged)return;
         var prefs=getSharedPreferences(PREF,0);
@@ -319,6 +331,12 @@ public class MainActivity extends Activity {
         if(wakeHoldSlider.getProgress()!=(hold-10)/5)wakeHoldSlider.setProgress((hold-10)/5);
         wakeMuteButton.setText(prefs.getBoolean("wake_muted",true)?
             R.string.wake_unmute_button:R.string.wake_mute_button);
+        if(nativeModeSelect!=null){
+            int desired=prefs.getBoolean("wake_muted",true)?0:
+                "continuous".equals(prefs.getString("native_voice_mode","wake"))?2:1;
+            if(nativeModeSelect.getSelectedItemPosition()!=desired)
+                nativeModeSelect.setSelection(desired);
+        }
     }
 
 
@@ -404,6 +422,26 @@ public class MainActivity extends Activity {
 
     private void initializeNativeAssistControls(){
         var preferences=getSharedPreferences(PREF,0);
+        nativeModeSelect=findViewById(R.id.native_voice_mode);
+        nativeModeSelect.setAdapter(ArrayAdapter.createFromResource(this,
+            R.array.native_mic_modes,android.R.layout.simple_spinner_dropdown_item));
+        int initial=preferences.getBoolean("wake_muted",true)?0:
+            "continuous".equals(preferences.getString("native_voice_mode","wake"))?2:1;
+        nativeModeSelect.setSelection(initial);
+        nativeModeSelect.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int index,long id){
+                String mode=index==0?"mute":index==2?"continuous":"wake";
+                boolean nextMuted="mute".equals(mode);
+                boolean previousMuted=preferences.getBoolean("wake_muted",true);
+                String previousMode=preferences.getString("native_voice_mode","wake");
+                String nextVoice=nextMuted?previousMode:mode;
+                if(nextMuted==previousMuted&&nextVoice.equals(previousMode))return;
+                preferences.edit().putBoolean("wake_muted",nextMuted)
+                    .putString("native_voice_mode",nextVoice).apply();
+                remoteMicMode(mode);
+            }
+        });
         CheckBox enabled=findViewById(R.id.native_assist_enabled);
         CheckBox followups=findViewById(R.id.native_followup_enabled);
         SeekBar pause=findViewById(R.id.native_pause_slider);
@@ -524,7 +562,8 @@ public class MainActivity extends Activity {
 
     private void startNativeWake(boolean manual){
         pendingNativeQuestion=manual;
-        if(!WakeModelInstaller.installed(this)){
+        if(!WakeModelInstaller.installed(this)&&
+                !"continuous".equals(getSharedPreferences(PREF,0).getString("native_voice_mode","wake"))){
             pendingNativeQuestion=false;
             showSection("settings",true);
             wakeStatus.setText(R.string.wake_model_missing);
@@ -867,7 +906,9 @@ public class MainActivity extends Activity {
             wakeStatus.setText(WakeWordService.running?WakeWordService.status:
                 (WakeModelInstaller.installed(this)?getString(R.string.wake_ready)+" · "+getString(R.string.wake_stopped):
                     getString(R.string.wake_model_missing)));
-            findViewById(R.id.wake_start).setEnabled(!WakeWordService.running&&WakeModelInstaller.installed(this));
+            findViewById(R.id.wake_start).setEnabled(!WakeWordService.running&&
+                (WakeModelInstaller.installed(this)||
+                 "continuous".equals(getSharedPreferences(PREF,0).getString("native_voice_mode","wake"))));
             findViewById(R.id.wake_stop).setEnabled(WakeWordService.running);
             wakeChoice.setEnabled(true);
             wakeInstall.setEnabled(!WakeWordService.running);

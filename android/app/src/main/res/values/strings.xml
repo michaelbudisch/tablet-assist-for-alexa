@@ -230,6 +230,13 @@
     <string name="native_assist_eyebrow">OPTIONAL · NEW</string>
     <string name="native_assist_title">Native voice conversation</string>
     <string name="native_assist_description">The built-in foreground wakeword service sends questions directly to Home Assistant Assist. Replies return to this tablet and play over Bluetooth. No dashboard window is required.</string>
+    <string name="native_mic_mode_label">Native microphone: operating mode</string>
+    <string name="native_mic_mode_help">Muted releases the microphone. Wake word detects your chosen phrase on-device. Always on detects speech locally without a wake word; background conversations can trigger TAFA. The microphone pauses during answers. No recordings are saved.</string>
+    <string-array name="native_mic_modes">
+        <item>Muted</item>
+        <item>Wake word</item>
+        <item>Always on</item>
+    </string-array>
     <string name="native_assist_switch">TAFA direct voice transport (always enabled)</string>
     <string name="native_followup_switch">Follow-up questions are configured per device in Home Assistant</string>
     <string name="native_pause_label">End-of-speech pause: %1$d ms</string>

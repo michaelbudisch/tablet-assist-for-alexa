@@ -163,6 +163,9 @@
                 <TextView style="@style/Eyebrow" android:text="@string/native_assist_eyebrow" />
                 <TextView style="@style/Heading" android:text="@string/native_assist_title" />
                 <TextView style="@style/Body" android:text="@string/native_assist_description" />
+                <TextView style="@style/Body" android:text="@string/native_mic_mode_label" android:labelFor="@id/native_voice_mode" />
+                <Spinner android:id="@+id/native_voice_mode" style="@style/Choice" android:spinnerMode="dropdown" android:contentDescription="@string/native_mic_mode_label" />
+                <TextView style="@style/Body" android:text="@string/native_mic_mode_help" android:textSize="12sp" />
                 <CheckBox android:id="@+id/native_assist_enabled" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/native_assist_switch" />
                 <CheckBox android:id="@+id/native_followup_enabled" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/native_followup_switch" />
                 <TextView style="@style/Body" android:text="@string/followup_limit_label" android:labelFor="@id/native_followup_limit" />
