@@ -309,7 +309,7 @@ def render_device_center(lang, csrf, state):
         f'<h3>{t("Erste Einrichtung","First-time setup")}</h3>'
         f'<p><strong>1.</strong> {t("In Home Assistant unter Einstellungen → Personen → Benutzer einen eigenen Nicht-Admin-Benutzer für den Raum anlegen.","Create a dedicated non-admin HA user for this room under Settings → People → Users.")}</p>'
         f'<p><strong>2.</strong> {t("Hier einen Raum erstellen – auch wenn noch kein Tablet angemeldet ist.","Create the room here, even before a tablet is enrolled.")}</p>'
-        f'<p><strong>3.</strong> {t("Die native App mit der Adresse des Testservers und dem Token dieses Benutzers verbinden. Rufworterkennung starten, damit das Tablet registriert wird.","Connect the native app to the test-server address with this users token. Start wakeword detection to enroll the tablet.")}</p>'
+        f'<p><strong>3.</strong> {t("Die native App mit der Serveradresse und dem Token dieses Benutzers verbinden, dann den Audioplayer starten. TAFA registriert das Tablet automatisch – auch ohne Rufworterkennung.","Connect the native app to the server with this user's token and start the audio player. TAFA enrolls automatically, without requiring wakeword.")}</p>'
         f'<p><strong>4.</strong> {t("Das angemeldete Tablet dem erstellten Raum zuordnen und danach den Bluetooth-Player starten.","Pair the enrolled tablet with the new room, then start Bluetooth playback.")}</p>'
         '</div>'
     )
@@ -392,7 +392,7 @@ def render_device_center(lang, csrf, state):
         + '</section>'
     )
     pairing_note = (
-        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>'
+        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über den Audioplayer erscheint hier die Zuordnung.","After enrolling a tablet using the audio player, pairing appears here.")}</p>'
         if not pair_forms else ""
     )
     pairing = (
