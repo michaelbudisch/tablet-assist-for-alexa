@@ -13,8 +13,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .config_flow import CHOICES, origin, room_map
 from .const import DOMAIN
-from .sources import SOURCES
-from .web_search import validate_local_search_origin
+from .sources import SOURCES, validate_local_search_origin
 
 COMMAND = DOMAIN + "/sync_app_configuration"
 APP_MANAGED_MARKER = ".tafa-managed.json"
