@@ -59,9 +59,9 @@
     <string name="status_missing_tafa_api">This Home Assistant server has no TAFA room-audio API (HTTP 404). Install TAFA on the selected test server and restart HA Core.</string>
     <string name="status_room_user">Room access denied (HTTP 403). In the TAFA control center on this server, pair this tablet with a dedicated non-admin HA user.</string>
     <string name="status_player_session">Room already has an active player (HTTP 409). Stop the other tablet player or wait for the old session to disconnect.</string>
-    <string name="status_backend_not_ready">TAFA audio backend is not ready (HTTP 503). Check the test server's TAFA integration state.</string>
+    <string name="status_backend_not_ready">TAFA audio backend is not ready (HTTP 503). Check the TAFA integration state on the test server.</string>
     <string name="status_tls_help">HTTPS certificate validation failed. Use a valid HTTPS hostname or consented private LAN HTTP on the test server.</string>
-    <string name="status_dns_help">The tablet cannot resolve this HA hostname. Check the tablet's Wi-Fi and DNS settings.</string>
+    <string name="status_dns_help">The tablet cannot resolve this HA hostname. Check Wi-Fi and DNS settings on the tablet.</string>
     <string name="status_network_help">Check the HA address, Wi-Fi and token. Open Diagnostics for the latest status.</string>
     <string name="status_route_help">Android could not confirm the Bluetooth output. Check that the Echo is connected for media audio, then retry.</string>
     <string name="status_auth_help">Check the saved address, token and HTTP permission, then start the player again.</string>
