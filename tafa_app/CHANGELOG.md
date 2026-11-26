@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.4.38 — Internetsuche, Trefferwahl und Rezept-Lesemodus
+
+- Die lokale SearXNG-Suche zeigt wieder nummerierte Treffer mit einer Anschlussfrage, welcher geöffnet werden soll.
+- Sprachfolgen wie „Öffne Nummer eins“ bleiben derselben Suchsession zugeordnet; bei erneuerter Conversation-ID wird nur beim gleichen authentifizierten Gerät wieder angeknüpft.
+- Treffer öffnen direkt im TAFA-Dashboard einen sicheren Lesemodus statt einer fremden eingebetteten Webseite.
+- Rezeptseiten mit schema.org-Originalangaben zeigen Zutaten und Zubereitung getrennt. Fehlende Angaben werden nicht erfunden.
+- Neue TAFA-Artikel-WebSocket-Schnittstelle ersetzt den entfernten Jarvis-Dienst. Die private Jarvis-Suchoberfläche nutzt denselben TAFA-Suchweg.
+- SearXNG bleibt optional; nicht erreichbare Suchserver werden ausdrücklich als Fehler gemeldet statt durch andere Trefferquellen verdeckt.
+
 ## 0.4.37 — Sichere Sensor-Fallbacks
 
 - Die grafische TAFA-Funktionsverwaltung und die bestehenden Datenzuordnungen werden gemeinsam ausgeliefert.
