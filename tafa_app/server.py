@@ -513,7 +513,9 @@ def display(message="",lang="de",default_tab="overview",review=None):
     latest=recent_stt_backend(TOKEN) if TOKEN else None
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     import_panel=render_panel(lang,CSRF,review=review)
-    connection_panel=render_connection_form({**load_options(),**preferences},lang,CSRF,checks=checks)
+    connection_panel=render_connection_form({**load_options(),**preferences},lang,CSRF,
+                                            checks=checks,wyoming=wyoming_entries,
+                                            wyoming_note=picker_note,latest=latest)
     device_state = read_device_data()
     if device_state.get("error") or device_state.get("room_error"):
         LOG.warning("TAFA device endpoints: wake=%s room=%s",
@@ -719,7 +721,7 @@ class Handler(BaseHTTPRequestHandler):
                 activate_configured_services()
                 msg="Einstellungen gespeichert. TAFA übernimmt die Änderung automatisch. / Settings saved; TAFA is applying changes automatically."
             elif action=="connection_settings":
-                save_connection_form(TOKEN,fields)
+                save_connection_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
                 activate_configured_services()
                 tab="connections"
                 msg="Verbindungsadressen gespeichert. / Connection addresses saved."

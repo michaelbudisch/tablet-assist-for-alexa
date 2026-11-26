@@ -224,3 +224,12 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;co
 #manifest-import input[type=file]{display:block;width:100%;max-width:100%;padding:12px 0}
 #manifest-file-status{overflow-wrap:anywhere}
 @media(max-width:700px){.connection-grid{grid-template-columns:1fr}}
+
+/* Connected services: one clear order for GPU primary, CPU fallback and Alexa. */
+.connection-group{margin-top:22px;padding:18px 18px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
+.connection-group h3{margin:0 0 8px;font-size:16px}
+.connection-group .connection-grid{margin-top:14px}
+.connection-group .connection-field{background:var(--surface)}
+.connection-field select{display:block;width:100%;padding:10px 12px;border:1px solid #becbd7;border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+.connection-field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+@media(max-width:700px){.connection-group{padding:13px}.connection-group .connection-grid{grid-template-columns:1fr}}
