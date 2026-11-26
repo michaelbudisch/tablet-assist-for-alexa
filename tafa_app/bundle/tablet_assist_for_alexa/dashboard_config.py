@@ -336,6 +336,49 @@ def migrate_saved_dashboard(raw):
     return validate_dashboard(clean)
 
 
+# The HA integration options are the canonical source mapping for speech and
+# the dashboard. The returned suggestions are read-only and do not modify
+# the user's saved custom bindings or Lovelace card configuration.
+SOURCE_TO_ROLE = {
+    "vorlauf": "heating_temperature", "ruecklauf": "heating_temperature",
+    "spreizung": "heating_temperature", "heizoel": "fuel_volume",
+    "oelverbrauch": "fuel_usage", "preis": "price", "guenstig": "price",
+    "netz": "grid_power", "solar": "solar_power",
+    "solarheute": "solar_today", "prognose": "solar_tomorrow",
+    "netzheute": "grid_import", "einspeisungheute": "grid_export",
+    "waermepumpe": "heatpump_power", "wpheute": "heatpump_energy",
+    "wpkosten": "heatpump_cost", "waschmaschine": "appliance_power",
+    "kuehlschrank": "appliance_power", "waschenergie": "appliance_energy",
+    "kuehlschrankheute": "appliance_energy", "waschkosten": "appliance_cost",
+    "weather": "weather", "shopping": "shopping_lists",
+    "restmuell": "waste_dates", "bioabfall": "waste_dates",
+    "papier": "waste_dates", "wertstoff": "waste_dates",
+}
+
+
+def linked_source_bindings(hass):
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if len(entries) != 1:
+        return {}
+    entry = entries[0]
+    options = {**entry.data, **entry.options}
+    sources = options.get("sources", {})
+    if not isinstance(sources, dict):
+        return {}
+    roles = {}
+    for key, entity in sources.items():
+        role = SOURCE_TO_ROLE.get(key)
+        domains = ROLE_DOMAINS.get(role) if role else None
+        if (not domains or not isinstance(entity, str)
+                or not ENTITY.fullmatch(entity)
+                or entity.split(".", 1)[0] not in domains):
+            continue
+        roles.setdefault(role, [])
+        if entity not in roles[role]:
+            roles[role].append(entity)
+    return roles
+
+
 def dashboard_store(hass):
     return Store(hass, STORE_VERSION, STORE_KEY)
 
@@ -360,7 +403,8 @@ async def load_dashboard(hass):
 })
 @websocket_api.async_response
 async def async_get_dashboard(hass, connection, msg):
-    connection.send_result(msg["id"], {"config": await load_dashboard(hass)})
+    connection.send_result(msg["id"], {"config": await load_dashboard(hass),
+                                        "linked_bindings": linked_source_bindings(hass)})
 
 
 @websocket_api.require_admin
