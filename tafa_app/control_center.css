@@ -118,6 +118,26 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .links a{background:var(--surface-alt);border:1px solid var(--line);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:680}
 .links a:hover{background:var(--accent-soft);text-decoration:none}
 footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;color:var(--muted);font-size:11px}
+.device-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 16px}
+.tablet-card header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tablet-card h3{margin:0;font-size:18px}
+.tablet-card details{margin:13px 0 0;background:var(--surface-alt);border:1px solid var(--line);border-radius:10px}
+.tablet-card details summary{font-weight:730;cursor:pointer;padding:12px 15px}
+.tablet-card details .subtle{margin:0 14px}
+.device-settings{padding:0 12px 14px;display:grid;gap:11px}
+.device-setting{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,1fr) auto;gap:10px;align-items:center}
+.device-setting label{font-size:12px;font-weight:670}
+.device-setting input,.device-setting select,.pair-form input,.pair-form select{min-height:38px;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px}
+.device-setting button{white-space:nowrap;font-size:12px;min-height:36px}
+.multiroom-panel{margin-top:14px}
+.room-list{margin:12px 0;display:grid;gap:8px}
+.room-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:9px 0}
+.room-row small{overflow-wrap:anywhere;color:var(--muted)}
+.pair-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;margin-top:16px}
+.pair-form>label{font-weight:650;font-size:12px}
+.pair-form button{grid-column:1/-1;justify-self:start}
+@media(max-width:990px){.device-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.device-setting{grid-template-columns:1fr auto}.device-setting label{grid-column:1/-1}.pair-form{grid-template-columns:1fr}}
 @media(max-width:930px){
   .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hero{padding:28px}

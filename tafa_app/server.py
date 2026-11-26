@@ -31,6 +31,7 @@ from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from control_center_view import render_dashboard
+from device_center import read_device_data, render_device_center, update_device, pair_device
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
@@ -511,11 +512,12 @@ def display(message="",lang="de",default_tab="overview",review=None):
     latest=recent_stt_backend(TOKEN) if TOKEN else None
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     import_panel=render_panel(lang,CSRF,review=review)
+    devices_panel=render_device_center(lang,CSRF,read_device_data())
     return render_dashboard(
         pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
-        cards=cards, picker=picker, import_panel=import_panel, checks=checks,
+        cards=cards, picker=picker, import_panel=import_panel, devices_panel=devices_panel, checks=checks,
         options={**load_options(), **preferences}, setup=setup,
         links=links, latest=latest, cache_info=cache_info,
         note=note, install=install, retry_button=retry_button,
@@ -570,7 +572,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
         tab=fields.get("tab",["maintenance"])[0]
-        if tab not in ("overview","setup","connections","maintenance"):
+        if tab not in ("overview","setup","devices","connections","maintenance"):
             tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
@@ -664,6 +666,12 @@ class Handler(BaseHTTPRequestHandler):
                 accepted=retry_models()
                 msg=("Speech model retry requested / Sprachmodelle erneut gestartet."
                      if accepted else "Speech model retry unavailable / Wiederholung nicht möglich.")
+            elif action=="device_update":
+                msg=update_device(fields)
+                tab="devices"
+            elif action=="room_pair":
+                msg=pair_device(fields)
+                tab="devices"
             elif action=="settings":
                 changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
                 activate_configured_services()
