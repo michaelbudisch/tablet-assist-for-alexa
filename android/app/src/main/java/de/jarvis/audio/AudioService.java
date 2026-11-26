@@ -19,6 +19,15 @@ public class AudioService extends Service {
     static final Pattern PATH=Pattern.compile("/api/tts_proxy/[A-Za-z0-9_.~-]{1,200}");
     final Handler main=new Handler(Looper.getMainLooper());
     final ScheduledExecutorService io=Executors.newSingleThreadScheduledExecutor();
+    // The native Bluetooth player and microphone may be started independently.
+    // Enroll on a separate executor so HA device registration cannot delay
+    // room audio polling, voice playback or the Android main thread.
+    final ScheduledExecutorService enrollmentIo=Executors.newSingleThreadScheduledExecutor(r->{
+        Thread thread=new Thread(r,"TAFA-Tablet-Enrollment");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private volatile boolean tabletEnrolled=false;
     private StreamingSession streaming;
     private Runnable streamWatchdog;
     volatile boolean active=false,busy=false; volatile String id="", cachedStatus="";
@@ -66,6 +75,10 @@ public class AudioService extends Service {
             active=true;ui="connecting";
             keepalive.setEnabled(prefs.getBoolean("keepalive_enabled",false));
             io.scheduleWithFixedDelay(this::poll,0,900,TimeUnit.MILLISECONDS);
+            // The first successful room connection is sufficient to enroll
+            // this tablet, even if native wakeword is not yet enabled.
+            enrollmentIo.scheduleWithFixedDelay(this::syncTabletEnrollment,
+                2,20,TimeUnit.SECONDS);
         }catch(Exception e){ui="credentials_error";stopSelf();}
         return START_NOT_STICKY;
     }
@@ -74,6 +87,29 @@ public class AudioService extends Service {
     private void state(String status){cachedStatus=status;ui=status;if(!io.isShutdown())io.execute(()->{if(active)try{publish(status);}catch(Exception ignored){}});}
     AudioDeviceInfo bluetooth(){for(AudioDeviceInfo d:am.getDevices(AudioManager.GET_DEVICES_OUTPUTS))if(d.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)return d;return null;}
     private void poll(){if(active)pollRoom();}
+
+    private void syncTabletEnrollment(){
+        // The room connection must have succeeded before we attempt device
+        // enrollment. This is an explicit player-start, not silent discovery.
+        if(!active||!haConnected)return;
+        try{
+            if(!tabletEnrolled){
+                WakePilotSettings.register(this);
+                tabletEnrolled=true;
+            }
+            // Only the wakeword service should report live mic state when it
+            // is running. Audio-only tablets still publish online telemetry.
+            if(!WakeWordService.running){
+                WakePilotSettings.report(this,"audio_ready","inactive");
+            }
+        }catch(Exception error){
+            // After a server reset, the device may have been deleted. Retry
+            // idempotent registration rather than losing the tablet forever.
+            tabletEnrolled=false;
+            android.util.Log.w("TAFAEnrollment",
+                "Noncritical HA device enrollment retry: "+error.getClass().getSimpleName());
+        }
+    }
     private JSONObject roomApi(JSONObject body)throws Exception {
         HttpURLConnection c=connection("/api/tablet_assist_for_alexa/room_audio","POST");
         try{
@@ -251,5 +287,5 @@ public class AudioService extends Service {
         }catch(Exception e){finish("error_route");}
     }};
     private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);}
-    @Override public void onDestroy(){active=false;running=false;haConnected=false;if(keepalive!=null)keepalive.close();finish("cancelled");try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
+    @Override public void onDestroy(){active=false;running=false;haConnected=false;enrollmentIo.shutdownNow();if(keepalive!=null)keepalive.close();finish("cancelled");try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }

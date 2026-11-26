@@ -59,10 +59,19 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn('tablet_assist_for_alexa/wake_devices',wake)
         self.assertIn("TAFA Lokal",native)
         self.assertNotIn("if(chosen==null)chosen=first",native)
+    def test_player_enrolls_even_without_wakeword(self):
+        audio=read("android/app/src/main/java/de/jarvis/audio/AudioService.java")
+        self.assertIn("enrollmentIo.scheduleWithFixedDelay(this::syncTabletEnrollment",audio)
+        self.assertIn("WakePilotSettings.register(this);",audio)
+        self.assertIn('WakePilotSettings.report(this,"audio_ready","inactive");',audio)
+        self.assertIn("if(!active||!haConnected)return;",audio)
+        self.assertIn("enrollmentIo.shutdownNow()",audio)
+        self.assertIn("if(!WakeWordService.running)",audio)
+
     def test_version_contract(self):
         self.assertIn('version: "0.3.39"',read("tafa_app/config.yaml"))
         self.assertEqual(read("VERSION").strip(),"0.4.23")
-        self.assertEqual(read("android/VERSION").strip(),"1.0.3")
+        self.assertEqual(read("android/VERSION").strip(),"1.0.4")
 
 if __name__=="__main__":
     unittest.main()
