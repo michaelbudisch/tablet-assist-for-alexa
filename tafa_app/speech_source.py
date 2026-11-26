@@ -126,6 +126,13 @@ def _advanced(values):
         _entity(value, SOURCE_DOMAINS[key])
     result = {"rooms_json": json.dumps(rooms, ensure_ascii=False),
               "sources_json": json.dumps(sources, ensure_ascii=False)}
+    search_base = values.get("search_base", "") or ""
+    result["search_base"] = private_http_origin(search_base) if search_base else ""
+    for key in ("family_name_man", "family_name_woman", "family_name_child"):
+        value = values.get(key, "") or ""
+        if not isinstance(value, str) or len(value) > 40 or any(ord(c) < 32 for c in value):
+            raise ValueError("Invalid family name")
+        result[key] = value.strip()
     for key, domain in (("cpu_stt", "stt"), ("gpu_stt", "stt"),
                         ("llm_agent", "conversation")):
         result[key] = _entity(values.get(key, "") or "", domain)
