@@ -1,3 +1,7 @@
+import ipaddress
+import re
+from urllib.parse import urlsplit
+
 """Semantic source keys, never household-specific entity IDs."""
 SOURCES = {
     "weather": "weather", "shopping": "todo",
@@ -37,3 +41,23 @@ METRICS = {
     "kuehlschrankheute": ("Kühlschrankverbrauch heute", ("kWh","Wh")),
 }
 UNITS = {"°C":"Grad Celsius","K":"Kelvin","W":"Watt","kW":"Kilowatt","Wh":"Wattstunden","kWh":"Kilowattstunden","L":"Liter","l":"Liter","Liter":"Liter","EUR":"Euro","€":"Euro","ct":"Cent","Cent":"Cent","ct/kWh":"Cent pro Kilowattstunde","¢/kWh":"Cent pro Kilowattstunde","Cent/kWh":"Cent pro Kilowattstunde","EUR/kWh":"Euro pro Kilowattstunde","€/kWh":"Euro pro Kilowattstunde"}
+
+
+def validate_local_search_origin(raw):
+    """Refuse arbitrary URLs, credentials, public destinations, and DNS names."""
+    if raw == "":
+        return ""
+    if not isinstance(raw, str) or len(raw) > 180:
+        raise ValueError("Invalid SearXNG address")
+    url = urlsplit(raw.strip().rstrip("/"))
+    if url.scheme != "http" or not url.hostname or not url.port or url.path or url.query or url.fragment or url.username or url.password:
+        raise ValueError("SearXNG must be a local HTTP host:port without credentials or path")
+    try:
+        ip = ipaddress.ip_address(url.hostname)
+        allowed = ip.version == 4 and ip.is_private and not ip.is_loopback and not ip.is_link_local
+    except ValueError:
+        allowed = url.hostname.endswith(".local") and re.fullmatch(r"[A-Za-z0-9.-]+", url.hostname)
+    if not allowed:
+        raise ValueError("SearXNG must be on a private LAN")
+    return raw.strip().rstrip("/")
+
