@@ -1,6 +1,6 @@
 # TAFA – nativer Sprachweg und zentrale Steuerung
 
-[English](en/native-only.md) · [Einrichtungsleitfaden](setup-guide.md) · [Android](../android/README.de.md)
+[English](en/native-only.md) · [Einrichtungsleitfaden](setup-guide.md) · [Android](../android/README.de.md) · [Eigene Dashboard-Sprachschalter](dashboard-voice-control.md)
 
 ## Sprachweg
 

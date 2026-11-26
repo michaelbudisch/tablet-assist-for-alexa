@@ -1,6 +1,6 @@
 # Install the TAFA Home Assistant App
 
-[Deutsch](../app.md) · [Project](../../README.md) · [Complete setup guide](setup-guide.md)
+[Deutsch](../app.md) · [Project](../../README.md) · [Complete setup guide](setup-guide.md) · [WebSocket controls](dashboard-voice-control.md)
 
 TAFA provides a **Control Center**, one integrated HA component, and optional CPU Piper/Faster-Whisper services. It requires **Home Assistant OS 2026.11+** with Apps on `amd64` or `aarch64`.
 

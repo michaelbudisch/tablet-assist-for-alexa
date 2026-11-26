@@ -1,6 +1,6 @@
 # TAFA – native voice path and central management
 
-[Deutsch](../native-only.md) · [Setup](setup-guide.md) · [Android](../../android/README.md)
+[Deutsch](../native-only.md) · [Setup](setup-guide.md) · [Android](../../android/README.md) · [Custom dashboard voice controls](dashboard-voice-control.md)
 
 ## Voice route
 
