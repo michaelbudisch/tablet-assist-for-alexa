@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.3.36 — native-only Control Center and per-tablet Home Assistant controls
+- Remove the automatically registered TAFA sidebar dashboard, leaving all private dashboards and existing HA automations alone.
+- Add devices and multiroom management to the Supervisor TAFA Control Center; administrator-only validated changes use the existing HA backend.
+- Expose dynamic per-tablet microphone, wakeword, brightness controls and diagnostic sensors through Home Assistant entities.
+- Android Device Bridge 1.0.3: no follow-up count cap, HA-owned microphone parameters, read-only status telemetry and opt-in brightness-only system permission.
+- Keep HA's existing Assist pipeline for STT, local AI and TTS. No browser or legacy microphone conversation route is registered.
+- Backup before development: HA c53f26c6; Git backup/native-only-base-20261126.
+
+
 ## 0.3.35 — avoid duplicate camera entities during old Jarvis → TAFA native audio migration
 - Keep the new TAFA audio/wake endpoints and read-only imported multiroom pairing while the old Jarvis camera integration is still installed.
 - Only register camera/binary-sensor platforms when TAFA owns the camera relay. Do not initialize orphan camera entities with a null relay; unload the same platform set that was actually loaded.

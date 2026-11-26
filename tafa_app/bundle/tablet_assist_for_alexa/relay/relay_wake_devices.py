@@ -24,7 +24,7 @@ DEFAULTS = {"muted": False, "word": "Hey Jarvis", "room": "Jarvis Tablet",
             "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1,
             "pause_ms": 1700, "mic_gain": 100, "brightness": 80,
             "screen_awake": True, "display_control_enabled": False}
-VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90),
+VALID = {"followup_limit": (-1, 100), "strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90),
          "pause_ms": (900, 3200), "mic_gain": (50, 200),
          "brightness": (1, 100)}
 TELEMETRY = {"wake_status", "microphone", "audio", "bluetooth", "battery",
