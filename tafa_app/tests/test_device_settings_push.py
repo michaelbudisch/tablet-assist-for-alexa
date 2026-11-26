@@ -59,7 +59,7 @@ class TestDeviceSettingsWS(unittest.TestCase):
         }
         def allowed(user,device):
             return user.is_admin or user.id==device["user_id"]
-        self.controller=types.SimpleNamespace(devices=self.devices,allowed=allowed)
+        self.controller=types.SimpleNamespace(devices=self.devices,allowed=allowed,revisions={self.a:4,self.b:2})
         self.hass=types.SimpleNamespace(data={
             "tablet_assist_for_alexa":{"wake_devices_dynamic":self.controller}})
 
@@ -68,6 +68,7 @@ class TestDeviceSettingsWS(unittest.TestCase):
         asyncio.run(self.subscribe(self.hass,conn,{"id":23,"device_id":self.a}))
         self.assertTrue(conn.result[0][1]["subscribed"])
         self.assertEqual(conn.events[0][1]["device_id"],self.a)
+        self.assertEqual(conn.events[0][1]["revision"],4)
         self.assertNotIn("secret_token",str(conn.events))
         self.assertNotIn("user_id",str(conn.events))
         self.devices[self.a]["muted"]=True

@@ -30,7 +30,7 @@ VALID = {"followup_limit": (-1, 100), "strict": (1, 3), "cooldown": (3, 30), "ho
          "pause_ms": (900, 3200), "mic_gain": (50, 200),
          "brightness": (1, 100)}
 TELEMETRY = {"wake_status", "microphone", "audio", "bluetooth", "battery",
-             "app_version", "display"}
+             "app_version", "display", "control_channel"}
 
 
 class WakeDeviceView(HomeAssistantView):
@@ -75,6 +75,9 @@ class WakeDevices:
         self.lock = asyncio.Lock()
         self.last_wake = 0.0
         self.telemetry = {}  # Volatile diagnostics, never persisted.
+        self.revisions = {}  # Per-runtime monotonic config revisions.
+        self.pending_controls = {}  # Revision and HA monotonic dispatch timestamp.
+        self.control_metrics = {}  # Only non-sensitive, volatile ACK diagnostics.
 
     def allowed(self, user, device):
         return user.is_admin or device["user_id"] == user.id
@@ -87,7 +90,8 @@ class WakeDevices:
                 **{k: v for k, v in device.items() if k != "user_id"},
                 "online": bool(seen and time.time() - seen < 45),
                 "last_seen": int(seen) if seen else None,
-                "telemetry": {k: v for k, v in observed.items() if k != "seen"}}
+                "telemetry": {k: v for k, v in observed.items() if k != "seen"},
+                "control": dict(self.control_metrics.get(identifier, {}))}
 
     def changed(self, identifier, registered=False):
         async_dispatcher_send(self.hass, SIGNAL, identifier)
@@ -100,6 +104,13 @@ class WakeDevices:
         Telemetry and last-seen updates must not create control events.
         The subscription checks device ownership before emitting data.
         """
+        revision = self.revisions.get(identifier, 0) + 1
+        self.revisions[identifier] = revision
+        self.pending_controls[identifier] = (revision, time.monotonic())
+        metrics = self.control_metrics.setdefault(identifier, {})
+        metrics["revision"] = revision
+        metrics["pending"] = True
+        metrics["requested_at"] = int(time.time() * 1000)
         async_dispatcher_send(self.hass, SETTINGS_SIGNAL, identifier)
 
     @staticmethod
@@ -179,10 +190,32 @@ class WakeDevices:
                     raise PermissionError()
                 del self.devices[identifier]
                 self.telemetry.pop(identifier, None)
+                self.control_metrics.pop(identifier, None)
+                self.revisions.pop(identifier, None)
+                self.pending_controls.pop(identifier, None)
                 await self.save()
                 self.changed(identifier)
                 async_dispatcher_send(self.hass, REMOVED_SIGNAL, identifier)
                 return {"removed": True}
+            if action == "ack":
+                revision = payload.get("revision")
+                channel = payload.get("channel")
+                if type(revision) is not int or not 0 <= revision <= 2147483647:
+                    raise ValueError("Invalid control revision")
+                if channel not in ("websocket", "poll"):
+                    raise ValueError("Invalid control channel")
+                if revision != self.revisions.get(identifier, 0):
+                    return {"accepted": False, "reason": "stale_revision"}
+                metrics = self.control_metrics.setdefault(identifier, {})
+                pending = self.pending_controls.get(identifier)
+                if pending and pending[0] == revision:
+                    metrics["latency_ms"] = int(max(0, (time.monotonic() - pending[1]) * 1000))
+                    self.pending_controls.pop(identifier, None)
+                metrics.update({"channel": channel, "revision": revision,
+                                "ack_revision": revision, "pending": False,
+                                "applied_at": int(time.time() * 1000)})
+                self.changed(identifier)
+                return {"accepted": True}
             if action == "report":
                 report = payload.get("telemetry")
                 if not isinstance(report, dict) or len(report) > 7 or any(
@@ -197,6 +230,8 @@ class WakeDevices:
                     else:
                         raise ValueError("Invalid telemetry value")
                 self.telemetry[identifier] = {"seen": time.time(), **sanitized}
+                if "control_channel" in sanitized:
+                    self.control_metrics.setdefault(identifier, {})["channel"] = sanitized["control_channel"]
                 self.changed(identifier)
                 return {"accepted": True}
             if action == "wake":

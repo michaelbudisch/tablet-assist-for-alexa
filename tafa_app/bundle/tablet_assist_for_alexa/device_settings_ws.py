@@ -14,9 +14,10 @@ from .relay.relay_wake_devices import KEY, SETTINGS_SIGNAL
 COMMAND = DOMAIN + "/device_settings_subscribe"
 
 
-def settings_payload(device):
+def settings_payload(device, revision=0):
     return {
         "device_id": device["device_id"],
+        "revision": revision,
         "muted": device.get("muted", False),
         "voice_mode": device.get("voice_mode", "wake"),
         "followup_limit": device.get("followup_limit", -1),
@@ -53,7 +54,7 @@ async def device_settings_subscribe(hass, connection, msg):
         current = controller.devices.get(identifier)
         if not current or not controller.allowed(user, current):
             return
-        connection.send_event(msg["id"], settings_payload(current))
+        connection.send_event(msg["id"], settings_payload(current, controller.revisions.get(identifier, 0)))
 
     unsubscribe = async_dispatcher_connect(hass, SETTINGS_SIGNAL, on_device_change)
     connection.subscriptions[msg["id"]] = unsubscribe
