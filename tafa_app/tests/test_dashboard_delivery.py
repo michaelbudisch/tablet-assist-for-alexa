@@ -140,7 +140,8 @@ class DashboardDelivery(unittest.TestCase):
         self.assertNotIn('className="toolbar"',panel)
         self.assertIn('className="subview-nav"',panel)
         self.assertIn('if(this._mode==="voice"||this._editing)',panel)
-        self.assertIn('if(id==="assist"',dashboard)
+        self.assertIn('if(this.page==="assist")return "";',dashboard)
+        self.assertIn('if(this.page==="assist"){\n  this.clearAssist();',dashboard)
         self.assertIn('if(id==="settings"&&this.h?.user?.is_admin)',dashboard)
 
         self.assertIn('customElements.define("tafa-integrated-dashboard"',dashboard)
