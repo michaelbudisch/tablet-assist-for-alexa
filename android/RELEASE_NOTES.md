@@ -1,4 +1,4 @@
-# TAFA Device Bridge 1.0.6
+# TAFA Device Bridge 1.1.0
 
 - Optional silent Bluetooth keepalive is directly visible on the Status/player card, including live state.
 - Automatic recovery after Bluetooth interruptions, route changes, audio-focus loss or player errors, with a 3–30 second retry delay. System volume is unchanged and no separate audio focus is requested.

@@ -1,5 +1,14 @@
 # Android changelog
 
+## 1.1.0 · One settings tab, informative status and focused setup
+- **Status:** information only (HA, Bluetooth, wakeword, Assist, camera, keepalive, battery).
+- **Connect:** HA discovery, URL, room-user token and save/connection actions only.
+- **Settings:** Bluetooth player/keepalive, wakeword/model/mic, native Assist, display permission, camera lens/refresh/motion controls, start/stop, help and diagnostics.
+- Remove the separate camera preview/test screen. The camera notification opens Settings. Motion is still reported as a HA motion binary sensor, including while setting changes during live streaming.
+- Preserve native Assist audio transport, encrypted credentials, app package ID and existing HA automations.
+- Version code 20. An in-place APK update still requires the original release signing certificate.
+
+
 ## 1.0.6 · Unified TAFA room camera
 - Replace the legacy Jarvis camera route with the supported authenticated TAFA room-camera API.
 - Use the dedicated room user's token, with explicit per-room camera opt-in from TAFA Control Center. No separate Jarvis camera receiver or administrator token is required.

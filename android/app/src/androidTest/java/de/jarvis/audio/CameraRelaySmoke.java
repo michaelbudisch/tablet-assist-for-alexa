@@ -34,10 +34,13 @@ final class CameraRelaySmoke {
             prefs.edit().putString("base",base).putString(MainActivity.HTTP_CONSENT,base)
                     .putString("secret",MainActivity.encrypt("camera-fixture-only"))
                     .putBoolean("camera_motion",true).commit();
-            Activity visible=test.startActivitySync(new Intent(context,CameraActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            Activity visible=test.startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             try{
                 check(!CameraRelayService.running,"Opening screen never auto-starts relay");
-                test.runOnMainSync(()->visible.findViewById(R.id.camera_relay_start).performClick());
+                test.runOnMainSync(()->{
+                    visible.findViewById(R.id.nav_settings).performClick();
+                    visible.findViewById(R.id.camera_relay_start).performClick();
+                });
                 check(receiver.first.await(15,TimeUnit.SECONDS),"First real camera JPEG uploaded: "+CameraRelayService.status);
                 test.runOnMainSync(visible::finish);
                 check(receiver.background.await(12,TimeUnit.SECONDS),"Camera keeps uploading after activity exits");

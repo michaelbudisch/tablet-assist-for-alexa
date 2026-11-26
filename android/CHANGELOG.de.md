@@ -1,5 +1,14 @@
 # Android-Änderungsverlauf
 
+## 1.1.0 · Übersichtliche App mit drei Tabs
+- **Status** zeigt ausschließlich Verbindung, Audio, Assist, Bluetooth, Kamera, Keepalive und Akku.
+- **Verbinden** übernimmt allein Home-Assistant-Suche, Serveradresse, Raumnutzer-Token und Speicherung.
+- **Einstellungen** bündelt Bluetooth, Player, Keepalive, Rufwort, Mikrofon, Assist, Displayberechtigung, Kamera-Linse, Bildintervall, Bildbewegung, Start/Stopp sowie Hilfe und Diagnose.
+- Separate Kameravorschau/Testseite entfällt; die Kamerabenachrichtigung führt zu Einstellungen. Bildbewegung funktioniert weiter als Home-Assistant-Bewegungssensor und kann auch bei laufender Kamera umgeschaltet werden.
+- Keine Änderungen an HA-Automatisierungen, Verschlüsselung der gespeicherten Zugangsdaten oder dem nativen Sprachweg.
+- VersionCode 20, unveränderte Paket-ID; das APK benötigt für ein In-place-Update denselben Release-Signaturschlüssel.
+
+
 ## 1.0.6 · Einheitlicher TAFA-Raumkamera-Empfänger
 - Den alten Jarvis-Kamera-Endpunkt durch die authentifizierte TAFA-Raumkamera-API ersetzt.
 - Kameraübertragung mit normalem Raumnutzer-Token und ausdrücklicher Freigabe je Raum im TAFA Control Center. Kein separater Jarvis-Empfänger oder Administrator-Token nötig.

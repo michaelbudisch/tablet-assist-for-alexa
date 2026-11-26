@@ -93,10 +93,33 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn("POST /api/tablet_assist_for_alexa/room_camera/register",smoke)
         self.assertIn("POST /api/tablet_assist_for_alexa/room_camera/frame",smoke)
 
+    def test_unified_settings_and_motion_binary_sensor(self):
+        layout=read("android/app/src/main/res/layout/activity_main.xml")
+        main=read("android/app/src/main/java/de/jarvis/audio/MainActivity.java")
+        camera=read("android/app/src/main/java/de/jarvis/audio/CameraRelayService.java")
+        binary=read("custom_components/tablet_assist_for_alexa/relay/binary_sensor.py")
+        manifest=read("android/app/src/main/AndroidManifest.xml")
+        self.assertEqual(layout.count('android:id="@+id/nav_status"'),1)
+        self.assertEqual(layout.count('android:id="@+id/nav_connection"'),1)
+        self.assertEqual(layout.count('android:id="@+id/nav_settings"'),1)
+        for id in ("player_start","player_stop","keepalive","display_permission",
+                   "camera_relay_start","camera_relay_stop","camera_motion","camera_refresh_rate"):
+            self.assertEqual(layout.count('android:id="@+id/'+id+'"'),1)
+        self.assertIn('android:id="@+id/section_settings"',layout)
+        self.assertNotIn('android:id="@+id/nav_help"',layout)
+        self.assertNotIn('android:id="@+id/nav_voice"',layout)
+        self.assertNotIn('android:id="@+id/camera_preview"',layout)
+        self.assertNotIn('android:id="@+id/camera_capture"',layout)
+        self.assertNotIn('<activity android:name=".CameraActivity"',manifest)
+        self.assertIn('getBoolean("camera_motion",false)',camera)
+        self.assertIn("BinarySensorDeviceClass.MOTION",binary)
+        self.assertIn("RoomRelayMotion",binary)
+        self.assertIn("R.id.section_settings",main)
+
     def test_version_contract(self):
         self.assertIn('version: "0.3.40"',read("tafa_app/config.yaml"))
         self.assertEqual(read("VERSION").strip(),"0.4.24")
-        self.assertEqual(read("android/VERSION").strip(),"1.0.6")
+        self.assertEqual(read("android/VERSION").strip(),"1.1.0")
 
 if __name__=="__main__":
     unittest.main()

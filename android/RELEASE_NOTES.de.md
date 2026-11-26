@@ -1,4 +1,4 @@
-# TAFA Device Bridge 1.0.5
+# TAFA Device Bridge 1.1.0
 
 - Der optionale lautlose Bluetooth-Keepalive ist direkt auf der Statusseite beim Player sichtbar, einschließlich Live-Status.
 - Automatische Wiederaufnahme nach Bluetooth-Unterbrechungen, Audio-Routenwechseln, Fokusverlust oder Playerfehlern mit 3–30 Sekunden Wiederholungsabstand. Keine Änderung der Systemlautstärke und kein eigener Audiofokus.
