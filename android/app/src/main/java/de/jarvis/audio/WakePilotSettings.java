@@ -2,6 +2,10 @@ package de.jarvis.audio;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+import android.os.BatteryManager;
+import android.provider.Settings;
 import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -18,12 +22,16 @@ final class WakePilotSettings {
         final boolean muted;
         final String word;
         final String room;
-        final int strictness,cooldownSeconds,holdSeconds,followupLimit;
-        Snapshot(boolean muted,String word,String room,int strictness,int cooldownSeconds,int holdSeconds,int followupLimit){
+        final int strictness,cooldownSeconds,holdSeconds,followupLimit,pauseMs,micGain,brightness;
+        final boolean screenAwake,displayControl;
+        Snapshot(boolean muted,String word,String room,int strictness,int cooldownSeconds,int holdSeconds,int followupLimit,
+                 int pauseMs,int micGain,int brightness,boolean screenAwake,boolean displayControl){
             this.muted=muted;this.word=word;this.room=room;
             this.strictness=strictness;
             this.cooldownSeconds=cooldownSeconds;this.holdSeconds=holdSeconds;
             this.followupLimit=followupLimit;
+            this.pauseMs=pauseMs;this.micGain=micGain;this.brightness=brightness;
+            this.screenAwake=screenAwake;this.displayControl=displayControl;
         }
     }
 
@@ -89,14 +97,54 @@ final class WakePilotSettings {
             clamp(dev.getInt("strict"),1,3),
             clamp(dev.getInt("cooldown"),3,30),
             clamp(dev.getInt("hold"),10,90),
-            -1
+            -1,
+            clamp(dev.optInt("pause_ms",1700),900,3200),
+            clamp(dev.optInt("mic_gain",100),50,200),
+            clamp(dev.optInt("brightness",80),1,100),
+            dev.optBoolean("screen_awake",true),
+            dev.optBoolean("display_control_enabled",false)
         );
         ctx.getSharedPreferences(MainActivity.PREF,0).edit()
             .putBoolean("wake_muted",s.muted).putString("wake_choice",s.word)
             .putInt("wake_strict",s.strictness).putInt("wake_cooldown",s.cooldownSeconds)
             .putInt("wake_hold",s.holdSeconds)
-            .putInt("native_followup_limit",s.followupLimit).apply();
+            .putInt("native_followup_limit",-1)
+            .putInt("native_pause_ms",s.pauseMs).putInt("mic_gain",s.micGain)
+            .putInt("display_brightness",s.brightness)
+            .putBoolean("screen_awake",s.screenAwake)
+            .putBoolean("display_control_enabled",s.displayControl).apply();
+        applyDisplay(ctx,s);
         return s;
+    }
+
+    // WRITE_SETTINGS is explicitly opted into; brightness does not power down
+    // or wake the physical screen, which remains under Android's control.
+    private static void applyDisplay(Context ctx,Snapshot s){
+        if(!s.displayControl||!Settings.System.canWrite(ctx))return;
+        try{
+            int value=s.screenAwake?Math.max(1,Math.round(s.brightness*255f/100f)):1;
+            Settings.System.putInt(ctx.getContentResolver(),Settings.System.SCREEN_BRIGHTNESS,value);
+        }catch(SecurityException ignored){}
+    }
+
+    static void report(Context ctx,String wakeStatus,String microphone) throws Exception{
+        JSONObject details=new JSONObject().put("wake_status",wakeStatus)
+            .put("microphone",microphone).put("audio",AudioService.ui)
+            .put("display",ctx.getSharedPreferences(MainActivity.PREF,0)
+                .getBoolean("display_control_enabled",false)?"brightness_control":"android_managed");
+        AudioManager am=(AudioManager)ctx.getSystemService(Context.AUDIO_SERVICE);
+        boolean bluetooth=false;
+        if(am!=null)for(AudioDeviceInfo device:am.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
+            if(device.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)bluetooth=true;
+        details.put("bluetooth",bluetooth?"connected":"disconnected");
+        BatteryManager battery=(BatteryManager)ctx.getSystemService(Context.BATTERY_SERVICE);
+        if(battery!=null){
+            int percent=battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            if(percent>=0&&percent<=100)details.put("battery",percent);
+        }
+        try{details.put("app_version",ctx.getPackageManager()
+            .getPackageInfo(ctx.getPackageName(),0).versionName);}catch(Exception ignored){}
+        request(ctx,body(ctx,"report").put("telemetry",details));
     }
 
     static boolean readMute(Context ctx) throws Exception {
@@ -111,7 +159,8 @@ final class WakePilotSettings {
             setting.put("muted",value);
         }else if("word".equals(key)&&value instanceof String){
             setting.put("word",displayFor((String)value));
-        }else if(("strict".equals(key)||"cooldown".equals(key)||"hold".equals(key))&&value instanceof Number){
+        }else if(("strict".equals(key)||"cooldown".equals(key)||"hold".equals(key)||
+                  "pause_ms".equals(key)||"mic_gain".equals(key)||"brightness".equals(key))&&value instanceof Number){
             setting.put(key,((Number)value).intValue());
         }else if("room".equals(key)&&value instanceof String){
             setting.put("room",value);

@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">TAFA Device Bridge</string>
+    <string name="display_permission">Allow optional display dimming</string>
+    <string name="display_permission_help">Grant Android Modify system settings once, then enable Display control for this tablet in Home Assistant. Brightness only; it cannot physically turn the screen off or wake a locked device.</string>
     <string name="app_tagline">Audio, voice and camera. Connected to your home.</string>
     <string name="intro_title">Your devices. One bridge.</string>
     <string name="intro_body">Connect Home Assistant once, then choose the features you need.</string>

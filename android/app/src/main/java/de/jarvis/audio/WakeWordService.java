@@ -148,6 +148,9 @@ public final class WakeWordService extends Service implements RecognitionListene
                 if(full){
                     WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
                     lastFullSync=SystemClock.elapsedRealtime();
+                    try{WakePilotSettings.report(this,status,muted?"muted":
+                        nativeSession!=null?"assist":speech!=null?"wakeword":"idle");}
+                    catch(Exception e){Log.w(TAG,"Noncritical telemetry failed",e);}
                     main.post(()->{
                         if(!enabled)return;
                         wordChoice=settings.word;

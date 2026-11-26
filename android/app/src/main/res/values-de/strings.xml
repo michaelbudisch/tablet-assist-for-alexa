@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">TAFA Device Bridge</string>
+    <string name="display_permission">Optionale Display-Helligkeitssteuerung erlauben</string>
+    <string name="display_permission_help">Einmal in Android „Systemeinstellungen ändern“ freigeben und dann in Home Assistant die Displaysteuerung aktivieren. Es wird nur die Helligkeit angepasst, kein echtes Ein- oder Ausschalten des Displays.</string>
     <string name="app_tagline">Audio, Sprache und Kamera. Mit deinem Zuhause verbunden.</string>
     <string name="intro_title">Deine Geräte. Eine Verbindung.</string>
     <string name="intro_body">Home Assistant einmal verbinden und die gewünschten Funktionen auswählen.</string>

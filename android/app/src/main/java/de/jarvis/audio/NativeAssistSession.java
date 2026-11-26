@@ -268,11 +268,18 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 // Vosk has already closed its own recorder before this point.
                 audio.startRecording();
                 NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(pauseMs,followup?6500:8000);
+                int gain=context.getSharedPreferences(MainActivity.PREF,0).getInt("mic_gain",100);
+                gain=Math.max(50,Math.min(200,gain));
                 short[] pcm=new short[FRAME_SAMPLES];
                 while(capture&&!ended.get()){
                     int n=audio.read(pcm,0,pcm.length,AudioRecord.READ_BLOCKING);
                     if(n<0)throw new IOException("microphone_read_failed");
                     if(n!=FRAME_SAMPLES)continue;
+                    // Digital microphone gain, applied to STT and silence detection.
+                    if(gain!=100)for(int i=0;i<n;i++){
+                        int sample=pcm[i]*gain/100;
+                        pcm[i]=(short)Math.max(-32768,Math.min(32767,sample));
+                    }
                     byte[] data=new byte[1+n*2];
                     data[0]=(byte)(handler&0xff);
                     for(int i=0;i<n;i++){
