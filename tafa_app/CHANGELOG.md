@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.4.37 — Sichere Sensor-Fallbacks
+
+- Die grafische TAFA-Funktionsverwaltung und die bestehenden Datenzuordnungen werden gemeinsam ausgeliefert.
+- Ist eine persönlich gewählte Dashboard-Entität nicht verfügbar, nutzt die integrierte Dashboard-Ansicht einen gültigen, zentral konfigurierten TAFA-Sensor als Laufzeit-Fallback.
+- Die ursprünglich gespeicherte Kachelzuordnung und die Automationen bleiben unangetastet.
+
 ## 0.4.36 — Funktionskatalog ohne JSON
 
 - Neuer Reiter **Funktionen & Datenquellen** mit Such- und Auswahlfeldern für vorhandene HA-Entitäten samt Werte- und Einheitenanzeige.
