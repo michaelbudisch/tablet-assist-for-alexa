@@ -1,6 +1,6 @@
 # TAFA: Ein Sprachweg, eine Benutzeroberfläche
 
-**Ab TAFA-App 0.3.38 / HA-Integration 0.4.22 / Device Bridge 1.0.3**
+**Ab TAFA-App 0.3.39 / HA-Integration 0.4.23 / Device Bridge 1.0.3**
 
 ## Architektur
 

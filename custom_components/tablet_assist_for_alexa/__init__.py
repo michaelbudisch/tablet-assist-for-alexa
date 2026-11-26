@@ -14,6 +14,7 @@ from homeassistant.components.http import StaticPathConfig
 
 from .const import DOMAIN, ROOMS, settings
 from .app_settings import async_sync_from_app
+from .device_admin_ws import device_admin_command
 from .ha_provision import provision_manifest, resolve_manifest_entities
 from .dashboard_config import async_get_dashboard, async_set_dashboard
 from .announcement import audio_url, allowed_targets
@@ -36,6 +37,7 @@ ANNOUNCE_SCHEMA = vol.Schema({
 async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, learning_command)
     websocket_api.async_register_command(hass, async_sync_from_app)
+    websocket_api.async_register_command(hass, device_admin_command)
     websocket_api.async_register_command(hass, provision_manifest)
     websocket_api.async_register_command(hass, resolve_manifest_entities)
     websocket_api.async_register_command(hass, async_get_dashboard)

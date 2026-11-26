@@ -7,7 +7,7 @@ No new Home Assistant dashboard, helper, or automation is created.
 import html
 import re
 import urllib.error
-from auto_setup import call as ha_call
+from auto_setup import device_admin_rpc as ws_call
 
 DEVICE_ID = re.compile(r"[a-f0-9]{32}\Z")
 ROOM = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
@@ -22,31 +22,23 @@ FIELDS = {
 WORDS = ("Hey Jarvis", "Jarvis", "Alexa", "Alle drei")
 
 
-def _read_endpoint(endpoint):
-    """Request one privileged HA endpoint without hiding other healthy sections.
-
-    The error is a fixed type name or numeric HTTP code only. Never include
-    HA's exception body, endpoint URL or bearer token in the user interface.
-    """
-    try:
-        reply = ha_call("tablet_assist_for_alexa/" + endpoint, {"action": "list"})
-        if not isinstance(reply, dict):
-            raise ValueError("Invalid API response")
-        return reply, ""
-    except urllib.error.HTTPError as exc:
-        return {}, "HTTP " + str(exc.code)
-    except (urllib.error.URLError, TimeoutError, OSError, ValueError, RuntimeError, TypeError) as exc:
-        return {}, type(exc).__name__
-
-
 def read_device_data():
-    """Read authenticated tablet data and room administration independently."""
-    devices, device_error = _read_endpoint("wake_devices")
-    multiroom, room_error = _read_endpoint("room_admin")
-    return {"devices": devices.get("devices", []),
-            "rooms": multiroom.get("rooms", []),
-            "users": multiroom.get("users", []),
-            "error": device_error, "room_error": room_error}
+    """Load devices, audio rooms and new HA users using one admin WebSocket."""
+    try:
+        result = ws_call("list")
+        if not isinstance(result, dict):
+            raise ValueError("Invalid TAFA device response")
+        for key in ("devices", "rooms", "users"):
+            if not isinstance(result.get(key), list):
+                raise ValueError("Invalid TAFA " + key)
+        return {**result, "error": "", "room_error": ""}
+    except Exception as exc:
+        # Do not leak tokens, URLs or server exception messages into the UI.
+        detail = (str(exc) if isinstance(exc, RuntimeError)
+                  and str(exc).startswith("TAFA WebSocket: ")
+                  else type(exc).__name__)
+        return {"devices": [], "rooms": [], "users": [],
+                "error": detail, "room_error": detail}
 
 
 def update_device(fields):
@@ -72,9 +64,7 @@ def update_device(fields):
             raise ValueError("Unknown wake phrase")
         if key == "room" and not 0 < len(value) <= 48:
             raise ValueError("Room name must be 1–48 characters")
-    ha_call("tablet_assist_for_alexa/wake_devices", {
-        "action": "configure", "device_id": identifier,
-        "settings": {key: value}})
+    ws_call("configure", device_id=identifier, settings={key: value})
     return "Tablet setting saved."
 
 
@@ -85,8 +75,7 @@ def create_room(fields):
     if (not ROOM.fullmatch(room) or not isinstance(user_id, str)
             or not 1 <= len(user_id) <= 128):
         raise ValueError("Ungültige Raum-ID oder Benutzer-ID / Invalid room or user")
-    ha_call("tablet_assist_for_alexa/room_admin", {
-        "action": "create", "room": room, "user_id": user_id})
+    ws_call("create", room=room, user_id=user_id)
     return "Raum angelegt / Room created."
 
 
@@ -100,10 +89,8 @@ def pair_device(fields):
     transfer = fields.get("transfer_device", ["0"])[0]
     if transfer not in ("0", "1"):
         raise ValueError("Invalid device transfer choice")
-    ha_call("tablet_assist_for_alexa/room_admin", {
-        "action": "pair", "device_id": identifier,
-        "room": room, "user_id": user_id,
-        "replace": False, "transfer_device": transfer == "1"})
+    ws_call("pair", device_id=identifier, room=room,
+            user_id=user_id, transfer_device=transfer == "1")
     return "Multiroom pairing saved."
 
 
