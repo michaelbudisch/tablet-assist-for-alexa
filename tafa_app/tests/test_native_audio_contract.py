@@ -41,14 +41,18 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn('prefs.getInt("native_followup_limit",-1)',service)
         self.assertIn("FollowupPolicy.effectiveLimit(",service)
         self.assertNotIn("native_followup_enabled",service)
-    def test_dashboard_microphone_is_a_real_ha_toggle(self):
+    def test_dashboard_microphone_cycles_native_three_modes(self):
         src=read("custom_components/tablet_assist_for_alexa/frontend/dashboard.js")
         self.assertIn("async toggleNativeMic(",src)
-        self.assertIn('action:"configure",device_id:selected.device_id,settings:{muted:!selected.muted}',src)
+        self.assertIn('return device?.muted?"off":device?.voice_mode==="continuous"?"continuous":"wake"',src)
+        self.assertIn('mode==="off"?"wake":mode==="wake"?"continuous":"off"',src)
+        self.assertIn('const settings={muted:next==="off",voice_mode:next==="off"?"continuous":next}',src)
+        self.assertIn('action:"configure",device_id:selected.device_id,settings',src)
         self.assertIn('control?.pending',src)
         self.assertIn("showMicChoice(devices)",src)
         self.assertIn("micDevices",src)
-        self.assertIn('quick("assist",',src)
+        self.assertIn('this.micIndicator().icon',src)
+        self.assertNotIn("getUserMedia(",src)
         self.assertNotIn('k==="assist"&&this.cfg.modules.includes("assist"))this.go("assist")',src)
     def test_no_old_audio_command_paths_on_android(self):
         audio=read("android/app/src/main/java/de/jarvis/audio/AudioService.java")
