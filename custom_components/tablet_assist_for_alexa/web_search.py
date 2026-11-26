@@ -14,27 +14,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .local_intents import SEARCH_PATTERN, FOLLOW_PATTERN, NUMBERS
+from .sources import validate_local_search_origin
 
 COMMAND = DOMAIN + "/search"
-def validate_local_search_origin(raw):
-    """Refuse arbitrary URLs, credentials, public destinations, and DNS names."""
-    if raw == "":
-        return ""
-    if not isinstance(raw, str) or len(raw) > 180:
-        raise ValueError("Invalid SearXNG address")
-    url = urlsplit(raw.strip().rstrip("/"))
-    if url.scheme != "http" or not url.hostname or not url.port or url.path or url.query or url.fragment or url.username or url.password:
-        raise ValueError("SearXNG must be a local HTTP host:port without credentials or path")
-    try:
-        ip = ipaddress.ip_address(url.hostname)
-        allowed = ip.version == 4 and ip.is_private and not ip.is_loopback and not ip.is_link_local
-    except ValueError:
-        allowed = url.hostname.endswith(".local") and re.fullmatch(r"[A-Za-z0-9.-]+", url.hostname)
-    if not allowed:
-        raise ValueError("SearXNG must be on a private LAN")
-    return raw.strip().rstrip("/")
-
-
 def public_link(url):
     try:
         value = urlsplit(str(url))
