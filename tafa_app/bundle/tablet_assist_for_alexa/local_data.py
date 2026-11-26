@@ -5,9 +5,8 @@ import re
 from homeassistant.util import dt as dt_util
 from homeassistant.auth.permissions.const import POLICY_READ, POLICY_CONTROL
 from .sources import METRICS, UNITS, WASTE_LABELS
-from .web_search import SEARCH_PATTERN, FOLLOW_PATTERN, NUMBERS, query_searxng
 from time import monotonic
-from .local_intents import classify, WASTE_KEYS, has, normalize
+from .local_intents import classify, WASTE_KEYS, has, normalize, SEARCH_PATTERN, FOLLOW_PATTERN, NUMBERS
 from .weather_data import weather, numeric, WEATHER_KEYS
 from .shopping import shopping, parse_shopping
 from .followups import Followups
@@ -96,6 +95,7 @@ class LocalData:
         # A missing server is a normal optional-feature state.
         query = SEARCH_PATTERN.match(text.strip())
         if query:
+            from .web_search import query_searxng
             result = await query_searxng(self.hass, self.cfg.get("search_base", ""), query.group(1))
             self.search_sessions[key] = {"results": result["results"], "expires": monotonic() + 720}
             return result["message"], False
