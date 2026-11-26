@@ -1,31 +1,24 @@
-# TAFA — Tests and release checklist
+# TAFA – tests and release checklist
 
-**English** | [Deutsch](../release.md) · [Project overview](../../README.md)
+[Deutsch](../release.md) · [Project](../../README.md) · [Setup](setup-guide.md)
 
-**Current state:** TAFA Home Assistant App **0.3.11** (experimental release candidate), unified HA integration **0.4.3**, Android Device Bridge **1.0.0 unchanged**. No production or hardware certification.
+**Authoritative versions:** The **TAFA App** version lives in [`tafa_app/config.yaml`](../../tafa_app/config.yaml), the **HA integration** in its [`manifest.json`](../../custom_components/tablet_assist_for_alexa/manifest.json), **Device Bridge** in [`android/VERSION`](../../android/VERSION), and the **GPU worker** in [`worker/VERSION`](../../worker/VERSION). A signed Android APK release may differ from current source.
 
-## Automated checks
+## Automated validation
 
-GitHub Actions workflows provide:
+GitHub Actions workflows check, as applicable, Python/JavaScript/Shell syntax, HA integration and Proxmox installer tests, App install/rollback behavior, GPU worker scripts, Android build and configuration contracts. Public documentation is additionally checked using **`python tests/test_docs_public.py`** (relative links, personal setup defaults, key onboarding contracts) and **`python tests/check_sources.py`**.
 
-- `python scripts/test_unified_layout.py`: one integration, app/Marketplace bundle matching, no placeholders/private network addresses, native compatibility API
-- `python -m unittest discover -s tafa_app/tests -v`: safe installation and rollback, Ingress/CSRF, Piper/Whisper HTTP API, and mocked HA config/Assist pipeline
-- `node --input-type=module --check < custom_components/tablet_assist_for_alexa/frontend/panel.js`: public UI syntax
-- `python tests/test_marketplace.py` and HACS/hassfest: integration structure and dependencies
-- `bash tests/ha_e2e/run.sh`: actual Home Assistant Core Docker startup, native relay services, multiroom, camera/motion entities, conversation, restart and persisted reminders
-- `linux/amd64` and `linux/arm64` Docker image builds in `.github/workflows/tafa-app.yml`.
+**Green CI is not a complete fresh-install test on physical hardware.** Verify the actual workflows for the release commit and rerun relevant tests whenever installation scripts change.
 
-Previous successful CI runs validate **source, image build and HA Core behavior**, not an entire fresh Home Assistant OS/Supervisor installation with real downloaded CPU models or physical tablets. Verify current HEAD checks independently after changes.
+## Manual clean-install checklist
 
-## Outstanding stable-release gates
+1. On a clean **HA OS 2026.11+** machine, back up HA and install TAFA from the App repository. Initial state must be `speech_mode=setup` with **no bundled model download until mode selection**.
+2. **Local:** start Piper/Faster-Whisper after selecting `local` and test speech. **External:** configure a Proxmox CPU server, Piper HTTP and a separate CPU Wyoming `stt.*` entity.
+3. **HA integration/pipeline:** After HA Core restart, verify the three **TAFA Lokal** routers and preservation of existing pipelines and automations.
+4. **Android:** Install the current **signed** Device Bridge, connect a non-admin room user, test wakeword/microphone and actual Bluetooth Echo media playback.
+5. **Optional GPU:** Verify Windows/Linux worker, import GPU JSON under **Connections**, add Wyoming and Ollama **in HA**, and test GPU online/offline CPU Whisper/Piper fallback. A CPU text-LLM fallback is not automatic.
+6. **Multiroom:** Pair at least two physical tablets/rooms and verify simultaneous requests and routing. Test camera/Vision only after explicit opt-in.
+7. **Optional Alexa MP3:** Verify remote HTTPS file retrieval while keeping internal generator ports closed. Ordinary Bluetooth replies must be independent of public audio hosting.
+8. **Upgrade/migration:** Distinguish App-managed integrations from Marketplace/legacy Jarvis; check backup, rollback and retained data on a separate test install.
 
-1. Full clean Home Assistant OS installation including App Store, Supervisor APIs, Ingress and automatic pipeline.
-2. Real Piper/Whisper model download, RAM/CPU use, and speech quality on amd64/aarch64.
-3. Echo Bluetooth playback and simultaneous physical Android multiroom tests.
-4. **Native wake handoff:** unchanged Device Bridge 1.0.0 sends only the matched wake phrase and releases its microphone. It does not stream the subsequent spoken question. A separate active Assist client must capture speech. Fully hands-free use with just this Bridge and the TAFA App is **not yet supported**.
-5. Legacy migration with existing `jarvis_tablet_audio` entries and room assignments must be tested on backed-up copies.
-6. Security/voice-model license reviews and final stable tag only after these checks.
-
-**Release policy:** Keep App config version, integration manifest, `VERSION`, both changelogs and DE/EN guides consistent. Exclude private dashboards, household secrets, tokens, and changes to the Android APK.
-
-[App setup](app.md) · [Marketplace](marketplace.md) · [Backend](backend-roadmap.md) · [GitHub Actions](https://github.com/michaelbudisch/tablet-assist-for-alexa/actions).
+**Release claim:** Do not label a build “fully tested” or “certified” without documented live hardware/network checks. Record any known limitations and exact tested combinations per release.

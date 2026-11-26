@@ -1,8 +1,8 @@
-# Local data sources and voice commands (0.3.1)
+# Optional local data sources and voice commands
 
 **English** | [Deutsch](../data-sources.md) · [Project overview](../../README.md)
 
-The standalone integration needs no helpers or entity names from another household. Open **Tablet Assist → Data sources** for configuration status. Administrators can follow the link to the integration and select **Options** to select or clear entities. Each source is optional. Saving reloads the integration. Household mappings are stored only in the local HA config entry; no personal mappings are included in the repository.
+TAFA does not ship household-specific entity IDs. For the **TAFA App**, configure available HA sensors under **TAFA → Settings → Data sources**; for a **Marketplace-only integration**, use **HA → Devices & services → TAFA → Options**. All sources are optional, and saving may reload the integration. Mappings remain in the local HA configuration, not in the public repository.
 
 ## Supported sources
 

@@ -1,8 +1,8 @@
-# Lokale Datenquellen und Sprachbefehle (0.3.1)
+# Optionale lokale Datenquellen und Sprachbefehle
 
 [English](en/data-sources.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-Die neue Standalone-Integration benötigt keine Helfer oder Entitäten einer fremden Hauszentrale. Unter **Tablet Assist → Datenquellen** siehst du den Konfigurationsstatus. Über den Link zur Integration → **Optionen** kann ein Administrator die eigenen Entitäten auswählen oder wieder abwählen. Alle Felder sind optional. Die Integration wird beim Speichern neu geladen. Private Daten bleiben im lokalen HA-Konfigurationseintrag; die öffentliche Version enthält keine konkrete Haushaltszuordnung.
+TAFA enthält keine fest eingetragenen Haushaltsentitäten. In der **TAFA-App → Einstellungen → Datenquellen** werden die eigenen vorhandenen Home-Assistant-Sensoren zugeordnet; bei einer **reinen Marketplace-Installation** erfolgt die Konfiguration über **HA → Geräte & Dienste → TAFA → Optionen**. Alle Datenquellen sind optional. Die Integration kann beim Speichern neu geladen werden. Die Zuordnungen bleiben lokal in HA; das Repository liefert keine privaten Entitäts-IDs mit.
 
 ## Datenquellen
 
