@@ -1,5 +1,7 @@
 # TAFA Device Bridge 1.2.1
 
+**Signierter Build:** TAFA-Device-Bridge-1.2.1.apk verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode 22. Über die vorhandene App installieren. Prüfung: 48 Unit-Tests erfolgreich, Android Lint ohne Fehler, UI-Tests kompiliert. Ein Praxistest auf Tablet/Echo steht noch aus.
+
 - **Neuer nativer Mikrofonmodus „Immer an“:** Das Tablet erkennt Sprachaktivität lokal, ganz ohne Rufwort oder zusätzlichen Browser-Whisper-Durchlauf.
 - **Vollständige Äußerung:** Die aktuelle Frage wird bis zum Sprechende ausschließlich im Arbeitsspeicher gepuffert und erst dann vollständig an die bestehende Home-Assistant-Assist-Pipeline übergeben. Es wird keine Aufnahmedatei angelegt.
 - **Drei Modi:** Stumm / Rufwort / Immer an. Umschaltung direkt in den Android-Einstellungen oder über das TAFA Control Center; die Einstellungen gelten pro Gerät. Home Assistant benötigt die Integration 0.4.26 oder neuer.

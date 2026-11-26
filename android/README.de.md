@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.2.0
+# TAFA Device Bridge · Android 1.2.1
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -22,6 +22,10 @@ Native Anbindung des Tablets an Home Assistant: Rufwort und Assist, Bluetooth-Au
 
 Die App-ID `de.jarvis.audio`, verschlüsselte Zugangsdaten, Geräteschlüssel, gespeicherte Einstellungen und die Tablet-ID bleiben bei einem korrekt signierten Update erhalten. Die App nicht deinstallieren, wenn diese Daten erhalten bleiben sollen. Der Bildschirm kann über Android nur in der Helligkeit verändert, nicht zuverlässig vollständig ein- und ausgeschaltet werden.
 
+## Mikrofonmodus in 1.2.1
+
+Unter **Einstellungen → Native Sprachunterhaltung → Natives Mikrofon: Betriebsmodus** stehen **Stumm**, **Rufwort** und **Immer an** zur Wahl. Home Assistant speichert den Modus pro Tablet; erforderlich ist die TAFA-Integration **0.4.26 oder neuer**. Im Modus Immer an kann eine lokale Geräuschaktivität ohne Rufwort eine neue Anfrage auslösen. Die aktuelle Äußerung bleibt bis zum Sprechende nur im Arbeitsspeicher und wird danach vollständig an Assist übergeben. Während Erkennung und Bluetooth-Antwort pausiert der lokale Monitor. Für ein Rufwort vor jeder neuen Anfrage den Rufwortmodus ohne Folgefragen verwenden.
+
 ## Rufwort und Folgefragen
 
 Unter **Einstellungen → Native Assist → Fragen ohne erneutes Rufwort** gilt standardmäßig **Rufwort für jede Frage**. Auch beim Update wird eine bisher unbegrenzte Unterhaltung nicht automatisch übernommen.
@@ -38,7 +42,7 @@ Die separate lokale Testvorschau wurde entfernt. Kameraaufnahmen erfolgen nur w�
 
 ## Veröffentlichung und Installation
 
-[Signierte APK 1.2.0 herunterladen](downloads/TAFA-Device-Bridge-1.2.0.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.0) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **21**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+[Signierte APK 1.2.1 herunterladen](downloads/TAFA-Device-Bridge-1.2.1.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.1) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **22**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
 
 Zum eigenen Bauen JDK 17, Android SDK Platform 35 und `build.ps1` verwenden; zum Signieren `sign-release.ps1` mit dem ursprünglichen Keystore. Private Schlüssel sind nicht im Repository enthalten. Die automatisierten Tests ersetzen keinen echten Bluetooth-/Mikrofontest.
 

@@ -1,5 +1,7 @@
 # TAFA Device Bridge 1.2.1
 
+**Signed build:** TAFA-Device-Bridge-1.2.1.apk uses the existing signing certificate, application ID de.jarvis.audio and version code 22. Install over the existing app. Validation: 48 JVM tests passed, Android lint without errors and UI-test compilation. Physical tablet/Echo testing remains outstanding.
+
 - Adds an opt-in native **Always on** speech-activity mode (no wakeword). Local microphone activity starts the existing HA Assist WebSocket, GPU Whisper, Qwen/Piper and Bluetooth output.
 - Choose **Muted**, **Wake word** or **Always on** from the app or TAFA Control Center; Home Assistant stores the mode per tablet.
 - No background recording files or stored transcripts. A single detected utterance is buffered only in volatile RAM until its end, then sent to Assist in full over the existing authenticated WebSocket. The monitor is stopped for GPU recognition and Bluetooth playback.

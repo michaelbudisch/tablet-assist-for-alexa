@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.2.1 · Three native microphone modes and complete utterance replay
+- Device-level Muted / Wake word / Always on selector in Android and TAFA Control Center; requires integration 0.4.26+.
+- Optional local sound activity detection without a wakeword. Keep the detected utterance in bounded RAM until speech ends and replay it in full to HA Assist.
+- Pause local monitoring during recognition and Bluetooth playback. No recording files or saved transcripts.
+- Version code 22; signed with the original update certificate.
+- Validation: 48 JVM tests, Android lint without errors and UI-test compilation. Physical tablet/Echo testing remains outstanding.
+
 ## 1.2.0 · Quick actions and bounded conversations
 - Status quick actions: Connect, Speak now, Start wakeword, End conversation, Start camera.
 - Require a wakeword for every question by default, including upgrades from unlimited follow-ups.
