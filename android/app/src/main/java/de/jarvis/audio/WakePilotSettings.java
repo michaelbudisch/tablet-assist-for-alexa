@@ -23,14 +23,15 @@ final class WakePilotSettings {
         final String voiceMode;
         final String word;
         final String room;
-        final int strictness,cooldownSeconds,holdSeconds,followupLimit,pauseMs,micGain,brightness;
+        final int strictness,cooldownSeconds,holdSeconds,followupLimit,pauseMs,micGain,brightness,revision;
         final boolean screenAwake,displayControl;
         Snapshot(boolean muted,String voiceMode,String word,String room,int strictness,int cooldownSeconds,int holdSeconds,int followupLimit,
-                 int pauseMs,int micGain,int brightness,boolean screenAwake,boolean displayControl){
+                 int pauseMs,int micGain,int brightness,boolean screenAwake,boolean displayControl,int revision){
             this.muted=muted;this.voiceMode=voiceMode;this.word=word;this.room=room;
             this.strictness=strictness;
             this.cooldownSeconds=cooldownSeconds;this.holdSeconds=holdSeconds;
             this.followupLimit=followupLimit;
+            this.revision=revision;
             this.pauseMs=pauseMs;this.micGain=micGain;this.brightness=brightness;
             this.screenAwake=screenAwake;this.displayControl=displayControl;
         }
@@ -105,7 +106,8 @@ final class WakePilotSettings {
             clamp(dev.optInt("mic_gain",100),50,200),
             clamp(dev.optInt("brightness",80),1,100),
             dev.optBoolean("screen_awake",true),
-            dev.optBoolean("display_control_enabled",false)
+            dev.optBoolean("display_control_enabled",false),
+            dev.optInt("revision",0)
         );
         ctx.getSharedPreferences(MainActivity.PREF,0).edit()
             .putBoolean("wake_muted",s.muted).putString("native_voice_mode",s.voiceMode)
@@ -132,6 +134,10 @@ final class WakePilotSettings {
     }
 
     static void report(Context ctx,String wakeStatus,String microphone) throws Exception{
+        report(ctx,wakeStatus,microphone,"inactive");
+    }
+    static void report(Context ctx,String wakeStatus,String microphone,
+                       String channel) throws Exception{
         JSONObject details=new JSONObject().put("wake_status",wakeStatus)
             .put("microphone",microphone).put("audio",AudioService.ui)
             .put("display",ctx.getSharedPreferences(MainActivity.PREF,0)
@@ -141,6 +147,7 @@ final class WakePilotSettings {
         if(am!=null)for(AudioDeviceInfo device:am.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
             if(device.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)bluetooth=true;
         details.put("bluetooth",bluetooth?"connected":"disconnected");
+        details.put("control_channel",channel);
         BatteryManager battery=(BatteryManager)ctx.getSystemService(Context.BATTERY_SERVICE);
         if(battery!=null){
             int percent=battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -152,19 +159,35 @@ final class WakePilotSettings {
     }
 
     static final class MicState {
-        final boolean muted; final String voiceMode;
-        MicState(boolean muted,String voiceMode){this.muted=muted;this.voiceMode=voiceMode;}
+        final boolean muted;
+        final String voiceMode;
+        final int revision,followupLimit;
+        MicState(boolean muted,String voiceMode,int revision,int followupLimit){
+            this.muted=muted;this.voiceMode=voiceMode;
+            this.revision=revision;this.followupLimit=followupLimit;
+        }
     }
     static MicState readMic(Context ctx) throws Exception {
         JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
-        MicState state=new MicState(dev.getBoolean("muted"),modeFor(dev.optString("voice_mode","wake")));
+        MicState state=new MicState(dev.getBoolean("muted"),
+            modeFor(dev.optString("voice_mode","wake")),
+            dev.optInt("revision",0),clamp(dev.optInt("followup_limit",-1),-1,100));
         SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
         if(prefs.getBoolean("wake_muted",true)!=state.muted ||
            !state.voiceMode.equals(prefs.getString("native_voice_mode","wake")))
             prefs.edit().putBoolean("wake_muted",state.muted)
                 .putString("native_voice_mode",state.voiceMode).apply();
+        if(prefs.getInt("native_followup_limit",-1)!=state.followupLimit)
+            prefs.edit().putInt("native_followup_limit",state.followupLimit).apply();
         return state;
     }
+    /** Reports an applied, revisioned remote command; HA measures round-trip latency. */
+    static boolean acknowledge(Context ctx,int revision,String channel) throws Exception{
+        JSONObject result=request(ctx,body(ctx,"ack")
+            .put("revision",revision).put("channel",channel));
+        return result.optBoolean("accepted",false);
+    }
+
     /** The three choices are committed atomically on the authenticated HA API. */
     static void writeMode(Context ctx,String selection) throws Exception {
         if(!selection.equals("mute")&&!selection.equals("wake")&&!selection.equals("continuous"))

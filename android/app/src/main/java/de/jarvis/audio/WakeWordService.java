@@ -52,6 +52,8 @@ public final class WakeWordService extends Service implements RecognitionListene
     private ScheduledExecutorService settingsExecutor;
     private NativeSettingsSocket settingsSocket;
     private volatile long lastFullSync=0;
+    private volatile int lastAckRevision=-1;
+    private volatile String lastAckChannel="";
     private volatile boolean registered=false;
     private Model model;
     private Recognizer recognizer;
@@ -154,6 +156,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 final boolean nextMuted=update.optBoolean("muted",true);
                 final String nextMode=update.optString("voice_mode","wake");
                 final int nextFollowups=update.optInt("followup_limit",-1);
+                final int revision=update.optInt("revision",0);
                 final String nextWord=WakePilotSettings.choiceFor(
                     update.optString("word","Hey Jarvis"));
                 final int nextStrict=WakePilotSettings.clamp(update.optInt("strict",1),1,3);
@@ -180,6 +183,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                         .putBoolean("wake_muted",nextMuted)
                         .putString("native_voice_mode",nextMode).apply();
                     setVoiceSettings(nextMuted,nextMode);
+                    acknowledgeSettings(revision,"websocket");
                     if(newWord&&!muted&&"wake".equals(voiceMode)&&nativeSession==null){
                         releaseRecognizer();
                         startRecognition();
@@ -190,7 +194,8 @@ public final class WakeWordService extends Service implements RecognitionListene
                     if(worker!=null&&!worker.isShutdown())worker.execute(()->{
                         try{WakePilotSettings.report(WakeWordService.this,status,
                             muted?"muted":nativeSession!=null?"assist":
-                            continuousRunning?"continuous":speech!=null?"wakeword":"idle");}
+                            continuousRunning?"continuous":speech!=null?"wakeword":"idle",
+                            controlChannel());}
                         catch(Exception problem){Log.w(TAG,"Settings ack unavailable");}
                     });
                 });
@@ -213,7 +218,8 @@ public final class WakeWordService extends Service implements RecognitionListene
                     WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
                     lastFullSync=SystemClock.elapsedRealtime();
                     try{WakePilotSettings.report(this,status,muted?"muted":
-                        nativeSession!=null?"assist":continuousRunning?"continuous":speech!=null?"wakeword":"idle");}
+                        nativeSession!=null?"assist":continuousRunning?"continuous":speech!=null?"wakeword":"idle",
+                        controlChannel());}
                     catch(Exception e){Log.w(TAG,"Noncritical telemetry failed",e);}
                     main.post(()->{
                         if(!enabled)return;
@@ -222,10 +228,15 @@ public final class WakeWordService extends Service implements RecognitionListene
                         cooldownSeconds=settings.cooldownSeconds;
                         holdSeconds=settings.holdSeconds;
                         setVoiceSettings(settings.muted,settings.voiceMode);
+                        acknowledgeSettings(settings.revision,controlChannel());
                     });
                 }else{
                     WakePilotSettings.MicState remote=WakePilotSettings.readMic(this);
-                    main.post(()->{if(enabled)setVoiceSettings(remote.muted,remote.voiceMode);});
+                    main.post(()->{
+                        if(!enabled)return;
+                        setVoiceSettings(remote.muted,remote.voiceMode);
+                        acknowledgeSettings(remote.revision,"poll");
+                    });
                 }
             }catch(Exception e){
                 // Fail closed: if HA is unreachable, the remote mute switch cannot
@@ -237,6 +248,27 @@ public final class WakeWordService extends Service implements RecognitionListene
                 });
             }
         },0,SYNC_INTERVAL_MS,TimeUnit.MILLISECONDS);
+    }
+
+    private String controlChannel(){
+        return settingsSocket!=null&&settingsSocket.isSubscribed()?"websocket":"poll";
+    }
+
+    /** Send ACK only after the main-thread control state has been applied. */
+    private void acknowledgeSettings(int revision,String channel){
+        if(revision<0||!enabled)return;
+        if(revision==lastAckRevision&&channel.equals(lastAckChannel))return;
+        ScheduledExecutorService worker=settingsExecutor;
+        if(worker==null||worker.isShutdown())return;
+        worker.execute(()->{
+            if(!enabled)return;
+            try{
+                if(WakePilotSettings.acknowledge(this,revision,channel)){
+                    lastAckRevision=revision;
+                    lastAckChannel=channel;
+                }
+            }catch(Exception e){Log.w(TAG,"Control ACK deferred to next sync");}
+        });
     }
 
     private void setVoiceSettings(boolean shouldMute,String nextMode){

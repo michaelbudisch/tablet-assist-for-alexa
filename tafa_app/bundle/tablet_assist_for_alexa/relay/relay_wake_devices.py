@@ -88,6 +88,7 @@ class WakeDevices:
         seen = observed.get("seen", 0)
         return {**DEFAULTS,
                 **{k: v for k, v in device.items() if k != "user_id"},
+                "revision": self.revisions.get(identifier, 0),
                 "online": bool(seen and time.time() - seen < 45),
                 "last_seen": int(seen) if seen else None,
                 "telemetry": {k: v for k, v in observed.items() if k != "seen"},
@@ -218,7 +219,7 @@ class WakeDevices:
                 return {"accepted": True}
             if action == "report":
                 report = payload.get("telemetry")
-                if not isinstance(report, dict) or len(report) > 7 or any(
+                if not isinstance(report, dict) or len(report) > 8 or any(
                         k not in TELEMETRY for k in report):
                     raise ValueError("Invalid telemetry")
                 sanitized = {}
