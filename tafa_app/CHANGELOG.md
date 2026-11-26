@@ -1,5 +1,15 @@
 # TAFA App changelog
 
+## 0.4.32 — Gemeinsame TAFA-Dashboards
+
+- Native Assist-Antworten werden als kurzlebige Ereignisse an das Dashboard übergeben.
+- Gemeinsame Infoboxen: Live-Hausdaten, Wissensantworten, optionale Wikipedia-Bilder und optionale Internetsuche über einen privaten SearXNG-Server.
+- Anzeige- und Navigationsoptionen werden zentral und geräteübergreifend in Home Assistant gespeichert.
+- TAFA Control Center erhält optionale Familiennamen und SearXNG-Einstellungen.
+- Datenquellen sind optional und können nach der Installation jederzeit ergänzt werden; nicht vorhandene Sensoren blockieren die Einrichtung nicht.
+- Bestehende private Automationen und Gerätezuordnungen werden bei der Aktualisierung nicht verändert.
+
+
 ## 0.3.52 — explicit vision preference migration before legacy removal
 
 - Administrator one-shot `migrate_legacy_vision` copies valid saved Qwen-Vision model, keep-alive and context values from the old Jarvis Tablet Audio config entry to TAFA once, without overwriting newer TAFA settings.
