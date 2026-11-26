@@ -119,7 +119,7 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('document.createElement("tafa-integrated-dashboard")',panel)
         self.assertIn('document.createElement("tablet-assist-voice-tools")',panel)
         self.assertIn('type:"tablet_assist_for_alexa/dashboard/set"',panel)
-        self.assertIn("dashboard.js?v=0.4.20",panel)
+        self.assertIn("dashboard.js?v=0.4.31-native-mic",panel)
         dashboard=(HA/"frontend/dashboard.js").read_text()
         self.assertIn("./dashboard_model.js?v=0.4.20",dashboard)
         self.assertIn("tafa-open-voice-tools",dashboard)
@@ -152,6 +152,16 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('customElements.define("tafa-integrated-dashboard"',dashboard)
         self.assertNotIn('customElements.define("tafa-home-dashboard"',dashboard)
         self.assertIn('tafa-integrated-dashboard-editor',panel)
+
+    def test_dashboard_microphone_is_native_websocket_backed(self):
+        dashboard=(HA/"frontend/dashboard.js").read_text()
+        self.assertIn('action:"configure",device_id:selected.device_id,settings:{muted:!selected.muted}',dashboard)
+        self.assertIn('control?.pending',dashboard)
+        self.assertIn('this.showMicChoice(devices)',dashboard)
+        self.assertIn('this.micIndicator().icon',dashboard)
+        self.assertIn('void this.refreshMic(true)',dashboard)
+        self.assertNotIn('getUserMedia(',dashboard)
+        self.assertNotIn('jarvis_tablet_audio/wake_devices',dashboard)
 
     def test_version_and_docs_consistent(self):
         self.assertIn('version: "0.3.52"',(APP/"config.yaml").read_text())
