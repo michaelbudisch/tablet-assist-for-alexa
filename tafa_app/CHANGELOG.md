@@ -1,5 +1,15 @@
 # TAFA App changelog
 
+## 0.4.36 — Funktionskatalog ohne JSON
+
+- Neuer Reiter **Funktionen & Datenquellen** mit Such- und Auswahlfeldern für vorhandene HA-Entitäten samt Werte- und Einheitenanzeige.
+- Optionale Funktionen lassen sich nachträglich hinzufügen, auch wenn notwendige Integrationen oder Sensoren bei der Installation noch fehlen.
+- Eine Datenquelle dient sowohl als TAFA-Sprachquelle als auch als Fallback für das integrierte Dashboard; persönliche Kachelbindungen haben Vorrang.
+- Alexa-Announce-Räume inklusive eigener Namen sind nun ohne JSON einzurichten. Native TAFA-Multiroom-Geräte bleiben davon getrennt.
+- Bestehende Module, Sensorbindungen, Reihenfolge und Anzeigeeinstellungen werden beim Laden alter Dashboard-Konfigurationen individuell übernommen.
+- Vor dem Überschreiben einer gespeicherten Dashboard-Konfiguration wird die vorherige Version in einem eigenen HA Store gesichert.
+- Interne JSON-Felder bleiben erhalten, sind aber aus den regulären KI-Einstellungen ausgeblendet; bestehende Automationen und private Lovelace-Dashboards werden nicht verändert.
+
 ## 0.4.35 — Heizölbestandsabfragen und Legacy-Übergang
 
 - Sobald `heizoel` in TAFA konfiguriert ist, werden reine Heizölbestandsfragen zuerst durch den sicheren TAFA-Datenleser beantwortet.
