@@ -4,6 +4,7 @@ We extract pure validation functions from the integration source and mock the
 entity registry. This guards migrations and prevents unsafe destination values.
 """
 import ast
+import ipaddress
 import json
 import re
 import unittest
@@ -29,11 +30,12 @@ def pure_source(path, funcs=(), variables=()):
 
 def load_validators():
     namespace = {"ast": ast, "json": json, "re": re, "urlsplit": urlsplit,
+                 "ipaddress": ipaddress,
                  "DOMAIN": "tablet_assist_for_alexa",
                  "ROOMS": ("Büro", "Wohnzimmer", "Badezimmer", "Schlafzimmer", "Kinderzimmer")}
     combined = [
         *pure_source(HA / "config_flow.py", ("origin", "room_map"), ("CHOICES",)),
-        *pure_source(HA / "sources.py", variables=("SOURCES",)),
+        *pure_source(HA / "sources.py", funcs=("validate_local_search_origin",), variables=("SOURCES",)),
         *pure_source(HA / "app_settings.py",
                      ("parse_settings", "_unique_wyoming_stt", "merge_settings")),
     ]
