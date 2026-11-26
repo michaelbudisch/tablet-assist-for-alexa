@@ -51,7 +51,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.41"
+APP_VERSION="0.3.42"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -540,7 +540,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type","text/html; charset=utf-8")
         self.send_header("Cache-Control","no-store")
         self.send_header("X-Content-Type-Options","nosniff")
-        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
+        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
         self.send_header("Content-Length",str(len(content)))
         self.end_headers()
         self.wfile.write(content)

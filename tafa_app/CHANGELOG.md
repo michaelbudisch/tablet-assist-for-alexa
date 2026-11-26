@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.42 — Fix browser-side live connection diagnostics
+- Allow same-origin AJAX requests in the Control Center page CSP (`connect-src 'self'`). Version 0.3.41 accidentally inherited `default-src 'none'`, which blocked every new live probe and showed “Prüfung nicht möglich” even when the target service was healthy.
+- Keep network requests limited to the TAFA Ingress origin: no wildcards, no permissions to connect directly from the browser to remote IPs, and no loosened restrictions for scripts, frames or forms.
+- The server-side address constraints and read-only live checks remain unchanged; HA backend integration stays at 0.4.25. No Android app or HA automations need changes.
+
+
 ## 0.3.41 — Device management and simplified connections
 - Control Center navigation is **Overview → Connections → Settings → Devices & Multiroom → Maintenance**. All IP/domain fields are editable in Connections and absent from Settings, which contains only speech/AI behavior and profiles.
 - Live, debounced field checks: private Piper/Qwen/MP3 HTTP /health, GPU Whisper TCP port 10300, and Alexa public HTTPS DNS/certificate verification (not a guaranteed external Alexa download). Checks are read-only, destination restricted, and never submit credentials or media.
