@@ -71,8 +71,18 @@ class TabletAssistPanel extends HTMLElement {
     // Dedicated dashboard picks have priority; the HA source list fills only
     // empty roles and never persists over a user's custom card bindings.
     for(const [role,ids] of Object.entries(this._linkedBindings||{})){
-      if((!Array.isArray(bindings[role])||!bindings[role].length)&&Array.isArray(ids)&&ids.length)
-        bindings[role]=ids;
+      const current=Array.isArray(bindings[role])?bindings[role]:[];
+      const useful=current.some(id=>{
+        const state=this._hass?.states?.[id]?.state;
+        return state!=null&&!["unknown","unavailable",""].includes(String(state));
+      });
+      // A stale old entity mapping is preserved in the editor, but the
+      // visual runtime can read the linked TAFA source instead.
+      const fallback=Array.isArray(ids)?ids.filter(id=>{
+        const state=this._hass?.states?.[id]?.state;
+        return state!=null&&!["unknown","unavailable",""].includes(String(state));
+      }):[];
+      if(!useful&&fallback.length)bindings[role]=fallback;
     }
     return {...raw,bindings};
   }
