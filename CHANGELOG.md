@@ -1,3 +1,6 @@
+## TAFA App 0.3.31 / integration 0.4.16 — isolated dashboard custom elements
+- Namespace the built-in TAFA panel card and editor separately from an existing TAFA Home Lovelace preview. Preserve both UIs, avoid global custom card registration collision, and update frontend cache version.
+
 ## TAFA App 0.3.30 / integration 0.4.15 — dashboard-first setup
 - Explicit dashboard-only setup of the HA integration before a speech server is ready. Keep the normal Piper health requirement for voice-enabled setup and preserve all automations.
 

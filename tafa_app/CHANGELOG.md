@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.31 — no collision with local TAFA Home Lovelace preview
+- The bundled panel uses its own component names `tafa-integrated-dashboard` / `tafa-integrated-dashboard-editor` to prevent interference with older `tafa-home-dashboard` resources already loaded by users.
+- Keep the original Lovelace preview available, and do not register a redundant Lovelace custom card globally. Integration 0.4.16 version-busts the bundled frontend assets.
+- No automations, private Lovelace settings or Jarvis pipelines are modified by the public release.
+
+
 ## 0.3.30 — Dashboard-only initial HA configuration
 - New HA integration 0.4.15 allows an explicit dashboard-only first setup without a reachable Piper /health endpoint. Normal voice setup continues to require a healthy Piper service.
 - TAFA Dashboard and its admin-controlled HA storage mappings can now be initialized while the separate Proxmox/CPU speech server is configured later.

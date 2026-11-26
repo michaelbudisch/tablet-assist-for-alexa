@@ -118,6 +118,9 @@ class DashboardDelivery(unittest.TestCase):
         dashboard=(HA/"frontend/dashboard.js").read_text()
         self.assertIn("./dashboard_model.js?v=0.4.15",dashboard)
         self.assertIn("tafa-open-voice-tools",dashboard)
+        self.assertIn('customElements.define("tafa-integrated-dashboard"',dashboard)
+        self.assertNotIn('customElements.define("tafa-home-dashboard"',dashboard)
+        self.assertIn('tafa-integrated-dashboard-editor',panel)
 
     def test_version_and_docs_consistent(self):
         self.assertIn('version: "0.3.30"',(APP/"config.yaml").read_text())

@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA-App 0.3.31 / Integration 0.4.16 — keine Kollision mit TAFA-Home-Vorschau
+- Das integrierte Dashboard und sein Editor erhalten eigene Web-Komponentennamen. So funktionieren bereits installierte Lovelace-Vorschau und neues TAFA-Panel gleichzeitig, ohne sich gegenseitig zu überschreiben.
+- Keine Änderungen an Automatisierungen, privaten Lovelace-Einstellungen oder Jarvis-Pipelines.
+
+
 ## TAFA App 0.3.30 / Integration 0.4.15 — Dashboard ohne Piper installieren
 - Die HA-Ersteinrichtung kann jetzt mit der ausdrücklich ausgewählten Option dashboard_only abgeschlossen werden, auch wenn Piper aktuell nicht erreichbar ist. Die normale Spracheinrichtung benötigt weiterhin einen bereiten Piper-Dienst.
 - TAFA Dashboard kann sofort mit zentralen Gerätezuordnungen eingerichtet werden. Bestehende Automatisierungen bleiben unverändert.

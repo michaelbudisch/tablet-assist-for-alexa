@@ -103,3 +103,5 @@ Die bisherige TAFA Sprachzentrale wird durch **TAFA Dashboard** als Startpanel d
 Das öffentliche Dashboard nutzt bewusst keine privaten Sensor-IDs oder altspezifischen Jarvis-Skripte. Auf einem neuen HA können die Module ohne vorkonfigurierte Geräte zunächst leer erscheinen; Gerätedaten werden erst nach der Auswahl angezeigt. Die separate eigene Kiosk-Karte bleibt auf der bestehenden Installation erhalten.
 
 **TAFA 0.3.30 / Integration 0.4.15:** Wenn der externe Piper-Sprachserver während der Erstinstallation noch nicht erreichbar ist, kann in der TAFA-HA-Integration ausdrücklich `dashboard_only` gewählt werden. Die Oberfläche einschließlich zentraler Gerätezuordnungen läuft dann bereits; die Spracherkennung und -ausgabe werden später über den Proxmox- bzw. GPU-JSON-Import angeschlossen. Der gewöhnliche Sprachmodus verlangt weiterhin den Piper-Gesundheitstest.
+
+**TAFA 0.3.31 / Integration 0.4.16:** Das integrierte Dashboard und der Editor verwenden eigene Komponentennamen. Deine bereits installierte Lovelace-Vorschau `tafa-home-dashboard` und das neue TAFA Dashboard können damit gleichzeitig geöffnet werden, ohne sich im Browser gegenseitig zu ersetzen.

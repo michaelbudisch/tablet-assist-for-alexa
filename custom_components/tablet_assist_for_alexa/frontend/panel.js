@@ -1,6 +1,6 @@
 /* TAFA Dashboard: built-in, cross-device, admin-configurable Home Assistant panel. */
-import "./dashboard.js?v=0.4.15";
-import "./voice_tools.js?v=0.4.15";
+import "./dashboard.js?v=0.4.16";
+import "./voice_tools.js?v=0.4.16";
 const DEFAULT={type:"custom:tafa-home-dashboard",version:1,title:"TAFA Dashboard",
   language:"auto",theme:"dark",accent:"teal",density:"comfortable",gridSign:"import",
   modules:["weather","lights","energy","ev","heating","heatpump","fuel",
@@ -91,7 +91,7 @@ class TabletAssistPanel extends HTMLElement {
     const bar=document.createElement("div");bar.className="toolbar";
     const brand=document.createElement("div");brand.className="brand";
     const img=document.createElement("img");img.alt="";
-    img.src="/tablet_assist_for_alexa/brand.svg?v=0.4.15";
+    img.src="/tablet_assist_for_alexa/brand.svg?v=0.4.16";
     const name=document.createElement("span");name.textContent="TAFA Dashboard";
     brand.append(img,name);bar.append(brand);
     const controls=document.createElement("div");controls.className="controls";
@@ -115,7 +115,7 @@ class TabletAssistPanel extends HTMLElement {
     }
     if(this._editing){
       const wrapper=document.createElement("div");wrapper.className="editor";
-      const editor=document.createElement("tafa-home-dashboard-editor");
+      const editor=document.createElement("tafa-integrated-dashboard-editor");
       editor.setConfig(this._config);editor.hass=this._hass;
       editor.addEventListener("config-changed",event=>{
         this._config=event.detail.config;this._dirty=true;
@@ -124,7 +124,7 @@ class TabletAssistPanel extends HTMLElement {
       });
       wrapper.append(editor);host.append(wrapper);this._editor=editor;return;
     }
-    const d=document.createElement("tafa-home-dashboard");
+    const d=document.createElement("tafa-integrated-dashboard");
     d.setConfig(this._config);d.hass=this._hass;
     d.addEventListener("tafa-open-voice-tools",()=>{this._mode="voice";this._render();});
     host.append(d);this._home=d;
