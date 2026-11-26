@@ -224,15 +224,22 @@ def save_settings_form(token, fields, available):
     return changes
 
 
-def save_app_changes(token,changes):
+def save_app_changes(token,changes,*,import_kind=None):
     """Persist validated import changes to the one Supervisor App option store."""
     if not token:
         raise RuntimeError("Supervisor authentication unavailable")
     if not isinstance(changes,dict):
         raise ValueError("Invalid import options")
     current=load_options()
+    if import_kind is not None:
+        # The Supervisor store may have changed since the JSON preview or
+        # provisioning step. Reconcile again against its ACTUAL last-read
+        # values, not a previous snapshot. Only a user-confirmed worker/CT
+        # import may clear an opposite-role duplicate; manual settings retain
+        # the stricter duplicate validation.
+        from import_manifest import reconcile_imported_stt
+        changes=reconcile_imported_stt(current,changes,import_kind)
     proposed={**current,**changes}
-    # All values are checked against the same contract used by manual settings.
     setup_settings_values(proposed)
     data=json.dumps({"options":proposed},ensure_ascii=False).encode("utf-8")
     req=urllib.request.Request(

@@ -1,3 +1,6 @@
+## TAFA App 0.3.28 — reconcile CPU/GPU Wyoming at final import save
+- Fix stale CPU/GPU STT duplicates after confirmed JSON import by comparing against freshly loaded Supervisor options in the last write operation. Show prospective cleanup and preserve genuinely separate providers. Manual settings remain strict.
+
 ## TAFA App 0.3.27 / HA integration 0.4.13 — distinct CPU/GPU Wyoming
 - Confirmed JSON imports reconcile a conflicting old opposite role without touching distinct STT providers. Future HA provider discovery uses the same rules. Integration 0.4.13 will not mis-assign the configured GPU provider as CPU merely because it is the only Wyoming endpoint.
 

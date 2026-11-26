@@ -129,6 +129,15 @@ class ImportTests(unittest.TestCase):
             self.assertIsNone(record["manifest"])
             self.assertEqual(record["entries"]["wyoming_stt"],"ready_entry")
 
+    def test_preview_shows_cleanup_for_already_duplicated_options(self):
+        duplicate={"cpu_stt":"stt.whisper","gpu_stt":"stt.whisper"}
+        with patch.object(imp,"load_records",return_value={}):
+            ticket,manifest,changes,previous=imp.preview(
+                json.dumps(gpu()),duplicate)
+        self.assertEqual(changes.get("cpu_stt"),"")
+        self.assertEqual(imp.consume(ticket)["device_id"],ID)
+        self.assertIsNone(previous)
+
     def test_preview_needs_confirmation_and_expires(self):
         with patch.object(imp,"RECORD",Path("/this/never-exists")):
             ticket,manifest,changes,prior=imp.preview(json.dumps(gpu()),{})

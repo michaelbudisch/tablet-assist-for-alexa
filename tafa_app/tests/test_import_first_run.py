@@ -83,7 +83,7 @@ class SetupAndBrandTests(unittest.TestCase):
              patch.object(server,"TOKEN","private-test-token"):
             server._complete_imports()
         self.assertEqual(resolve.call_count,1)
-        save.assert_called_once_with("private-test-token",{"gpu_stt":"stt.gpu_1"})
+        save.assert_called_once_with("private-test-token",{"gpu_stt":"stt.gpu_1"},import_kind="gpu_worker")
         sync.assert_called_once()
 
     def test_delayed_gpu_registration_clears_cpu_alias_for_same_entity(self):
@@ -105,7 +105,7 @@ class SetupAndBrandTests(unittest.TestCase):
              patch.object(server,"TOKEN","test-internal-token"):
             server._complete_imports()
         save.assert_called_once_with(
-            "test-internal-token",{"gpu_stt":"stt.gpu_whisper","cpu_stt":""})
+            "test-internal-token",{"gpu_stt":"stt.gpu_whisper","cpu_stt":""},import_kind="gpu_worker")
 
     def test_delayed_resolution_repairs_existing_saved_duplicate(self):
         with patch.object(server,"_tracked_profiles",return_value={
@@ -125,7 +125,7 @@ class SetupAndBrandTests(unittest.TestCase):
              patch.object(server,"sync_app_configuration"), \
              patch.object(server,"TOKEN","test-internal-token"):
             server._complete_imports()
-        save.assert_called_once_with("test-internal-token",{"cpu_stt":""})
+        save.assert_called_once_with("test-internal-token",{"cpu_stt":""},import_kind="gpu_worker")
 
     def test_import_will_validate_repaired_proposed_options(self):
         source=(APP/"server.py").read_text(encoding="utf-8")

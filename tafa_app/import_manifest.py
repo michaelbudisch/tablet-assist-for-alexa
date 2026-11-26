@@ -198,7 +198,8 @@ def preview(manifest_text, options):
                 del PENDING[key]
         ticket=secrets.token_urlsafe(24)
         PENDING[ticket]={"manifest":manifest,"created":now}
-    changes=proposed_options(manifest,options)
+    changes=reconcile_imported_stt(
+        options,proposed_options(manifest,options),manifest["kind"])
     previous=load_records().get(manifest["device_id"])
     return ticket,manifest,changes,previous
 
@@ -245,6 +246,7 @@ def render_panel(lang,csrf,notice="",review=None):
 <p>{t("Geplante Home-Assistant-Aktionen","Planned Home Assistant actions")}:</p><ul>{action_items}</ul>
 <p>{t("TAFA-Optionen werden angepasst","TAFA options to update")}:</p><ul>{changes_html}</ul>
 <p class="subtle">{t("Wyoming und Ollama werden erst nach deiner Bestätigung eingerichtet. Bestehende, nicht zugeordnete Integrationen bleiben unverändert.","Wyoming and Ollama are provisioned only after confirmation. Unrelated existing integrations remain unchanged.")}</p>
+<p class="subtle">{t("Wenn CPU und GPU dieselbe Wyoming-STT-Entität verwenden, wird beim bestätigten Import die alte Gegenzuordnung entfernt. Andere, unterschiedliche Entitäten bleiben erhalten.","If CPU and GPU point to the same Wyoming STT entity, an approved import removes only the stale opposite-role assignment. Different entities stay unchanged.")}</p>
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
 <input type="hidden" name="lang" value="{esc(lang)}">

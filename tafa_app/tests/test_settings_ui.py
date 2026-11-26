@@ -1,11 +1,12 @@
 """One store, validation, escaping and preservation for the TAFA Control Center."""
 import sys
+import json
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from settings_ui import FORM_FIELDS, BOOL_FIELDS, render_settings_form, validate_settings_form
+from settings_ui import FORM_FIELDS, BOOL_FIELDS, render_settings_form, validate_settings_form, save_app_changes
 from speech_source import setup_settings_values
 
 
@@ -39,6 +40,52 @@ class SettingsUI(unittest.TestCase):
             validate_settings_form(self.form(rooms_json="{broken"),{},[])
         with self.assertRaises(ValueError):
             validate_settings_form({"csrf":["token"]},{},[])
+
+    def test_import_save_repairs_latest_supervisor_stt_collision(self):
+        # Regression: preview used older settings; a concurrent update (or
+        # a pre-existing previous import) leaves equal CPU/GPU IDs in the
+        # Supervisor file just before save_app_changes re-reads the store.
+        latest={"cpu_stt":"stt.worker_gpu","gpu_stt":"stt.worker_gpu",
+                "hardware_profile":"automatic","custom_setting":"keep"}
+        requested={"gpu_base":"http://10.2.3.4:10502"}
+        response=MagicMock()
+        response.status=200
+        response.read.return_value=b'{"result":"ok"}'
+        response.__enter__.return_value=response
+        with patch("settings_ui.load_options",return_value=latest), \
+             patch("settings_ui.urllib.request.urlopen",return_value=response) as urlopen:
+            changed=save_app_changes("internal-test-token",requested,
+                                     import_kind="gpu_worker")
+        self.assertEqual(changed["cpu_stt"],"")
+        data=json.loads(urlopen.call_args.args[0].data)
+        stored=data["options"]
+        self.assertEqual(stored["cpu_stt"],"")
+        self.assertEqual(stored["gpu_stt"],"stt.worker_gpu")
+        self.assertEqual(stored["gpu_base"],"http://10.2.3.4:10502")
+        self.assertEqual(stored["custom_setting"],"keep")
+        self.assertEqual(latest["cpu_stt"],"stt.worker_gpu")
+
+    def test_import_save_keeps_distinct_cpu_provider(self):
+        latest={"cpu_stt":"stt.real_cpu","gpu_stt":"stt.worker_gpu"}
+        response=MagicMock(status=200)
+        response.status=200
+        response.read.return_value=b'{"result":"ok"}'
+        response.__enter__.return_value=response
+        with patch("settings_ui.load_options",return_value=latest), \
+             patch("settings_ui.urllib.request.urlopen",return_value=response) as urlopen:
+            save_app_changes("internal-test-token",
+                             {"gpu_stt":"stt.worker_new"},import_kind="gpu_worker")
+        opts=json.loads(urlopen.call_args.args[0].data)["options"]
+        self.assertEqual(opts["cpu_stt"],"stt.real_cpu")
+        self.assertEqual(opts["gpu_stt"],"stt.worker_new")
+
+    def test_manual_save_still_rejects_duplicate_roles(self):
+        with patch("settings_ui.load_options",
+                   return_value={"cpu_stt":"stt.same","gpu_stt":"stt.same"}), \
+             patch("settings_ui.urllib.request.urlopen") as request:
+            with self.assertRaisesRegex(ValueError,"CPU and GPU Wyoming"):
+                save_app_changes("internal-test-token",{},import_kind=None)
+            request.assert_not_called()
 
     def test_single_page_bilingual_safe_escaping(self):
         options = {"cpu_stt":"stt.cpu","gpu_stt":"", "llm_agent":"conversation.ollama",

@@ -49,7 +49,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.27"
+APP_VERSION="0.3.28"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -275,7 +275,7 @@ def _complete_imports():
                 if changes:
                     current=load_options()
                     changes=reconcile_imported_stt(current,changes,manifest["kind"])
-                    save_app_changes(TOKEN,changes)
+                    save_app_changes(TOKEN,changes,import_kind=manifest["kind"])
                 save_record(manifest,assigned)
             except (OSError,RuntimeError,ValueError,TimeoutError) as exc:
                 still_pending=True
@@ -307,7 +307,7 @@ def _complete_imports():
                                 ("cpu_stt" not in changes and "gpu_worker" in mappings)
                                 else "speech_server")
                 changes=reconcile_imported_stt(current,changes,preferred_kind)
-                save_app_changes(TOKEN,changes)
+                save_app_changes(TOKEN,changes,import_kind=preferred_kind)
                 mode,base=choose_speech_source()
                 if mode!="setup":
                     service=_internal_address() if mode=="local" else base
@@ -633,7 +633,7 @@ class Handler(BaseHTTPRequestHandler):
                     changes["llm_agent"]=entities["llm_agent"]
                 changes=reconcile_imported_stt(current,changes,manifest["kind"])
                 if changes:
-                    save_app_changes(TOKEN,changes)
+                    save_app_changes(TOKEN,changes,import_kind=manifest["kind"])
                 save_record(manifest,entries,pending=pending)
                 activate_configured_services()
                 notes=results.get("messages",[])

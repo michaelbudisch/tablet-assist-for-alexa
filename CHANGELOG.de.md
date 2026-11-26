@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA-App 0.3.28 — Wyoming-Konflikt beim Speichern bereinigen
+- Bereinigung der CPU-/GPU-Doppelzuordnung jetzt auch nach dem erneuten Lesen der neuesten Supervisor-Einstellungen unmittelbar vor dem Speichern eines bestätigten JSON-Imports.
+- Importvorschau zeigt eine bereits bekannte Bereinigung. Unterschiedliche STT-Entitäten werden nicht verändert.
+
+
 ## TAFA-App 0.3.27 / HA-Integration 0.4.13 — CPU/GPU-Wyoming getrennt
 - Wenn ein bestätigter GPU-/Proxmox-JSON-Import dieselbe STT-Entität in beiden Rollen vorfindet, wird nur die alte Gegenzuordnung gelöscht. Unterschiedliche CPU- und GPU-Anbieter bleiben unverändert.
 - Der Import validiert die korrigierte Zielkonfiguration, nicht die bereits fehlerhafte alte. Auch die spätere Registrierung neuer Entitäten wird abgefangen.

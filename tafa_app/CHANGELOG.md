@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.28 — reconcile Wyoming roles at final Supervisor write
+- Fix duplicate CPU/GPU Wyoming STT validation that could still fail after a confirmed JSON import: the Supervisor App options are re-read inside the last write function, so role reconciliation must also happen there, on the freshest values.
+- Preserve the imported GPU/Proxmox role; remove only its exact duplicate in the opposite role. Unrelated and genuinely separate CPU/GPU STT entities remain unchanged; manual settings still reject duplicate assignments.
+- Show pre-existing role cleanup in the import confirmation preview, add actionable guidance, and test configurations that change between preview and persistence.
+
+
 ## 0.3.27 — automatically resolve conflicting CPU/GPU Wyoming mappings
 - JSON import assigns the verified Wyoming STT entity to the role of the imported worker (GPU) or speech CT (CPU). If an old opposite-role field points to that exact same entity, TAFA clears only that stale field; distinct providers remain intact.
 - Validate the repaired proposed options before HA configuration, even if the current saved options have a conflicting CPU/GPU STT pair. This also applies to deferred HA entity resolution and import resume after HA Core restarts.
