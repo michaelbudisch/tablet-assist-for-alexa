@@ -1,5 +1,6 @@
 // TAFA Home Dashboard — preview 0.2.0 (MIT)
 import {model} from './dashboard_model.js?v=0.4.20';
+import {installTafaResponseOverlay} from './response_overlay.js?v=0.4.32';
 function makeDashboard(model){
 const {modules,roles,byId,byRole,normalize,escape:E,label,name,language,sum,value,area,candidates,eligible}=model;
 const words={en:{home:"Home",settings:"Settings",setup:"Configure modules and sources in the Lovelace card editor.",empty:"No configured modules yet.",missing:"Missing entity",offline:"Unavailable",incompatible:"Incompatible reading",select:"Select source",add:"Add source",remove:"Remove",title:"Title",language:"Language",theme:"Theme",accent:"Accent",density:"Density",auto:"Automatic",dark:"Dark",light:"Light",ha:"HA theme",teal:"Teal",blue:"Blue",violet:"Violet",comfortable:"Comfortable",compact:"Compact",sources:"Sources",suggested:"Suggested",matching:"Other matching sources",room:"Unassigned area",totalPV:"Solar power",totalEnergy:"Solar yield today",noData:"Incomplete readings",energyTip:"Select separate, non-overlapping meters. Totals require every selected source to be available.",assistTip:"Load the voice assistant explicitly. Use only one active TAFA Device Bridge controller per helper pair.",load:"Load assistant",unload:"Close assistant",assistMissing:"TAFA Device Bridge Assist card is not installed or loaded.",pipeline_id:"Assist pipeline ID (optional)",wake_pipeline_id:"Wake-word pipeline ID (optional)",moveUp:"Move up",moveDown:"Move down",check:"Verify suggested sources before selecting. Nothing is assigned automatically.",configured:"Configured",notConfigured:"Not configured",preview:"TAFA Dashboard 0.4.14",open:"Open entity details",noMatch:"No matching source",settingsTip:"Use the card editor to choose modules, reorder them and change the appearance.",noSource:"No source assigned",activate:"Modules",readOnly:"Device details open using native Home Assistant controls.",shopping:"Open shopping list",clock:"Local time"},de:{home:"Start",settings:"Einstellungen",setup:"Module und Datenquellen im Lovelace-Karteneditor konfigurieren.",empty:"Noch keine eingerichteten Module.",missing:"Entität fehlt",offline:"Nicht verfügbar",incompatible:"Messwert unpassend",select:"Quelle auswählen",add:"Quelle hinzufügen",remove:"Entfernen",title:"Titel",language:"Sprache",theme:"Design",accent:"Akzent",density:"Dichte",auto:"Automatisch",dark:"Dunkel",light:"Hell",ha:"HA-Design",teal:"Türkis",blue:"Blau",violet:"Violett",comfortable:"Komfortabel",compact:"Kompakt",sources:"Quellen",suggested:"Vorschläge",matching:"Weitere passende Quellen",room:"Ohne Raum",totalPV:"Solarleistung",totalEnergy:"PV-Ertrag heute",noData:"Messwerte unvollständig",energyTip:"Separate, nicht überlappende Zähler zuordnen. Summen erfordern alle ausgewählten Messwerte.",assistTip:"Sprachassistent bewusst laden. Pro Helferpaar nur einen aktiven TAFA Device Bridge-Controller verwenden.",load:"Assistent laden",unload:"Assistent schließen",assistMissing:"TAFA Device Bridge Assist-Karte ist nicht installiert oder geladen.",pipeline_id:"Assist-Pipeline-ID (optional)",wake_pipeline_id:"Rufwort-Pipeline-ID (optional)",moveUp:"Nach oben",moveDown:"Nach unten",check:"Vorgeschlagene Quellen vor der Auswahl prüfen. Es wird nichts automatisch zugeordnet.",configured:"Eingerichtet",notConfigured:"Nicht eingerichtet",preview:"TAFA Dashboard 0.4.14",open:"Entitätsdetails öffnen",noMatch:"Keine passende Quelle",settingsTip:"Im Karteneditor Module wählen, sortieren und die Darstellung anpassen.",noSource:"Keine Quelle zugeordnet",activate:"Module",readOnly:"Gerätedetails öffnen sich über die nativen HA-Bedienelemente.",shopping:"Einkaufsliste öffnen",clock:"Ortszeit"}};
@@ -31,10 +32,24 @@ class TafaHome extends HTMLElement{
  getCardSize(){return 8;}
  setConfig(raw){const next=normalize(raw);if(JSON.stringify(next)===JSON.stringify(this.cfg))return;this.cfg=next;if(!["home","settings",...next.modules].includes(this.page))this.page="home";this.render();}
  set panel(p){this._panel=p;if(this.voiceTools)this.voiceTools.panel=p;}
- set hass(h){this.h=h;if(this.alive)void this.refreshMic();this.render();}
+ set hass(h){this.h=h;if(this.alive){void this.refreshMic();this.tafaOverlay();}this.render();}
  get hass(){return this.h;}
- connectedCallback(){this.alive=true;this.render();void this.refreshMic();clearInterval(this.clockTimer);this.clockTimer=setInterval(()=>{if(this.alive&&this.h)this.render();},30000);}
+ connectedCallback(){this.alive=true;this.render();this.tafaOverlay();void this.refreshMic();clearInterval(this.clockTimer);this.clockTimer=setInterval(()=>{if(this.alive&&this.h)this.render();},30000);}
  disconnectedCallback(){clearInterval(this.clockTimer);this.alive=false;this.voiceTools=null;this.clearAssist();this.clearNative();this.loaded=false;this.nativeOpen=false;}
+ tafaOverlay(){
+    if(!this.alive||!this.h)return;
+    installTafaResponseOverlay(this,this.h,{
+      bindings:this.cfg.bindings,
+      presentation:this.cfg.presentation,
+      onNavigate:key=>{
+        const page=key==="vorlauf"||key==="ruecklauf"||key==="spreizung"?"heating":
+          ["netz","solar","preis","prognose","solarheute"].includes(key)?"energy":
+          ["waermepumpe","wpheute","wpkosten"].includes(key)?"heatpump":
+          key==="shopping"?"shopping":key==="weather"?"weather":null;
+        if(page&&this.cfg.modules.includes(page))this.go(page);
+      }
+    });
+  }
  clearAssist(){this.assist?.remove();this.assist=null;this.assistKey="";}
  clearNative(){this.nativeSeq++;this.nativeKey="";this.nativeCards=[];this.nativeLoading=false;const el=this.shadowRoot.querySelector(".native-details");if(el)el.replaceChildren();}
  nativeConfigs(){const b=this.cfg.bindings,page=this.page;if(page==="shopping")return b.shopping_lists.map(entity=>({type:"todo-list",entity}));if(page==="lights")return b.lights.map(entity=>({type:"tile",entity,features:[{type:"light-brightness"}]})).map(c=>{const state=this.h?.states?.[c.entity],mode=state?.attributes?.supported_color_modes;if(!Array.isArray(mode)||mode.every(x=>x==="onoff"||x==="unknown"))delete c.features;return c;});if(page==="cameras")return b.cameras.map(entity=>({type:"picture-entity",entity,camera_view:"live",show_name:true,show_state:false,tap_action:{action:"more-info"}}));if(page==="weather")return b.weather.map(entity=>({type:"weather-forecast",entity,forecast_type:"daily"}));if(page==="waste")return b.waste_calendars.length?[{type:"calendar",entities:b.waste_calendars}]:[];if(page==="heating"&&b.climate.length)return b.climate.map(entity=>({type:"tile",entity})).concat(this.historyConfigs());return this.historyConfigs();}
