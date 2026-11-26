@@ -24,6 +24,13 @@ class OllamaAvailabilityTests(unittest.TestCase):
         self.agent="conversation.ollama_conversation"
         self.self_id="conversation.tablet_assist_gesprachsrouter"
 
+    def test_configured_oil_bypasses_obsolete_ha_sentence_trigger(self):
+        source=SOURCE.read_text(encoding="utf-8")
+        self.assertIn('prefer_tafa_oil = (',source)
+        self.assertIn('classify(user_input.text) == "heizoel"',source)
+        self.assertIn('self._local_data.sources.get("heizoel")',source)
+        self.assertIn('if handler is not None and not prefer_tafa_oil:',source)
+
     def test_unknown_is_the_normal_state_before_first_message(self):
         self.assertTrue(self.check(self.agent,SimpleNamespace(state="unknown"),self.self_id))
 
