@@ -122,8 +122,10 @@
       new Date(control.applied_at).toLocaleTimeString():"—";
     const followups=el("voice-followups-select");
     const selectedLimit=Number.isInteger(device?.followup_limit)?device.followup_limit:-1;
-    followups.value=String(selectedLimit);
-    if(followups.value==="")followups.value="-1";
+    if(followups.dataset.dirty!=="true"){
+      followups.value=String(selectedLimit);
+      if(followups.value==="")followups.value="-1";
+    }
     const local=Number.isInteger(telemetry.local_followup_limit)?telemetry.local_followup_limit:null;
     el("voice-followups-effective").textContent=local===null?
       tr("App-Grenze noch nicht gemeldet. Für unbegrenzt in der App ausdrücklich „Unbegrenzt“ wählen.",
@@ -202,6 +204,7 @@
     try{
       const updated=await postForm("voice_device_followups",{
         device_id:device.device_id,limit:String(value)});
+      delete el("voice-followups-select").dataset.dirty;
       renderDevices(updated);
     }catch(error){
       el("voice-native-status").textContent=tr("Anschlussfragen konnten nicht gespeichert werden",
@@ -391,7 +394,11 @@
     } finally {running=false;}
   }
   nativeModes.forEach(button=>button.addEventListener("click",()=>setNativeMode(button.dataset.nativeMode)));
-  deviceSelect.addEventListener("change",showDevice);
+  deviceSelect.addEventListener("change",()=>{
+    delete el("voice-followups-select").dataset.dirty;
+    showDevice();
+  });
+  el("voice-followups-select").addEventListener("change",e=>{e.target.dataset.dirty="true";});
   el("voice-followups-save").addEventListener("click",()=>void saveFollowups());
   el("voice-once").addEventListener("click",()=>{runOnce();});
   el("voice-stop").addEventListener("click",()=>stopLoop(tr("Browser-Aufnahme beendet", "Browser recording stopped")));

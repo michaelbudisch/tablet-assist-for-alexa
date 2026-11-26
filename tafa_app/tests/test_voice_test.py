@@ -36,6 +36,18 @@ class VoiceTestContracts(unittest.TestCase):
         return {"id":1,"type":"result","success":True,"result":{
             "pipelines":[{"id":"tafa-1","name":"TAFA Lokal","stt_engine":"stt.tafa"}]}}
 
+    def test_ws_diagnostics_are_present_and_sanitized(self):
+        view=(APP/"voice_test_view.py").read_text()
+        js=(APP/"voice-test.js").read_text()
+        for control in ("voice-control-channel","voice-control-confirm",
+                        "voice-control-latency","voice-control-last",
+                        "voice-followups-select","voice-followups-save"):
+            self.assertIn(control,view)
+            self.assertIn(control,js)
+        self.assertIn('control["pending"]',view)
+        self.assertIn("voice_device_followups",js)
+        self.assertNotIn("access_token",view)
+
     def test_speech_runs_existing_pipeline_and_streams_pcm(self):
         replies = [
             self.pipeline(),
