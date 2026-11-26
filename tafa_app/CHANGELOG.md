@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.3.41 — Remove, unpair, and recreate rooms and tablets
+- Add **Unpair tablet**, **Remove tablet**, and **Delete room** controls to the Devices & Multiroom page, with explicit confirmation, CSRF protection, and HA administrator-only authorization.
+- Unpairing stops active room audio/camera sessions and frees the matching device for reassignment; both the room and tablet stay registered.
+- Removing a tablet deletes its TAFA settings and telemetry, releases its room assignments, and cleans up its TAFA-owned HA entities. The tablet can enroll again using the same installation ID.
+- Deleting a room revokes the room-user audio session, clears room camera frames and permissions, and removes the room camera/motion entities. The HA room user is **not** deleted and can be reused in another room.
+- HA users, scripts and automations are not deleted or edited. Automations referencing intentionally removed entities may require reconfiguration.
+- Because the native app automatically re-enrolls active tablets, stop its audio player and wakeword before using **Remove tablet** if a lasting removal is intended. No Android app update is needed.
+
+
 ## 0.3.40 — Native TAFA camera stream in each opted-in room
 - Add room camera enable/disable controls under Apps → TAFA → Devices & multiroom, even before a tablet enrolls; default is off.
 - Grant access only to the dedicated room user on the authenticated HA room-camera endpoint. Disabling access expires cached frames and prevents new uploads.

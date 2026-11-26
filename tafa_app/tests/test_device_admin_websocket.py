@@ -22,6 +22,8 @@ def load_action():
         "DOMAIN": "tablet_assist_for_alexa",
         "DEVICE_ID": re.compile(r"[a-f0-9]{32}\Z"),
         "ROOM": re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z"),
+        "cleanup_tablet": lambda hass, identifier: hass.cleaned_tablets.append(identifier),
+        "cleanup_room": lambda hass, room: hass.cleaned_rooms.append(room),
     }
     exec(compile(ast.fix_missing_locations(
         ast.Module(body=[method], type_ignores=[])), str(SOURCE), "exec"),
@@ -59,6 +61,9 @@ class Fixture:
         async def save_controller():
             return None
         async def handle(user, action, identifier, payload):
+            if action == "delete":
+                self.devices.pop(identifier)
+                return {"removed": True}
             return {"device": {"device_id": identifier}}
         self.controller.save = save_controller
         self.controller.handle = handle
@@ -68,9 +73,17 @@ class Fixture:
         def status(principal):
             room = next(r for r, uid in rooms.items() if uid == principal)
             return {"room": room, "online": False, "ready": False}
+        self.sessions, self.jobs = {}, {}
+        def revoke(room):
+            rooms.pop(room, None)
+            self.sessions.pop(room, None)
+            for job in tuple(self.jobs):
+                if self.jobs[job] == room:
+                    self.jobs.pop(job)
         self.transport = types.SimpleNamespace(
             rooms=rooms, settings=settings,
-            provision=provision, status=status)
+            provision=provision, revoke=revoke, status=status)
+        self.cleaned_tablets, self.cleaned_rooms = [], []
         self.saved = 0
         async def persist():
             self.saved += 1
@@ -140,6 +153,89 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
             "action": "camera", "room": "buero", "user_id": "tablet",
             "camera_enabled": False})
         self.assertFalse(hass.transport.settings["buero"]["camera_enabled"])
+
+    async def test_unpair_stops_room_session_and_can_repair(self):
+        hass = Fixture()
+        did = "a" * 32
+        hass.devices[did] = {"device_id": did, "room": "Büro", "user_id": "tablet"}
+        await self.action(hass, hass.admin, {
+            "action": "create", "room": "buero", "user_id": "tablet"})
+        await self.action(hass, hass.admin, {
+            "action": "pair", "room": "buero", "user_id": "tablet",
+            "device_id": did})
+        hass.transport.settings["buero"]["camera_enabled"] = True
+        hass.sessions["buero"] = "active"
+        hass.jobs["old-job"] = "buero"
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "unpair", "room": "buero", "user_id": "tablet",
+                "device_id": did, "confirmed": False})
+        result = await self.action(hass, hass.admin, {
+            "action": "unpair", "room": "buero", "user_id": "tablet",
+            "device_id": did, "confirmed": True})
+        self.assertTrue(result["unpaired"])
+        self.assertEqual(hass.transport.rooms["buero"], "tablet")
+        self.assertNotIn("wake_device_id", hass.transport.settings["buero"])
+        self.assertFalse(hass.transport.settings["buero"]["camera_enabled"])
+        self.assertFalse(hass.sessions)
+        self.assertFalse(hass.jobs)
+        self.assertIn(did, hass.devices)
+        await self.action(hass, hass.admin, {
+            "action": "pair", "room": "buero", "user_id": "tablet",
+            "device_id": did})
+        self.assertEqual(hass.transport.settings["buero"]["wake_device_id"], did)
+
+    async def test_delete_room_releases_owner_without_deleting_ha_user(self):
+        hass = Fixture()
+        await self.action(hass, hass.admin, {
+            "action": "create", "room": "buero", "user_id": "tablet"})
+        hass.transport.settings["buero"] = {"camera_enabled": True}
+        hass.sessions["buero"] = "active"
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "delete_room", "room": "buero",
+                "user_id": "admin", "confirmed": True})
+        result = await self.action(hass, hass.admin, {
+            "action": "delete_room", "room": "buero",
+            "user_id": "tablet", "confirmed": True})
+        self.assertTrue(result["removed"])
+        self.assertNotIn("buero", hass.transport.rooms)
+        self.assertNotIn("buero", hass.transport.settings)
+        self.assertNotIn("buero", hass.sessions)
+        self.assertEqual(hass.cleaned_rooms, ["buero"])
+        self.assertIsNotNone(await hass.auth.async_get_user("tablet"))
+        await self.action(hass, hass.admin, {
+            "action": "create", "room": "buero", "user_id": "tablet"})
+        self.assertEqual(hass.transport.rooms["buero"], "tablet")
+
+    async def test_delete_tablet_clears_pairings_but_keeps_rooms(self):
+        hass = Fixture()
+        did = "b" * 32
+        hass.devices[did] = {"device_id": did, "room": "Büro", "user_id": "tablet"}
+        await self.action(hass, hass.admin, {
+            "action": "create", "room": "buero", "user_id": "tablet"})
+        await self.action(hass, hass.admin, {
+            "action": "pair", "room": "buero", "user_id": "tablet",
+            "device_id": did})
+        hass.transport.settings["buero"]["camera_enabled"] = True
+        hass.sessions["buero"] = "active"
+        with self.assertRaises(PermissionError):
+            await self.action(hass, hass.user, {
+                "action": "delete_device", "device_id": did,
+                "confirmed": True})
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "delete_device", "device_id": did})
+        result = await self.action(hass, hass.admin, {
+            "action": "delete_device", "device_id": did, "confirmed": True})
+        self.assertTrue(result["removed"])
+        self.assertNotIn(did, hass.devices)
+        self.assertFalse(hass.sessions)
+        self.assertEqual(hass.transport.rooms["buero"], "tablet")
+        self.assertNotIn("wake_device_id", hass.transport.settings["buero"])
+        self.assertFalse(hass.transport.settings["buero"]["camera_enabled"])
+        self.assertEqual(hass.cleaned_tablets, [did])
+        self.assertIsNotNone(await hass.auth.async_get_user("tablet"))
 
     async def test_pairing_respects_user_ownership(self):
         hass = Fixture()
