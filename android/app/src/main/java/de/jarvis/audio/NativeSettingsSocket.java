@@ -30,7 +30,7 @@ final class NativeSettingsSocket extends WebSocketListener implements AutoClosea
     private final Listener listener;
     private final String deviceId;
     private volatile WebSocket socket;
-    private String token;
+    private volatile String token;
     private volatile boolean subscribed=false;
     private boolean connecting=false,closed=false;
     private long retryAt=0;
@@ -60,7 +60,7 @@ final class NativeSettingsSocket extends WebSocketListener implements AutoClosea
         }
     }
     @Override public void onMessage(WebSocket ws,String message){
-        if(closed)return;
+        if(closed||ws!=socket)return;
         try{
             JSONObject packet=new JSONObject(message);
             String type=packet.optString("type","");
@@ -90,11 +90,13 @@ final class NativeSettingsSocket extends WebSocketListener implements AutoClosea
             Log.w(TAG,"Invalid settings event: "+ex.getClass().getSimpleName());
         }
     }
-    private synchronized void offline(){
+    private synchronized void offline(WebSocket ws){
+        // A late callback from an old socket may not clear a newer connection.
+        if(socket!=ws)return;
         connecting=false;subscribed=false;socket=null;token=null;
     }
-    @Override public void onFailure(WebSocket ws,Throwable failure,Response response){offline();}
-    @Override public void onClosed(WebSocket ws,int code,String reason){offline();}
+    @Override public void onFailure(WebSocket ws,Throwable failure,Response response){offline(ws);}
+    @Override public void onClosed(WebSocket ws,int code,String reason){offline(ws);}
     @Override public synchronized void close(){
         closed=true;subscribed=false;connecting=false;
         WebSocket existing=socket;socket=null;token=null;

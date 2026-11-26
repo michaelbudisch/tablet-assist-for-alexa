@@ -20,11 +20,11 @@ For each enrolled tablet, find its entities under **Settings → Devices & servi
 type: entities
 title: TAFA – voice control
 entities:
-  - entity: switch.MY_TABLET_mikrofon_stumm
+  - entity: switch.tafa_exampletablet_mikrofon_stumm
     name: Mute microphone
-  - entity: select.MY_TABLET_nativer_sprachmodus
+  - entity: select.tafa_exampletablet_nativer_sprachmodus
     name: Voice mode
-  - entity: select.MY_TABLET_anschlussfragen_ha_grenze
+  - entity: select.tafa_exampletablet_anschlussfragen_ha_grenze
     name: Follow-ups
 ```
 

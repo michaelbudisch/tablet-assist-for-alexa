@@ -22,11 +22,11 @@ Für eine einfache Lovelace-Karte reichen die Standard-Entitäten:
 type: entities
 title: TAFA – Sprachsteuerung
 entities:
-  - entity: switch.MEIN_TABLET_mikrofon_stumm
+  - entity: switch.tafa_beispieltablet_mikrofon_stumm
     name: Mikrofon stumm
-  - entity: select.MEIN_TABLET_nativer_sprachmodus
+  - entity: select.tafa_beispieltablet_nativer_sprachmodus
     name: Sprachmodus
-  - entity: select.MEIN_TABLET_anschlussfragen_ha_grenze
+  - entity: select.tafa_beispieltablet_anschlussfragen_ha_grenze
     name: Anschlussfragen
 ```
 
