@@ -2,6 +2,16 @@
 import re
 import unicodedata
 
+# Pure search phrase classifier; no optional HTTP/HA dependencies.
+SEARCH_PATTERN = re.compile(
+    r"^(?:(?:hey\s+)?(?:jarvis|tafa)[,\s]+)?(?:bitte\s+)?"
+    r"(?:such(?:e)?|recherchier(?:e)?)\s+(?:(?:bitte|mal)\s+)*"
+    r"(?:im\s+(?:internet|web)(?:\s+nach)?|online(?:\s+nach)?|nach)\s+(.{2,160})[.!?]?$", re.I)
+FOLLOW_PATTERN = re.compile(r"^(?:oeffne|öffne|zeig(?:e)?)\s+(?:treffer\s+)?(?:nummer\s+)?([1-9]|zehn|eins|zwei|drei|vier|fünf|fuenf|sechs|sieben|acht|neun)\b", re.I)
+NUMBERS = {"eins": 1, "zwei": 2, "drei": 3, "vier": 4, "fünf": 5, "fuenf": 5,
+           "sechs": 6, "sieben": 7, "acht": 8, "neun": 9, "zehn": 10}
+
+
 def normalize(text):
     s = unicodedata.normalize('NFKC', text).casefold().translate(str.maketrans({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}))
     s = re.sub(r'[^a-z0-9]+', ' ', s).strip()
