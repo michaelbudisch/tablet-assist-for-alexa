@@ -26,7 +26,7 @@ class TabletMixin:
             self.hass, SIGNAL, self._changed))
 
     def _changed(self, identifier):
-        if identifier == self.device_id:
+        if identifier is None or identifier == self.device_id:
             self.async_write_ha_state()
 
 def setup_tablets(hass, entry, add_entities, factory):

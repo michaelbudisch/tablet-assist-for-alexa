@@ -1,7 +1,7 @@
 """Diagnostic HA sensors for each enrolled TAFA tablet."""
 from datetime import datetime, timezone
 import time
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.helpers.event import async_track_time_interval
 from datetime import timedelta
 from .tablet_entities import TabletMixin, setup_tablets
@@ -23,7 +23,10 @@ class TabletSensor(TabletMixin, SensorEntity):
         super().__init__(controller, device_id, key, SENSORS[key][0])
         self._attr_icon = SENSORS[key][1]
         if key == "battery":
+            self._attr_device_class = SensorDeviceClass.BATTERY
             self._attr_native_unit_of_measurement = "%"
+        if key in ("last_seen", "last_wake"):
+            self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
     def native_value(self):

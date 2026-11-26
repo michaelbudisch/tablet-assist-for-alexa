@@ -3,7 +3,8 @@ from homeassistant.components.switch import SwitchEntity
 from .tablet_entities import TabletMixin, setup_tablets
 
 SWITCHES = {"muted": ("Mikrofon stumm", "mdi:microphone-off"),
-            "screen_awake": ("Display hell", "mdi:tablet")}
+            "screen_awake": ("Display hell", "mdi:tablet"),
+            "display_control_enabled": ("Displaysteuerung aktiv", "mdi:brightness-6")}
 class TabletSwitch(TabletMixin, SwitchEntity):
     def __init__(self, controller, device_id, key):
         super().__init__(controller, device_id, key, SWITCHES[key][0])

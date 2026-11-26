@@ -23,7 +23,7 @@ CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
 DEFAULTS = {"muted": False, "word": "Hey Jarvis", "room": "Jarvis Tablet",
             "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1,
             "pause_ms": 1700, "mic_gain": 100, "brightness": 80,
-            "screen_awake": True}
+            "screen_awake": True, "display_control_enabled": False}
 VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90),
          "pause_ms": (900, 3200), "mic_gain": (50, 200),
          "brightness": (1, 100)}
@@ -98,7 +98,7 @@ class WakeDevices:
             raise ValueError("Invalid settings")
         cleaned = {}
         for key, value in updates.items():
-            if key in ("muted", "screen_awake") and type(value) is bool:
+            if key in ("muted", "screen_awake", "display_control_enabled") and type(value) is bool:
                 cleaned[key] = value
             elif key == "word" and isinstance(value, str) and value in CHOICES:
                 cleaned[key] = value
