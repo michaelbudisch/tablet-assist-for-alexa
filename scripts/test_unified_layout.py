@@ -29,9 +29,9 @@ init=(BASE/"__init__.py").read_text()
 assert "Platform.CAMERA" in init and "Platform.BINARY_SENSOR" in init
 assert "setup_room_audio" in init and "setup_wake_devices" in init
 wake=(BASE/"relay"/"relay_wake_devices.py").read_text()
-assert 'url = "/api/jarvis_tablet_audio/wake_devices"' in wake
-assert "jarvis_android_wakeword_routed" in wake
-assert 'DOMAIN = "jarvis_tablet_audio"' in (BASE/"relay"/"const.py").read_text()
+assert 'url = "/api/tablet_assist_for_alexa/wake_devices"' in wake
+assert '"followup_limit": (-1, 100)' in wake
+assert 'DOMAIN = "tablet_assist_for_alexa"' in (BASE/"relay"/"const.py").read_text()
 # Prevent publishing a mismatched App release or dropping the external-only mode.
 config=(ROOT/"tafa_app"/"config.yaml").read_text(encoding="utf-8")
 server=(ROOT/"tafa_app"/"server.py").read_text(encoding="utf-8")
