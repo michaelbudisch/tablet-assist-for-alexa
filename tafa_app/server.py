@@ -32,6 +32,8 @@ from settings_ui import render_settings_form, save_settings_form, render_connect
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
+from voice_test_view import render_voice_panel
+from voice_test import run_voice, voice_status, load_audio, VoiceTestError, MAX_AUDIO
 from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
@@ -51,7 +53,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.44"
+APP_VERSION="0.3.45"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -522,11 +524,12 @@ def display(message="",lang="de",default_tab="overview",review=None):
                     device_state.get("error") or "ok",
                     device_state.get("room_error") or "ok")
     devices_panel=render_device_center(lang,CSRF,device_state)
+    voice_panel=render_voice_panel(lang,CSRF,device_state)
     return render_dashboard(
         pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
-        cards=cards, picker=picker, connection_panel=connection_panel, import_panel=import_panel, devices_panel=devices_panel, checks=checks,
+        cards=cards, picker=picker, connection_panel=connection_panel, import_panel=import_panel, devices_panel=devices_panel, voice_panel=voice_panel, checks=checks,
         options={**load_options(), **preferences}, setup=setup,
         links=links, latest=latest, cache_info=cache_info,
         note=note, install=install, retry_button=retry_button,
@@ -574,6 +577,20 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
             return
+        if path.startswith("/voice/audio/"):
+            identifier=path[len("/voice/audio/"):]
+            try:
+                data,mime=load_audio(TOKEN,identifier)
+            except (OSError,ValueError,RuntimeError,TimeoutError):
+                return self.send_error(404)
+            self.send_response(200)
+            self.send_header("Content-Type",mime)
+            self.send_header("Cache-Control","no-store")
+            self.send_header("X-Content-Type-Options","nosniff")
+            self.send_header("Content-Length",str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path not in ("/",""):
             return self.send_error(404)
         query=parse_qs(urlsplit(self.path).query)
@@ -583,6 +600,25 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():return self.send_error(403)
         length=self.headers.get("Content-Length")
+        if urlsplit(self.path).path == "/voice/run":
+            if (self.headers.get_content_type()!="application/octet-stream"
+                    or not length or not length.isdigit()
+                    or not 16000 <= int(length) <= MAX_AUDIO
+                    or not secrets.compare_digest(self.headers.get("X-TAFA-CSRF",""),CSRF)):
+                return self.send_error(400)
+            query=parse_qs(urlsplit(self.path).query)
+            kind=query.get("kind",["turn"])
+            ident=query.get("conversation_id",[""])
+            if len(kind)!=1 or kind[0] not in ("turn","wake") or len(ident)!=1:
+                return self.respond_json({"error":"Invalid voice request"},400)
+            payload=self.rfile.read(int(length))
+            try:
+                result=run_voice(TOKEN,pcm=payload,wake=kind[0]=="wake",conversation_id=ident[0])
+            except VoiceTestError as exc:
+                return self.respond_json({"error":str(exc)},400)
+            except (OSError,RuntimeError,TimeoutError,ValueError,TypeError):
+                return self.respond_json({"error":"Assist connection unavailable"},503)
+            return self.respond_json(result)
         if not length or not length.isdigit() or not 0<int(length)<=16384:
             return self.send_error(400)
         if self.headers.get_content_type()!="application/x-www-form-urlencoded":
@@ -592,10 +628,28 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
         tab=fields.get("tab",["maintenance"])[0]
-        if tab not in ("overview","connections","setup","devices","maintenance"):
+        if tab not in ("overview","connections","setup","devices","maintenance","voice"):
             tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
+            if action=="voice_status":
+                if set(fields) - {"csrf","lang","tab","action"}:
+                    return self.respond_json({"error":"Invalid voice status request"},400)
+                try:
+                    return self.respond_json(voice_status(TOKEN))
+                except (OSError,TimeoutError,ValueError,RuntimeError,TypeError):
+                    return self.respond_json({"error":"Home Assistant status unavailable"},503)
+            if action=="voice_text":
+                if set(fields) - {"csrf","lang","tab","action","text","conversation_id"}:
+                    return self.respond_json({"error":"Invalid voice text request"},400)
+                try:
+                    return self.respond_json(run_voice(TOKEN,
+                        text=fields.get("text",[""])[0],
+                        conversation_id=fields.get("conversation_id",[""])[0]))
+                except VoiceTestError as exc:
+                    return self.respond_json({"error":str(exc)},400)
+                except (OSError,TimeoutError,ValueError,RuntimeError,TypeError):
+                    return self.respond_json({"error":"Assist connection unavailable"},503)
             if action=="connection_probe":
                 # Short, read-only request from a typing event. Strict
                 # destination validation in connection_probes prevents SSRF.
