@@ -115,6 +115,32 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
                 await self.action(hass, hass.user, {
                     "action": action, "room": "buero", "user_id": "tablet"})
 
+    async def test_camera_requires_admin_owner_and_explicit_boolean(self):
+        hass = Fixture()
+        await self.action(hass, hass.admin, {
+            "action": "create", "room": "buero", "user_id": "tablet"})
+        view = await self.action(hass, hass.admin, {"action": "list"})
+        self.assertFalse(view["rooms"][0]["camera_enabled"])
+        response = await self.action(hass, hass.admin, {
+            "action": "camera", "room": "buero", "user_id": "tablet",
+            "camera_enabled": True})
+        self.assertTrue(response["camera_enabled"])
+        self.assertTrue(hass.transport.settings["buero"]["camera_enabled"])
+        self.assertTrue((await self.action(hass, hass.admin, {"action": "list"}))["rooms"][0]["camera_enabled"])
+        for invalid in ({"room": "buero", "user_id": "tablet", "camera_enabled": "true"},
+                        {"room": "elsewhere", "user_id": "tablet", "camera_enabled": True},
+                        {"room": "buero", "user_id": "admin", "camera_enabled": True}):
+            with self.assertRaises(ValueError):
+                await self.action(hass, hass.admin, {"action": "camera", **invalid})
+        with self.assertRaises(PermissionError):
+            await self.action(hass, hass.user, {
+                "action": "camera", "room": "buero", "user_id": "tablet",
+                "camera_enabled": False})
+        await self.action(hass, hass.admin, {
+            "action": "camera", "room": "buero", "user_id": "tablet",
+            "camera_enabled": False})
+        self.assertFalse(hass.transport.settings["buero"]["camera_enabled"])
+
     async def test_pairing_respects_user_ownership(self):
         hass = Fixture()
         identifier = "a" * 32

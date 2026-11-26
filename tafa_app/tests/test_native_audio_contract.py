@@ -94,8 +94,8 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn("POST /api/tablet_assist_for_alexa/room_camera/frame",smoke)
 
     def test_version_contract(self):
-        self.assertIn('version: "0.3.39"',read("tafa_app/config.yaml"))
-        self.assertEqual(read("VERSION").strip(),"0.4.23")
+        self.assertIn('version: "0.3.40"',read("tafa_app/config.yaml"))
+        self.assertEqual(read("VERSION").strip(),"0.4.24")
         self.assertEqual(read("android/VERSION").strip(),"1.0.6")
 
 if __name__=="__main__":

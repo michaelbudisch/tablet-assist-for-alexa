@@ -51,6 +51,30 @@ class DeviceCenterTests(unittest.TestCase):
         pair = html.split('name="action" value="room_pair"', 1)[1].split('</form>', 1)[0]
         self.assertEqual(pair.count('name="device_id"'), 1)
 
+    def test_room_camera_explicit_opt_in_without_any_tablet(self):
+        with patch.object(panel, "ws_call", return_value={"camera_enabled": True}) as api:
+            result = panel.set_room_camera({
+                "room": ["buero"], "user_id": ["user1"],
+                "camera_enabled": ["true"]})
+            self.assertIn("aktiviert", result)
+            self.assertEqual(api.call_args.args, ("camera",))
+            self.assertEqual(api.call_args.kwargs,
+                {"room": "buero", "user_id": "user1", "camera_enabled": True})
+        state = {"devices": [], "rooms": [
+                    {"room": "buero", "user_id": "user1", "camera_enabled": False}],
+                 "users": [{"id": "user1", "name": "Tablet Benutzer"}],
+                 "error": "", "room_error": ""}
+        html = panel.render_device_center("de", "csrf", state)
+        self.assertIn('name="action" value="room_camera"', html)
+        self.assertIn('name="camera_enabled"', html)
+        self.assertIn('value="false" selected', html)
+        state["rooms"][0]["camera_enabled"] = True
+        self.assertIn('value="true" selected',panel.render_device_center("de","csrf",state))
+        for val in ("yes", "", "1"):
+            with self.assertRaises(ValueError):
+                panel.set_room_camera({"room": ["buero"], "user_id": ["user1"],
+                                       "camera_enabled": [val]})
+
     def test_create_room_without_any_tablet(self):
         with patch.object(panel, "ws_call", return_value={"created": True}) as api:
             self.assertIn("Raum angelegt", panel.create_room({

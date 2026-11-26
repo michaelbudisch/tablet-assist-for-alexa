@@ -31,7 +31,7 @@ from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from control_center_view import render_dashboard
-from device_center import read_device_data, render_device_center, update_device, pair_device, create_room
+from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
@@ -50,7 +50,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.39"
+APP_VERSION="0.3.40"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -679,6 +679,9 @@ class Handler(BaseHTTPRequestHandler):
                 tab="devices"
             elif action=="room_pair":
                 msg=pair_device(fields)
+                tab="devices"
+            elif action=="room_camera":
+                msg=set_room_camera(fields)
                 tab="devices"
             elif action=="settings":
                 changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))

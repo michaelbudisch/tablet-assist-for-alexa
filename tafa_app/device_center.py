@@ -94,6 +94,19 @@ def pair_device(fields):
     return "Multiroom pairing saved."
 
 
+def set_room_camera(fields):
+    """Require a real room, matching owner and explicit enable/disable value."""
+    room = fields.get("room", [""])[0].strip()
+    user_id = fields.get("user_id", [""])[0]
+    raw = fields.get("camera_enabled", [""])[0]
+    if (not ROOM.fullmatch(room) or not isinstance(user_id, str)
+            or not 1 <= len(user_id) <= 128 or raw not in ("true", "false")):
+        raise ValueError("Invalid camera room or permission")
+    enabled = raw == "true"
+    ws_call("camera", room=room, user_id=user_id, camera_enabled=enabled)
+    return "Kamera für Raum aktiviert." if enabled else "Kamera für Raum deaktiviert."
+
+
 def render_device_center(lang, csrf, state):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
@@ -273,8 +286,41 @@ def render_device_center(lang, csrf, state):
                 f'<button class="btn btn-primary" type="submit">{t("Tablet zuordnen","Pair tablet")}</button>'
                 '</form>'
             )
+    camera_forms = []
+    if not state.get("room_error"):
+        for item in rooms:
+            if not isinstance(item, dict):
+                continue
+            rid, uid = item.get("room"), item.get("user_id")
+            if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
+                    or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
+                continue
+            enabled = item.get("camera_enabled") is True
+            selector = (
+                f'<select name="camera_enabled" aria-label="{t("Kamera für Raum","Camera for room")} {h(rid)}">'
+                f'<option value="false"{" selected" if not enabled else ""}>{t("Aus – keine Bilder","Off – no images")}</option>'
+                f'<option value="true"{" selected" if enabled else ""}>{t("An – Bilder bei manuellem Kamerastart","On – images on manual camera start")}</option>'
+                '</select>'
+            )
+            camera_forms.append(
+                f'<form class="pair-form" action="./" method="post">{hidden("room_camera")}'
+                f'<input type="hidden" name="room" value="{h(rid)}">'
+                f'<input type="hidden" name="user_id" value="{h(uid)}">'
+                f'<strong>{h(rid)}</strong>'
+                + selector
+                + f'<button class="btn btn-outline" type="submit">{t("Kamerafreigabe speichern","Save camera permission")}</button>'
+                '</form>'
+            )
+    camera_panel = (
+        f'<section class="work-card multiroom-panel">'
+        f'<h3>{t("Tablet-Kameras je Raum","Tablet cameras per room")}</h3>'
+        f'<p class="subtle">{t("Kameraübertragung ist standardmäßig aus. Erlaube sie hier für einen Raum und starte die Kamera anschließend ausdrücklich auf dem Tablet. Es werden nur aktuelle Bilder im HA-Arbeitsspeicher gehalten.","Camera uploads are off by default. Enable them for a room here and explicitly start the tablet camera afterwards. Only recent images are held in HA memory.")}</p>'
+        + "".join(camera_forms)
+        + (f'<p class="subtle">{t("Lege zuerst einen Raum an.","Create a room first.")}</p>' if not camera_forms else "")
+        + '</section>'
+    )
     pairing_note = (
-        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>'
+        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>
         if not pair_forms else ""
     )
     pairing = (
@@ -283,4 +329,4 @@ def render_device_center(lang, csrf, state):
         '<div class="room-list">' + "".join(roomrows) + '</div>'
         + "".join(pair_forms) + pairing_note + '</section>'
     )
-    return notice + device_section + guide + room_create + pairing
+    return notice + device_section + guide + room_create + camera_panel + pairing
