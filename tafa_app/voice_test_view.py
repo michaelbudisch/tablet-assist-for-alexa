@@ -148,7 +148,3 @@ def render_voice_panel(lang, csrf, device_state):
   </div>
 </section>
 """
-
-  </div>
-</section>
-"""
