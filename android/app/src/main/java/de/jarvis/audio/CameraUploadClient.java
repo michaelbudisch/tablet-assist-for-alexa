@@ -7,17 +7,15 @@ import java.nio.charset.StandardCharsets;
 
 /** Same-origin authenticated push; no image listener/port on the tablet and no redirect forwarding. */
 final class CameraUploadClient implements AutoCloseable {
-    static final String API="/api/jarvis_echo_relay";
+    static final String API="/api/tablet_assist_for_alexa/room_camera";
     private final String base,token,consent,device,api;
     private volatile HttpURLConnection current;
     private volatile boolean closed;
     private volatile String session="";
     private long sequence;
     CameraUploadClient(String base,String token,String consent,String device)throws Exception{
-        this(base,token,consent,device,false);
-    }
-    CameraUploadClient(String base,String token,String consent,String device,boolean room)throws Exception{
-        this.base=HaAddress.validateStored(base,consent);this.token=token;this.consent=consent;this.device=device;this.api=room?API+"/room_camera":API;
+        this.base=HaAddress.validateStored(base,consent);
+        this.token=token;this.consent=consent;this.device=device;this.api=API;
     }
     private HttpURLConnection connect(String path,String method)throws Exception{
         if(closed)throw new InterruptedIOException("cancelled");

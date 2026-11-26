@@ -79,16 +79,16 @@ final class CameraRelaySmoke {
                     check(offset==length,"Complete body");
                     check(headers.get("authorization").equals("Bearer camera-fixture-only"),"HA bearer authentication");
                     byte[] reply=new byte[0];int status=204;
-                    if(request.startsWith("POST /api/jarvis_echo_relay/register ")){
+                    if(request.startsWith("POST /api/tablet_assist_for_alexa/room_camera/register ")){
                         device=headers.get("x-relay-device");
                         check(device!=null&&device.matches("[a-f0-9]{32}"),"Stable device ID");
                         check(new String(body,StandardCharsets.UTF_8).contains(device),"Pairing body matches device");
                         reply=("{\"session\":\""+session+"\"}").getBytes(StandardCharsets.UTF_8);status=200;
                     }else{
                         check(session.equals(headers.get("x-relay-session"))&&device.equals(headers.get("x-relay-device")),"Session and device headers");
-                        if(request.startsWith("DELETE /api/jarvis_echo_relay/frame "))stopped.countDown();
+                        if(request.startsWith("DELETE /api/tablet_assist_for_alexa/room_camera/frame "))stopped.countDown();
                         else{
-                            check(request.startsWith("POST /api/jarvis_echo_relay/frame "),"Fixed same-origin image path");
+                            check(request.startsWith("POST /api/tablet_assist_for_alexa/room_camera/frame "),"Fixed same-origin image path");
                             check("image/jpeg".equals(headers.get("content-type")),"JPEG content type");
                             BitmapFactory.Options bounds=new BitmapFactory.Options();bounds.inJustDecodeBounds=true;
                             BitmapFactory.decodeByteArray(body,0,body.length,bounds);

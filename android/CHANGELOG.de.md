@@ -1,5 +1,12 @@
 # Android-Änderungsverlauf
 
+## 1.0.6 · Einheitlicher TAFA-Raumkamera-Empfänger
+- Den alten Jarvis-Kamera-Endpunkt durch die authentifizierte TAFA-Raumkamera-API ersetzt.
+- Kameraübertragung mit normalem Raumnutzer-Token und ausdrücklicher Freigabe je Raum im TAFA Control Center. Kein separater Jarvis-Empfänger oder Administrator-Token nötig.
+- Hinweise für 403/404/409 verbessert. Kamera startet nur manuell; keine Bildaufzeichnung.
+- Versionscode 19, gleiche Paket-ID; das direkte Update benötigt den bisherigen Release-Signaturschlüssel.
+
+
 ## 1.0.5 · Sichtbarer, automatisch wiederverbindender Bluetooth-Keepalive
 - Der vorhandene optionale lautlose Bluetooth-Keepalive ist jetzt direkt auf der Statusseite beim Player zu sehen, mit Live-Status statt im versteckten Bluetooth-Untermenü.
 - Automatische Wiederaufnahme nach Bluetooth-Unterbrechungen, Audio-Routenwechseln, Audiofokusverlust oder MediaPlayer-Fehlern; begrenzte Wiederholungen mit 3–30 Sekunden Abstand und gespeicherter Einstellung.

@@ -1,3 +1,19 @@
+# Tablet-Kamera mit TAFA – TAFA Device Bridge 1.0.6 + HA-Integration 0.4.24
+
+**Aktueller Weg für frische TAFA-Installationen:** Der Kamera-Empfänger ist bereits Bestandteil der einheitlichen TAFA-Integration. **Jarvis Tablet Audio muss nicht separat installiert werden.** Die folgenden älteren Jarvis-Anleitungen weiter unten gelten nur für historische Installationen.
+
+1. Auf dem **gewählten Testserver** TAFA App **0.3.40** und die enthaltene HA-Integration **0.4.24** installieren und HA Core nach dem Backend-Update einmal neu starten.
+2. Home Assistant → **Apps → TAFA → Benutzeroberfläche → Geräte & Multiroom → Tablet-Kameras je Raum** öffnen und die Kamera für deinen Raum (z. B. `buero`) ausdrücklich **An** schalten und speichern. Standardmäßig sind Kamera-Uploads **Aus**.
+3. Auf dem Tablet **TAFA Device Bridge 1.0.6** mit dem Token des **Nicht-Admin-Raumnutzers** für diesen Testserver verwenden. Keine Administratorberechtigung nötig. Kamera in der App öffnen, Objektiv wählen, Berechtigung erteilen und **Kamera für HA starten** tippen. Der Audioplayer und die Rufworterkennung dürfen unabhängig davon laufen.
+4. Home Assistant erzeugt die Kameras und Bewegungssensoren pro Raum unter der TAFA-Integration. Die Kameraübertragung läuft über authentifizierte `/api/tablet_assist_for_alexa/room_camera/register` und `/frame`, niemals über `/api/jarvis_echo_relay`.
+5. Zum Beenden auf dem Tablet **HA-Kamera stoppen** drücken oder die Kamerafreigabe für den Raum in TAFA ausschalten. Bei letzterem wird auch das zuletzt gehaltene Bild verworfen.
+
+Die Kamera sendet nur nach ausdrücklichem Start Einzelbilder, keine Aufzeichnung oder Offline-Warteschlange. Bilder werden im RAM gehalten und verfallen ohne neue Bilder. Wenn Betroffene erkennbar sind, deren Privatsphäre beachten. Verbindungsfehler: **404** bedeutet, dass der TAFA-Kamera-Endpunkt auf dem ausgewählten HA fehlt; **403** bedeutet Raum-/Benutzer-Berechtigung oder noch nicht aktivierte Kamerafreigabe; **409** bedeutet eine konkurrierende Tablet-Kamerasitzung.
+
+---
+
+## Historische Jarvis-Kamera-Dokumentation (nicht für neue TAFA-Installationen)
+
 # Kamera und lokales Visionmodell · 0.5.0
 
 [English](camera-preparation.md) | **Deutsch** · [Projektübersicht](../../README.de.md)

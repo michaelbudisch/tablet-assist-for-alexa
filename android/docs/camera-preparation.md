@@ -1,3 +1,19 @@
+# Tablet camera with TAFA – TAFA Device Bridge 1.0.6 + HA integration 0.4.24
+
+**Current clean-install path:** The camera receiver is included in the unified TAFA Home Assistant integration. **Do not install a separate Jarvis Tablet Audio receiver.** Historical Jarvis steps below are archived for older systems only.
+
+1. On the **selected test server**, update TAFA App to **0.3.40**, including HA integration **0.4.24**, then restart HA Core once for the updated Python integration.
+2. Open **Apps → TAFA → User interface → Devices & multiroom → Tablet cameras per room**. Explicitly select **On** for the chosen room, e.g. `buero`, and save. Camera uploads default to **Off**.
+3. Use **TAFA Device Bridge 1.0.6** and the **non-admin room user's** HA token for that server. No admin token needed. In the Android camera settings, choose the lens, grant camera permission and explicitly tap **Start camera for HA**. This service is independent of voice/audio.
+4. HA exposes a room camera and motion sensor under the TAFA integration. Images use authenticated `/api/tablet_assist_for_alexa/room_camera/register` and `/frame`; never the legacy `/api/jarvis_echo_relay` route.
+5. Stop the stream in Android or disable the room's camera permission in TAFA. Disabling also clears cached frames.
+
+Only user-started snapshots are sent; no persistent recording or offline queue. Frames are kept in RAM and expire when stale. Consider the privacy of anyone in view. **404:** TAFA camera API is missing on the selected HA server. **403:** room user, ownership or camera permission missing. **409:** another active tablet camera session.
+
+---
+
+## Archived Jarvis camera documentation (not for clean TAFA installations)
+
 # Camera and local vision · 0.5.0
 
 **English** | [Deutsch](camera-preparation.de.md) · [Project overview](../../README.md)

@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.0.6 · Unified TAFA room camera
+- Replace the legacy Jarvis camera route with the supported authenticated TAFA room-camera API.
+- Use the dedicated room user's token, with explicit per-room camera opt-in from TAFA Control Center. No separate Jarvis camera receiver or administrator token is required.
+- Update 403/404/409 guidance. Camera remains user-started and temporary; no recordings.
+- Version code 19; same package ID, so an in-place update requires the original release signing key.
+
+
 ## 1.0.5 · Visible, self-recovering silent Bluetooth keepalive
 - Move the existing optional zero-PCM Bluetooth keepalive from a collapsed advanced menu to the player card on the Status page, with live status.
 - Recover automatically after Bluetooth disconnects, audio route changes, transient focus loss and MediaPlayer failures; bounded 3–30 second backoff, preserving the user's enable switch.

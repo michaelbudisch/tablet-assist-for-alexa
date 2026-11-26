@@ -83,10 +83,20 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn("enrollmentIo.scheduleWithFixedDelay",player)
         self.assertNotIn("enabled = false;",service.split("void pauseForFocus()",1)[1].split("void close()",1)[0])
 
+    def test_camera_uses_tafa_only(self):
+        cam=read("android/app/src/main/java/de/jarvis/audio/CameraUploadClient.java")
+        svc=read("android/app/src/main/java/de/jarvis/audio/CameraRelayService.java")
+        smoke=read("android/app/src/androidTest/java/de/jarvis/audio/CameraRelaySmoke.java")
+        self.assertIn('API="/api/tablet_assist_for_alexa/room_camera"',cam)
+        self.assertNotIn("/api/jarvis_echo_relay",cam+svc+smoke)
+        self.assertNotIn("room_audio_enabled",svc)
+        self.assertIn("POST /api/tablet_assist_for_alexa/room_camera/register",smoke)
+        self.assertIn("POST /api/tablet_assist_for_alexa/room_camera/frame",smoke)
+
     def test_version_contract(self):
-        self.assertIn('version: "0.3.39"',read("tafa_app/config.yaml"))
-        self.assertEqual(read("VERSION").strip(),"0.4.23")
-        self.assertEqual(read("android/VERSION").strip(),"1.0.5")
+        self.assertIn('version: "0.3.40"',read("tafa_app/config.yaml"))
+        self.assertEqual(read("VERSION").strip(),"0.4.24")
+        self.assertEqual(read("android/VERSION").strip(),"1.0.6")
 
 if __name__=="__main__":
     unittest.main()

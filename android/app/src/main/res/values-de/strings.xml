@@ -136,7 +136,7 @@
     <string name="language_en">EN</string>
     <string name="footer">TAFA Device Bridge · %1$s</string>
     <string name="camera_relay_title">Kamera für Home Assistant</string>
-    <string name="camera_relay_help">Übertrage die gewählte Kamera im gewählten Aktualisierungsintervall mit deiner gespeicherten HA-Anmeldung. Die Übertragung läuft auch im Dashboard und bei ausgeschaltetem Display. Starte ausdrücklich und stoppe hier oder über die eigene Kamera-Benachrichtigung. Bilder werden nicht aufgezeichnet. Der passende Kamera-Empfänger von Jarvis Tablet Audio muss zuvor in HA installiert sein.</string>
+    <string name="camera_relay_help">Überträgt Einzelbilder an deinen TAFA-Raum mit der gespeicherten Anmeldung des Raumnutzers. Zuerst unter Apps → TAFA → Geräte &amp; Multiroom die Kamera im Raum freigeben. Kamera ausdrücklich starten oder über die Benachrichtigung stoppen. Keine Aufzeichnung und kein separater Jarvis-Empfänger nötig.</string>
     <string name="camera_relay_start">Kamera für HA starten</string>
     <string name="camera_relay_stop">HA-Kamera stoppen</string>
     <string name="camera_local_title">Lokaler Kameratest</string>
@@ -147,9 +147,9 @@
     <string name="camera_relay_count">%1$d Bilder gesendet · zuletzt %2$s</string>
     <string name="camera_setup_required">Speichere zuerst HA-Adresse und Token in der Audioeinrichtung. Für die Kamera muss der Audioplayer nicht laufen.</string>
     <string name="camera_upload_error">Bildübertragung unterbrochen · neuer Versuch folgt. Prüfe WLAN und HA. Alte Bilder verfallen in HA nach 15 Sekunden.</string>
-    <string name="camera_auth_error">HA-Kamerazugriff verweigert. Nutze einen gültigen Administrator-Token des gekoppelten HA-Benutzers.</string>
-    <string name="camera_integration_missing">Installiere/aktualisiere den Kamera-Empfänger von Jarvis Tablet Audio in HA und lade diese Integration neu.</string>
-    <string name="camera_pairing_error">Ein anderes Tablet ist gekoppelt. Stoppe es und nutze in HA die Aktion Jarvis Tablet Audio: Kamerakopplung aufheben, bevor du dieses Gerät koppelst.</string>
+    <string name="camera_auth_error">Kamerazugriff abgelehnt. Unter Apps → TAFA → Geräte &amp; Multiroom die Kamera für den Raum aktivieren und das Token des Raumnutzers verwenden. Administratorrechte sind nicht nötig.</string>
+    <string name="camera_integration_missing">TAFA-Kamera-Endpunkt fehlt. Aktualisiere die TAFA-Integration auf diesem Home Assistant und starte HA Core neu. Kein separater Jarvis-Empfänger erforderlich.</string>
+    <string name="camera_pairing_error">Ein anderes Tablet überträgt bereits Bilder an diesen TAFA-Raum. Stoppe dessen Kameraübertragung, bevor du diese Kamera startest.</string>
     <string name="camera_image_error">Das Kamerabild konnte nicht vorbereitet werden. Stoppe und starte die HA-Kamera erneut.</string>
     <string name="camera_notification_channel">Kamera-Bildübertragung</string>
     <string name="camera_notification_text">Kamera aktiv · Bilder werden an Home Assistant übertragen</string>

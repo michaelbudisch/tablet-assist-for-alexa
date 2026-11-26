@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.40 — Native TAFA camera stream in each opted-in room
+- Add room camera enable/disable controls under Apps → TAFA → Devices & multiroom, even before a tablet enrolls; default is off.
+- Grant access only to the dedicated room user on the authenticated HA room-camera endpoint. Disabling access expires cached frames and prevents new uploads.
+- Android Device Bridge 1.0.6 switches its camera upload to the namespaced TAFA room camera endpoint; the old Jarvis receiver is neither needed nor shipped separately.
+- No recordings, camera auto-start, or changes to personal HA automations.
+
+
 ## 0.3.39 — Fix empty room-user list on clean installations
 - Repair "Geräte & Multiroom": query native tablets, HA room users and rooms through a single authenticated HA-admin WebSocket API rather than two Supervisor-proxied REST endpoints that returned HTTP 400.
 - Keep existing Android audio/wakeword REST endpoints and other personal automations unchanged.

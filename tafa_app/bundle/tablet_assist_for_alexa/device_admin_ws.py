@@ -31,6 +31,7 @@ async def perform_device_admin(hass, user, msg):
             devices = [controller.public(d) for d in controller.devices.values()]
         rooms = [{"room": name, "user_id": owner,
                   "wake_device_id": transport.settings.get(name, {}).get("wake_device_id", ""),
+                  "camera_enabled": transport.settings.get(name, {}).get("camera_enabled") is True,
                   **transport.status(owner)}
                  for name, owner in transport.rooms.items()]
         return {"users": sorted(users, key=lambda u: u["name"].casefold()),
@@ -57,6 +58,19 @@ async def perform_device_admin(hass, user, msg):
         transport.provision(room, principal)
         await persist()
         return {"room": room, "created": True}
+    if action == "camera":
+        # Only an administrator may explicitly enable one enrolled room's
+        # camera uploads. Disabling also clears existing in-memory frames via
+        # persist() -> room camera hub sync().
+        enabled = msg.get("camera_enabled")
+        if type(enabled) is not bool or transport.rooms.get(room) != principal:
+            raise ValueError("Invalid room camera setting")
+        transport.settings[room] = {
+            **transport.settings.get(room, {}),
+            "camera_enabled": enabled,
+        }
+        await persist()
+        return {"room": room, "camera_enabled": enabled}
     if action == "pair":
         identifier = msg.get("device_id")
         transfer = msg.get("transfer_device", False)
@@ -91,11 +105,12 @@ async def perform_device_admin(hass, user, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): COMMAND,
-    vol.Required("action"): vol.In(("list", "create", "pair", "configure")),
+    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera")),
     vol.Optional("room"): str,
     vol.Optional("user_id"): str,
     vol.Optional("device_id"): str,
     vol.Optional("transfer_device"): bool,
+    vol.Optional("camera_enabled"): bool,
     vol.Optional("settings"): dict,
 })
 @websocket_api.async_response
