@@ -57,7 +57,7 @@ public class CameraRelayService extends Service {
             var prefs=getSharedPreferences(MainActivity.PREF,0);
             String device=prefs.getString("camera_device_id","");
             if(!device.matches("[a-f0-9]{32}")){device=UUID.randomUUID().toString().replace("-","");prefs.edit().putString("camera_device_id",device).apply();}
-            upload=new CameraUploadClient(prefs.getString("base",""),MainActivity.decrypt(prefs.getString("secret","")),prefs.getString(MainActivity.HTTP_CONSENT,""),device,prefs.getBoolean("room_audio_enabled",false));
+            upload=new CameraUploadClient(prefs.getString("base",""),MainActivity.decrypt(prefs.getString("secret","")),prefs.getString(MainActivity.HTTP_CONSENT,""),device);
             lens=prefs.getString("camera_lens_id","");
             if(lens.isEmpty())lens=CameraPreviewController.lenses(this).get(0).id;
             motionEnabled=prefs.getBoolean("camera_motion",false);
