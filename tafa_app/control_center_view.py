@@ -108,6 +108,8 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     docs = "".join((
         f'<a href="{esc(repo)}/blob/main/docs/app.md" target="_blank" rel="noopener">Deutsch</a>',
         f'<a href="{esc(repo)}/blob/main/docs/en/app.md" target="_blank" rel="noopener">English</a>',
+        f'<a href="{esc(repo)}/blob/main/docs/native-only.md" target="_blank" rel="noopener">Native Sprachsteuerung</a>',
+        f'<a href="{esc(repo)}/blob/main/docs/en/native-only.md" target="_blank" rel="noopener">Native voice guide</a>',
         f'<a href="{esc(repo)}/tree/main/android" target="_blank" rel="noopener">Device Bridge</a>',
         f'<a href="{esc(repo)}/issues" target="_blank" rel="noopener">GitHub Issues</a>',
     ))
