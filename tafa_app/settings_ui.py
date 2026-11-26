@@ -276,9 +276,9 @@ def validate_settings_form(fields, current, available):
     for name, choices in CHOICES.items():
         if update[name] not in choices:
             raise ValueError("Invalid selection: " + name)
-    if update["speech_mode"] == "external":
-        private_http_origin(update["external_piper_base"])
     candidate = {**current, **update}
+    if update["speech_mode"] == "external":
+        private_http_origin(candidate.get("external_piper_base", ""))
     setup_settings_values(candidate)
     valid = {item["id"] for item in available}
     for key in ("cpu_stt", "gpu_stt"):

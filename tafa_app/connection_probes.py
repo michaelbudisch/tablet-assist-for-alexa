@@ -95,6 +95,13 @@ def _probe_public_https(value):
     setup_settings_values({"public_audio_base": value})
     parsed = urlsplit(value.strip().rstrip("/"))
     host = parsed.hostname or ""
+    # Public audio checks accept domain names only, never literal IPs.
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        pass
+    else:
+        raise ValueError("Public HTTPS requires a domain")
     if (not re.fullmatch(r"[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63})+", host)
             or parsed.port not in (None, 443)
             or len(value) > 256):
