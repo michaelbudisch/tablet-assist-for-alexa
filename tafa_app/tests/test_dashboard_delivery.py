@@ -18,7 +18,7 @@ def validators():
     path=HA/"dashboard_config.py"
     src=path.read_text(encoding="utf-8")
     module=ast.parse(src)
-    names={"MODULES","ROLE_DOMAINS","DEFAULT_MODULES"}
+    names={"MODULES","ROLE_DOMAINS","DEFAULT_MODULES","ENTITY","PIPELINE"}
     funcs={"default_dashboard","validate_dashboard"}
     nodes=[]
     for node in module.body:
