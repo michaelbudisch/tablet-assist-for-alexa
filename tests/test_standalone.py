@@ -9,8 +9,8 @@ D = Path(__file__).resolve().parents[1] / "custom_components/tablet_assist_for_a
 class Standalone(unittest.TestCase):
     def test_panel_files_and_lifecycle(self):
         src = (D / "__init__.py").read_text()
-        self.assertIn("await panel_custom.async_register_panel(", src)
-        self.assertIn("frontend.async_remove_panel(hass, DOMAIN)", src)
+        self.assertNotIn("panel_custom.async_register_panel(", src)
+        self.assertNotIn("frontend.async_remove_panel(hass, DOMAIN)", src)
         self.assertIn("/tablet_assist_for_alexa/panel.js", src)
         panel = (D / "frontend/panel.js").read_text()
         voice = (D / "frontend/voice_tools.js").read_text()

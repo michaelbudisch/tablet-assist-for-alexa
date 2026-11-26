@@ -161,6 +161,8 @@
                 <TextView android:id="@+id/native_pause_label" style="@style/Body" android:text="@string/native_pause_label" />
                 <SeekBar android:id="@+id/native_pause_slider" android:layout_width="match_parent" android:layout_height="48dp" android:max="23" android:progress="8" />
                 <Button android:id="@+id/native_assist_test" style="@style/Action" android:text="@string/native_assist_test" />
+                <Button android:id="@+id/display_permission" style="@style/Action" android:text="@string/display_permission" />
+                <TextView style="@style/Body" android:text="@string/display_permission_help" android:textSize="12sp" />
                 <TextView android:id="@+id/native_assist_status" style="@style/Body" android:text="@string/native_assist_inactive" android:textSize="12sp" android:accessibilityLiveRegion="polite" />
                 <TextView style="@style/Body" android:text="@string/native_assist_privacy" android:textSize="12sp" />
             </LinearLayout>

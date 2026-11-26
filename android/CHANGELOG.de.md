@@ -1,5 +1,12 @@
 # Android-Änderungsverlauf
 
+## 1.0.3 · Native Geräteverwaltung
+
+- Folgefragen unbegrenzt bis Stille, Stummschaltung oder Stopp.
+- Sprechpause und digitale Mikrofonverstärkung über HA, Tablet-, Akku- und Bluetoothstatus.
+- Optionale Android-Freigabe nur für Displayhelligkeit, keine physische Bildschirm-Abschaltung.
+- Versionscode 16; Update weiterhin mit bisherigem Signierschlüssel.
+
 [English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
 ## 1.0.1 · Native Assist-Sprachunterhaltung

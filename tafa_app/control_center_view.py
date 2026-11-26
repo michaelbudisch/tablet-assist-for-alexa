@@ -7,12 +7,12 @@ import html
 
 
 def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
-                     cards, picker, import_panel, checks, options, setup, pipeline, links, latest,
+                     cards, picker, import_panel, devices_panel, checks, options, setup, pipeline, links, latest,
                      cache_info, note, install, retry_button, remove_button, mode):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
     esc = lambda value: html.escape(str(value or ""), quote=True)
-    allowed_tabs = ("overview", "setup", "connections", "maintenance")
+    allowed_tabs = ("overview", "setup", "devices", "connections", "maintenance")
     if default_tab not in allowed_tabs:
         default_tab = "overview"
 
@@ -54,7 +54,8 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
                      else t("Wird eingerichtet","Setting up"),
                      "ready" if pipeline.get("status")=="ready" else "not_ready"),
     ))
-    expected_route = cards[7][1]
+    expected_route = t("Tablet-Mikrofon → HA Assist (TAFA Lokal) → Tablet / Bluetooth",
+                       "Tablet microphone → HA Assist (TAFA Lokal) → Tablet / Bluetooth")
     last_backend = (
         t("GPU-Whisper","GPU Whisper") if latest and latest.get("backend") == "zusatzrechner"
         else t("CPU / Homeserver","CPU / home server") if latest and latest.get("backend") == "homeserver"
@@ -95,6 +96,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     nav_items = [
         ("overview",t("Übersicht","Overview")),
         ("setup",t("Einrichtung","Settings")),
+        ("devices",t("Geräte & Multiroom","Devices & multiroom")),
         ("connections",t("Verbindungen","Connections")),
         ("maintenance",t("Wartung & Hilfe","Maintenance & help")),
     ]
@@ -106,6 +108,8 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     docs = "".join((
         f'<a href="{esc(repo)}/blob/main/docs/app.md" target="_blank" rel="noopener">Deutsch</a>',
         f'<a href="{esc(repo)}/blob/main/docs/en/app.md" target="_blank" rel="noopener">English</a>',
+        f'<a href="{esc(repo)}/blob/main/docs/native-only.md" target="_blank" rel="noopener">Native Sprachsteuerung</a>',
+        f'<a href="{esc(repo)}/blob/main/docs/en/native-only.md" target="_blank" rel="noopener">Native voice guide</a>',
         f'<a href="{esc(repo)}/tree/main/android" target="_blank" rel="noopener">Device Bridge</a>',
         f'<a href="{esc(repo)}/issues" target="_blank" rel="noopener">GitHub Issues</a>',
     ))
@@ -182,6 +186,14 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
   {picker}
 </section>
 
+<section class="tab-panel" id="devices" role="tabpanel" aria-labelledby="tab-devices">
+  <div class="section-heading"><p class="kicker">{t("TABLETS & MULTIROOM","TABLETS & MULTIROOM")}</p>
+    <h2>{t("Alle Sprachgeräte an einem Ort","All speech devices in one place")}</h2>
+    <p>{t("Rufwort, Mikrofon, Displayhelligkeit, Status und Raumzuordnung direkt aus Home Assistant steuern.","Control wakeword, microphone, brightness, diagnostics and rooms directly in Home Assistant.")}</p>
+  </div>
+  {devices_panel}
+</section>
+
 <section class="tab-panel" id="connections" role="tabpanel" aria-labelledby="tab-connections">
   <div class="section-heading with-action">
     <div><p class="kicker">{t("VERBINDUNGEN","CONNECTIONS")}</p>
@@ -228,7 +240,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
       <li>{t("GPU-/Proxmox-JSON unter Einrichtung importieren. TAFA verbindet Wyoming und Ollama automatisch, soweit die Dienste verfügbar sind.","Import GPU/Proxmox JSON under Settings. TAFA connects Wyoming and Ollama automatically when the services are available.")}</li>
       <li>{t("TAFA Device Bridge für Rufwort und Audio verbinden.","Connect TAFA Device Bridge for wake words and audio.")}</li>
     </ol><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open Devices & services")}</a>
-    <span aria-hidden="true"> · </span><a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Dashboard","TAFA dashboard")}</a></div>
+    <span aria-hidden="true"> · </span><a href="#devices">{t("Geräte &amp; Multiroom","Devices &amp; multiroom")}</a></div>
   </details>
   <section class="work-card support-links">
     <h3>{t("Dokumentation & Support","Documentation & support")}</h3>

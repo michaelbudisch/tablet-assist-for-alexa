@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.0.3 · Native-only HA control
+
+- Unlimited follow-ups until silence, mute or stop. Only the HA Assist / Bluetooth transport is used.
+- Remotely controlled pause and digital microphone gain, tablet health and Bluetooth telemetry.
+- Opt-in brightness adjustment through Android special permission (not physical screen on/off).
+- Version code 16; in-place update requires the existing release signing key.
+
 **English** | [Deutsch](CHANGELOG.de.md) · [Project overview](../README.md)
 
 ## 1.0.1 · Native Assist voice conversation

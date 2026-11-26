@@ -21,7 +21,7 @@ class ControlCenterLayoutTests(unittest.TestCase):
         opts.update(kw)
         return opts
 
-    def test_four_accessible_tabs_in_both_languages(self):
+    def test_five_accessible_tabs_in_both_languages(self):
         configs=self.mock_view()
         with patch.object(server,"choose_speech_source",return_value=configs["choose_speech_source"]),\
              patch.object(server,"external_piper_ready",return_value=True),\
@@ -35,8 +35,8 @@ class ControlCenterLayoutTests(unittest.TestCase):
              patch.object(server,"recent_stt_backend",return_value=None):
             de=server.display(lang="de",default_tab="connections")
             en=server.display(lang="en",default_tab="setup")
-        self.assertEqual(de.count('role="tab"'),4)
-        self.assertEqual(de.count('role="tabpanel"'),4)
+        self.assertEqual(de.count('role="tab"'),5)
+        self.assertEqual(de.count('role="tabpanel"'),5)
         self.assertIn('data-default-tab="connections"',de)
         self.assertIn('data-default-tab="setup"',en)
         self.assertIn("Wartung &amp; Hilfe",de)

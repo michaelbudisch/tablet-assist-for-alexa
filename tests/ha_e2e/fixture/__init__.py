@@ -73,11 +73,33 @@ async def phase_one(hass):
             "conversation_mode":"intelligent","mp3_profile":"natural","chime":False,
         })
         check(entry.data["hardware_profile"]=="Homeserver","translated config value compatible")
-        check(DOMAIN in hass.data[frontend.DATA_PANELS],"independent sidebar panel registered")
+        check(DOMAIN not in hass.data[frontend.DATA_PANELS],"no TAFA sidebar registered")
         check(hass.services.has_service(DOMAIN,"announce"),"service registered")
         relay=hass.data.get(DOMAIN,{})
         check(bool(relay.get("relay_camera")),"unified native camera relay registered")
         check(bool(relay.get("wake_devices_dynamic")),"native wake-device registry registered")
+        # Enrolling a new tablet must create real Home Assistant entities at
+        # runtime, without static helper slots or a Core restart.
+        controller=relay["wake_devices_dynamic"]
+        tablet_id="c"*32
+        controller.devices[tablet_id]={
+            "device_id":tablet_id, "user_id":"ci-device",
+            "room":"CI Tablet", "muted":False, "mic_gain":100,
+            "screen_awake":True, "word":"Jarvis"}
+        controller.changed(tablet_id,registered=True)
+        def tablet_entity(key):
+            registry=er.async_get(hass)
+            match=next((e.entity_id for e in registry.entities.values()
+                        if e.unique_id=="tafa_"+tablet_id+"_"+key),None)
+            return match
+        await wait_until(lambda: tablet_entity("mic_gain") is not None
+                         and tablet_entity("online") is not None
+                         and tablet_entity("muted") is not None,
+                         "tablet sensors, numbers and switches registered dynamically")
+        await controller.set_value(tablet_id,"mic_gain",120)
+        await wait_until(lambda: hass.states.get(tablet_entity("mic_gain")) is not None
+                         and hass.states.get(tablet_entity("mic_gain")).state in ("120","120.0"),
+                         "HA tablet control updates state")
         check(bool(relay.get("room_audio")),"multiroom audio transport registered")
         check(hass.services.has_service(DOMAIN,"room_audio"),"TAFA room audio service")
         check(hass.services.has_service(DOMAIN,"model_settings"),"unified AI model settings service")
@@ -102,7 +124,7 @@ async def phase_one(hass):
         await wait_until(lambda: hass.data.get(DOMAIN,{}).get(entry.entry_id) not in (None,before) and entry.state==ConfigEntryState.LOADED,"options reload")
         data=hass.data[DOMAIN][entry.entry_id]
         check(data.sources.get("shopping")==todo_id and data.cfg.get("reminders_enabled"),"options live")
-        check(DOMAIN in hass.data[frontend.DATA_PANELS],"sidebar survives options reload")
+        check(DOMAIN not in hass.data[frontend.DATA_PANELS],"no TAFA sidebar after reload")
         menu=await hass.config_entries.options.async_init(entry.entry_id)
         check(menu["type"]=="menu","hardware setup reachable from categorized options")
         hardware=await hass.config_entries.options.async_configure(menu["flow_id"],{"next_step_id":"hardware"})
@@ -159,7 +181,7 @@ async def phase_two(hass):
     check(len(entries)==1,"config entry restored after complete process restart")
     entry=entries[0]
     await entry_loaded(hass,entry)
-    check(DOMAIN in hass.data[frontend.DATA_PANELS],"sidebar restored")
+    check(DOMAIN not in hass.data[frontend.DATA_PANELS],"no TAFA sidebar after restart")
     check(hass.services.has_service(DOMAIN,"room_audio"),"multiroom registered after restart")
     check(hass.data.get(DOMAIN,{}).get("wake_devices_dynamic") is not None,"native wake registry after restart")
     data=hass.data[DOMAIN][entry.entry_id]

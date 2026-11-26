@@ -410,8 +410,8 @@ public class MainActivity extends Activity {
         SeekBar pause=findViewById(R.id.native_pause_slider);
         TextView pauseLabel=findViewById(R.id.native_pause_label);
         Button test=findViewById(R.id.native_assist_test);
-        // No transport mode switch or local follow-up cap. HA manages
-        // per-device follow-up limits; direct native capture is mandatory.
+        // Native HA Assist + tablet Bluetooth is the only audio route.
+        // Follow-ups continue until silence; HA owns microphone parameters.
         enabled.setChecked(true);
         enabled.setVisibility(View.GONE);
         followups.setVisibility(View.GONE);
@@ -424,10 +424,19 @@ public class MainActivity extends Activity {
             @Override public void onProgressChanged(SeekBar bar,int progress,boolean fromUser){
                 int ms=900+100*progress;
                 pauseLabel.setText(getString(R.string.native_pause_label,ms));
-                if(fromUser)preferences.edit().putInt("native_pause_ms",ms).apply();
+                // Slider changes are committed once on release below.
             }
             @Override public void onStartTrackingTouch(SeekBar bar){}
-            @Override public void onStopTrackingTouch(SeekBar bar){}
+            @Override public void onStopTrackingTouch(SeekBar bar){
+                int ms=900+100*bar.getProgress();
+                preferences.edit().putInt("native_pause_ms",ms).apply();
+                remoteWakeSetting("pause_ms",ms);
+            }
+        });
+        findViewById(R.id.display_permission).setOnClickListener(v->{
+            Intent settings=new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                android.net.Uri.parse("package:"+getPackageName()));
+            startActivity(settings);
         });
         test.setOnClickListener(v->{
             if(!WakeWordService.running||!AudioService.running){
