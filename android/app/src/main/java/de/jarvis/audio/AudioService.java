@@ -130,11 +130,11 @@ public class AudioService extends Service {
         }catch(Exception e){
             haConnected=false;
             String msg=e.getMessage()==null?"":e.getMessage();
-            if(msg.contains("403")||msg.contains("409")){
+            if(msg.contains("401")||msg.contains("403")||msg.contains("409")){
                 roomSession="";roomTerminal="";roomRetryAt=System.currentTimeMillis()+3000;
                 if(busy)main.post(()->finish("error_room_session"));
             }
-            if(!busy)ui=msg.contains("401")||msg.contains("403")?"credentials_error":"connection_error|"+e.getClass().getSimpleName();
+            if(!busy)ui=ConnectionDiagnostics.status(e);
         }
     }
     private boolean takeSpeechFocus() {

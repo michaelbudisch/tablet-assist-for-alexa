@@ -670,7 +670,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.camera_main_stop).setVisibility(CameraRelayService.running?View.VISIBLE:View.GONE);
         String raw = AudioService.ui;
         String stage = raw;
-        if (raw.contains("|") && !raw.startsWith("ready|") && !raw.startsWith("no_bluetooth|") && !raw.startsWith("connection_error|"))
+        if (raw.contains("|") && !raw.startsWith("ready|") && !raw.startsWith("no_bluetooth|") && !raw.startsWith("connection_error|") && !raw.startsWith("credentials_error"))
             stage = raw.split("\\|", 3)[1];
         int title = R.string.status_stopped, description = R.string.status_stopped_help;
         if (raw.startsWith("ready|")) { title = R.string.status_ready; description = R.string.status_ready_help; }
@@ -682,8 +682,15 @@ public class MainActivity extends Activity {
         else if (stage.equals("cancelled")) { title = R.string.status_cancelled; description = R.string.status_done_help; }
         else if (stage.contains("error")) {
             title = R.string.status_error;
-            description = stage.contains("route") || stage.contains("bluetooth") ? R.string.status_route_help
-                    : stage.contains("auth") || stage.contains("credentials") ? R.string.status_auth_help : R.string.status_network_help;
+            description = raw.contains("http_404_tafa_api") ? R.string.status_missing_tafa_api
+                    : raw.contains("http_403_room_user") ? R.string.status_room_user
+                    : raw.contains("http_409_session") ? R.string.status_player_session
+                    : raw.contains("http_503_not_ready") ? R.string.status_backend_not_ready
+                    : raw.contains("tls_certificate") ? R.string.status_tls_help
+                    : raw.contains("dns_failed") ? R.string.status_dns_help
+                    : stage.contains("route") || stage.contains("bluetooth") ? R.string.status_route_help
+                    : stage.contains("auth") || stage.contains("credentials") ? R.string.status_auth_help
+                    : R.string.status_network_help;
         }
         ((TextView) findViewById(R.id.player_status)).setText(title);
         ((TextView) findViewById(R.id.player_description)).setText(description);
