@@ -208,28 +208,39 @@ async def read_public_article(url):
     link = public_link(url)
     if not link or not re.fullmatch(r"[A-Za-z0-9.-]{3,253}", urlsplit(link).hostname or ""):
         raise ValueError("Only public HTTPS article URLs are supported")
-    timeout = aiohttp.ClientTimeout(total=14, connect=5, sock_read=8)
+    timeout = aiohttp.ClientTimeout(total=16, connect=5, sock_read=8)
     connector = aiohttp.TCPConnector(resolver=PublicResolver(), use_dns_cache=False,
                                     limit=2, ttl_dns_cache=0)
     async with aiohttp.ClientSession(connector=connector, trust_env=False,
                                      timeout=timeout) as session:
-        async with session.get(link, allow_redirects=False,
-                               headers={"Accept": "text/html,application/xhtml+xml",
-                                        "User-Agent": "TAFA-ArticleReader/1.0"}) as response:
-            if response.status != 200:
-                raise ValueError("Article is unavailable or redirects to another site")
-            media = response.headers.get("Content-Type", "").lower()
-            if "text/html" not in media and "application/xhtml+xml" not in media:
-                raise ValueError("The source is not an HTML article")
-            if response.content_length and response.content_length > MAX_HTML:
-                raise ValueError("Article is too large")
-            raw = await response.content.read(MAX_HTML + 1)
-            if len(raw) > MAX_HTML:
-                raise ValueError("Article is too large")
-            parser = ArticleParser()
-            parser.feed(raw.decode(response.charset or "utf-8", errors="replace"))
-            parser.close()
-            return parser.result(link)
+        # Follow at most two redirects. Every hop must stay public HTTPS and is
+        # DNS-validated by the connector before any connection is established.
+        for hop in range(3):
+            async with session.get(link, allow_redirects=False,
+                                   headers={"Accept": "text/html,application/xhtml+xml",
+                                            "User-Agent": "TAFA-ArticleReader/1.0"}) as response:
+                if response.status in (301, 302, 303, 307, 308):
+                    from urllib.parse import urljoin
+                    candidate = urljoin(link, response.headers.get("Location", ""))
+                    if hop >= 2 or not public_link(candidate):
+                        raise ValueError("The article redirect was not allowed")
+                    link = candidate
+                    continue
+                if response.status != 200:
+                    raise ValueError("Article HTTP status " + str(response.status))
+                media = response.headers.get("Content-Type", "").lower()
+                if "text/html" not in media and "application/xhtml+xml" not in media:
+                    raise ValueError("The source is not an HTML article")
+                if response.content_length and response.content_length > MAX_HTML:
+                    raise ValueError("Article is too large")
+                raw = await response.content.read(MAX_HTML + 1)
+                if len(raw) > MAX_HTML:
+                    raise ValueError("Article is too large")
+                parser = ArticleParser()
+                parser.feed(raw.decode(response.charset or "utf-8", errors="replace"))
+                parser.close()
+                return parser.result(link)
+        raise ValueError("Too many redirects")
 
 
 @websocket_api.websocket_command({
@@ -240,11 +251,21 @@ async def read_public_article(url):
 async def article_read_command(hass, connection, msg):
     try:
         result = await read_public_article(msg["url"])
-    except (ValueError, TypeError, UnicodeError, OSError, asyncio.TimeoutError,
-            aiohttp.ClientError):
-        connection.send_result(msg["id"], {
-            "error": "Diese Quelle kann nicht sicher ausgelesen werden. "
-                     "Der Suchauszug bleibt verfügbar."
-        })
+    except ValueError as exc:
+        # Report a bounded reason without revealing private addresses or
+        # source response bodies to the requesting dashboard.
+        reason = str(exc)
+        if reason.startswith("Article HTTP status "):
+            reason = "Die Webseite antwortet mit HTTP " + reason.rsplit(" ", 1)[-1] + "."
+        elif "redirect" in reason.lower():
+            reason = "Die Webseite leitet zu einer nicht erlaubten Adresse weiter."
+        elif "readable article" in reason.lower():
+            reason = "Auf der Seite wurde kein lesbarer Artikeltext erkannt."
+        else:
+            reason = "Diese Quelle kann nicht sicher ausgelesen werden."
+        connection.send_result(msg["id"], {"error": reason})
+        return
+    except (TypeError, UnicodeError, OSError, asyncio.TimeoutError, aiohttp.ClientError):
+        connection.send_result(msg["id"], {"error": "Die Webseite ist gerade nicht erreichbar. Der Suchauszug bleibt verfügbar."})
         return
     connection.send_result(msg["id"], result)
