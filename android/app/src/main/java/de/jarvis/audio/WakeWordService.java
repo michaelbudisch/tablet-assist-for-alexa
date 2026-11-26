@@ -16,6 +16,8 @@ import org.vosk.Recognizer;
 import org.vosk.android.RecognitionListener;
 import org.vosk.android.SpeechService;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayDeque;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -287,7 +289,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         if(notifications!=null)notifications.notify(43,notification());
         continuousThread=new Thread(()->{
             AudioRecord recorder=null;
-            boolean detected=false;
+            byte[] question=null;
             try{
                 int min=AudioRecord.getMinBufferSize(16000,
                     AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
@@ -301,14 +303,44 @@ public final class WakeWordService extends Service implements RecognitionListene
                     throw new IllegalStateException("microphone_unavailable");
                 continuousRecorder=recorder;
                 recorder.startRecording();
-                ContinuousSpeechTrigger detector=new ContinuousSpeechTrigger();
+                ContinuousSpeechTrigger gate=new ContinuousSpeechTrigger();
+                NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(1700,8000);
+                ArrayDeque<byte[]> preroll=new ArrayDeque<>(30);
+                ByteArrayOutputStream pending=new ByteArrayOutputStream(32000);
+                boolean started=false;
                 short[] pcm=new short[320];
                 while(continuousRunning&&continuousGeneration==generation&&enabled&&!muted&&
                       "continuous".equals(voiceMode)){
                     int count=recorder.read(pcm,0,pcm.length,AudioRecord.READ_BLOCKING);
                     if(count<0)throw new IllegalStateException("microphone_read_failed");
                     if(count!=320)continue;
-                    if(detector.feed(pcm,count)){detected=true;break;}
+                    byte[] frame=new byte[count*2];
+                    for(int i=0;i<count;i++){
+                        frame[i*2]=(byte)pcm[i];
+                        frame[i*2+1]=(byte)(pcm[i]>>>8);
+                    }
+                    NativeSpeechEndpoint.Decision decision=endpoint.feed(pcm,count);
+                    if(started){
+                        pending.write(frame,0,frame.length);
+                    }else{
+                        preroll.addLast(frame);
+                        if(preroll.size()>30)preroll.removeFirst();
+                        if(gate.feed(pcm,count)){
+                            started=true;
+                            for(byte[] saved:preroll)pending.write(saved,0,saved.length);
+                            preroll.clear();
+                        }
+                    }
+                    if(decision==NativeSpeechEndpoint.Decision.EMPTY){
+                        gate=new ContinuousSpeechTrigger();
+                        endpoint=new NativeSpeechEndpoint(1700,8000);
+                        preroll.clear();pending.reset();started=false;
+                    }else if(decision==NativeSpeechEndpoint.Decision.END||
+                            decision==NativeSpeechEndpoint.Decision.LIMIT){
+                        if(started&&endpoint.hasSpeech()&&pending.size()>=16000)
+                            question=pending.toByteArray();
+                        break;
+                    }
                 }
             }catch(Exception e){
                 if(continuousGeneration==generation&&enabled&&!muted){
@@ -328,12 +360,14 @@ public final class WakeWordService extends Service implements RecognitionListene
                 if(continuousGeneration==generation){
                     continuousRunning=false;
                     continuousRecorder=null;
-                    if(detected)main.post(()->{
-                        if(enabled&&!muted&&"continuous".equals(voiceMode)&&
-                                nativeSession==null&&!followupPending){
+                    final byte[] captured=question;
+                    main.post(()->{
+                        if(!enabled||muted||!"continuous".equals(voiceMode)||
+                                nativeSession!=null||followupPending)return;
+                        if(captured!=null){
                             resetConversation();
-                            beginNativeAssist("",false);
-                        }
+                            beginNativeAssist("",false,captured);
+                        }else main.postDelayed(rearm,300);
                     });
                 }
             }
@@ -382,6 +416,10 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     /** Launch only while the explicitly started foreground wake service runs. */
     private void beginNativeAssist(String hit,boolean nextQuestion){
+        beginNativeAssist(hit,nextQuestion,null);
+    }
+
+    private void beginNativeAssist(String hit,boolean nextQuestion,byte[] capturedPcm){
         if(!enabled||muted||nativeSession!=null)return;
         if(nextQuestion){
             if(!FollowupPolicy.shouldContinue(true,completedFollowups,followupLimit())){
@@ -429,7 +467,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                         }else endConversation();
                     });
                 }
-            });
+            },capturedPcm);
         holder[0]=session;
         nativeSession=session;
         session.start();

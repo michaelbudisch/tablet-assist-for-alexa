@@ -50,6 +50,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         .pingInterval(20,TimeUnit.SECONDS).build();
     private final Context context;
     private final Listener listener;
+    private byte[] capturedPcm;
     private final String lastConversation, wakeWord;
     private final boolean followup;
     private final ExecutorService work=Executors.newSingleThreadExecutor(r->{
@@ -72,12 +73,18 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
 
     NativeAssistSession(Context context,String wakeWord,String lastConversation,
                         int pauseMs,boolean followup,Listener listener){
+        this(context,wakeWord,lastConversation,pauseMs,followup,listener,null);
+    }
+
+    NativeAssistSession(Context context,String wakeWord,String lastConversation,
+                        int pauseMs,boolean followup,Listener listener,byte[] capturedPcm){
         this.context=context.getApplicationContext();
         this.wakeWord=wakeWord==null?"":wakeWord;
         this.lastConversation=lastConversation==null?"":lastConversation;
         this.pauseMs=Math.max(900,Math.min(3200,pauseMs));
         this.followup=followup;
         this.listener=listener;
+        this.capturedPcm=capturedPcm;
     }
 
     void start(){
@@ -246,6 +253,33 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
     private void startCapture(){
         if(capture||ended.get())return;
         capture=true;
+        if(capturedPcm!=null){
+            // Continuous mode already recorded this one utterance locally;
+            // replay the bounded PCM over the normal Assist STT WebSocket.
+            // No second microphone or repeated wakeword transcription.
+            state("transcribing");
+            byte[] utterance=capturedPcm;
+            capturedPcm=null;
+            work.execute(()->{
+                try{
+                    WebSocket ws=socket;
+                    if(ws==null||handler<0)throw new IOException("audio_socket_closed");
+                    for(int pos=0;pos<utterance.length&&!ended.get();pos+=640){
+                        int len=Math.min(640,utterance.length-pos);
+                        byte[] packet=new byte[len+1];
+                        packet[0]=(byte)(handler&0xff);
+                        System.arraycopy(utterance,pos,packet,1,len);
+                        if(!ws.send(ByteString.of(packet)))
+                            throw new IOException("audio_socket_closed");
+                    }
+                    if(!ended.get()&&!ws.send(ByteString.of(new byte[]{(byte)(handler&0xff)})))
+                        throw new IOException("audio_socket_closed");
+                }catch(Exception error){
+                    if(!ended.get())fail("audio_"+error.getClass().getSimpleName());
+                }finally{capture=false;}
+            });
+            return;
+        }
         state("listening");
         work.execute(()->{
             AudioRecord audio=null;
