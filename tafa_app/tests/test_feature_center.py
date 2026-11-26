@@ -84,7 +84,9 @@ class FeatureCenterTests(unittest.TestCase):
 
     def test_room_form_preserves_other_rooms(self):
         previous = {"rooms_json": json.dumps({"Büro": {"notify": "notify.echo_old"},
-                                               "Wohnzimmer": {"notify": "notify.living"}})}
+                                               "Wohnzimmer": {"notify": "notify.living"}}),
+                    "mp3_base": "http://192.168.1.50:5001",
+                    "public_audio_base": "https://tafa.example.org"}
         data = {"csrf": ["test"], "lang": ["de"], "tab": ["features"],
                 "action": ["feature_room"], "room_name": ["Büro"],
                 "notify": ["notify.echo_new"], "dnd": [""], "quiet": [""]}
