@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.4.35 — Heizölbestandsabfragen und Legacy-Übergang
+
+- Sobald `heizoel` in TAFA konfiguriert ist, werden reine Heizölbestandsfragen zuerst durch den sicheren TAFA-Datenleser beantwortet.
+- Vorhandene ältere Home-Assistant-Konversationsautomationen bleiben erhalten; deren veraltete Bestandsensoren werden bei solchen TAFA-Abfragen nicht mehr verwendet.
+- Tests für typische Formulierungen wie „Wie viel Heizöl ist noch im Tank?“ und „Wie hoch ist mein Heizölbestand?“ ergänzt.
+
 ## 0.4.34 — Gemeinsame Darstellung und kontextbezogene Navigation
 
 - Neue Hausdaten- und Wissens-Infoboxen nutzen denselben TAFA-Antwortkanal wie die native Android-App.
