@@ -268,8 +268,81 @@ def validate_dashboard(raw):
     return result
 
 
+def migrate_saved_dashboard(raw):
+    """Recover known settings individually without rewriting the stored original.
+
+    New modules and source roles always come from current defaults. Old modules,
+    entity assignments, preferences and module order survive whenever valid.
+    Unsupported legacy fields are ignored here but remain in the original HA
+    Store until an explicit save; that save first snapshots the original.
+    """
+    if not isinstance(raw, dict):
+        return default_dashboard()
+    if raw.get("type") not in (None, "custom:tafa-home-dashboard"):
+        return default_dashboard()
+    if isinstance(raw.get("version"), int) and raw["version"] > 1:
+        # A newer TAFA version wrote this: do not silently overwrite it.
+        raise ValueError("Newer TAFA dashboard schema detected; update TAFA")
+    defaults = default_dashboard()
+    clean = {"type": defaults["type"], "version": defaults["version"]}
+    for key in ("language", "theme", "accent", "density", "gridSign", "title"):
+        value = raw.get(key)
+        if value is not None:
+            trial = {**defaults, key: value}
+            try:
+                validate_dashboard(trial)
+            except (TypeError, ValueError):
+                continue
+            clean[key] = value
+    modules = raw.get("modules")
+    if isinstance(modules, list):
+        clean["modules"] = list(dict.fromkeys(
+            k for k in modules if isinstance(k, str) and k in MODULES))
+    bindings = raw.get("bindings")
+    if isinstance(bindings, dict):
+        migrated = {}
+        for role, domains in ROLE_DOMAINS.items():
+            ids = bindings.get(role)
+            if not isinstance(ids, list):
+                continue
+            filtered = []
+            for item in ids:
+                if (isinstance(item, str) and len(item) <= 255
+                        and ENTITY.fullmatch(item)
+                        and item.split(".", 1)[0] in domains
+                        and item not in filtered):
+                    filtered.append(item)
+                if len(filtered) >= 100:
+                    break
+            migrated[role] = filtered
+        clean["bindings"] = migrated
+    assist = raw.get("assist")
+    if isinstance(assist, dict):
+        clean["assist"] = {k: v for k, v in assist.items()
+                           if k in ("pipeline_id", "wake_pipeline_id")
+                           and isinstance(v, str) and (not v or PIPELINE.fullmatch(v))}
+    prefs = raw.get("presentation")
+    if isinstance(prefs, dict):
+        migrated_prefs = {}
+        for key, default in PRESENTATION_DEFAULTS.items():
+            value = prefs.get(key)
+            if type(default) is bool and type(value) is bool:
+                migrated_prefs[key] = value
+            elif key == "returnTarget" and value in ("previous", "start"):
+                migrated_prefs[key] = value
+            elif type(default) is int and type(value) is int and 5 <= value <= 180:
+                migrated_prefs[key] = value
+        clean["presentation"] = migrated_prefs
+    return validate_dashboard(clean)
+
+
 def dashboard_store(hass):
     return Store(hass, STORE_VERSION, STORE_KEY)
+
+
+def dashboard_backup_store(hass):
+    # Separate HA Store key, not the raw .storage file or Lovelace YAML.
+    return Store(hass, STORE_VERSION, STORE_KEY + "_previous")
 
 
 async def load_dashboard(hass):
@@ -279,8 +352,7 @@ async def load_dashboard(hass):
     try:
         return validate_dashboard(data)
     except (TypeError, ValueError):
-        # Never crash the whole frontend due to older or corrupt settings.
-        return default_dashboard()
+        return migrate_saved_dashboard(data)
 
 
 @websocket_api.websocket_command({
@@ -306,5 +378,9 @@ async def async_set_dashboard(hass, connection, msg):
     lock = hass.data.setdefault(DOMAIN, {}).setdefault(
         "dashboard_write_lock", asyncio.Lock())
     async with lock:
+        existing = await dashboard_store(hass).async_load()
+        if existing is not None and existing != parsed:
+            # Snapshot before overwriting. Includes unknown future/legacy keys.
+            await dashboard_backup_store(hass).async_save(existing)
         await dashboard_store(hass).async_save(parsed)
     connection.send_result(msg["id"], {"saved": True, "config": parsed})
