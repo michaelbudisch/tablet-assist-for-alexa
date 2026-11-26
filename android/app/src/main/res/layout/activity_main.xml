@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/main_scroll" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:clipToPadding="false">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/page_content" android:padding="20dp" android:focusableInTouchMode="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/page_content" android:padding="12dp" android:focusableInTouchMode="true">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:id="@+id/brand_header">
-            <LinearLayout android:id="@+id/brand_logo" android:layout_width="0dp" android:layout_weight="1" android:layout_height="80dp" android:orientation="horizontal" android:gravity="center_vertical" android:contentDescription="@string/app_name">
-                <ImageView android:layout_width="48dp" android:layout_height="52dp" android:src="@drawable/ic_relay" android:importantForAccessibility="no" />
+            <LinearLayout android:id="@+id/brand_logo" android:layout_width="0dp" android:layout_weight="1" android:layout_height="60dp" android:orientation="horizontal" android:gravity="center_vertical" android:contentDescription="@string/app_name">
+                <ImageView android:layout_width="36dp" android:layout_height="40dp" android:src="@drawable/ic_relay" android:importantForAccessibility="no" />
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="10dp" android:importantForAccessibility="noHideDescendants">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/brand_family" android:textSize="30sp" android:textColor="@color/ink" android:fontFamily="sans-serif-black" android:letterSpacing="0.035" android:includeFontPadding="false" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/brand_family" android:textSize="24sp" android:textColor="@color/ink" android:fontFamily="sans-serif-black" android:letterSpacing="0.035" android:includeFontPadding="false" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/brand_product" android:textSize="13sp" android:textColor="@color/secondary" android:fontFamily="sans-serif" android:includeFontPadding="false" android:layout_marginTop="2dp" />
                 </LinearLayout>
             </LinearLayout>
@@ -17,14 +17,14 @@
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-        <TextView style="@style/Body" android:text="@string/app_tagline" android:textSize="13sp" android:layout_marginTop="0dp" android:layout_marginBottom="18dp" />
+        <TextView style="@style/Body" android:visibility="gone" android:text="@string/app_tagline" android:textSize="13sp" android:layout_marginTop="0dp" android:layout_marginBottom="18dp" />
         <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="4dp" android:background="@drawable/bg_navigation" android:id="@+id/section_tabs" android:columnCount="3">
             <Button android:id="@+id/nav_status" style="@style/Tab" android:text="@string/nav_status" />
             <Button android:id="@+id/nav_connection" style="@style/Tab" android:text="@string/nav_connection" />
             <Button android:id="@+id/nav_settings" style="@style/Tab" android:text="@string/nav_settings" />
         </GridLayout>
-        <TextView style="@style/Heading" android:text="@string/section_status_title" android:id="@+id/section_heading" android:textSize="26sp" android:layout_marginTop="24dp" android:accessibilityHeading="true" />
-        <TextView style="@style/Body" android:text="@string/section_status_description" android:id="@+id/section_description" android:layout_marginTop="6dp" android:layout_marginBottom="18dp" />
+        <TextView style="@style/Heading" android:text="@string/section_status_title" android:id="@+id/section_heading" android:textSize="22sp" android:layout_marginTop="12dp" android:accessibilityHeading="true" />
+        <TextView style="@style/Body" android:text="@string/section_status_description" android:id="@+id/section_description" android:layout_marginTop="6dp" android:layout_marginBottom="8dp" />
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/section_status">
             <GridLayout android:id="@+id/status_quick_actions" android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="2" android:layout_marginBottom="12dp">
                 <Button android:id="@+id/status_connect" style="@style/Primary" android:text="@string/quick_connect" />
@@ -112,7 +112,9 @@
             <LinearLayout style="@style/Card">
                 <TextView style="@style/Eyebrow" android:text="@string/settings_audio_group" />
                 <TextView style="@style/Heading" android:text="@string/settings_audio_title" />
-                <TextView style="@style/Body" android:text="@string/settings_audio_help" />
+                <TextView style="@style/Body" android:text="@string/output_label" android:labelFor="@+id/audio_output_mode" />
+                <Spinner android:id="@id/audio_output_mode" style="@style/Choice" android:spinnerMode="dropdown" android:contentDescription="@string/output_label" />
+                <TextView style="@style/Body" android:text="@string/settings_audio_help" android:textSize="12sp" />
                 <Button android:id="@+id/bluetooth_settings" style="@style/Action" android:text="@string/bluetooth_settings" />
                 <Button android:id="@+id/player_start" style="@style/Primary" android:text="@string/player_start" />
                 <Button android:id="@+id/player_stop" style="@style/Action" android:text="@string/player_stop" />

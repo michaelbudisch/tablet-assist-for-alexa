@@ -51,6 +51,8 @@ public class MainActivity extends Activity {
     private boolean didAutoSearch;
     private int resultCount;
     private String selectedSection = "connection";
+    private Spinner audioOutputChoice;
+    private boolean updatingOutputChoice;
 
     @Override protected void attachBaseContext(Context base) { super.attachBaseContext(AppLanguage.wrap(base)); }
 
@@ -145,12 +147,18 @@ public class MainActivity extends Activity {
             prefs.edit().putBoolean("keepalive_enabled", enabled).apply();
             if (AudioService.running) startService(new Intent(this, AudioService.class).setAction("update_keepalive"));
         });
+        initializeAudioOutput();
+        compactSettings();
         initializeNativeWake();
         initializeNativeAssistControls();
-        findViewById(R.id.status_connect).setOnClickListener(v->startPlayer());
+        findViewById(R.id.status_connect).setOnClickListener(v->{
+            if(AudioService.running||WakeWordService.running||CameraRelayService.running)disconnectBridge();
+            else if(!getSharedPreferences(PREF,0).contains("secret"))showSection("connection",true);
+            else startPlayer();
+        });
         findViewById(R.id.status_speak).setOnClickListener(v->startNativeWake(true));
-        findViewById(R.id.status_wake).setOnClickListener(v->startNativeWake());
-        findViewById(R.id.status_camera).setOnClickListener(v->requestCameraRelay());
+        findViewById(R.id.status_wake).setOnClickListener(v->{if(WakeWordService.running)stopService(new Intent(this,WakeWordService.class));else startNativeWake();});
+        findViewById(R.id.status_camera).setOnClickListener(v->{if(CameraRelayService.running)stopService(new Intent(this,CameraRelayService.class));else requestCameraRelay();});
         findViewById(R.id.status_end_conversation).setOnClickListener(v->{
             if(WakeWordService.running)
                 startService(new Intent(this,WakeWordService.class).setAction(WakeWordService.NATIVE_SETTINGS));
@@ -163,6 +171,72 @@ public class MainActivity extends Activity {
     }
 
 
+    private void disconnectBridge(){
+        getSharedPreferences(PREF,0).edit().putBoolean("room_audio_enabled",false).apply();
+        stopService(new Intent(this,WakeWordService.class));
+        stopService(new Intent(this,CameraRelayService.class));
+        stopService(new Intent(this,AudioService.class));
+    }
+    private void initializeAudioOutput(){
+        audioOutputChoice=findViewById(R.id.audio_output_mode);
+        audioOutputChoice.setAdapter(BridgeChoices.create(this,java.util.Arrays.asList(
+            getString(R.string.output_auto),getString(R.string.output_bluetooth),getString(R.string.output_tablet))));
+        refreshAudioOutputChoice();
+        audioOutputChoice.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int position,long id){
+                String mode=AudioOutputMode.MODES[position];
+                if(updatingOutputChoice||mode.equals(AudioOutputMode.get(MainActivity.this)))return;
+                AudioOutputMode.choose(MainActivity.this,mode);
+                if(getSharedPreferences(PREF,0).contains("secret"))new Thread(()->{
+                    try{WakePilotSettings.register(MainActivity.this);WakePilotSettings.syncAudioOutput(MainActivity.this);}
+                    catch(Exception ignored){/* Audio service retries the locally saved selection. */}
+                },"TAFA-Audio-Settings").start();
+            }
+        });
+    }
+    private void refreshAudioOutputChoice(){
+        if(audioOutputChoice==null)return;
+        int index=java.util.Arrays.asList(AudioOutputMode.MODES).indexOf(AudioOutputMode.get(this));
+        if(audioOutputChoice.getSelectedItemPosition()!=index){
+            updatingOutputChoice=true;audioOutputChoice.setSelection(index);updatingOutputChoice=false;
+        }
+    }
+    /** Compact settings index: only the selected group expands; preserve all existing controls. */
+    private void compactSettings(){
+        LinearLayout settings=findViewById(R.id.section_settings);
+        if(settings.getChildCount()!=10)return;
+        View[] cards=new View[10];
+        for(int i=0;i<cards.length;i++)cards[i]=settings.getChildAt(i);
+        settings.removeAllViews();
+        int[][] groups={{0},{2,5,1},{3},{4},{6,7},{8,9}};
+        int[] titles={R.string.group_audio,R.string.group_voice,R.string.group_room,
+            R.string.group_advanced,R.string.group_device,R.string.group_support};
+        LinearLayout[] panels=new LinearLayout[groups.length];
+        Button[] headers=new Button[groups.length];
+        for(int i=0;i<groups.length;i++){
+            final int selected=i;
+            Button header=new Button(this,null,0,R.style.Action);
+            header.setText(getString(titles[i])+"  ▾");
+            header.setAllCaps(false);header.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);
+            settings.addView(header,new LinearLayout.LayoutParams(-1,dp(52)));
+            headers[i]=header;
+            LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);
+            settings.addView(panel,new LinearLayout.LayoutParams(-1,-2));
+            panels[i]=panel;panel.setVisibility(View.GONE);
+            for(int card:groups[i])panel.addView(cards[card]);
+            header.setOnClickListener(v->{
+                boolean expand=panel.getVisibility()!=View.VISIBLE;
+                for(int k=0;k<panels.length;k++){
+                    boolean open=k==selected&&expand;
+                    panels[k].setVisibility(open?View.VISIBLE:View.GONE);
+                    headers[k].setText(getString(titles[k])+(open?"  ▴":"  ▾"));
+                    headers[k].setSelected(open);
+                }
+                if(expand)header.post(()->header.requestRectangleOnScreen(new android.graphics.Rect(0,0,header.getWidth(),header.getHeight()),true));
+            });
+        }
+    }
     private void initializeNavigation(Bundle state) {
         String initial = getSharedPreferences(PREF, 0).contains("secret") ? "status" : "connection";
         for (String section : new String[]{"status", "connection", "settings"}) {
@@ -847,13 +921,20 @@ public class MainActivity extends Activity {
 
     private void refreshStatus() {
         refreshWakeConfigUi();
+        refreshAudioOutputChoice();
         refreshBridgeOverview();
         ((TextView)findViewById(R.id.camera_main_status)).setText(CameraActivity.relayMessage(this));
         boolean cameraRunning=CameraRelayService.running;
         findViewById(R.id.camera_relay_start).setEnabled(!cameraRunning&&!availableCameras.isEmpty());
         findViewById(R.id.camera_relay_stop).setEnabled(cameraRunning);
-        findViewById(R.id.status_camera).setEnabled(!cameraRunning&&!availableCameras.isEmpty());
-        findViewById(R.id.status_wake).setEnabled(!WakeWordService.running);
+        findViewById(R.id.status_camera).setEnabled(cameraRunning||!availableCameras.isEmpty());
+        ((Button)findViewById(R.id.status_camera)).setText(cameraRunning?R.string.camera_relay_stop:R.string.quick_camera);
+        ((Button)findViewById(R.id.status_wake)).setText(WakeWordService.running?R.string.wake_stop:R.string.quick_wake);
+        findViewById(R.id.status_wake).setEnabled(true);
+        boolean bridgeRunning=AudioService.running||WakeWordService.running||CameraRelayService.running;
+        ((Button)findViewById(R.id.status_connect)).setText(bridgeRunning?
+            (AudioService.haConnected?R.string.quick_disconnect:R.string.quick_cancel_connection):R.string.quick_connect);
+        ((Button)findViewById(R.id.connection_start)).setText(AudioService.running?R.string.connection_reconnect:R.string.connection_start);
         boolean busy=WakeWordService.running&&WakeWordService.status.startsWith("native_");
         findViewById(R.id.status_speak).setEnabled(!busy);
         findViewById(R.id.status_end_conversation).setEnabled(WakeWordService.running);
@@ -892,7 +973,7 @@ public class MainActivity extends Activity {
                     : stage.contains("auth") || stage.contains("credentials") ? R.string.status_auth_help : R.string.status_network_help;
         }
         ((TextView) findViewById(R.id.player_status)).setText(title);
-        ((TextView) findViewById(R.id.player_description)).setText(description);
+        ((TextView) findViewById(R.id.player_description)).setText(raw.endsWith("|tablet")?R.string.output_using_tablet:raw.endsWith("|bluetooth")?R.string.output_using_bluetooth:description);
         boolean bluetooth = false;
         AudioManager audio = getSystemService(AudioManager.class);
         if (audio != null) for (AudioDeviceInfo device : audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
@@ -911,6 +992,7 @@ public class MainActivity extends Activity {
                 : keepalive.equals("error") ? R.string.keepalive_error : R.string.keepalive_off;
         ((TextView) findViewById(R.id.keepalive_status)).setText(keepaliveText);
         findViewById(R.id.player_stop).setEnabled(AudioService.running);
+        findViewById(R.id.player_start).setEnabled(!AudioService.running);
         if(wakeStatus!=null&&!wakeDownloading){
             wakeStatus.setText(WakeWordService.running?WakeWordService.status:
                 (WakeModelInstaller.installed(this)?getString(R.string.wake_ready)+" · "+getString(R.string.wake_stopped):

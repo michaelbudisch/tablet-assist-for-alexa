@@ -46,18 +46,18 @@
     <string name="status_connecting">Verbindung wird aufgebaut …</string>
     <string name="status_connecting_help">Prüfe Home Assistant und den Bluetooth-Ausgang.</string>
     <string name="status_ready">Bereit für Antworten</string>
-    <string name="status_ready_help">Kehre zu deinem Echo-Relay-Dashboard in Home Assistant zurück und starte eine Sprachanfrage. Lass diesen Player laufen.</string>
+    <string name="status_ready_help">Bereit für Sprachanfragen.</string>
     <string name="status_buffering">Antwort wird vorbereitet</string>
     <string name="status_buffering_help">Ein kleiner Audiopuffer wird gefüllt. MP3 und PCM/WAV können bereits spielen, während weiteres Audio ankommt.</string>
     <string name="status_playing">Wiedergabe über Bluetooth</string>
-    <string name="status_playing_help">Der tatsächliche Bluetooth-Ausgang wurde bestätigt.</string>
+    <string name="status_playing_help">Der gewählte Audioausgang wurde bestätigt.</string>
     <string name="status_done">Antwort abgeschlossen</string>
     <string name="status_done_help">Der Player wartet auf die nächste Antwort.</string>
     <string name="status_no_bluetooth">Echo verbinden</string>
     <string name="status_no_bluetooth_help">Home Assistant ist verbunden. Es ist noch kein Bluetooth-Medienausgang verfügbar.</string>
     <string name="status_error">Verbindung prüfen</string>
     <string name="status_network_help">HA-Adresse, WLAN und Token prüfen. Unter Diagnose findest du den letzten Status.</string>
-    <string name="status_route_help">Android konnte den Bluetooth-Ausgang nicht bestätigen. Echo als Medienaudio-Ausgang verbinden und erneut versuchen.</string>
+    <string name="status_route_help">Der gewählte Audioausgang konnte nicht bestätigt werden. Prüfe die Audioauswahl und Android-Verbindung.</string>
     <string name="status_auth_help">Gespeicherte Adresse, Token und HTTP-Freigabe prüfen und den Player erneut starten.</string>
     <string name="status_cancelled">Wiedergabe gestoppt</string>
     <string name="label_bluetooth">Bluetooth</string>
@@ -208,7 +208,7 @@
     <string name="open_voice">Rufwort einrichten</string>
     <string name="voice_overview_eyebrow">MIKROFON</string>
     <string name="voice_overview_help">Das Rufwort wird auf diesem Gerät erkannt. Die eigentliche Frage übernimmt dein TAFA-Dashboard.</string>
-    <string name="connection_start">Speichern &amp; Player starten</string>
+    <string name="connection_start">Verbinden</string>
     <string name="connection_start_help">Du nutzt nur die Rufworterkennung? Unter Rufwort starten; dabei wird dieselbe Verbindung gespeichert.</string>
     <string name="bluetooth_advanced_title">Bluetooth-Optionen</string>
     <string name="room_settings_title">TAFA Multiroom über Bluetooth</string>
@@ -265,7 +265,7 @@
     <string name="section_connection_description">Home Assistant suchen, Adresse und Raumnutzer-Token einrichten.</string>
     <string name="settings_audio_group">AUDIO &amp; BLUETOOTH</string>
     <string name="settings_audio_title">Echo &amp; Audioplayer</string>
-    <string name="settings_audio_help">Echo in Android koppeln, den TAFA-Player starten und die lautlose Bluetooth-Verbindung optional aktiv halten.</string>
+    <string name="settings_audio_help">Im Automatikmodus nutzt TAFA Bluetooth, wenn verfügbar, sonst den Tablet-Lautsprecher.</string>
     <string name="settings_display_group">BILDSCHIRM</string>
     <string name="settings_display_title">Helligkeit fernsteuern</string>
     <string name="settings_display_help">Berechtigung hier erteilen. Helligkeit und Dimmen im TAFA Control Center steuern; vollständiges Display-Ein/Aus kann Android damit nicht zuverlässig ermöglichen.</string>
@@ -280,7 +280,7 @@
     <string name="status_motion_on">Bewegungserkennung eingeschaltet (HA-Sensor bei Bildübertragung verfügbar)</string>
     <string name="status_motion_off">Bewegungserkennung ausgeschaltet</string>
     <string name="quick_connect">Verbinden</string>
-    <string name="quick_connect_help">Verwendet deine gespeicherte Home-Assistant-Verbindung. Fehlende Angaben ergänzt du unter Verbinden.</string>
+    <string name="quick_connect_help">Verbinden startet TAFA; Trennen beendet die laufenden TAFA-Dienste.</string>
     <string name="quick_speak">Jetzt sprechen</string>
     <string name="quick_wake">Rufwort starten</string>
     <string name="quick_camera">Kamera starten</string>
@@ -292,4 +292,19 @@
     <string name="followup_limit_help">Standardmäßig ist für jede Frage das Rufwort nötig. Optional 1–100 oder unbegrenzte Anschlussfragen ohne Rufwort. Stille, Fehler oder Stummschaltung beenden die Unterhaltung. Home Assistant kann die maximale Anzahl jederzeit reduzieren. Die App-Einstellung gilt auch bei geschlossenem Dashboard. Hintergrundgespräche können Folgefragen auslösen.</string>
     <string name="followup_unlimited">Unbegrenzt (bis Gesprächspause)</string>
     <plurals name="followup_count"><item quantity="one">1 zusätzliche Frage</item><item quantity="other">%d zusätzliche Fragen</item></plurals>
+    <string name="output_label">Audioausgabe</string>
+    <string name="output_auto">Automatisch – Bluetooth bevorzugen</string>
+    <string name="output_bluetooth">Nur Bluetooth</string>
+    <string name="output_tablet">Nur Tablet</string>
+    <string name="output_using_tablet">Ausgabe über den Tablet-Lautsprecher.</string>
+    <string name="output_using_bluetooth">Ausgabe über Bluetooth.</string>
+    <string name="group_audio">Audio</string>
+    <string name="group_voice">Sprache &amp; Rufwort</string>
+    <string name="group_room">Raum &amp; Gerät</string>
+    <string name="group_advanced">Erweiterte Spracherkennung</string>
+    <string name="group_device">Display &amp; Kamera</string>
+    <string name="group_support">Hilfe &amp; Diagnose</string>
+    <string name="quick_disconnect">Trennen</string>
+    <string name="quick_cancel_connection">Verbindung abbrechen</string>
+    <string name="connection_reconnect">Speichern &amp; neu verbinden</string>
 </resources>

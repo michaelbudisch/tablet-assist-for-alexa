@@ -46,18 +46,18 @@
     <string name="status_connecting">Connecting…</string>
     <string name="status_connecting_help">Checking Home Assistant and the Bluetooth output.</string>
     <string name="status_ready">Ready to play</string>
-    <string name="status_ready_help">Return to your Echo Relay dashboard in Home Assistant and start a voice request. Keep this player running.</string>
+    <string name="status_ready_help">Ready for voice requests.</string>
     <string name="status_buffering">Preparing your answer</string>
     <string name="status_buffering_help">Building a small audio buffer. MP3 and PCM/WAV can play while the remaining audio is still arriving.</string>
     <string name="status_playing">Playing through Bluetooth</string>
-    <string name="status_playing_help">The actual Bluetooth output has been confirmed.</string>
+    <string name="status_playing_help">The selected audio output has been confirmed.</string>
     <string name="status_done">Answer completed</string>
     <string name="status_done_help">The player is waiting for the next answer.</string>
     <string name="status_no_bluetooth">Connect your Echo</string>
     <string name="status_no_bluetooth_help">Home Assistant is connected, but no Bluetooth media output is available.</string>
     <string name="status_error">Connection needs attention</string>
     <string name="status_network_help">Check the HA address, Wi-Fi and token. Open Diagnostics for the latest status.</string>
-    <string name="status_route_help">Android could not confirm the Bluetooth output. Check that the Echo is connected for media audio, then retry.</string>
+    <string name="status_route_help">The selected audio output could not be confirmed. Check the audio selection and Android connection.</string>
     <string name="status_auth_help">Check the saved address, token and HTTP permission, then start the player again.</string>
     <string name="status_cancelled">Playback stopped</string>
     <string name="label_bluetooth">Bluetooth</string>
@@ -208,7 +208,7 @@
     <string name="open_voice">Configure wakeword</string>
     <string name="voice_overview_eyebrow">MICROPHONE</string>
     <string name="voice_overview_help">Recognize a wakeword on this device and let your TAFA dashboard handle the question.</string>
-    <string name="connection_start">Save &amp; start player</string>
+    <string name="connection_start">Connect</string>
     <string name="connection_start_help">Only using wakeword recognition? Switch to Wakeword and start it there; the same connection is saved.</string>
     <string name="bluetooth_advanced_title">Bluetooth options</string>
     <string name="room_settings_title">TAFA direct Bluetooth multiroom</string>
@@ -267,7 +267,7 @@
     <string name="section_connection_description">Find Home Assistant and set the server address and room-user token.</string>
     <string name="settings_audio_group">AUDIO &amp; BLUETOOTH</string>
     <string name="settings_audio_title">Echo &amp; audio player</string>
-    <string name="settings_audio_help">Pair your Echo in Android, start the TAFA player, then optionally keep Bluetooth media active silently.</string>
+    <string name="settings_audio_help">Automatic mode prefers Bluetooth and otherwise uses the tablet speaker.</string>
     <string name="settings_display_group">DISPLAY</string>
     <string name="settings_display_title">Remote brightness</string>
     <string name="settings_display_help">Grant permission here. Control brightness and dimming in the TAFA Control Center; this does not reliably power the display on or off.</string>
@@ -282,7 +282,7 @@
     <string name="status_motion_on">Motion detection enabled (HA sensor available during camera upload)</string>
     <string name="status_motion_off">Motion detection disabled</string>
     <string name="quick_connect">Connect</string>
-    <string name="quick_connect_help">Uses your saved Home Assistant connection. Missing details open Connect.</string>
+    <string name="quick_connect_help">Connect starts TAFA; Disconnect stops its running services.</string>
     <string name="quick_speak">Speak now</string>
     <string name="quick_wake">Start wakeword</string>
     <string name="quick_camera">Start camera</string>
@@ -294,4 +294,19 @@
     <string name="followup_limit_help">By default, each new question requires the wake word. Optionally allow 1–100 or unlimited follow-ups. Silence, an error or muting ends the conversation. Home Assistant can reduce the limit at any time. The app setting applies even with the dashboard closed. Background conversation can trigger follow-ups.</string>
     <string name="followup_unlimited">Unlimited (until silence)</string>
     <plurals name="followup_count"><item quantity="one">1 additional question</item><item quantity="other">%d additional questions</item></plurals>
+    <string name="output_label">Audio output</string>
+    <string name="output_auto">Automatic – prefer Bluetooth</string>
+    <string name="output_bluetooth">Bluetooth only</string>
+    <string name="output_tablet">Tablet only</string>
+    <string name="output_using_tablet">Output through the tablet speaker.</string>
+    <string name="output_using_bluetooth">Output through Bluetooth.</string>
+    <string name="group_audio">Audio</string>
+    <string name="group_voice">Speech &amp; wakeword</string>
+    <string name="group_room">Room &amp; device</string>
+    <string name="group_advanced">Advanced speech settings</string>
+    <string name="group_device">Display &amp; camera</string>
+    <string name="group_support">Help &amp; diagnostics</string>
+    <string name="quick_disconnect">Disconnect</string>
+    <string name="quick_cancel_connection">Cancel connection</string>
+    <string name="connection_reconnect">Save &amp; reconnect</string>
 </resources>
