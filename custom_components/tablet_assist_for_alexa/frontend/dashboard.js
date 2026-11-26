@@ -56,9 +56,11 @@ class TafaHome extends HTMLElement{
   * before changing that device's mute state. No browser audio capture is used.
   */
  async refreshMic(force=false){
-   if(!this.h?.callApi||this.micBusy||(!force&&Date.now()-this.micLastCheck<12000))return;
+   if(!this.h?.callApi||this.micBusy||(!force&&Date.now()-this.micLastCheck<4000))return;
    this.micLastCheck=Date.now();
    try{
+     // HA is the source of truth; device setting changes are pushed via the
+     // authenticated TAFA WebSocket to the selected Android tablet.
      const response=await this.h.callApi("POST","tablet_assist_for_alexa/wake_devices",{action:"list"});
      this.micDevices=Array.isArray(response?.devices)?response.devices:[];
      if(this.alive)this.render();
@@ -76,7 +78,7 @@ class TafaHome extends HTMLElement{
    const p=document.createElement("p");p.textContent="Wähle genau den Raum, dessen Mikrofon du steuern möchtest.";sheet.append(p);
    for(const device of devices){
      const b=document.createElement("button");b.type="button";b.className="mic-room";
-     b.textContent=(device.room||device.device_id)+" · "+(device.muted?"Stumm → Aktivieren":"Aktiv → Stummschalten");
+     b.textContent=(device.room||device.device_id)+" · "+(device.muted?"Stumm → Aktivieren":"Aktiv → Stummschalten")+(device.control?.pending?" · Wird übertragen":device.online===false?" · Offline":"");
      b.addEventListener("click",()=>{overlay.remove();void this.toggleNativeMic(device.device_id);});
      sheet.append(b);
    }
@@ -96,20 +98,39 @@ class TafaHome extends HTMLElement{
      if(!targetId&&devices.length>1){this.showMicChoice(devices);return;}
      const selected=devices.find(d=>d.device_id===(targetId||devices[0].device_id));
      if(!selected)throw Error("Tablet ist nicht mehr verfügbar.");
-     const nextMuted=!selected.muted;
-     await this.h.callApi("POST","tablet_assist_for_alexa/wake_devices",{
-       action:"configure",device_id:selected.device_id,settings:{muted:nextMuted}
+     // HA stores the setting, then pushes it to the native app by WebSocket.
+     // The dashboard must never acquire the browser microphone.
+     const reply=await this.h.callApi("POST","tablet_assist_for_alexa/wake_devices",{
+       action:"configure",device_id:selected.device_id,settings:{muted:!selected.muted}
      });
-     this.micDevices=devices.map(d=>d.device_id===selected.device_id?{...d,muted:nextMuted}:d);
-     this.micLastCheck=Date.now();
-     this.render();
+     if(!reply?.device||reply.device.device_id!==selected.device_id)throw Error("TAFA hat die Mikrofoneinstellung nicht bestätigt.");
+     // Server response is authoritative. Android acknowledgement arrives
+     // later via control.pending / control.ack_revision, not by assumption.
+     this.micDevices=devices.map(d=>d.device_id===selected.device_id?reply.device:d);
+     this.micLastCheck=Date.now();this.render();
    }catch(error){
      const msg=document.createElement("div");msg.className="mic-notice";
      msg.setAttribute("role","alert");msg.textContent=String(error?.message||error).slice(0,190);
      this.shadowRoot.querySelector(".mic-dialog")?.remove();
      this.shadowRoot.append(msg);
      setTimeout(()=>msg.remove(),6000);
-   }finally{this.micBusy=false;}
+   }finally{
+     this.micBusy=false;
+     if(this.alive){
+       void this.refreshMic(true);
+       setTimeout(()=>{if(this.alive)void this.refreshMic(true);},1400);
+     }
+   }
+ }
+ micIndicator(){
+   const de=language(this.cfg,this.h)==="de",devices=this.micDevices;
+   if(!devices.length)return {icon:"mdi:microphone-off",title:de?"Kein TAFA-Tablet verfügbar":"No TAFA tablet available"};
+   if(devices.length>1)return {icon:"mdi:microphone-settings",title:de?"Tablet-Mikrofon auswählen":"Choose a tablet microphone"};
+   const d=devices[0],room=d.room||"Tablet";
+   const status=d.control?.pending?(de?"Wird an die App übertragen":"Sending to app"):
+     d.online===false?(de?"Offline – Einstellung gespeichert":"Offline – setting saved"):
+     d.muted?(de?"stumm":"muted"):(de?"aktiv":"active");
+   return {icon:d.muted?"mdi:microphone-off":"mdi:microphone",title:room+" · "+status};
  }
  timeFormat(L,opts){try{return new Intl.DateTimeFormat(L,{...opts,timeZone:this.h?.config?.time_zone||undefined});}catch{return new Intl.DateTimeFormat(L,opts);}}
  number(n,L,d=2){return typeof n==="number"&&Number.isFinite(n)?new Intl.NumberFormat(L,{maximumFractionDigits:d}).format(n):"—";}
@@ -141,7 +162,7 @@ class TafaHome extends HTMLElement{
  const forecast=forecastTiles.length?`<section><h2>${E(L==="de"?"Aufheizprognose":"Heating forecast")}</h2><div class="grid">${forecastTiles.join("")}</div><p class="muted">${E(L==="de"?"Zeitprognose anhand einer geschätzten Speichertemperatur und gelernter Heizraten.":"Estimated completion based on inferred tank temperature and learned heating rates.")}</p></section>`:"";
  const body=m.roles.filter(r=>!(m.id==="heatpump"&&forecastKeys.includes(r.key))).map(r=>{const ids=this.cfg.bindings[r.key];if(!ids.length)return "";if(r.key==="lights"){const groups=new Map;for(const id of ids){const a=area(this.h,id)||S.room;if(!groups.has(a))groups.set(a,[]);groups.get(a).push(id);}return [...groups].map(([a,ids])=>`<section><h2>${E(a)}</h2>${this.tiles(ids,r,S)}</section>`).join("");}return `<section><h2>${E(label(r,L))}</h2>${this.tiles(ids,r,S)}</section>`;}).join("");
  return (m.id==="energy"?`<p class="muted">${E(S.energyTip)}</p><div class="grid">${this.totals(S,L)}</div>${this.energyFlow(S,L)}`:"")+forecast+body+`<p class="muted">${E(S.readOnly)}</p>`+(m.id!=="shopping"&&this.nativeConfigs().length?`<button type="button" class="plain" data-native="1">${E(this.nativeOpen?S.hideNative:S.nativeView)}</button>`:"")+(m.id==="cameras"?`<p class="muted">${E(S.cameraNote)}</p>`:"");}
- render(){if(!this.alive||!this.h)return;this.mount();const L=language(this.cfg,this.h),S=words[L];this.shadowRoot.querySelector(".wrap").className=`wrap theme-${this.sessionTheme||this.cfg.theme} density-${this.cfg.density} accent-${this.cfg.accent}`;const gs=this.navGroups(),g=gs.find(n=>n.pages.includes(this.page))||gs[0],page=byId.get(this.page),title=this.page==="home"?S.overview:this.page==="settings"?S.settings:label(page||g,L),now=new Date;this.update("nav",gs.map(n=>`<button type="button" class="nav${n.id===g.id?" active":""}" data-group="${n.id}" aria-current="${n.id===g.id?"page":"false"}">${icon(n.icon)}${E(label(n,L))}</button>`).join(""));this.update(".foot",E(S.preview));this.update(".subnav",g.pages.length>1?g.pages.map(k=>`<button type="button" class="${k===this.page?"active":""}" data-page="${k}">${E(k==="settings"?S.settings:label(byId.get(k),L))}</button>`).join(""):"");const quick=(key,ic,title)=>`<button type="button" class="quick" data-quick="${key}" title="${E(title)}" aria-label="${E(title)}">${icon(ic)}</button>`;this.update("header",`<div><div class="eyebrow">${E(this.cfg.title||"TAFA HOME DASHBOARD")}</div><h1>${E(title)}</h1></div><div class="header-right"><div class="header-clock"><div class="clock">${E(this.timeFormat(L,{hour:"2-digit",minute:"2-digit"}).format(now))}</div><div class="date">${E(this.timeFormat(L,{weekday:"long",month:"long",day:"numeric"}).format(now))}</div></div><div class="quick-actions">${quick("theme","mdi:weather-night",S.themeToggle)}${quick("settings","mdi:cog-outline",S.settingsNav)}${quick("refresh","mdi:refresh",S.refresh)}${quick("full","mdi:fullscreen",S.full)}${this.cfg.modules.includes("assist")?quick("assist",this.micDevices.some(d=>!d.muted)?"mdi:microphone":"mdi:microphone-off",this.micDevices.length===1?((this.micDevices[0].room||"Tablet")+" · "+(this.micDevices[0].muted?"stumm":"aktiv")):"Tablet-Mikrofon steuern"):""}</div></div>`);this.update(".body",this.body(S,L));void this.renderNativeDetails(S);const host=this.shadowRoot.querySelector(".native");
+ render(){if(!this.alive||!this.h)return;this.mount();const L=language(this.cfg,this.h),S=words[L];this.shadowRoot.querySelector(".wrap").className=`wrap theme-${this.sessionTheme||this.cfg.theme} density-${this.cfg.density} accent-${this.cfg.accent}`;const gs=this.navGroups(),g=gs.find(n=>n.pages.includes(this.page))||gs[0],page=byId.get(this.page),title=this.page==="home"?S.overview:this.page==="settings"?S.settings:label(page||g,L),now=new Date;this.update("nav",gs.map(n=>`<button type="button" class="nav${n.id===g.id?" active":""}" data-group="${n.id}" aria-current="${n.id===g.id?"page":"false"}">${icon(n.icon)}${E(label(n,L))}</button>`).join(""));this.update(".foot",E(S.preview));this.update(".subnav",g.pages.length>1?g.pages.map(k=>`<button type="button" class="${k===this.page?"active":""}" data-page="${k}">${E(k==="settings"?S.settings:label(byId.get(k),L))}</button>`).join(""):"");const quick=(key,ic,title)=>`<button type="button" class="quick" data-quick="${key}" title="${E(title)}" aria-label="${E(title)}">${icon(ic)}</button>`;this.update("header",`<div><div class="eyebrow">${E(this.cfg.title||"TAFA HOME DASHBOARD")}</div><h1>${E(title)}</h1></div><div class="header-right"><div class="header-clock"><div class="clock">${E(this.timeFormat(L,{hour:"2-digit",minute:"2-digit"}).format(now))}</div><div class="date">${E(this.timeFormat(L,{weekday:"long",month:"long",day:"numeric"}).format(now))}</div></div><div class="quick-actions">${quick("theme","mdi:weather-night",S.themeToggle)}${quick("settings","mdi:cog-outline",S.settingsNav)}${quick("refresh","mdi:refresh",S.refresh)}${quick("full","mdi:fullscreen",S.full)}${this.cfg.modules.includes("assist")?quick("assist",this.micIndicator().icon,this.micIndicator().title):""}</div></div>`);this.update(".body",this.body(S,L));void this.renderNativeDetails(S);const host=this.shadowRoot.querySelector(".native");
 if(this.page==="assist"){
   this.clearAssist();
   // Keep native TAFA voice controls inside the dashboard's familiar header,
