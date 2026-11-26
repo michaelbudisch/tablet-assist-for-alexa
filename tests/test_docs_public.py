@@ -67,7 +67,7 @@ class PublicDocumentationTests(unittest.TestCase):
     def test_config_and_worker_docs_contract(self):
         app = (ROOT / "tafa_app/config.yaml").read_text(encoding="utf-8")
         self.assertRegex(app, r"(?m)^  speech_mode: setup$")
-        self.assertIn('version: "0.4.36"', app)
+        self.assertIn('version: "0.4.37"', app)
         self.assertEqual((ROOT / "worker/VERSION").read_text().strip(), "2.2.6")
         self.assertEqual((ROOT / "android/VERSION").read_text().strip(), "1.2.3")
         for name in ("proxmox/quick-install.sh", "proxmox/resume-install.sh"):
