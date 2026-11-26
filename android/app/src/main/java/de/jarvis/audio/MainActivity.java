@@ -456,7 +456,7 @@ public class MainActivity extends Activity {
             .putBoolean("room_audio_enabled",true).apply();
         Spinner limit=findViewById(R.id.native_followup_limit);
         ArrayList<String> choices=new ArrayList<>();
-        final int[] followupValues={0,1,2,3,5,10,20,50,100,-1};
+        final int[] followupValues={0,1,2,3,4,5,6,7,8,9,10,20,50,100,-1};
         choices.add(getString(R.string.followup_wakeword_only));
         for(int i=1;i<followupValues.length;i++){
             int count=followupValues[i];

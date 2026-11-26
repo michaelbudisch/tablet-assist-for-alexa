@@ -184,6 +184,15 @@ public final class WakeWordService extends Service implements RecognitionListene
                         releaseRecognizer();
                         startRecognition();
                     }
+                    // Acknowledge applied changes promptly in HA telemetry so
+                    // the Control Center doesn't display a stale microphone state.
+                    ScheduledExecutorService worker=settingsExecutor;
+                    if(worker!=null&&!worker.isShutdown())worker.execute(()->{
+                        try{WakePilotSettings.report(WakeWordService.this,status,
+                            muted?"muted":nativeSession!=null?"assist":
+                            continuousRunning?"continuous":speech!=null?"wakeword":"idle");}
+                        catch(Exception problem){Log.w(TAG,"Settings ack unavailable");}
+                    });
                 });
             }
         });

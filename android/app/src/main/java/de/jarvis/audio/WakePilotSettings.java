@@ -158,8 +158,11 @@ final class WakePilotSettings {
     static MicState readMic(Context ctx) throws Exception {
         JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
         MicState state=new MicState(dev.getBoolean("muted"),modeFor(dev.optString("voice_mode","wake")));
-        ctx.getSharedPreferences(MainActivity.PREF,0).edit()
-            .putBoolean("wake_muted",state.muted).putString("native_voice_mode",state.voiceMode).apply();
+        SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
+        if(prefs.getBoolean("wake_muted",true)!=state.muted ||
+           !state.voiceMode.equals(prefs.getString("native_voice_mode","wake")))
+            prefs.edit().putBoolean("wake_muted",state.muted)
+                .putString("native_voice_mode",state.voiceMode).apply();
         return state;
     }
     /** The three choices are committed atomically on the authenticated HA API. */
