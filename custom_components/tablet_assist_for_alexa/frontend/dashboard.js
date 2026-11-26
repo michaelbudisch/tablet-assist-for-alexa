@@ -35,7 +35,7 @@ class TafaHome extends HTMLElement{
  set hass(h){this.h=h;if(this.alive){void this.refreshMic();this.tafaOverlay();}this.render();}
  get hass(){return this.h;}
  connectedCallback(){this.alive=true;this.render();this.tafaOverlay();void this.refreshMic();clearInterval(this.clockTimer);this.clockTimer=setInterval(()=>{if(this.alive&&this.h)this.render();},30000);}
- disconnectedCallback(){clearInterval(this.clockTimer);this.alive=false;this.voiceTools=null;this.clearAssist();this.clearNative();this.loaded=false;this.nativeOpen=false;}
+ disconnectedCallback(){clearInterval(this.clockTimer);clearTimeout(this._tafaReturnTimer);this.alive=false;this.voiceTools=null;this.clearAssist();this.clearNative();this.loaded=false;this.nativeOpen=false;const overlay=document.querySelector("tafa-response-overlay");if(overlay?._owner===this)overlay.remove();}
  tafaOverlay(){
     if(!this.alive||!this.h)return;
     installTafaResponseOverlay(this,this.h,{
@@ -46,7 +46,16 @@ class TafaHome extends HTMLElement{
           ["netz","solar","preis","prognose","solarheute"].includes(key)?"energy":
           ["waermepumpe","wpheute","wpkosten"].includes(key)?"heatpump":
           key==="shopping"?"shopping":key==="weather"?"weather":null;
-        if(page&&this.cfg.modules.includes(page))this.go(page);
+        if(page&&this.cfg.modules.includes(page)&&this.page!==page){
+          const from=this.page;
+          this.go(page);
+          const target=this.cfg.presentation?.returnTarget==="start"?"home":from;
+          const delay=Math.max(5,Math.min(180,Number(this.cfg.presentation?.returnSeconds)||20))*1000;
+          clearTimeout(this._tafaReturnTimer);
+          this._tafaReturnTimer=setTimeout(()=>{
+            if(this.alive&&this.page===page&&target!==page)this.go(target);
+          },delay);
+        }
       }
     });
   }
