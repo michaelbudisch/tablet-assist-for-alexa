@@ -73,7 +73,7 @@ async def phase_one(hass):
             "conversation_mode":"intelligent","mp3_profile":"natural","chime":False,
         })
         check(entry.data["hardware_profile"]=="Homeserver","translated config value compatible")
-        check(DOMAIN in hass.data[frontend.DATA_PANELS],"independent sidebar panel registered")
+        check(DOMAIN not in hass.data[frontend.DATA_PANELS],"no TAFA sidebar registered")
         check(hass.services.has_service(DOMAIN,"announce"),"service registered")
         relay=hass.data.get(DOMAIN,{})
         check(bool(relay.get("relay_camera")),"unified native camera relay registered")
@@ -102,7 +102,7 @@ async def phase_one(hass):
         await wait_until(lambda: hass.data.get(DOMAIN,{}).get(entry.entry_id) not in (None,before) and entry.state==ConfigEntryState.LOADED,"options reload")
         data=hass.data[DOMAIN][entry.entry_id]
         check(data.sources.get("shopping")==todo_id and data.cfg.get("reminders_enabled"),"options live")
-        check(DOMAIN in hass.data[frontend.DATA_PANELS],"sidebar survives options reload")
+        check(DOMAIN not in hass.data[frontend.DATA_PANELS],"no TAFA sidebar after reload")
         menu=await hass.config_entries.options.async_init(entry.entry_id)
         check(menu["type"]=="menu","hardware setup reachable from categorized options")
         hardware=await hass.config_entries.options.async_configure(menu["flow_id"],{"next_step_id":"hardware"})
@@ -159,7 +159,7 @@ async def phase_two(hass):
     check(len(entries)==1,"config entry restored after complete process restart")
     entry=entries[0]
     await entry_loaded(hass,entry)
-    check(DOMAIN in hass.data[frontend.DATA_PANELS],"sidebar restored")
+    check(DOMAIN not in hass.data[frontend.DATA_PANELS],"no TAFA sidebar after restart")
     check(hass.services.has_service(DOMAIN,"room_audio"),"multiroom registered after restart")
     check(hass.data.get(DOMAIN,{}).get("wake_devices_dynamic") is not None,"native wake registry after restart")
     data=hass.data[DOMAIN][entry.entry_id]
