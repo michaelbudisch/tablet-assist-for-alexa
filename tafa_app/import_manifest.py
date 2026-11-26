@@ -257,8 +257,8 @@ def render_panel(lang,csrf,notice="",review=None):
 </form></div>"""
     return f"""<section class="import-card" id="manifest-import">
 <div class="import-header"><div><p class="kicker">JSON IMPORT</p>
-<h3>{t("Worker automatisch einrichten","Set up a worker automatically")}</h3>
-<p>{t("Worker- oder Proxmox-JSON auswählen. TAFA zeigt alle Änderungen vor der Übernahme an.","Choose a worker or Proxmox JSON. TAFA previews every change before applying.")}</p></div></div>
+<h3>{t("Schnelleinrichtung per JSON","Quick setup via JSON")}</h3>
+<p>{t("GPU-Worker- oder Proxmox-JSON auswählen.","Select a GPU worker or Proxmox JSON file.")}</p></div></div>
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
 <input type="hidden" name="lang" value="{esc(lang)}">

@@ -44,6 +44,8 @@ class ControlCenterLayoutTests(unittest.TestCase):
         self.assertIn('href="#connections"',de)
         self.assertLess(de.index('id="tab-connections"'),de.index('id="tab-setup"'))
         self.assertIn('id="manifest-file"',de)
+        self.assertLess(de.index('id="manifest-file"'),de.index('id="tafa-connections"'))
+        self.assertIn("Schnelleinrichtung per JSON",de)
         self.assertNotIn('<textarea id="manifest-json"',de)
         self.assertIn('name="action" value="connection_settings"',de)
         self.assertIn("Sprachassistent und KI",de)

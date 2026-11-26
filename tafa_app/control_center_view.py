@@ -180,10 +180,10 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
   <div class="section-heading">
     <p class="kicker">{t("VERBINDUNGEN","CONNECTIONS")}</p>
     <h2>{t("Server und Komponenten verbinden","Connect servers and components")}</h2>
-    <p>{t("Adressen bearbeiten, erreichbar prüfen und Proxmox-/GPU-Konfigurationen importieren.","Edit addresses, check connectivity and import Proxmox/GPU configuration files.")}</p>
+    <p>{t("JSON für die Schnelleinrichtung importieren oder Serveradressen manuell bearbeiten.","Import JSON for quick setup or edit service addresses manually.")}</p>
   </div>
-  {connection_panel}
   {import_panel}
+  {connection_panel}
 </section>
 
 <section class="tab-panel" id="setup" role="tabpanel" aria-labelledby="tab-setup">

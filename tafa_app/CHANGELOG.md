@@ -1,5 +1,10 @@
 # TAFA App changelog
 
+## 0.3.43 — Quick setup and grouped settings
+
+- Put JSON quick setup first in Connections; group manual addresses by GPU, CPU fallback and Alexa.
+- Explain the existing quick GPU detection host and show both Wyoming roles in expanded settings groups. Preserve all option keys and routing behavior.
+
 ## 0.3.42 — Fix browser-side live connection diagnostics
 - Allow same-origin AJAX requests in the Control Center page CSP (`connect-src 'self'`). Version 0.3.41 accidentally inherited `default-src 'none'`, which blocked every new live probe and showed “Prüfung nicht möglich” even when the target service was healthy.
 - Keep network requests limited to the TAFA Ingress origin: no wildcards, no permissions to connect directly from the browser to remote IPs, and no loosened restrictions for scripts, frames or forms.
