@@ -1,5 +1,11 @@
 # Android-Änderungsverlauf
 
+## 1.0.4 · Verbindungsdiagnose für frischen HA-Testserver
+- Fehler der nativen Audio-API werden mit HTTP-Code statt pauschal IOException angezeigt: 404 (TAFA-Endpunkt fehlt), 403 (keine Raumzuordnung), 409 (anderer Player angemeldet), 503 (TAFA noch nicht bereit) sowie DNS-, TLS- und Zeitüberschreitungen.
+- Hinweise zur Erstinstallation. Keine neuen Gesprächswege, keine automatischen Übertragungen bestehender Räume, keine Änderungen an Automatisierungen.
+- Gleiche Paket-ID; ein nahtloses Update erfordert weiterhin den ursprünglichen Signierschlüssel.
+
+
 ## 1.0.3 · Native Geräteverwaltung
 
 - Folgefragen unbegrenzt bis Stille, Stummschaltung oder Stopp.

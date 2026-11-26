@@ -1,5 +1,11 @@
 # Android changelog
 
+## 1.0.4 · Native HA test-server connection diagnostics
+- Show exact safe HTTP error families instead of opaque IOException for the room-audio player: 404 (TAFA endpoint missing), 403 (tablet user has no room), 409 (another player session), 503 (TAFA backend not ready), plus DNS, TLS and timeout.
+- Explain how to configure a fresh Home Assistant test server without requiring access to any production HA installation.
+- No new audio paths, automatic room transfers or automation changes; same package ID. Requires original signing key for a seamless update.
+
+
 ## 1.0.3 · Native-only HA control
 
 - Unlimited follow-ups until silence, mute or stop. Only the HA Assist / Bluetooth transport is used.

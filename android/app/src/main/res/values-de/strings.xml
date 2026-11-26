@@ -56,6 +56,12 @@
     <string name="status_no_bluetooth">Echo verbinden</string>
     <string name="status_no_bluetooth_help">Home Assistant ist verbunden. Es ist noch kein Bluetooth-Medienausgang verfügbar.</string>
     <string name="status_error">Verbindung prüfen</string>
+    <string name="status_missing_tafa_api">Auf diesem Home-Assistant-Server fehlt die TAFA-Raum-Audio-API (HTTP 404). TAFA auf dem ausgewählten Testserver installieren und HA Core neu starten.</string>
+    <string name="status_room_user">Raumzugriff abgelehnt (HTTP 403). Tablet im TAFA Control Center dieses Servers einem eigenen Nicht-Admin-HA-Benutzer und Raum zuordnen.</string>
+    <string name="status_player_session">Raum hat bereits einen aktiven Player (HTTP 409). Alten Player beenden oder dessen Sitzung auslaufen lassen.</string>
+    <string name="status_backend_not_ready">TAFA-Audio-Backend noch nicht bereit (HTTP 503). Integration auf dem Testserver prüfen.</string>
+    <string name="status_tls_help">HTTPS-Zertifikat ungültig. Gültigen HTTPS-Namen oder bewusst freigegebenes lokales HTTP auf dem Testserver verwenden.</string>
+    <string name="status_dns_help">Tablet kann den HA-Hostnamen nicht auflösen. WLAN und DNS-Einstellungen des Tablets prüfen.</string>
     <string name="status_network_help">HA-Adresse, WLAN und Token prüfen. Unter Diagnose findest du den letzten Status.</string>
     <string name="status_route_help">Android konnte den Bluetooth-Ausgang nicht bestätigen. Echo als Medienaudio-Ausgang verbinden und erneut versuchen.</string>
     <string name="status_auth_help">Gespeicherte Adresse, Token und HTTP-Freigabe prüfen und den Player erneut starten.</string>
