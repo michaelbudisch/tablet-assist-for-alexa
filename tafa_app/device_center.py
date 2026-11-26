@@ -6,6 +6,7 @@ No new Home Assistant dashboard, helper, or automation is created.
 """
 import html
 import re
+import urllib.error
 from auto_setup import call as ha_call
 
 DEVICE_ID = re.compile(r"[a-f0-9]{32}\Z")
@@ -21,19 +22,31 @@ FIELDS = {
 WORDS = ("Hey Jarvis", "Jarvis", "Alexa", "Alle drei")
 
 
-def read_device_data():
-    """Read-only, authenticated, bounded HA API requests."""
+def _read_endpoint(endpoint):
+    """Request one privileged HA endpoint without hiding other healthy sections.
+
+    The error is a fixed type name or numeric HTTP code only. Never include
+    HA's exception body, endpoint URL or bearer token in the user interface.
+    """
     try:
-        a = ha_call("tablet_assist_for_alexa/wake_devices", {"action": "list"})
-        b = ha_call("tablet_assist_for_alexa/room_admin", {"action": "list"})
-        if not isinstance(a, dict) or not isinstance(b, dict):
-            raise RuntimeError("Unexpected HA device response")
-        return {"devices": a.get("devices", []), "rooms": b.get("rooms", []),
-                "users": b.get("users", []), "error": ""}
-    except Exception as exc:
-        # Never leak bearer tokens or internal error bodies into HTML.
-        return {"devices": [], "rooms": [], "users": [],
-                "error": type(exc).__name__}
+        reply = ha_call("tablet_assist_for_alexa/" + endpoint, {"action": "list"})
+        if not isinstance(reply, dict):
+            raise ValueError("Invalid API response")
+        return reply, ""
+    except urllib.error.HTTPError as exc:
+        return {}, "HTTP " + str(exc.code)
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError, RuntimeError, TypeError) as exc:
+        return {}, type(exc).__name__
+
+
+def read_device_data():
+    """Read authenticated tablet data and room administration independently."""
+    devices, device_error = _read_endpoint("wake_devices")
+    multiroom, room_error = _read_endpoint("room_admin")
+    return {"devices": devices.get("devices", []),
+            "rooms": multiroom.get("rooms", []),
+            "users": multiroom.get("users", []),
+            "error": device_error, "room_error": room_error}
 
 
 def update_device(fields):
@@ -130,10 +143,19 @@ def render_device_center(lang, csrf, state):
         rooms = []
     if not isinstance(users, list):
         users = []
+    notice = ""
     if state.get("error"):
-        return (f'<div class="info-note" role="status"><strong>'
-                f'{t("Geräteverwaltung noch nicht erreichbar","Device backend not available yet")}'
-                f'</strong><p>{t("TAFA-Integration nach dem Update in Home Assistant neu laden. Die übrigen App-Einstellungen bleiben verfügbar.","Reload the TAFA HA integration after updating. Other settings remain available.")}</p></div>')
+        notice += (f'<div class="info-note" role="status"><strong>'
+                   f'{t("Tablet-Verbindung zu HA fehlgeschlagen","Tablet API unavailable")}</strong>'
+                   f'<p>{t("Tablet-Abfrage","Tablet request")}: {h(state["error"])}. '
+                   f'{t("Die übrigen Bereiche bleiben verfügbar.","Other sections remain available.")}'
+                   '</p></div>')
+    if state.get("room_error"):
+        notice += (f'<div class="info-note" role="status"><strong>'
+                   f'{t("Multiroom-Verwaltung nicht erreichbar","Multiroom API unavailable")}</strong>'
+                   f'<p>{t("Raum-Abfrage","Room request")}: {h(state["room_error"])}. '
+                   f'{t("Die Tablet-Einstellungen sind weiterhin nutzbar.","Tablet controls remain available.")}'
+                   '</p></div>')
 
     parts = []
     for device in devices:
@@ -198,7 +220,9 @@ def render_device_center(lang, csrf, state):
                f'<button class="btn btn-primary" type="submit">{t("Multiroom koppeln","Pair multiroom")}</button>'
                '</form>' if useropts and deviceopts else
                f'<p class="subtle">{t("Für jeden Raum einen eigenen Nicht-Admin-HA-Benutzer anlegen und die App damit anmelden.","Create a dedicated non-admin HA user for each room and sign the tablet in with it.")}</p>')
-    return (device_section
+    if state.get("room_error"):
+        pairing = f'<p class="subtle">{t("Raumkopplung derzeit nicht verfügbar.","Room pairing temporarily unavailable.")}</p>'
+    return (notice + device_section
             +f'<section class="work-card multiroom-panel"><h3>{t("Multiroom · Bluetooth-Ausgabe","Multiroom · Bluetooth playback")}</h3>'
             f'<p class="subtle">{t("Jedes Tablet ist einem eigenen Home-Assistant-Benutzer und Raum zugeordnet. Antworten werden über den nativen Audio-Player auf dem gekoppelten Bluetooth-Lautsprecher ausgegeben.","Each tablet is paired with its own HA user and room. Native playback routes answers to its Bluetooth speaker.")}</p>'
             +'<div class="room-list">'+"".join(roomrows)+'</div>'+pairing+'</section>')

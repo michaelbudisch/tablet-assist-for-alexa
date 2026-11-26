@@ -53,9 +53,30 @@ class DeviceCenterTests(unittest.TestCase):
         with patch.object(panel, "ha_call", side_effect=OSError("secrets")):
             state = panel.read_device_data()
         self.assertEqual(state["error"], "OSError")
+        self.assertEqual(state["room_error"], "OSError")
         self.assertNotIn("secrets", repr(state))
-        self.assertIn("noch nicht erreichbar",
+        self.assertIn("Tablet-Verbindung zu HA fehlgeschlagen",
                       panel.render_device_center("de", "x", state))
+
+    def test_room_api_failure_does_not_hide_registered_tablets(self):
+        def query(path, data):
+            if path.endswith("/wake_devices"):
+                return {"devices": [{"device_id": ID, "room": "Büro", "word": "Jarvis"}]}
+            raise panel.urllib.error.HTTPError(
+                url="https://secret.internal", code=403, msg="Bearer secret",
+                hdrs=None, fp=None)
+        with patch.object(panel, "ha_call", side_effect=query):
+            state = panel.read_device_data()
+        self.assertEqual(len(state["devices"]), 1)
+        self.assertEqual(state["error"], "")
+        self.assertEqual(state["room_error"], "HTTP 403")
+        page = panel.render_device_center("de", "x", state)
+        self.assertIn("Büro", page)
+        self.assertIn("Multiroom-Verwaltung nicht erreichbar", page)
+        self.assertIn("HTTP 403", page)
+        self.assertNotIn("Bearer secret", page)
+        self.assertNotIn("https://secret.internal", page)
+        self.assertNotIn('class="pair-form"', page)
 
 
 if __name__ == "__main__":
