@@ -26,6 +26,15 @@ function createModel(){
   const enabled=[...new Set(Array.isArray(raw.modules)?raw.modules.filter(x=>typeof x==="string"&&byId.has(x)):[])];
   const out={type:"custom:tafa-home-dashboard",version:1,modules:enabled,bindings:{},language:["auto","en","de"].includes(raw.language)?raw.language:"auto",theme:["dark","light","ha"].includes(raw.theme)?raw.theme:"dark",density:["comfortable","compact"].includes(raw.density)?raw.density:"comfortable",accent:["teal","blue","violet"].includes(raw.accent)?raw.accent:"teal",assist:{},gridSign:raw.gridSign==="export"?"export":"import",title:typeof raw.title==="string"?raw.title.trim().slice(0,60):""};
   for(const r of roles){const b=raw.bindings&&typeof raw.bindings==="object"&&Object.hasOwn(raw.bindings,r.key)?raw.bindings[r.key]:[];out.bindings[r.key]=[...new Set((Array.isArray(b)?b:typeof b==="string"?[b]:[]).filter(x=>typeof x==="string"&&ENTITY.test(x)&&r.domains.includes(x.split(".")[0])))].slice(0,r.multiple?100:1);}
+  const defaults={captions:true,houseCards:true,knowledge:true,knowledgeMedia:false,contextNav:true,search:true,returnTarget:"previous",returnSeconds:20,infoSeconds:30};
+  out.presentation={...defaults};
+  const opts=raw.presentation&&typeof raw.presentation==="object"?raw.presentation:{};
+  for(const [key,def] of Object.entries(defaults)){
+    const val=opts[key];
+    if(typeof def==="boolean"&&typeof val==="boolean")out.presentation[key]=val;
+    else if(key==="returnTarget"&&["previous","start"].includes(val))out.presentation[key]=val;
+    else if(typeof def==="number"&&Number.isInteger(val)&&val>=5&&val<=180)out.presentation[key]=val;
+  }
   for(const k of ["pipeline_id","wake_pipeline_id"])if(typeof raw.assist?.[k]==="string"&&/^[A-Za-z0-9_-]{1,100}$/.test(raw.assist[k]))out.assist[k]=raw.assist[k];
   return out;
  }
