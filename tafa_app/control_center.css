@@ -208,3 +208,19 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;co
 /* Same branded vector as the TAFA Android launcher icon. */
 .brand-mark{background:#0B1220;overflow:hidden;padding:0;box-shadow:0 0 0 1px #ffffff26}
 .brand-mark img{display:block;width:100%;height:100%;object-fit:contain}
+
+/* Connection editor: visible inputs and low-noise live status. */
+.connection-editor{margin-bottom:18px}
+.connection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.connection-field{min-width:0;background:var(--surface-alt);border:1px solid var(--line);border-radius:11px;padding:16px}
+.connection-field input[type=text]{display:block;width:100%;padding:10px 12px;background:var(--surface);border:1px solid #becbd7;border-radius:8px;color:var(--ink);font:600 13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.connection-field input[type=text]:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.connection-field .field-help{margin:7px 0 2px}
+.probe-feedback{margin:9px 0 0;font-size:12px;font-weight:670;min-height:20px;color:var(--muted)}
+.probe-feedback[data-state=ready],.probe-feedback[data-state=reachable],.probe-feedback[data-state=tls_ok]{color:var(--good)}
+.probe-feedback[data-state=invalid],.probe-feedback[data-state=offline],.probe-feedback[data-state=tls_failed]{color:var(--bad)}
+.probe-feedback[data-state=checking],.probe-feedback[data-state=not_ready]{color:var(--warn)}
+#manifest-import{margin-top:18px}
+#manifest-import input[type=file]{display:block;width:100%;max-width:100%;padding:12px 0}
+#manifest-file-status{overflow-wrap:anywhere}
+@media(max-width:700px){.connection-grid{grid-template-columns:1fr}}
