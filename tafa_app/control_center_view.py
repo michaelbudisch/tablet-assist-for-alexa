@@ -8,11 +8,11 @@ import html
 
 def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
                      cards, picker, connection_panel, import_panel, devices_panel, voice_panel, checks, options, setup, pipeline, links, latest,
-                     cache_info, note, install, retry_button, remove_button, mode):
+                     cache_info, note, install, retry_button, remove_button, mode, features_panel=""):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
     esc = lambda value: html.escape(str(value or ""), quote=True)
-    allowed_tabs = ("overview", "connections", "setup", "devices", "maintenance", "voice")
+    allowed_tabs = ("overview", "connections", "setup", "features", "devices", "maintenance", "voice")
     if default_tab not in allowed_tabs:
         default_tab = "overview"
 
@@ -97,6 +97,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
         ("overview",t("Übersicht","Overview")),
         ("connections",t("Verbindungen","Connections")),
         ("setup",t("Einstellungen","Settings")),
+        ("features",t("Funktionen & Datenquellen","Features & sources")),
         ("devices",t("Geräte & Multiroom","Devices & multiroom")),
         ("maintenance",t("Wartung & Hilfe","Maintenance & help")),
     ]
@@ -177,6 +178,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
   <div class="shortcut-grid">
     <a href="#connections" class="shortcut"><span class="shortcut-icon" aria-hidden="true">01</span><strong>{t("Verbindungen","Connections")}</strong><small>{t("Serveradressen und JSON-Import","Server addresses and JSON import")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
     <a href="#setup" class="shortcut"><span class="shortcut-icon" aria-hidden="true">02</span><strong>{t("Einstellungen","Settings")}</strong><small>{t("Sprachverarbeitung und KI","Speech processing and AI")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
+    <a href="#features" class="shortcut"><span class="shortcut-icon" aria-hidden="true">03</span><strong>{t("Funktionen & Datenquellen","Features & sources")}</strong><small>{t("Sensoren auswählen und Module hinzufügen","Assign sensors and add modules")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
     <a href="#devices" class="shortcut"><span class="shortcut-icon" aria-hidden="true">03</span><strong>{t("Geräte & Multiroom","Devices & multiroom")}</strong><small>{t("Tablet- und Raumverwaltung","Tablet and room management")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
   </div>
 </section>
@@ -198,6 +200,14 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <p>{t("Sprachverarbeitung, KI und Ausgabeprofile. Netzwerkadressen stehen unter Verbindungen.","Speech processing, AI and voice profiles. Network addresses are under Connections.")}</p>
   </div>
   {picker}
+</section>
+
+<section class="tab-panel" id="features" role="tabpanel" aria-labelledby="tab-features">
+  <div class="section-heading"><p class="kicker">{t("FUNKTIONEN","FEATURES")}</p>
+    <h2>{t("Funktionen und Datenquellen","Features and data sources")}</h2>
+    <p>{t("Nachrüstbar, ohne vorhandene Dashboards und Automationen zu überschreiben.","Add features later without replacing existing dashboards or automations.")}</p>
+  </div>
+  {features_panel}
 </section>
 
 <section class="tab-panel" id="devices" role="tabpanel" aria-labelledby="tab-devices">
