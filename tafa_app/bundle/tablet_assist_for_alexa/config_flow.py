@@ -28,7 +28,7 @@ def origin(value, https_only=False):
 
 def room_map(raw):
     obj = json.loads(raw or "{}")
-    if not isinstance(obj, dict) or any(k not in ROOMS for k in obj):
+    if not isinstance(obj, dict) or len(obj) > 32 or any(not isinstance(k, str) or not 1 <= len(k) <= 48 or not re.fullmatch(r"[\w äöüÄÖÜß-]+", k) or k != k.strip() for k in obj):
         raise ValueError("Invalid rooms")
     for item in obj.values():
         if not isinstance(item, dict) or set(item) - {"notify", "dnd", "quiet"} or not item.get("notify"):
