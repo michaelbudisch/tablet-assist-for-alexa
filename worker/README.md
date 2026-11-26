@@ -1,4 +1,4 @@
-# TAFA GPU Worker 2.2.5
+# TAFA GPU Worker 2.2.6
 
 [Deutsch: Installationsanleitung](docs/README.de.md) · [English installation guide](docs/README.md) · [TAFA Projekt](../README.de.md)
 
@@ -6,14 +6,16 @@ Der GPU Worker ist eine **optionale** Ergänzung für GPU-Whisper, Qwen-TTS, Oll
 
 ## Windows-Schnellstart
 
-1. **01-Installieren.bat** – fehlende `.env` erzeugen, Whisper/Qwen starten; optional Ollama und Modell-Download nach Zustimmung.
+1. **01-Installieren.bat** – fehlende `.env` erzeugen und Whisper/Qwen starten; Text-Ollama optional, **Vision für Tablet-Kamera wird ausdrücklich angeboten (Vorgabe: Ja)**. Modell-Downloads nur nach Nachfrage.
 2. **02-Starten.bat** – konfigurierte Dienste starten.
 3. **03-Neustarten.bat** – laufende Container neu starten.
 4. **04-Verbindungsdaten.bat** – `tafa-worker.json` und `GPU-Worker-Verbindungsdaten.txt` erstellen; die TXT wird geöffnet.
 
-Optional: **00-Konfiguration.bat** nur für die fehlende `.env`, **scripts/windows/05-Ollama-Einrichten.bat** für Ollama später. Linux: **scripts/linux/setup-linux.sh**; dort werden HA-Verbindungsdaten derzeit manuell eingetragen.
+Optional: **00-Konfiguration.bat** nur für die fehlende `.env`, **05-Vision-Einrichten.bat** zum Nachrüsten auf bestehenden GPU-Rechnern, **scripts/windows/05-Ollama-Einrichten.bat** für Text-Ollama. Linux: **scripts/linux/setup-linux.sh**; dort werden HA-Verbindungsdaten derzeit manuell eingetragen.
 
 **TAFA → Verbindungen → Schnelleinrichtung per JSON**: Import prüfen und bestätigen. Anschließend in Home Assistant die **Wyoming Protocol**-Integration für die GPU (Port **10300**) hinzufügen und die neu erzeugte GPU-`stt.*`-Entität in **Verbindungen** auswählen. Ollama benötigt separat die HA-Ollama-Integration und einen `conversation.*`-Agenten.
+
+**Vision-Diagnose:** `04-Verbindungsdaten.bat` zeigt neu die lokale Vision-Adresse `http://GPU-IP:10503` und unterscheidet gestarteten Container von **tatsächlich bereitstehendem Modell** (`/health` mit `ready: true`). Die JSON-v1-Struktur bleibt unverändert, damit ältere TAFA-Installationen sie lesen können. Die Kamera-Vision-Adresse wird in HA aus der GPU-TTS-Adresse abgeleitet. Der eigene Vision-Dienst muss zusätzlich auf dem GPU-PC laufen.
 
 **CPU-Fallback:** Externes CPU-Whisper via separatem Wyoming (10300) und Piper HTTP (5000), oder beide CPU-Dienste direkt in der TAFA-App. Das GPU-JSON enthält **keine** erfundene CPU-Adresse und aktiviert keinen CPU-LLM-Fallback.
 

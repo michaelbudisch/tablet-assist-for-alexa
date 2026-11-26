@@ -1,5 +1,14 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.6
+
+- Windows-Installer bietet Vision-Bildanalyse standardmäßig aktiv an; der mehrgigabytegroße Modell-Download erfordert eine gesonderte Bestätigung. Keine automatische Modellinstallation ohne Einwilligung.
+- `05-Vision-Einrichten.bat` rüstet Vision und Ollama auf einem bestehenden GPU-Worker nach, ohne Whisper-/Qwen-Einstellungen oder die vorhandene `.env` zu verändern.
+- `02-Starten.bat` startet einen bereits eingerichteten Vision-Dienst nach Reboot erneut; `04-Verbindungsdaten.bat` zeigt Port 10503 und den Unterschied zwischen „Container gestartet“ und „Modell bereit“.
+- Das bisherige `tafa-worker.json`-Schema bleibt kompatibel: Vision steht in der TXT, TAFA leitet seine URL aus der bekannten GPU-IP ab.
+- Worker-Version, Docker-Image-Tags und Testverträge auf 2.2.6 aktualisiert.
+
+
 ## 2.2.5
 
 - Installation bietet Ollama optional direkt in `01-Installieren.bat` an; Modelldownload nur mit ausdrücklicher Bestätigung.

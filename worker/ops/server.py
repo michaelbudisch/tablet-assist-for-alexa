@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import URLError, HTTPError
 from urllib.request import Request, urlopen
 
-VERSION = "2.2.5"
+VERSION = "2.2.6"
 SERVICES = {
     "vision": ("http://vision:10503/health", "http"),
     "tts_stream": ("http://qwen-stream:10502/health", "http"),

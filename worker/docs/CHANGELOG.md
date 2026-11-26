@@ -1,5 +1,14 @@
 # GPU worker changelog
 
+## 2.2.6
+
+- Windows installer offers Vision camera analysis by default, while multi-GB model downloads still require a separate opt-in.
+- New `05-Vision-Einrichten.bat` starts Vision and its Ollama dependency on existing workers without modifying `.env`, Whisper or Qwen settings.
+- `02-Starten.bat` restores an already-installed Vision container after reboot; `04-Verbindungsdaten.bat` reports port 10503 and both container and actual model readiness.
+- The `tafa-worker.json` v1 schema remains backward-compatible. Vision endpoint and readiness are in the TXT; TAFA infers the host from the configured GPU connection.
+- Worker version and image metadata bumped to 2.2.6, with regression coverage.
+
+
 ## 2.2.5
 
 - Optional Ollama setup integrated into `01-Installieren.bat`; model download requires separate consent.

@@ -1,4 +1,4 @@
-# TAFA GPU Worker 2.2.5 – installation
+# TAFA GPU Worker 2.2.6 – installation
 
 [Deutsch](README.de.md) · [Quick start](../README.md) · [TAFA setup](../../docs/en/setup-guide.md)
 
@@ -8,12 +8,12 @@ The GPU worker is **optional**, adding GPU Wyoming Whisper (STT), Qwen streaming
 
 From the `worker/` directory:
 
-1. Run `01-Installieren.bat` (or optionally `00-Konfiguration.bat` to create a missing `.env`). This sets up **Whisper and Qwen**, optionally offers **Ollama**, and requests separate consent before downloading a text model.
+1. Run `01-Installieren.bat` (or optionally `00-Konfiguration.bat` to create a missing `.env`). This sets up **Whisper and Qwen**, optionally offers **text Ollama**, then offers **Vision for tablet camera analysis (default Yes)**. Downloads of text and vision models each require separate consent.
 2. `02-Starten.bat` starts configured services; `03-Neustarten.bat` restarts active containers.
 3. `04-Verbindungsdaten.bat` generates **`tafa-worker.json`** and **`GPU-Worker-Verbindungsdaten.txt`**, opens the text report, and **does not start services**. It uses the `LAN_IP` in the local `.env` and current service state; stopped services appear as `enabled: false`.
 4. In **TAFA Control Center → Connections → Quick setup via JSON**, select `tafa-worker.json`, **check configuration**, and confirm GPU endpoints. Finish selecting real HA entities as explained below.
 
-Optional Windows helpers live in `scripts/windows/` (`05-Ollama-Einrichten.bat`, `Worker-Windows.ps1` and `tests/`). Existing `.env` and Docker volumes are preserved.
+To retrofit Vision into an existing Windows GPU worker, run **`05-Vision-Einrichten.bat`** in the root worker folder. Other optional Windows helpers live in `scripts/windows/` (`05-Ollama-Einrichten.bat`, `Worker-Windows.ps1` and `tests/`). Existing `.env` and Docker volumes are preserved.
 
 ## Linux and manual Docker setup
 
@@ -52,6 +52,6 @@ The Windows JSON/TXT exporter is **not included** in the Linux bootstrap: enter 
 
 Verify endpoints in TAFA **Connections**, confirm the three routers in **TAFA Lokal**, then ask a spoken question with GPU online and stopped. STT router attributes indicate the actual recognition backend; TCP reachability alone is not a transcription test. Browser **Speak now** plays audio in the browser; test Android/Echo output separately.
 
-Qwen serves `/health`, `/stream` and `/synthesize` on **10502**. Older non-streaming TTS uses **10501** and should not run at the same time. Optional Vision can be launched with `docker compose --profile vision up -d --build vision` on port **10503**; selecting a model and granting HA camera permission are separate tasks. More advanced and historical details are retained in [legacy worker reference](archive/legacy-worker-guide.en.md).
+Qwen serves `/health`, `/stream` and `/synthesize` on **10502**. Older non-streaming TTS uses **10501** and should not run at the same time. Windows now offers Vision during installation and allows retrofitting it using **`05-Vision-Einrichten.bat`**. On Linux/manually, run `docker compose --profile vision up -d --build ollama vision`, then (only after consenting to a multi-GB download) `docker compose --profile vision exec -T ollama ollama pull qwen3-vl:4b-instruct`. Verify `http://GPU-IP:10503/health` returns `ready: true`. A running Vision container without an installed model is **not ready**. The Windows TXT report includes the Vision endpoint and readiness; the v1 JSON stays compatible with older TAFA releases and contains only existing endpoints. HA infers the Vision host and port from the configured GPU-TTS address. Camera permission in HA is separate. More advanced and historical details are retained in [legacy worker reference](archive/legacy-worker-guide.en.md).
 
 **Security:** These token-free APIs must be restricted to a **trusted LAN**. Restrict **10300**, **10502**, **10503**, **11434** and optional **10501** with your firewall; never port-forward the worker. Do not commit private `.env` or generated JSON/TXT containing LAN details.

@@ -28,8 +28,23 @@ class ReleaseTests(unittest.TestCase):
                 self.assertNotIn("X-API-Key", source)
         for name in ("00-Konfiguration.bat", "01-Installieren.bat",
                      "02-Starten.bat", "03-Neustarten.bat",
-                     "04-Verbindungsdaten.bat", "scripts/windows/05-Ollama-Einrichten.bat", "scripts/windows/Worker-Windows.ps1"):
+                     "04-Verbindungsdaten.bat", "05-Vision-Einrichten.bat",
+                     "scripts/windows/05-Ollama-Einrichten.bat", "scripts/windows/Worker-Windows.ps1"):
             self.assertTrue((check_release.ROOT / name).is_file(), name)
+
+    def test_vision_has_default_install_retrofit_restart_and_readiness(self):
+        ps=(check_release.ROOT/"scripts/windows/Worker-Windows.ps1").read_text(encoding="utf-8")
+        self.assertIn("function Setup-Vision",ps)
+        self.assertIn("'Vision' { Setup-Vision }",ps)
+        self.assertIn("-DefaultYes $true",ps)
+        self.assertIn("ollama ollama pull $model",ps)
+        self.assertIn("'10503/health'",ps)
+        self.assertIn("$health.ready -eq $true",ps)
+        self.assertIn("$known -contains 'vision'",ps)
+        self.assertIn("'05-Vision-Einrichten.bat'",ps)
+        self.assertIn("'vision'",(check_release.ROOT/"compose.yaml").read_text())
+        self.assertIn("-Action Vision",(check_release.ROOT/"05-Vision-Einrichten.bat").read_text())
+        self.assertNotIn("JARVIS_TTS_TOKEN",ps)
 
     def test_version_and_changelog(self):
         self.assertRegex(check_release.validate(), r"^\d+\.\d+\.\d+$")

@@ -1,4 +1,4 @@
-# TAFA GPU Worker 2.2.5 – Installation
+# TAFA GPU Worker 2.2.6 – Installation
 
 [English](README.md) · [Schnellstart](../README.md) · [TAFA-Ersteinrichtung](../../docs/setup-guide.md)
 
@@ -8,12 +8,12 @@ Der GPU Worker ist **optional**. Er ergänzt eine funktionierende TAFA-CPU-Basis
 
 Im Verzeichnis `worker/`:
 
-1. `01-Installieren.bat` starten (optional vorher `00-Konfiguration.bat` zur Erzeugung einer fehlenden `.env`). Die Installation startet **Whisper und Qwen**, fragt optional nach **Ollama** und verlangt eine gesonderte Zustimmung zum Textmodell-Download.
+1. `01-Installieren.bat` starten (optional vorher `00-Konfiguration.bat` zur Erzeugung einer fehlenden `.env`). Die Installation startet **Whisper und Qwen**, fragt optional nach **Text-Ollama** und bietet danach **Vision (Vorgabe Ja)** für Kamera-Bildanalyse an. Ein Vision-Modell wird nur nach gesonderter Zustimmung heruntergeladen.
 2. `02-Starten.bat` startet konfigurierte Dienste; `03-Neustarten.bat` startet laufende Container neu.
 3. `04-Verbindungsdaten.bat` erzeugt **`tafa-worker.json`** und **`GPU-Worker-Verbindungsdaten.txt`**, öffnet die TXT und startet **keine** Dienste. Exportwerte stammen aus der `LAN_IP` der lokalen `.env` und dem aktuell erkannten Containerstatus. Nicht gestartete Dienste stehen als `enabled: false` im JSON.
 4. Im **TAFA Control Center → Verbindungen → Schnelleinrichtung per JSON** die Datei `tafa-worker.json` auswählen, **Konfiguration prüfen** und die GPU-Werte übernehmen. Danach die echten HA-Entitäten wie unten beschrieben zuordnen.
 
-Die optionalen Windows-Werkzeuge liegen in `scripts/windows/`, etwa `05-Ollama-Einrichten.bat`, `Worker-Windows.ps1` und `tests/`. Bestehende `.env`-Dateien und Docker-Volumes werden nicht überschrieben.
+Eine bestehende Installation kann Vision mit **`05-Vision-Einrichten.bat`** nachrüsten, ohne Whisper oder Qwen neu zu installieren. Weitere Windows-Werkzeuge liegen in `scripts/windows/`, etwa `05-Ollama-Einrichten.bat`, `Worker-Windows.ps1` und `tests/`. Bestehende `.env`-Dateien und Docker-Volumes werden nicht überschrieben.
 
 ## Linux und manueller Docker-Start
 
@@ -52,6 +52,6 @@ Die automatisierte Windows-Erzeugung der JSON-/TXT-Dateien ist für Linux **nich
 
 In TAFA **Verbindungen** die Dienste prüfen; danach in der Pipeline **TAFA Lokal** die drei Router kontrollieren. Eine echte Frage zuerst mit GPU und danach mit gestoppter GPU stellen. Die Attribute der STT-Router-Entität zeigen an, ob CPU oder GPU verwendet wurde. Ein TCP-Check allein belegt keine erfolgreiche Transkription. Browser-Tests unter **Jetzt sprechen** verwenden Browser-Audio; eine Echo-Ausgabe muss zusätzlich am Android-Tablet geprüft werden.
 
-Qwen stellt `/health`, `/stream` und `/synthesize` auf Port **10502** bereit. Das ältere nicht-streamende TTS-Profil nutzt **10501** und soll nicht gleichzeitig mit dem Streamingmodell laufen. Optional Vision über `docker compose --profile vision up -d --build vision` auf Port **10503**; die Aktivierung eines Visionmodells und Kamera-Freigabe in HA sind separate Schritte. Fortgeschrittene/ältere technische Details stehen im [historischen Worker-Referenztext](archive/legacy-worker-guide.de.md).
+Qwen stellt `/health`, `/stream` und `/synthesize` auf Port **10502** bereit. Das ältere nicht-streamende TTS-Profil nutzt **10501** und soll nicht gleichzeitig mit dem Streamingmodell laufen. Vision wird im Windows-Installer nun aktiv angeboten; Nachrüstung mit **`05-Vision-Einrichten.bat`**. Unter Linux/manuell: `docker compose --profile vision up -d --build ollama vision` und erst nach Zustimmung `docker compose --profile vision exec -T ollama ollama pull qwen3-vl:4b-instruct`. Test: `http://GPU-IP:10503/health` muss `ready: true` melden. Der Vision-Container kann auch laufen, wenn das Modell fehlt – dann ist er **nicht bereit**. Der Adressbericht nennt Container- und Modellstatus; im JSON-v1 bleiben aus Kompatibilitätsgründen nur die bisherigen Dienste. HA leitet den Vision-Port aus der gespeicherten GPU-TTS-Adresse ab. Die Kamera-Freigabe in HA ist ein separater Schritt. Fortgeschrittene/ältere technische Details stehen im [historischen Worker-Referenztext](archive/legacy-worker-guide.de.md).
 
 **Sicherheit:** Tokenfreie Worker-APIs sind **keine öffentlichen Internetdienste**. Ports **10300**, **10502**, **10503**, **11434** und ggf. **10501** nur für vertrauenswürdige Geräte/HA per LAN/Firewall freigeben. Keine Portweiterleitungen oder öffentlichen Worker-Proxies einrichten. Die `.env`, JSON- und TXT-Dateien mit lokalen IPs nicht in Git hochladen.
