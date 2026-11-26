@@ -1,5 +1,24 @@
 # Install TAFA from Home Assistant Apps
 
+## Current interface · TAFA App 0.3.41 / integration 0.4.25
+
+The **TAFA Control Center** uses five areas:
+
+1. **Overview:** voice route and component status, without configuration fields.
+2. **Connections:** edit Piper/Proxmox, Qwen, GPU Whisper, MP3 and Alexa HTTPS addresses, with checks triggered as you type. **Choose JSON file → Check configuration** reviews the detected changes; nothing is applied until confirmation. No large raw JSON editor.
+3. **Settings:** local/external mode, AI and STT provider selection, voice, conversation behavior, optional Alexa announcements and HA data sources. **No IP/domain fields.**
+4. **Devices & multiroom:** enroll, pair, **unpair**, **remove tablet** or **delete room**. Only TAFA assignments and TAFA-owned entities are cleared. HA users and automations remain, although automations referencing removed entities may need to be reconfigured.
+5. **Maintenance & help:** backend status, model files, restart and documentation.
+
+**Verification limit:** HTTP/TCP connectivity does not prove live speech. Public Alexa HTTPS checks DNS and TLS validity, not actual audio-file retrieval from Amazon. Edits are only saved when you select Save.
+
+To keep a tablet removed, first stop its player and wakeword services; an active Device Bridge can enroll again. Restart HA Core once after updating the backend.
+
+---
+
+## Older setup notes (historical releases)
+
+
 [Deutsch](../app.md) · [Project overview](../../README.md)
 
 > **From App 0.3.20:** Use **TAFA Control Center → Settings** to configure all TAFA features. The technical **Apps → TAFA → Configuration** is an advanced view of the same persistent options, especially useful before the first start to choose external speech without downloading local models. Restart TAFA after saving. Wyoming/Ollama are added once in Devices & services; existing Assist pipelines are preserved.

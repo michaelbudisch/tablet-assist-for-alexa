@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.41 — Device management and simplified connections
+- Control Center navigation is **Overview → Connections → Settings → Devices & Multiroom → Maintenance**. All IP/domain fields are editable in Connections and absent from Settings, which contains only speech/AI behavior and profiles.
+- Live, debounced field checks: private Piper/Qwen/MP3 HTTP /health, GPU Whisper TCP port 10300, and Alexa public HTTPS DNS/certificate verification (not a guaranteed external Alexa download). Checks are read-only, destination restricted, and never submit credentials or media.
+- Proxmox/GPU JSON import is now in Connections with **Choose JSON file → Check configuration → Review → Apply**. No large raw JSON editing textarea; confirmed import behavior is preserved.
+- Neutral navigation text, headings, status descriptions and footer.
+- Server addresses and AI settings remain in the one existing Supervisor options file. Changing either form preserves unrelated values.
+- HA users, scripts and automations remain unchanged.
+
 ## 0.3.41 — Remove, unpair, and recreate rooms and tablets
 - Add **Unpair tablet**, **Remove tablet**, and **Delete room** controls to the Devices & Multiroom page, with explicit confirmation, CSRF protection, and HA administrator-only authorization.
 - Unpairing stops active room audio/camera sessions and frees the matching device for reassignment; both the room and tablet stay registered.
