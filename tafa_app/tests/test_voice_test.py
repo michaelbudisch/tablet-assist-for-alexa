@@ -8,7 +8,7 @@ import json
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
 import voice_test
-from voice_test_view import render_voice_panel
+from voice_test_view import render_voice_panel, public_device_snapshot
 
 
 class FakeWS:
@@ -95,15 +95,39 @@ class VoiceTestContracts(unittest.TestCase):
         self.assertEqual(voice_test._tts_path("/api/tts_proxy/abc.wav?url=evil"),"")
         self.assertEqual(voice_test._tts_path("/api/tts_proxy/abc.wav"),"/api/tts_proxy/abc.wav")
 
-    def test_voice_ui_escapes_devices_and_has_true_controls(self):
-        state={"devices":[{"device_id":"a"*32,"room":"<bad>","online":True,"muted":True}]}
+    def test_voice_ui_escapes_devices_and_controls_native_device_only(self):
+        state={"devices":[{"device_id":"a"*32,"room":"<bad>","online":True,"muted":True,
+             "telemetry":{"microphone":"muted","bluetooth":"connected","secret":"never"}}],
+             "users":[{"id":"secret-user"}]}
         markup=render_voice_panel("de","token",state)
-        self.assertIn("data-voice-mode=\"wake\"",markup)
-        self.assertIn("data-voice-mode=\"continuous\"",markup)
+        self.assertIn('data-native-mode="wake"',markup)
+        self.assertIn('data-native-mode="mute"',markup)
+        self.assertIn('data-native-mode="continuous"',markup)
+        self.assertIn('aria-pressed="false" disabled',markup)
         self.assertIn("&lt;bad&gt;",markup)
         self.assertNotIn("<bad>",markup)
-        self.assertIn("Nur während dieser geöffneten Seite",markup)
+        self.assertIn("Android-App",markup)
+        self.assertIn("Einmal sprechen",markup)
         self.assertNotIn("<script",markup)
+        public=public_device_snapshot(state)
+        self.assertEqual(len(public["devices"]),1)
+        self.assertNotIn("users",public)
+        self.assertNotIn("secret",public["devices"][0]["telemetry"])
+        self.assertEqual(public["devices"][0]["telemetry"]["bluetooth"],"connected")
+
+    def test_no_browser_wakeword_loop_and_csrf_native_controls(self):
+        js=(APP/"voice-test.js").read_text()
+        server=(APP/"server.py").read_text()
+        self.assertNotIn("kind=wake",js)
+        self.assertNotIn("runLoop(",js)
+        self.assertNotIn("chooseMode(",js)
+        self.assertIn('postForm("voice_device_mode"',js)
+        self.assertIn('postForm("voice_devices"',js)
+        self.assertIn('["mute","wake"]',js)
+        self.assertIn('update_device({"device_id":[identifier],"setting":["muted"]',server)
+        self.assertIn('target not in ("mute","wake")',server)
+        self.assertIn('kind[0] != "turn"',server)
+        self.assertNotIn('run_voice(TOKEN,pcm=payload,wake=',server)
 
 
 if __name__ == "__main__":

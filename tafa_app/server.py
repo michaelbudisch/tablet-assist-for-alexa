@@ -32,7 +32,7 @@ from settings_ui import render_settings_form, save_settings_form, render_connect
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
-from voice_test_view import render_voice_panel
+from voice_test_view import render_voice_panel, public_device_snapshot
 from voice_test import run_voice, voice_status, load_audio, VoiceTestError, MAX_AUDIO
 from device_center import read_device_data, render_device_center, update_device, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
@@ -53,7 +53,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.46"
+APP_VERSION="0.3.47"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -610,11 +610,11 @@ class Handler(BaseHTTPRequestHandler):
             query=parse_qs(urlsplit(self.path).query)
             kind=query.get("kind",["turn"])
             ident=query.get("conversation_id",[""])
-            if len(kind)!=1 or kind[0] not in ("turn","wake") or len(ident)!=1:
+            if len(kind)!=1 or kind[0] != "turn" or len(ident)!=1:
                 return self.respond_json({"error":"Invalid voice request"},400)
             payload=self.rfile.read(int(length))
             try:
-                result=run_voice(TOKEN,pcm=payload,wake=kind[0]=="wake",conversation_id=ident[0])
+                result=run_voice(TOKEN,pcm=payload,conversation_id=ident[0])
             except VoiceTestError as exc:
                 return self.respond_json({"error":str(exc)},400)
             except (OSError,RuntimeError,TimeoutError,ValueError,TypeError):
@@ -633,6 +633,32 @@ class Handler(BaseHTTPRequestHandler):
             tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
+            if action=="voice_devices":
+                if set(fields) - {"csrf","lang","tab","action"}:
+                    return self.respond_json({"error":"Invalid device status request"},400)
+                device_state=read_device_data()
+                if device_state.get("error"):
+                    return self.respond_json({"error":"TAFA device status unavailable"},503)
+                return self.respond_json(public_device_snapshot(device_state))
+            if action=="voice_device_mode":
+                if (set(fields) - {"csrf","lang","tab","action","device_id","mode"}
+                        or len(fields.get("device_id",[]))!=1 or len(fields.get("mode",[]))!=1):
+                    return self.respond_json({"error":"Invalid native microphone request"},400)
+                identifier=fields["device_id"][0]
+                target=fields["mode"][0]
+                if target not in ("mute","wake"):
+                    return self.respond_json({"error":"Unsupported native microphone mode"},400)
+                try:
+                    update_device({"device_id":[identifier],"setting":["muted"],
+                                   "value":["true" if target=="mute" else "false"]})
+                    current=read_device_data()
+                    if current.get("error"):
+                        raise RuntimeError("Device status unavailable")
+                    return self.respond_json(public_device_snapshot(current))
+                except (OSError,TimeoutError,RuntimeError):
+                    return self.respond_json({"error":"Tablet update unavailable"},503)
+                except (ValueError,TypeError,KeyError):
+                    return self.respond_json({"error":"Invalid native microphone request"},400)
             if action=="voice_status":
                 if set(fields) - {"csrf","lang","tab","action"}:
                     return self.respond_json({"error":"Invalid voice status request"},400)

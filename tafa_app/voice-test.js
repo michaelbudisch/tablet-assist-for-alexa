@@ -1,5 +1,5 @@
-/* TAFA Control Center speech-test: browser-only mic modes and local Assist runs.
-   No audio or history persists; no HA/Android settings are mutated. */
+/* TAFA native Android device controls + optional single-shot browser diagnostics.
+   No browser wakeword loop. Device changes require explicit admin action. */
 (() => {
   "use strict";
   const root = document.getElementById("tafa-voice-test");
@@ -8,11 +8,14 @@
   const tr = (de, eng) => en ? eng : de;
   const el = id => document.getElementById(id);
   const csrf = root.dataset.csrf || "";
-  const modes = root.querySelectorAll("[data-voice-mode]");
+  const nativeModes = root.querySelectorAll("[data-native-mode]");
+  const deviceSelect = el("voice-device-select");
+  const voicePanel = document.getElementById("voice");
   const history = el("voice-history-list");
   const audio = new Audio();
   audio.preload = "none";
-  let mode = "mute", generation = 0, recording = null, controller = null;
+  let generation = 0, recording = null, controller = null;
+  let devices = [], nativeBusy = false, deviceLoading = false;
   let conversationId = "", lastAudioId = "", latestError = "", running = false;
   const totals = [];
   let lastStatus = null;
@@ -47,6 +50,7 @@
     el("voice-conv-entity").textContent = conv.entity || "—";
     el("voice-tts-entity").textContent = tts.entity || "—";
     el("voice-time-first").textContent = ms(tts.first_audio_ms);
+    el("voice-native-stt-time").textContent = ms(stt.duration_ms);
   }
   async function postForm(action, additional = {}, signal) {
     const params = new URLSearchParams({csrf, action, tab:"voice", lang:en?"en":"de", ...additional});
@@ -80,20 +84,81 @@
     if (message) mark(message, tr("Bereit", "Ready"));
     indicator(tr("Mikrofon aus", "Mic off"), false);
   }
-  function chooseMode(selected) {
-    if (!["mute","wake","continuous"].includes(selected)) return;
-    stopLoop();
-    mode = selected;
-    modes.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.voiceMode === mode)));
-    if (mode === "mute") {
-      mark(tr("Stumm · Nur durch „Einmal sprechen“ wird das Mikrofon kurz aktiviert.",
-              "Muted · Only Speak once activates the microphone briefly."), tr("Bereit", "Ready"));
-    } else {
-      const current = generation;
-      runLoop(current).catch(error => {
-        if (current === generation) { mode = "mute"; chooseMode("mute"); setError(error.message); }
-      });
+  function activePage() {
+    return !document.hidden && voicePanel && !voicePanel.hidden;
+  }
+  function showDevice() {
+    const device = devices.find(item => item.device_id === deviceSelect.value);
+    const telemetry = device?.telemetry || {};
+    const status = el("voice-native-status");
+    for (const button of nativeModes) {
+      const selected = button.dataset.nativeMode;
+      button.setAttribute("aria-pressed", String(!!device && selected !== "continuous" &&
+        (selected === "mute") === !!device.muted));
+      button.disabled = nativeBusy || !device?.online || selected === "continuous";
     }
+    el("voice-native-word").textContent = device?.word || "—";
+    el("voice-native-microphone").textContent = telemetry.microphone || (device ? (
+      device.muted ? tr("Stumm", "Muted") : tr("Rufwort", "Wake word")) : "—");
+    el("voice-native-audio").textContent = telemetry.audio || "—";
+    el("voice-native-bluetooth").textContent = telemetry.bluetooth || "—";
+    el("voice-native-indicator").textContent = device ? (
+      device.online ? tr("Online", "Online") : tr("Offline", "Offline")) : tr("Kein Tablet", "No tablet");
+    el("voice-native-indicator").dataset.listening = String(!!device?.online && !device.muted);
+    if (!nativeBusy) status.textContent = !device ? tr(
+      "Kein TAFA-Tablet angemeldet.", "No enrolled TAFA tablet.") : (
+      device.online ? (telemetry.wake_status || tr("Verbunden", "Connected")) :
+      tr("Tablet offline · Änderungen derzeit nicht möglich", "Tablet offline · controls unavailable"));
+  }
+  function renderDevices(next) {
+    if (!next || !Array.isArray(next.devices)) throw Error(tr("Gerätestatus ungültig", "Invalid device status"));
+    devices = next.devices.filter(item => /^[a-f0-9]{32}$/.test(item.device_id || ""));
+    const chosen = deviceSelect.value;
+    deviceSelect.replaceChildren();
+    if (!devices.length) {
+      const option=document.createElement("option");
+      option.value="";option.textContent=tr("Kein Tablet", "No tablet");
+      deviceSelect.append(option);
+    } else {
+      for (const device of devices) {
+        const option=document.createElement("option");
+        option.value=device.device_id;
+        option.textContent=(device.room||"Tablet")+" · "+(device.online ? "Online" : "Offline");
+        deviceSelect.append(option);
+      }
+      deviceSelect.value=devices.some(item=>item.device_id===chosen)?chosen:devices[0].device_id;
+    }
+    showDevice();
+  }
+  async function loadDevices() {
+    if (deviceLoading || nativeBusy) return;
+    deviceLoading=true;
+    try {
+      const response=await postForm("voice_devices");
+      renderDevices(response);
+    } catch(_) {
+      el("voice-native-status").textContent=tr(
+        "Android-Gerätestatus momentan nicht erreichbar", "Android device status currently unavailable");
+    } finally {deviceLoading=false;}
+  }
+  async function setNativeMode(next) {
+    if (nativeBusy || !["mute","wake"].includes(next)) return;
+    const selected=devices.find(item=>item.device_id===deviceSelect.value);
+    if (!selected || !selected.online) return;
+    nativeBusy=true;
+    showDevice();
+    el("voice-native-status").textContent=tr("Mikrofon-Einstellung wird gespeichert", "Saving microphone setting");
+    try {
+      const updated=await postForm("voice_device_mode",{device_id:selected.device_id,mode:next});
+      renderDevices(updated);
+      el("voice-native-status").textContent=tr(
+        "Gespeichert · Android übernimmt die Einstellung bei der nächsten Synchronisierung",
+        "Saved · Android applies the setting on its next sync");
+    } catch(_) {
+      el("voice-native-status").textContent=tr(
+        "Änderung fehlgeschlagen · bisherige Einstellung bleibt aktiv",
+        "Update failed · previous setting remains active");
+    } finally {nativeBusy=false;showDevice();}
   }
   function downsample(chunks, sampleRate) {
     const sourceLength = chunks.reduce((count, chunk) => count + chunk.length, 0);
@@ -115,7 +180,7 @@
     }
     return bytes;
   }
-  async function recordOne(current, wake = false) {
+  async function recordOne(current) {
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
       throw Error(tr("Mikrofon benötigt HTTPS und Browserfreigabe.", "Microphone requires HTTPS and browser permission."));
     }
@@ -132,8 +197,7 @@
     let chunks = [], heard = false, silence = 0, speechFrames = 0;
     const rate = context.sampleRate;
     indicator(tr("Mikrofon aktiv", "Mic active"),true);
-    mark(wake ? tr("Warte auf „Jarvis“ / „Hey Jarvis“ / „Alexa“", "Listening for Jarvis / Hey Jarvis / Alexa") :
-      tr("Hört zu · Bitte sprechen", "Listening · Speak now"), tr("Hört zu", "Listening"));
+    mark(tr("Hört zu · Bitte sprechen", "Listening · Speak now"), tr("Hört zu", "Listening"));
     return new Promise(async (resolve, reject) => {
       function finish(result, error) {
         if (settled) return;
@@ -166,7 +230,7 @@
           if (heard && speechFrames>=2 && silence>=1.1) {
             const bytes=downsample(chunks,rate);
             finish(bytes.length>=16000?{pcm:bytes,durationMs:Math.round(duration)}:null);
-          } else if (duration > (wake?18000:23000)) {
+          } else if (duration > 23000) {
             if (heard) {
               const bytes=downsample(chunks,rate);
               finish(bytes.length>=16000?{pcm:bytes,durationMs:Math.round(duration)}:null);
@@ -174,16 +238,16 @@
           }
         };
         source.connect(node);node.connect(sink);sink.connect(context.destination);
-        timer=setTimeout(()=>finish(null), wake?19000:24000);
+        timer=setTimeout(()=>finish(null),24000);
       } catch (error) {finish(null,error);}
     });
   }
-  async function runAudio(captured, wake, current) {
+  async function runAudio(captured, current) {
     if (!captured || current!==generation) return null;
     controller = new AbortController();
     mark(tr("Audio wird in TAFA verarbeitet", "Audio processing in TAFA"), tr("Verarbeitet", "Processing"));
-    const url="./voice/run?kind="+(wake?"wake":"turn")+
-      (conversationId && !wake?"&conversation_id="+encodeURIComponent(conversationId):"");
+    const url="./voice/run?kind=turn"+
+      (conversationId?"&conversation_id="+encodeURIComponent(conversationId):"");
     const response=await fetch(url,{method:"POST", credentials:"same-origin",
       headers:{"Content-Type":"application/octet-stream","X-TAFA-CSRF":csrf},
       body:captured.pcm,signal:controller.signal,cache:"no-store"});
@@ -263,64 +327,26 @@
     entry(data,captured,question);
     if (lastAudioId && autoplay && current===generation) await playback(lastAudioId,true);
   }
-  async function runLoop(current) {
-    if (running) return;
-    running=true;
-    try {
-      while(current===generation && mode!=="mute" && !document.hidden) {
-        const wake=mode==="wake";
-        const captured=await recordOne(current,wake);
-        if (current!==generation||document.hidden) break;
-        if (!captured) continue;
-        let data=await runAudio(captured,wake,current);
-        if (current!==generation) break;
-        if (wake) {
-          const phrase=(data.transcript||"").trim();
-          const match=phrase.match(/^(?:hey\s+)?(?:jarvis|alexa)\b[\s.,!?;:]*(.*)$/i);
-          if (!match) {
-            mark(tr("Kein Rufwort erkannt · Warte weiter", "No wake phrase · listening again"),tr("Rufwort","Wake word"));
-            continue;
-          }
-          mark(tr("Rufwort erkannt","Wake phrase detected"),tr("Rufwort","Wake word"));
-          let question=match[1]?.trim();
-          let next=null;
-          if (!question) {
-            next=await recordOne(current,false);
-            if (current!==generation||!next) continue;
-            question=null;
-          }
-          data=question?await runText(question,current):await runAudio(next,false,current);
-          await handleResult(data,next,current,question,true);
-        } else await handleResult(data,captured,current,null,true);
-        if(current!==generation)break;
-      }
-    } catch(error) {
-      if (current===generation) {
-        mode="mute";stopLoop();
-        modes.forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.voiceMode==="mute")));
-        setError(error.name==="NotAllowedError"?tr("Mikrofonberechtigung verweigert","Microphone permission denied"):error.message);
-      }
-    } finally {running=false;}
-  }
   async function runOnce() {
     if (running) return;
-    chooseMode("mute");
-    // Manual push-to-talk remains available even when background listening is muted.
+    stopLoop();
+    // Manual browser capture never changes native Android settings.
     const current=generation;
     try {
       running=true;
       const captured=await recordOne(current,false);
       if (!captured||current!==generation) return;
-      const data=await runAudio(captured,false,current);
+      const data=await runAudio(captured,current);
       await handleResult(data,captured,current,null,false);
     } catch(error) {
       if (current===generation) setError(error.message);
     } finally {running=false;}
   }
-  modes.forEach(button=>button.addEventListener("click",()=>chooseMode(button.dataset.voiceMode)));
+  nativeModes.forEach(button=>button.addEventListener("click",()=>setNativeMode(button.dataset.nativeMode)));
+  deviceSelect.addEventListener("change",showDevice);
   el("voice-once").addEventListener("click",()=>{runOnce();});
-  el("voice-stop").addEventListener("click",()=>chooseMode("mute"));
-  el("voice-refresh").addEventListener("click",()=>refresh());
+  el("voice-stop").addEventListener("click",()=>stopLoop(tr("Browser-Aufnahme beendet", "Browser recording stopped")));
+  el("voice-refresh").addEventListener("click",()=>{void refresh();void loadDevices();});
   el("voice-clear").addEventListener("click",()=>{
     history.replaceChildren();
     const empty=document.createElement("p");
@@ -333,7 +359,7 @@
     event.preventDefault(); if(running) return;
     const input=el("voice-text-input"), question=input.value.trim();
     if(!question)return;
-    chooseMode("mute");const current=generation;running=true;
+    stopLoop();const current=generation;running=true;
     try {
       const data=await runText(question,current);
       await handleResult(data,null,current,question,false);
@@ -343,22 +369,22 @@
   });
   el("voice-replay").addEventListener("click",()=>playback(lastAudioId));
   document.addEventListener("visibilitychange",()=>{
-    if(document.hidden){chooseMode("mute");audio.pause();}
-    else if(window.location.hash==="#voice")refresh();
+    if(document.hidden){stopLoop();audio.pause();}
+    else if(activePage()){void refresh();void loadDevices();}
   });
-  // Home Assistant tab navigation uses history.replaceState, which does not
-  // fire hashchange. Also watch the actual panel visibility to release the
-  // microphone immediately whenever another Control Center tab is selected.
-  const voicePanel = document.getElementById("voice");
   if (voicePanel) {
-    new MutationObserver(() => {
-      if (voicePanel.hidden) {chooseMode("mute");audio.pause();}
-      else refresh();
+    new MutationObserver(()=>{
+      if (voicePanel.hidden){stopLoop();audio.pause();}
+      else {void refresh();void loadDevices();}
     }).observe(voicePanel,{attributes:true,attributeFilter:["hidden"]});
   }
   window.addEventListener("hashchange",()=>{
-    if(window.location.hash!=="#voice"){chooseMode("mute");audio.pause();}
-    else refresh();
+    if(window.location.hash!=="#voice"){stopLoop();audio.pause();}
+    else {void refresh();void loadDevices();}
   });
-  if(window.location.hash==="#voice")refresh();
+  // Status polling never starts the browser microphone or a second wakeword
+  // recognizer. Suppress it when the page is hidden or another tab is selected.
+  setInterval(()=>{if(activePage())void loadDevices();},8000);
+  setInterval(()=>{if(activePage())void refresh();},20000);
+  if(window.location.hash==="#voice"){void refresh();void loadDevices();}
 })();

@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.47 — Native Device Bridge microphone controls and diagnostics
+
+- Replace the Control Center browser wakeword/continuous Whisper loop with administrator-only controls for an enrolled native Android TAFA Device Bridge. Stumm/Rufwort sets the existing device's `muted` state through the authenticated HA WebSocket device-admin API; no synthetic wakeword request or duplicate browser capture.
+- Show online/offline state, selected room, native microphone/wakeword stage, Bluetooth/audio telemetry, and latest actual HA STT/TTS router metrics. Poll only while the Voice tab is visible. Never expose room users, tokens or private configuration in the device-status response.
+- Keep one explicit browser Speak once action, typed question and browser-local audio replay as separate diagnostic tools. Stopping/hiding the browser diagnostics never mutes the native Android service.
+- Android 1.2.0 has no true always-listening-without-wakeword mode. Show this unavailable mode disabled rather than pretending the existing `muted` switch provides it. No APK update required; no automations, private dashboards or Assist pipelines changed.
+- Reject legacy browser wake-only HTTP requests and add regression tests for the native control path, allowlists and read-only status.
+
 ## 0.3.46 — Voice test JavaScript delivery hotfix
 
 - Serve `/assets/voice-test.js` through the existing allowlisted Ingress asset handler. This fixes HTTP 404 in the Control Center's "Jetzt sprechen" tab even though the file was packaged in the Docker image.
