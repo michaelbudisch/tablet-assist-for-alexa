@@ -83,7 +83,9 @@ async def query_searxng(hass, base, query):
                 rows.append({"title": title, "url": url, "snippet": str(item.get("content", "")).strip()[:270]})
             if len(rows) >= 10:
                 break
-        msg = ("Ich habe " + str(len(rows)) + " Suchtreffer gefunden. Du kannst sie auf dem TAFA-Dashboard öffnen."
+        msg = ("Ich habe " + str(len(rows)) + " Suchtreffer gefunden. "
+               + ("Welchen Treffer soll ich öffnen? Sage zum Beispiel: Öffne Nummer eins."
+                  if len(rows) > 1 else "Soll ich den Treffer öffnen? Sage: Öffne Nummer eins.")
                if rows else "SearXNG hat keine passenden Treffer geliefert.")
         return {"message": msg, "results": rows}
     except (aiohttp.ClientError, TimeoutError, ValueError, TypeError, KeyError):
