@@ -154,14 +154,36 @@ public final class WakeWordService extends Service implements RecognitionListene
                 final boolean nextMuted=update.optBoolean("muted",true);
                 final String nextMode=update.optString("voice_mode","wake");
                 final int nextFollowups=update.optInt("followup_limit",-1);
+                final String nextWord=WakePilotSettings.choiceFor(
+                    update.optString("word","Hey Jarvis"));
+                final int nextStrict=WakePilotSettings.clamp(update.optInt("strict",1),1,3);
+                final int nextCooldown=WakePilotSettings.clamp(update.optInt("cooldown",12),3,30);
+                final int nextHold=WakePilotSettings.clamp(update.optInt("hold",50),10,90);
+                final int nextPause=WakePilotSettings.clamp(update.optInt("pause_ms",1700),900,3200);
+                final int nextGain=WakePilotSettings.clamp(update.optInt("mic_gain",100),50,200);
                 if(nextFollowups < -1 || nextFollowups > 100)return;
                 main.post(()->{
                     if(!enabled)return;
+                    boolean newWord=!wordChoice.equals(nextWord);
+                    wordChoice=nextWord;
+                    strictness=nextStrict;
+                    cooldownSeconds=nextCooldown;
+                    holdSeconds=nextHold;
                     getSharedPreferences(MainActivity.PREF,0).edit()
                         .putInt("native_followup_limit",nextFollowups)
+                        .putString("wake_choice",nextWord)
+                        .putInt("wake_strict",nextStrict)
+                        .putInt("wake_cooldown",nextCooldown)
+                        .putInt("wake_hold",nextHold)
+                        .putInt("native_pause_ms",nextPause)
+                        .putInt("mic_gain",nextGain)
                         .putBoolean("wake_muted",nextMuted)
                         .putString("native_voice_mode",nextMode).apply();
                     setVoiceSettings(nextMuted,nextMode);
+                    if(newWord&&!muted&&"wake".equals(voiceMode)&&nativeSession==null){
+                        releaseRecognizer();
+                        startRecognition();
+                    }
                 });
             }
         });

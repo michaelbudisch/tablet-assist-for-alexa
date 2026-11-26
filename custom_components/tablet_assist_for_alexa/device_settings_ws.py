@@ -20,6 +20,8 @@ def settings_payload(device):
         "muted": device.get("muted", False),
         "voice_mode": device.get("voice_mode", "wake"),
         "followup_limit": device.get("followup_limit", -1),
+        "word": device.get("word", "Hey Jarvis"),
+        "mic_gain": device.get("mic_gain", 100),
         "strict": device.get("strict", 1),
         "cooldown": device.get("cooldown", 12),
         "hold": device.get("hold", 50),
