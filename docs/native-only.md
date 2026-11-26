@@ -1,6 +1,6 @@
 # TAFA: Ein Sprachweg, eine Benutzeroberfläche
 
-**Ab TAFA-App 0.3.39 / HA-Integration 0.4.23 / Device Bridge 1.0.3**
+**TAFA-App 0.3.40 / HA-Integration 0.4.24 / Device Bridge 1.0.6**
 
 ## Architektur
 
@@ -16,6 +16,11 @@ Das alte zusätzliche **TAFA Dashboard** wird nicht mehr als Seitenleistenpanel 
 4. Verbinde den gewünschten Echo- oder Bluetooth-Lautsprecher **in den Android-Bluetooth-Einstellungen** und prüfe normale Medienwiedergabe. Die App steuert den Hardware-Lautsprecher nicht über Alexa-Sprachbefehle.
 5. Öffne TAFA → **Geräte & Multiroom**. Das gestartete Tablet registriert sich mit einer dauerhaften Geräte-ID. Stelle Rufwort, Stummschaltung und Mikrofonwerte direkt in HA ein. Änderungen werden regelmäßig von der App synchronisiert.
 6. Unter **Geräte & Multiroom → Neuen Raum anlegen** kannst du einen Raum **vor der Tablet-Registrierung** mit einem eigenen Nicht-Admin-HA-Benutzer erstellen. In TAFA Device Bridge den **Testserver** und das Token dieses Benutzers hinterlegen, die Rufworterkennung zur Registrierung starten und anschließend das Tablet im bereits erstellten Raum zuordnen. War das Tablet zuvor mit einem anderen Benutzer registriert, erfordert die Übertragung eine ausdrückliche Bestätigung. Mehr als vier Räume sind möglich.
+
+## Tablet-Kamera
+
+Unter **Geräte & Multiroom → Tablet-Kameras je Raum** wird die Kamera pro Raum ausdrücklich freigeschaltet (Standard: **Aus**). TAFA Device Bridge **1.0.6** sendet erst nach manuellem Start Bilder über die authentifizierte TAFA-Raumkamera-API. Der normale Nicht-Admin-Raumnutzer genügt; es ist kein alter Jarvis-Kameraempfänger nötig. Bilder bleiben nur vorübergehend im Home-Assistant-Arbeitsspeicher. Details: [Aktuelle Kamera-Anleitung](../android/docs/camera-preparation.de.md).
+
 
 ## Steuerung und Sensoren
 
