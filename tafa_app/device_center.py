@@ -320,7 +320,7 @@ def render_device_center(lang, csrf, state):
         + '</section>'
     )
     pairing_note = (
-        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>
+        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>'
         if not pair_forms else ""
     )
     pairing = (
