@@ -68,6 +68,13 @@ class TafaHome extends HTMLElement{
      this.micDevices=[];if(this.alive)this.render();
    }
  }
+ micMode(device){
+   return device?.muted?"off":device?.voice_mode==="continuous"?"continuous":"wake";
+ }
+ micNext(mode){return mode==="off"?"wake":mode==="wake"?"continuous":"off";}
+ micModeText(mode,de=true){
+   return mode==="off"?(de?"Aus":"Off"):mode==="wake"?(de?"Rufwort":"Wake word"):(de?"Dauer aktiv":"Always active");
+ }
  showMicChoice(devices){
    const old=this.shadowRoot.querySelector(".mic-dialog");old?.remove();
    const overlay=document.createElement("div");overlay.className="mic-dialog";
@@ -78,7 +85,8 @@ class TafaHome extends HTMLElement{
    const p=document.createElement("p");p.textContent="Wähle genau den Raum, dessen Mikrofon du steuern möchtest.";sheet.append(p);
    for(const device of devices){
      const b=document.createElement("button");b.type="button";b.className="mic-room";
-     b.textContent=(device.room||device.device_id)+" · "+(device.muted?"Stumm → Aktivieren":"Aktiv → Stummschalten")+(device.control?.pending?" · Wird übertragen":device.online===false?" · Offline":"");
+     const de=language(this.cfg,this.h)==="de",mode=this.micMode(device);
+     b.textContent=(device.room||device.device_id)+" · "+this.micModeText(mode,de)+" → "+this.micModeText(this.micNext(mode),de)+(device.control?.pending?(de?" · Wird übertragen":" · Sending"):device.online===false?" · Offline":"");
      b.addEventListener("click",()=>{overlay.remove();void this.toggleNativeMic(device.device_id);});
      sheet.append(b);
    }
@@ -98,14 +106,14 @@ class TafaHome extends HTMLElement{
      if(!targetId&&devices.length>1){this.showMicChoice(devices);return;}
      const selected=devices.find(d=>d.device_id===(targetId||devices[0].device_id));
      if(!selected)throw Error("Tablet ist nicht mehr verfügbar.");
-     // HA stores the setting, then pushes it to the native app by WebSocket.
-     // The dashboard must never acquire the browser microphone.
+     // Advance the native app through Aus -> Rufwort -> Dauer aktiv -> Aus.
+     // Change both values atomically through HA; per-tablet WebSocket applies them.
+     const next=this.micNext(this.micMode(selected));
+     const settings={muted:next==="off",voice_mode:next==="off"?"continuous":next};
      const reply=await this.h.callApi("POST","tablet_assist_for_alexa/wake_devices",{
-       action:"configure",device_id:selected.device_id,settings:{muted:!selected.muted}
+       action:"configure",device_id:selected.device_id,settings
      });
      if(!reply?.device||reply.device.device_id!==selected.device_id)throw Error("TAFA hat die Mikrofoneinstellung nicht bestätigt.");
-     // Server response is authoritative. Android acknowledgement arrives
-     // later via control.pending / control.ack_revision, not by assumption.
      this.micDevices=devices.map(d=>d.device_id===selected.device_id?reply.device:d);
      this.micLastCheck=Date.now();this.render();
    }catch(error){
@@ -126,7 +134,7 @@ class TafaHome extends HTMLElement{
    const de=language(this.cfg,this.h)==="de",devices=this.micDevices;
    if(!devices.length)return {icon:"mdi:microphone-off",title:de?"Kein TAFA-Tablet verfügbar":"No TAFA tablet available"};
    if(devices.length>1)return {icon:"mdi:microphone-settings",title:de?"Tablet-Mikrofon auswählen":"Choose a tablet microphone"};
-   const d=devices[0],room=d.room||"Tablet";
+   const d=devices[0],room=d.room||"Tablet",mode=this.micMode(d);
    const pending=d.control?.pending===true;
    const requested=Number(d.control?.requested_at||0);
    const age=requested>0?Date.now()-requested:Infinity;
@@ -134,8 +142,9 @@ class TafaHome extends HTMLElement{
      (de?"Wird an die App übertragen":"Sending to app"):
      (de?"Nicht von App bestätigt":"Not acknowledged by app")):
      d.online===false?(de?"Offline – Einstellung gespeichert":"Offline – setting saved"):
-     d.muted?(de?"stumm":"muted"):(de?"aktiv":"active");
-   return {icon:d.muted?"mdi:microphone-off":"mdi:microphone",title:room+" · "+status};
+     this.micModeText(mode,de)+" → "+this.micModeText(this.micNext(mode),de);
+   const iconName=mode==="off"?"mdi:microphone-off":mode==="wake"?"mdi:microphone-outline":"mdi:microphone";
+   return {icon:iconName,title:room+" · "+status};
  }
  timeFormat(L,opts){try{return new Intl.DateTimeFormat(L,{...opts,timeZone:this.h?.config?.time_zone||undefined});}catch{return new Intl.DateTimeFormat(L,opts);}}
  number(n,L,d=2){return typeof n==="number"&&Number.isFinite(n)?new Intl.NumberFormat(L,{maximumFractionDigits:d}).format(n):"—";}
