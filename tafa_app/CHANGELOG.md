@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.3.43 — GPU-first connections and discoverable CPU/GPU Wyoming entities
+- Reorganize Connections into **1. GPU / AI (preferred), 2. CPU fallback, 3. Alexa (optional)**. Place the existing `gpu_stt_host` fast-check IP first, with explicit **Wyoming TCP :10300 / 0.8 s** explanation. Keep the independent Qwen TTS health check.
+- Move both dynamically discovered Wyoming `stt.*` provider selectors and the optional Ollama/conversation entity ID into Connections next to the relevant services, instead of hiding them in AI Settings.
+- Show last actual STT backend (GPU vs CPU and duration) in Connections, not only in the formerly collapsed Settings area.
+- Save connection addresses and entity IDs in one form with strict HA registry validation, distinct CPU/GPU STT roles, preservation of existing options and missing-entity warnings. Separate AI Settings now holds only operating mode, routing behavior, voices and advanced features.
+- Live GPU Wyoming check uses 0.8-second TCP timeout, matching the actual STT router. A listening port is not proof of successful transcription. GPU speech output keeps its own Qwen readiness check and Piper fallback.
+- No changes to HA integration 0.4.25, Android Device Bridge, automations or Assist pipelines.
+
+
 ## 0.3.42 — Fix browser-side live connection diagnostics
 - Allow same-origin AJAX requests in the Control Center page CSP (`connect-src 'self'`). Version 0.3.41 accidentally inherited `default-src 'none'`, which blocked every new live probe and showed “Prüfung nicht möglich” even when the target service was healthy.
 - Keep network requests limited to the TAFA Ingress origin: no wildcards, no permissions to connect directly from the browser to remote IPs, and no loosened restrictions for scripts, frames or forms.
