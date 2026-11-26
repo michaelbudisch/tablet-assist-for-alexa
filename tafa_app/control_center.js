@@ -152,4 +152,17 @@
       else mark("missing");
     });
   }
+
+  // Optional filter above each HA entity select. No external UI dependencies.
+  document.querySelectorAll("[data-filter-select]").forEach(input => {
+    const id = input.dataset.filterSelect;
+    const selector = document.querySelector('select[data-source-picker="' + id + '"]');
+    if (!selector) return;
+    input.addEventListener("input", () => {
+      const query = input.value.trim().toLocaleLowerCase();
+      for (const option of selector.options) {
+        option.hidden = Boolean(option.value && query && !option.textContent.toLocaleLowerCase().includes(query));
+      }
+    });
+  });
 })();
