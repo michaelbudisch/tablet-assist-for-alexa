@@ -23,7 +23,8 @@ CHOICES = {
 TEXT_FIELDS = (
     "external_piper_base", "gpu_base", "gpu_stt_host", "llm_agent",
     "mp3_base", "public_audio_base", "rooms_json", "sources_json",
-    "reminder_room", "cpu_stt", "gpu_stt",
+    "reminder_room", "cpu_stt", "gpu_stt", "search_base",
+    "family_name_man", "family_name_woman", "family_name_child",
 )
 BOOL_FIELDS = ("chime", "learning_enabled", "reminders_enabled")
 FORM_FIELDS = frozenset((*CHOICES, *TEXT_FIELDS, *BOOL_FIELDS))
@@ -132,9 +133,17 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 </details>
 <details><summary>5 · {t("Daten und Erweiterungen", "Data and advanced options")}</summary>
 {field("sources_json",t("Home-Assistant-Datenquellen (JSON)", "Home Assistant data sources (JSON)"))}
+{field("search_base",t("SearXNG-Adresse (optional, z. B. http://192.168.1.50:8888)", "SearXNG server (optional, e.g. http://192.168.1.50:8888)"))}
+<p class="muted">{t("Internetsuche wird nur bei einer ausdrücklichen Suchanfrage verwendet. Ohne SearXNG bleiben alle anderen Funktionen aktiv.", "Internet search runs only for explicit queries. Everything else works without SearXNG.")}</p>
 {check("learning_enabled",t("Lernfunktionen aktivieren", "Enable learning features"))}
 {check("reminders_enabled",t("Erinnerungen aktivieren", "Enable reminders"))}
 {field("reminder_room",t("Erinnerungsraum (wenn eingerichtet)", "Reminder room (if configured)"))}
+</details>
+<details><summary>6 · {t("Familie & Begrüßung", "Family & greetings")}</summary>
+{field("family_name_man",t("Name Person 1", "Person 1 name"))}
+{field("family_name_woman",t("Name Person 2", "Person 2 name"))}
+{field("family_name_child",t("Name Kind (optional)", "Child name (optional)"))}
+<p class="muted">{t("Namen werden zentral in TAFA gespeichert; bestehende Begrüßungsregeln bleiben erhalten.", "Names are stored centrally in TAFA; existing greeting rules remain unchanged.")}</p>
 </details>
 <p class="muted">{t("Die Felder werden geprüft und andere TAFA-Einstellungen bleiben erhalten. Änderungen werden automatisch übernommen; ein neu installiertes HA-Backend kann einen Core-Neustart erfordern.",
 "Fields are checked and unrelated TAFA settings are preserved. Changes apply automatically; a new HA backend may require a Core restart.")}</p>
