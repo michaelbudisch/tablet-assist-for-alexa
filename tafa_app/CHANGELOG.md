@@ -1,5 +1,16 @@
 # TAFA App changelog
 
+## 0.3.50 — tablet camera migration into the unified TAFA device
+
+- Integrated camera and image-motion platforms are now available during the legacy `jarvis_tablet_audio` migration. Previously they were disabled whenever the old integration was installed.
+- TAFA room camera + motion entities share the **same HA Device Registry identifiers** as the registered TAFA Device Bridge, so they appear alongside the tablet's battery, microphone and Bluetooth sensors.
+- Legacy coexistence uses new namespaced camera HTTP paths and TAFA service names; unrelated legacy automations and configurations remain untouched until they are explicitly migrated and checked.
+- Admin-only `tablet_assist_for_alexa/device_admin` adds the `camera_setup` action: explicitly pair an enrolled tablet to a matching room using its existing HA owner, enable camera upload, and refuse cross-owner/cross-room transfers.
+- The Vision worker host fallback reads the existing TAFA `gpu_base` configuration in integration options.
+- Image streams remain opt-in and memory-only, with strict freshness; an unavailable entity means no fresh authenticated frames.
+- German and English native-camera setup guidance updated. Root README is unchanged.
+
+
 ## 0.3.49 — Native WebSocket confirmations, measured control RTT and dashboard API guide
 
 - The Android Device Bridge 1.2.3 acknowledges the applied microphone configuration using authenticated, device-owned REST, including the HA-assigned control revision and active channel. Home Assistant measures the round trip with its own monotonic clock, distinguishes WebSocket push from 500-ms polling fallback, and discards stale acknowledgments.

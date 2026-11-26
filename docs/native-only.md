@@ -16,6 +16,8 @@ Das Echo ist bei normalen Gesprächen ein Bluetooth-Medienlautsprecher; **es lie
 4. Optional Bluetooth-Echo koppeln, nativen Player starten, Rufwort wählen und Mikrofonberechtigung erteilen.
 5. Unter **TAFA → Geräte & Multiroom** Tablets registrieren und einem Raum zuordnen. Es gibt **keine feste Begrenzung auf vier Räume**.
 
+**Tablet-Kamera unter dem TAFA-Gerät:** In **TAFA → Geräte & Multiroom** muss für das registrierte Tablet ein eigener Audioraum mit demselben HA-Benutzer verknüpft und der Kamera-Zugriff **explizit freigegeben** werden. Danach die Kameraübertragung in der Android Device Bridge starten. Unter **Einstellungen → Geräte & Dienste → TAFA → TAFA · [Raum]** erscheinen Kamera und Bildbewegung zusammen mit Akku, Mikrofon und Bluetooth. Die Kamera ist eine Folge aktueller JPEG-Bilder, **kein unterbrechungsfreier Videostream**. Die Entitäten werden bei fehlendem oder älter als 15 Sekunden altem Bild als nicht verfügbar angezeigt. Beim Umstieg von **Jarvis Tablet Audio** erst alle Automationen/Skripte/Dashboard-Referenzen auf TAFA umstellen und die Bildübertragung prüfen, **dann** die alte Integration entfernen. Die separate TAFA-Kamera-Schnittstelle kann währenddessen parallel existieren.
+
 Der native Android-Mikrofonmodus bietet **Stumm**, **Rufwort** und optional **Immer an**. Eine begrenzte Zahl von Anschlussfragen lässt sich auf dem Tablet einstellen; **unbegrenzte Folgefragen sind nicht die Voreinstellung**. „Immer an“ kann Umgebungsgeräusche als Sprache fehlinterpretieren. Der eigene Bereich **TAFA → Jetzt sprechen** ist **ein separater Browser-Test** mit Transkript/Zeiten und Browser-Audio; er ersetzt weder den Android-Rufwortdienst noch testet er automatisch die Bluetooth-Ausgabe.
 
 ## Kamera, Display und Grenzen

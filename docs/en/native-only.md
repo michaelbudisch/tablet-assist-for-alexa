@@ -16,6 +16,8 @@ For ordinary conversations, Echo is a Bluetooth **speaker**, **not** the microph
 4. Optionally pair Echo via Bluetooth, start native playback, select a wake word, grant microphone permission.
 5. Register tablets under **TAFA → Devices & Multiroom** and assign rooms. There is **no fixed four-room limit**.
 
+**Tablet camera under the TAFA device:** In **TAFA → Devices & Multiroom**, assign an enrolled tablet to a dedicated room with the same HA owner and **explicitly enable** camera upload. Then start camera transmission in Android Device Bridge. Under **Settings → Devices & services → TAFA → TAFA · [room]**, the camera and image motion sensor appear alongside battery, microphone and Bluetooth. The camera provides periodically refreshed JPEG frames, **not live video**. Without fresh authenticated frames (maximum age 15 seconds) both entities become unavailable. When migrating from **Jarvis Tablet Audio**, update automations, scripts and dashboard references and verify fresh images before removing the old integration. The TAFA camera backend can coexist during this cutover.
+
 Native Android microphone modes are **Muted**, **Wake word** and optional **Always on**. Device Bridge supports a **limited** number of follow-up questions; unlimited follow-ups are **not the default**. Always on may mistake background speech for a request. **TAFA → Speak now** is a **separate browser test** with transcript, timing and browser playback, not a replacement for native wake detection or an automatic Echo output test.
 
 ## Camera, display and limitations
