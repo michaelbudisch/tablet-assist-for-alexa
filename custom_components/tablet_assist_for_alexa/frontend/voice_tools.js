@@ -1,6 +1,7 @@
 import "/tablet_assist_for_alexa/room_assist_test.js?v=0.4.7";
 import {fetchAudioPairings,renderAudioPairing,renderSpeechTest} from "/tablet_assist_for_alexa/device_audio.js?v=0.4.8";
 import "/tablet_assist_for_alexa/keepalive.js?v=0.3.1";
+import {installTafaResponseOverlay} from "/tablet_assist_for_alexa/response_overlay.js?v=0.4.33";
 const SOURCE_LABELS={"weather":["Weather entity","Wetter-Entität"],"shopping":["Shopping list (Bring! or other to-do list)","Einkaufsliste (Bring! oder andere To-do-Liste)"],"restmuell":["Residual waste dates","Restmüll-Abholtermine"],"bioabfall":["Organic waste dates","Biomüll-Abholtermine"],"papier":["Paper collection dates","Papier-Abholtermine"],"wertstoff":["Recycling collection dates","Wertstoff-Abholtermine"],"vorlauf":["Heating flow temperature (°C)","Vorlauftemperatur (°C)"],"ruecklauf":["Heating return temperature (°C)","Rücklauftemperatur (°C)"],"spreizung":["Temperature difference (K)","Heizungsspreizung (K)"],"preis":["Current electricity price","Aktueller Strompreis"],"guenstig":["Lowest electricity price tomorrow","Niedrigster Strompreis morgen"],"netz":["Signed grid power (+ import, − export)","Netzleistung (+ Bezug, − Einspeisung)"],"solar":["Total PV power","Gesamte PV-Leistung"],"prognose":["Forecast PV yield tomorrow","PV-Ertragsprognose morgen"],"solarheute":["PV yield today","PV-Ertrag heute"],"netzheute":["Grid import today","Netzbezug heute"],"einspeisungheute":["Grid export today","Einspeisung heute"],"heizoel":["Heating oil stock","Heizölbestand"],"oelverbrauch":["Estimated oil use today","Geschätzter Heizölverbrauch heute"],"waschmaschine":["Washing machine power","Waschmaschinenleistung"],"waschkosten":["Washing machine cost today","Waschmaschinenkosten heute"],"waschenergie":["Washing machine energy today","Waschmaschinenverbrauch heute"],"waermepumpe":["Heat pump power","Wärmepumpenleistung"],"wpheute":["Heat pump energy today","Wärmepumpenverbrauch heute"],"wpkosten":["Heat pump cost today","Wärmepumpenkosten heute"],"kuehlschrank":["Refrigerator power","Kühlschrankleistung"],"kuehlschrankheute":["Refrigerator energy today","Kühlschrankverbrauch heute"],"reminders_enabled":["Enable shared reminders","Gemeinsame Erinnerungen aktivieren"],"reminder_room":["Optional Echo room for reminders","Optionaler Echo-Raum für Erinnerungen"]};
 const INTENT_LABELS={...SOURCE_LABELS,...{"aktuell":["Current weather","Aktuelles Wetter"],"temperatur":["Outside temperature","Außentemperatur"],"feuchte":["Humidity","Luftfeuchtigkeit"],"wind":["Wind speed","Windgeschwindigkeit"],"druck":["Air pressure","Luftdruck"],"gefuehlt":["Feels like","Gefühlte Temperatur"],"regenjetzt":["Rain now","Regen aktuell"],"regenwahrscheinlichkeit":["Rain probability (if available)","Regenwahrscheinlichkeit"],"heute":["Weather today","Wetter heute"],"morgen":["Weather tomorrow","Wetter morgen"],"uebermorgen":["Weather day after tomorrow","Wetter übermorgen"],"kommendetage":["Weather next days","Wetter nächste Tage"],"frost":["Frost tomorrow","Frost morgen"],"regenuebermorgen":["Rain day after tomorrow","Regen übermorgen"],"regenheute":["Rain today","Regen heute"],"regenmorgen":["Rain tomorrow","Regen morgen"],"regennachher":["Rain next 6 hours","Regen nächste 6 Stunden"],"regenzwei":["Rain next 2 hours","Regen nächste 2 Stunden"],"regenabend":["Rain this evening","Regen heute Abend"],"regennacht":["Rain tonight","Regen heute Nacht"],"regenmorgenfrueh":["Rain tomorrow morning","Regen morgen früh"],"schnee":["Snow next 24 hours","Schnee nächste 24 Stunden"],"schneeheute":["Snow today","Schnee heute"],"schneemorgen":["Snow tomorrow","Schnee morgen"],"abend":["Weather this evening","Wetter heute Abend"],"nacht":["Weather tonight","Wetter heute Nacht"],"morgenfrueh":["Weather tomorrow morning","Wetter morgen früh"],"stunden":["Weather next hours","Wetter nächste Stunden"],"bring_list":["Read shopping list","Einkaufsliste vorlesen"]}};
 const ROOM_EN={"Büro":"Office","Wohnzimmer":"Living room","Badezimmer":"Bathroom","Schlafzimmer":"Bedroom","Kinderzimmer":"Children's room"};
@@ -48,6 +49,35 @@ class TabletAssistVoiceTools extends HTMLElement {
  selectView(this._view);
  q("#menu").onclick=()=>this.dispatchEvent(new CustomEvent("hass-toggle-menu",{bubbles:true,composed:true}));
  q("#assist").onclick=()=>{const ext=this._hass?.auth?.external;if(ext?.config?.hasAssist && typeof ext.fireMessage==="function"){ext.fireMessage({type:"assist/show",payload:{pipeline_id:"last_used",start_listening:true}});}else{window.location.assign("/lovelace?conversation=1");}};
+ // Optional web search, harmless when SearXNG is not installed.
+ const searchPanel=document.createElement("section");
+ const searchTitle=document.createElement("h2");
+ searchTitle.textContent=this._lang==="de"?"Internetsuche":"Internet search";
+ const searchHelp=document.createElement("p");
+ searchHelp.textContent=this._lang==="de"?"SearXNG kann im TAFA Control Center jederzeit nachträglich eingerichtet werden.":"SearXNG can be connected later in TAFA Control Center.";
+ const searchRow=document.createElement("div");
+ searchRow.style.cssText="display:flex;gap:9px;flex-wrap:wrap";
+ const searchInput=document.createElement("input");
+ searchInput.type="search";searchInput.maxLength=160;
+ searchInput.placeholder=this._lang==="de"?"Im Internet suchen …":"Search the web …";
+ searchInput.style.cssText="flex:1;min-width:150px;padding:11px;border-radius:9px;border:1px solid var(--vl);background:var(--vc2);color:var(--vf)";
+ const searchButton=document.createElement("button");
+ searchButton.type="button";searchButton.className="primary";
+ searchButton.textContent=this._lang==="de"?"Suchen":"Search";
+ const searchStatus=document.createElement("p");searchStatus.setAttribute("role","status");
+ searchButton.onclick=async()=>{
+   const query=searchInput.value.trim();if(!query||!this._hass)return;
+   searchButton.disabled=true;searchStatus.textContent=this._lang==="de"?"Suche wird ausgeführt …":"Searching …";
+   try{
+     const overlay=installTafaResponseOverlay(this,this._hass,{presentation:{search:true,infoSeconds:90}});
+     await overlay.search(query);searchStatus.textContent="";
+   }catch{searchStatus.textContent=this._lang==="de"?"Internetsuche derzeit nicht verfügbar.":"Search unavailable.";}
+   finally{searchButton.disabled=false;}
+ };
+ searchInput.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();searchButton.click();}};
+ searchRow.append(searchInput,searchButton);
+ searchPanel.append(searchTitle,searchHelp,searchRow,searchStatus);
+ q("#keepalive").before(searchPanel);
  q("textarea").value=previous;
  q("#noRooms").textContent=this._rooms.length?"":t.none;
  for(const room of this._rooms){const label=document.createElement("label"),input=document.createElement("input");input.type="checkbox";input.checked=this._selected.has(room);input.onchange=()=>{input.checked?this._selected.add(room):this._selected.delete(room);};label.append(input,document.createTextNode(this._lang==="de"?room:ROOM_EN[room]));q("#rooms").append(label);}
