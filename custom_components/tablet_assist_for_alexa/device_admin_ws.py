@@ -33,6 +33,8 @@ async def perform_device_admin(hass, user, msg):
         rooms = [{"room": name, "user_id": owner,
                   "wake_device_id": transport.settings.get(name, {}).get("wake_device_id", ""),
                   "camera_enabled": transport.settings.get(name, {}).get("camera_enabled") is True,
+                  "camera_online": bool(data.get("room_cameras") and
+                                        data["room_cameras"].store.fresh(name)),
                   **transport.status(owner)}
                  for name, owner in transport.rooms.items()]
         return {"users": sorted(users, key=lambda u: u["name"].casefold()),
@@ -62,6 +64,39 @@ async def perform_device_admin(hass, user, msg):
         await controller.handle(user, "delete", identifier, {})
         cleanup_tablet(hass, identifier)
         return {"device_id": identifier, "removed": True}
+    if action == "camera_setup":
+        # Explicit one-shot migration for an already enrolled tablet.
+        # Derive the actual HA user from its registered owner; never trust a
+        # client-supplied principal or reassign ownership during migration.
+        identifier, room = msg.get("device_id"), msg.get("room")
+        if not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier):
+            raise ValueError("Invalid device")
+        if not isinstance(room, str) or not ROOM.fullmatch(room):
+            raise ValueError("Invalid room")
+        device = controller.devices.get(identifier)
+        if device is None:
+            raise ValueError("Tablet not enrolled")
+        principal = device.get("user_id")
+        owner = await hass.auth.async_get_user(principal) if principal else None
+        if not owner or not owner.is_active or owner.is_admin or owner.system_generated:
+            raise ValueError("Tablet needs a dedicated active HA user")
+        if any(r != room and p == principal for r, p in transport.rooms.items()):
+            raise ValueError("HA user is already assigned to a different room")
+        if room in transport.rooms and transport.rooms[room] != principal:
+            raise ValueError("Room belongs to another HA user")
+        if any(r != room and s.get("wake_device_id") == identifier
+               for r, s in transport.settings.items()):
+            raise ValueError("Tablet already paired to another room")
+        associated = transport.settings.get(room, {}).get("wake_device_id")
+        if associated and associated != identifier:
+            raise ValueError("Room paired to another tablet")
+        if room not in transport.rooms:
+            transport.provision(room, principal)
+        transport.settings[room] = {**transport.settings.get(room, {}),
+                                    "wake_device_id": identifier,
+                                    "camera_enabled": True}
+        await persist()
+        return {"room": room, "paired": True, "camera_enabled": True}
     if action == "configure":
         identifier = msg.get("device_id")
         if not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier):
@@ -157,7 +192,7 @@ async def perform_device_admin(hass, user, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): COMMAND,
-    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera",
+    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera", "camera_setup",
                         "unpair", "delete_device", "delete_room")),
     vol.Optional("room"): str,
     vol.Optional("user_id"): str,

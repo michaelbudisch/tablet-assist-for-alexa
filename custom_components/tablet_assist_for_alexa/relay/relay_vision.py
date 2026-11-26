@@ -119,7 +119,8 @@ async def resolve_camera_request(relay, selection, context):
 def worker_url(entry):
     configured = entry.options.get("vision_url", "").strip()
     if not configured:
-        gpu_base = entry.data.get("gpu_base", "").strip()
+        gpu_base = (entry.options.get("gpu_base") or
+                    entry.data.get("gpu_base", "")).strip()
         if not gpu_base:
             raise ServiceValidationError("Configure a local vision worker URL before enabling vision")
         parsed = urlsplit(gpu_base)

@@ -104,17 +104,15 @@ async def async_setup_entry(hass, entry):
     await setup_room_audio(hass, entry)
     await setup_wake_devices(hass, entry)
     data["relay_started"] = True
-    data["relay_camera_started"] = not legacy_present
-    if not legacy_present:
-        from .relay.relay_camera import async_setup as setup_relay_camera
-        await setup_relay_camera(hass, entry)
-    else:
-        _LOGGER.info("TAFA direct audio enabled with read-only legacy pairing migration; legacy camera/automations unchanged")
-    # Camera/binary-sensor platforms require our camera relay. An older
-    # Jarvis camera relay may still be configured during the Android
-    # migration; never create camera entities with a null relay in that case.
-    active_platforms = ([Platform.STT, Platform.TTS, Platform.CONVERSATION, *CONTROL_PLATFORMS]
-                        if legacy_present else PLATFORMS)
+    # TAFA HTTP routes, service namespace and per-room frame storage are
+    # independent of the legacy integration. Keep both temporarily so users
+    # can verify new camera/motion entities before removing old services.
+    from .relay.relay_camera import async_setup as setup_relay_camera
+    await setup_relay_camera(hass, entry)
+    data["relay_camera_started"] = True
+    if legacy_present:
+        _LOGGER.info("TAFA camera and legacy camera enabled side by side for safe migration")
+    active_platforms = PLATFORMS
     data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
     await hass.config_entries.async_forward_entry_setups(entry, active_platforms)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)

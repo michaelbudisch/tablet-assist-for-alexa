@@ -31,9 +31,25 @@ class RoomCameraHub:
     def uid(self, room, kind):
         return self.entry.entry_id + "_room_" + room + "_" + kind
 
+    def enrolled_device_id(self, room):
+        """Only bind a camera to a verified paired tablet of the same HA user."""
+        identifier = self.transport.settings.get(room, {}).get("wake_device_id")
+        controller = self.hass.data.get(DOMAIN, {}).get("wake_devices_dynamic")
+        if not controller or not identifier or identifier not in controller.devices:
+            return None
+        if controller.devices[identifier].get("user_id") != self.transport.rooms.get(room):
+            return None
+        return identifier
+
     def device_info(self, room):
-        return DeviceInfo(identifiers={(DOMAIN, self.entry.entry_id + "_room_" + room)},
-                          name="Jarvis Tablet " + room, manufacturer="Jarvis", model="Echo Relay")
+        identifier = self.enrolled_device_id(room)
+        if identifier is None:
+            raise ValueError("Camera must be paired to an enrolled TAFA device")
+        device = self.hass.data[DOMAIN]["wake_devices_dynamic"].devices[identifier]
+        return DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            name="TAFA · " + device.get("room", room),
+            manufacturer="TAFA", model="Device Bridge")
 
     def entity_id(self, room, kind):
         domain = "camera" if kind == "camera" else "binary_sensor"
@@ -54,7 +70,8 @@ class RoomCameraHub:
     def sync(self):
         changed = self.store.sync()
         for kind, (add, factory) in self.adders.items():
-            rooms = set(self.transport.rooms) - self.known[kind]
+            rooms = {room for room in self.transport.rooms
+                     if self.enrolled_device_id(room)} - self.known[kind]
             if rooms:
                 self.known[kind].update(rooms)
                 add([factory(self, room) for room in sorted(rooms)])
@@ -90,7 +107,7 @@ def get_hub(request):
 
 class RoomCameraRegister(HomeAssistantView):
     url = API + "/register"
-    name = "api:jarvis_echo_relay:room_camera_register"
+    name = "api:tablet_assist_for_alexa:room_camera_register"
     requires_auth = True
 
     async def post(self, request):
@@ -115,7 +132,7 @@ class RoomCameraRegister(HomeAssistantView):
 
 class RoomCameraFrame(HomeAssistantView):
     url = API + "/frame"
-    name = "api:jarvis_echo_relay:room_camera_frame"
+    name = "api:tablet_assist_for_alexa:room_camera_frame"
     requires_auth = True
 
     async def post(self, request):

@@ -18,7 +18,7 @@ from .const import DOMAIN
 from .relay_frames import FrameStore, DEVICE, MAX_IMAGE
 from .relay_vision import describe, health, classify, resolve_camera_request
 
-API = "/api/jarvis_echo_relay"
+API = "/api/tablet_assist_for_alexa/camera"
 
 def normalize(data, external=False):
     """Do CPU work off the HA loop. Strip metadata and reject multi-frame/bomb input."""
@@ -95,7 +95,7 @@ def runtime(hass):
 
 class ResolveCameraView(HomeAssistantView):
     url = API + "/resolve_camera"
-    name = "api:jarvis_echo_relay:resolve_camera"
+    name = "api:tablet_assist_for_alexa:resolve_camera"
     requires_auth = True
 
     async def post(self, request):
@@ -123,7 +123,7 @@ class ResolveCameraView(HomeAssistantView):
 
 class RegisterView(HomeAssistantView):
     url = API + "/register"
-    name = "api:jarvis_echo_relay:register"
+    name = "api:tablet_assist_for_alexa:camera_register"
     requires_auth = True
     async def post(self, request):
         relay = runtime(request.app[KEY_HASS])
@@ -150,7 +150,7 @@ class RegisterView(HomeAssistantView):
 
 class FrameView(HomeAssistantView):
     url = API + "/frame"
-    name = "api:jarvis_echo_relay:frame"
+    name = "api:tablet_assist_for_alexa:camera_frame"
     requires_auth = True
     def validate(self, request):
         relay = runtime(request.app[KEY_HASS])
