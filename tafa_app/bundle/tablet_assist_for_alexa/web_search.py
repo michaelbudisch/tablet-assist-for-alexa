@@ -73,8 +73,14 @@ async def query_searxng(hass, base, query):
                 raise
         if not isinstance(payload, dict):
             raise ValueError("SearXNG did not return a JSON object")
+        raw_results = payload.get("results", [])
+        if not isinstance(raw_results, list):
+            raw_results = []
+        engine_issues = payload.get("unresponsive_engines", [])
+        if not isinstance(engine_issues, list):
+            engine_issues = []
         rows = []
-        for item in payload.get("results", []):
+        for item in raw_results:
             if not isinstance(item, dict):
                 continue
             url = public_link(item.get("url"))
@@ -86,8 +92,11 @@ async def query_searxng(hass, base, query):
         msg = ("Ich habe " + str(len(rows)) + " Suchtreffer gefunden. "
                + ("Welchen Treffer soll ich öffnen? Sage zum Beispiel: Öffne Nummer eins."
                   if len(rows) > 1 else "Soll ich den Treffer öffnen? Sage: Öffne Nummer eins.")
-               if rows else "SearXNG hat keine passenden Treffer geliefert.")
-        return {"message": msg, "results": rows}
+               if rows else ("SearXNG liefert derzeit keine Suchergebnisse."
+                             + (" Einige Suchmaschinen melden Fehler." if engine_issues else "")))
+        diagnostics = {"results_received": len(raw_results), "results_usable": len(rows),
+                       "engine_errors": min(len(engine_issues), 30)}
+        return {"message": msg, "results": rows, "diagnostics": diagnostics}
     except (aiohttp.ClientError, TimeoutError, ValueError, TypeError, KeyError):
         return {"message": "Die lokale Internetsuche ist momentan nicht erreichbar. Prüfe SearXNG und die aktivierte JSON-Ausgabe.", "results": []}
 
