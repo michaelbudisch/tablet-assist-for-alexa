@@ -448,7 +448,7 @@ public class MainActivity extends Activity {
         TextView pauseLabel=findViewById(R.id.native_pause_label);
         Button test=findViewById(R.id.native_assist_test);
         // Native HA Assist + tablet Bluetooth is the only audio route.
-        // A separate local hard ceiling survives HA sync and defaults to wakeword-only.
+        // Opt-in follow-up ceiling; HA may reduce it without opening the Android UI.
         enabled.setChecked(true);
         enabled.setVisibility(View.GONE);
         followups.setVisibility(View.GONE);
@@ -456,13 +456,22 @@ public class MainActivity extends Activity {
             .putBoolean("room_audio_enabled",true).apply();
         Spinner limit=findViewById(R.id.native_followup_limit);
         ArrayList<String> choices=new ArrayList<>();
+        final int[] followupValues={0,1,2,3,5,10,20,50,100,-1};
         choices.add(getString(R.string.followup_wakeword_only));
-        for(int i=1;i<=10;i++)choices.add(getResources().getQuantityString(R.plurals.followup_count,i,i));
+        for(int i=1;i<followupValues.length;i++){
+            int count=followupValues[i];
+            choices.add(count==-1?getString(R.string.followup_unlimited):
+                getResources().getQuantityString(R.plurals.followup_count,count,count));
+        }
         limit.setAdapter(BridgeChoices.create(this,choices));
-        limit.setSelection(FollowupPolicy.localLimit(preferences.getInt(FollowupPolicy.LOCAL_LIMIT,0)));
+        int current=FollowupPolicy.localLimit(preferences.getInt(FollowupPolicy.LOCAL_LIMIT,0));
+        int initial=0;
+        for(int i=0;i<followupValues.length;i++)if(followupValues[i]==current)initial=i;
+        limit.setSelection(initial);
         limit.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             public void onNothingSelected(AdapterView<?> parent){}
-            public void onItemSelected(AdapterView<?> parent,View view,int value,long id){
+            public void onItemSelected(AdapterView<?> parent,View view,int index,long id){
+                int value=followupValues[index];
                 if(value==preferences.getInt(FollowupPolicy.LOCAL_LIMIT,0))return;
                 preferences.edit().putInt(FollowupPolicy.LOCAL_LIMIT,value).apply();
                 if(WakeWordService.running)

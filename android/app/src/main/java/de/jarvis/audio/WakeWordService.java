@@ -51,7 +51,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     private final WakeTriggerGate triggerGate=new WakeTriggerGate();
     private ScheduledExecutorService settingsExecutor;
     private NativeSettingsSocket settingsSocket;
-    private long lastFullSync=0;
+    private volatile long lastFullSync=0;
     private volatile boolean registered=false;
     private Model model;
     private Recognizer recognizer;
@@ -138,23 +138,9 @@ public final class WakeWordService extends Service implements RecognitionListene
             stopSelf();return START_NOT_STICKY;
         }
         enabled=true;running=true;muted=true;status="loading";
-        loading=!"continuous".equals(voiceMode);
+        loading=false;
         startSettingsSync();
-        if(!loading){startRecognition();return START_NOT_STICKY;}
-        new Thread(()->{
-            try{
-                Model newModel=new Model(WakeModelInstaller.modelDir(this).getAbsolutePath());
-                main.post(()->{
-                    loading=false;
-                    if(!enabled){newModel.close();return;}
-                    model=newModel;
-                    startRecognition();
-                });
-            }catch(Exception e){
-                Log.w(TAG,"Offline model loading failed",e);
-                main.post(()->{loading=false;status="model_error: "+e.getClass().getSimpleName();stopSelf();});
-            }
-        },"JarvisWakeModel").start();
+        startRecognition();
         return START_NOT_STICKY;
     }
 
@@ -256,6 +242,28 @@ public final class WakeWordService extends Service implements RecognitionListene
         }
     }
 
+    private void loadWakeModel(){
+        if(model!=null||loading)return;
+        if(!WakeModelInstaller.installed(this)){status="model_missing";return;}
+        loading=true;
+        new Thread(()->{
+            try{
+                Model loaded=new Model(WakeModelInstaller.modelDir(this).getAbsolutePath());
+                main.post(()->{
+                    loading=false;
+                    if(!enabled){loaded.close();return;}
+                    model=loaded;
+                    startRecognition();
+                });
+            }catch(Exception error){
+                main.post(()->{
+                    loading=false;
+                    status="model_error: "+error.getClass().getSimpleName();
+                });
+            }
+        },"TAFA-WakeModel").start();
+    }
+
     private void startRecognition(){
         main.removeCallbacks(rearm);
         if(!enabled||loading||muted||nativeSession!=null||followupPending)return;
@@ -273,7 +281,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             startContinuousMonitor();
             return;
         }
-        if(model==null){status="model_missing";return;}
+        if(model==null){loadWakeModel();return;}
         if(speech!=null)return;
         wordChoice=getSharedPreferences(MainActivity.PREF,0).getString("wake_choice","hey_jarvis");
         try{

@@ -291,6 +291,7 @@
     <string name="quick_microphone_muted">The microphone is muted in Home Assistant. Unmute this device there first.</string>
     <string name="followup_limit_label">Questions without another wakeword</string>
     <string name="followup_wakeword_only">Require wakeword for every question (default)</string>
-    <string name="followup_limit_help">Default: the wakeword is required again after every answer. Optionally allow 1–10 additional questions per conversation. Silence, an error or this limit returns to wakeword detection. This local ceiling also applies without a dashboard; Home Assistant may reduce it. Background sounds can still be mistaken for speech during an open follow-up window.</string>
+    <string name="followup_limit_help">By default, each new question requires the wake word. Optionally allow 1–100 or unlimited follow-ups. Silence, an error or muting ends the conversation. Home Assistant can reduce the limit at any time. The app setting applies even with the dashboard closed. Background conversation can trigger follow-ups.</string>
+    <string name="followup_unlimited">Unlimited (until silence)</string>
     <plurals name="followup_count"><item quantity="one">1 additional question</item><item quantity="other">%d additional questions</item></plurals>
 </resources>
