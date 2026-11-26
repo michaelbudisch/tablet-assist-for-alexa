@@ -20,13 +20,14 @@ final class WakePilotSettings {
 
     static final class Snapshot {
         final boolean muted;
+        final String voiceMode;
         final String word;
         final String room;
         final int strictness,cooldownSeconds,holdSeconds,followupLimit,pauseMs,micGain,brightness;
         final boolean screenAwake,displayControl;
-        Snapshot(boolean muted,String word,String room,int strictness,int cooldownSeconds,int holdSeconds,int followupLimit,
+        Snapshot(boolean muted,String voiceMode,String word,String room,int strictness,int cooldownSeconds,int holdSeconds,int followupLimit,
                  int pauseMs,int micGain,int brightness,boolean screenAwake,boolean displayControl){
-            this.muted=muted;this.word=word;this.room=room;
+            this.muted=muted;this.voiceMode=voiceMode;this.word=word;this.room=room;
             this.strictness=strictness;
             this.cooldownSeconds=cooldownSeconds;this.holdSeconds=holdSeconds;
             this.followupLimit=followupLimit;
@@ -34,6 +35,8 @@ final class WakePilotSettings {
             this.screenAwake=screenAwake;this.displayControl=displayControl;
         }
     }
+
+    static String modeFor(String value){return "continuous".equals(value)?"continuous":"wake";}
 
     static String choiceFor(String text){
         for(int i=0;i<DISPLAY.length;i++)if(DISPLAY[i].equals(text))return CHOICES[i];
@@ -92,7 +95,7 @@ final class WakePilotSettings {
     static Snapshot readFull(Context ctx) throws Exception {
         JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
         Snapshot s=new Snapshot(
-            dev.getBoolean("muted"),choiceFor(dev.getString("word")),
+            dev.getBoolean("muted"),modeFor(dev.optString("voice_mode","wake")),choiceFor(dev.getString("word")),
             dev.optString("room","Jarvis Tablet"),
             clamp(dev.getInt("strict"),1,3),
             clamp(dev.getInt("cooldown"),3,30),
@@ -105,7 +108,8 @@ final class WakePilotSettings {
             dev.optBoolean("display_control_enabled",false)
         );
         ctx.getSharedPreferences(MainActivity.PREF,0).edit()
-            .putBoolean("wake_muted",s.muted).putString("wake_choice",s.word)
+            .putBoolean("wake_muted",s.muted).putString("native_voice_mode",s.voiceMode)
+            .putString("wake_choice",s.word)
             .putInt("wake_strict",s.strictness).putInt("wake_cooldown",s.cooldownSeconds)
             .putInt("wake_hold",s.holdSeconds)
             .putInt("native_followup_limit",s.followupLimit)
@@ -147,8 +151,25 @@ final class WakePilotSettings {
         request(ctx,body(ctx,"report").put("telemetry",details));
     }
 
-    static boolean readMute(Context ctx) throws Exception {
-        return request(ctx,body(ctx,"get")).getJSONObject("device").getBoolean("muted");
+    static final class MicState {
+        final boolean muted; final String voiceMode;
+        MicState(boolean muted,String voiceMode){this.muted=muted;this.voiceMode=voiceMode;}
+    }
+    static MicState readMic(Context ctx) throws Exception {
+        JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
+        MicState state=new MicState(dev.getBoolean("muted"),modeFor(dev.optString("voice_mode","wake")));
+        ctx.getSharedPreferences(MainActivity.PREF,0).edit()
+            .putBoolean("wake_muted",state.muted).putString("native_voice_mode",state.voiceMode).apply();
+        return state;
+    }
+    /** The three choices are committed atomically on the authenticated HA API. */
+    static void writeMode(Context ctx,String selection) throws Exception {
+        if(!selection.equals("mute")&&!selection.equals("wake")&&!selection.equals("continuous"))
+            throw new IllegalArgumentException("Unknown microphone mode");
+        register(ctx);
+        JSONObject settings=new JSONObject().put("muted",selection.equals("mute"));
+        if(!selection.equals("mute"))settings.put("voice_mode",selection);
+        request(ctx,body(ctx,"configure").put("settings",settings));
     }
 
     /** User edits apply only to this installation. */
@@ -157,6 +178,9 @@ final class WakePilotSettings {
         JSONObject setting=new JSONObject();
         if("muted".equals(key)&&value instanceof Boolean){
             setting.put("muted",value);
+        }else if("voice_mode".equals(key)&&value instanceof String &&
+                ("wake".equals(value)||"continuous".equals(value))){
+            setting.put("voice_mode",value);
         }else if("word".equals(key)&&value instanceof String){
             setting.put("word",displayFor((String)value));
         }else if(("strict".equals(key)||"cooldown".equals(key)||"hold".equals(key)||

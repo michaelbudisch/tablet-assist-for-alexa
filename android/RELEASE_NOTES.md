@@ -1,3 +1,11 @@
+# TAFA Device Bridge 1.2.1
+
+- Adds an opt-in native **Always on** speech-activity mode (no wakeword). Local microphone activity starts the existing HA Assist WebSocket, GPU Whisper, Qwen/Piper and Bluetooth output.
+- Choose **Muted**, **Wake word** or **Always on** from the app or TAFA Control Center; Home Assistant stores the mode per tablet.
+- No background recording files or stored transcripts. Only a locally detected speech event opens Assist; the monitor is stopped for recognition and Bluetooth playback.
+- This mode can react to background speech and increases microphone activity. Use Wake word in noisy rooms. Requires TAFA integration 0.4.26 or newer.
+- Device Bridge update requires an APK signed with the same signing key as the currently installed app. CI debug builds are not in-place replacements for an existing release-signed APK.
+
 # TAFA Device Bridge 1.2.0
 
 - Status now offers Connect, Speak now, Start wakeword, Start camera and End conversation directly at the top, with a responsive button layout.
