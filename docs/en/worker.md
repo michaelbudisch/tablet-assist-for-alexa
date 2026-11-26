@@ -2,7 +2,7 @@
 
 [Deutsch](../worker.md) · [TAFA installation](setup-guide.md)
 
-**GPU Worker 2.2.5** adds GPU Wyoming Whisper (TCP **10300**), Qwen streaming TTS (**10502**), optional Ollama text AI (**11434**) and Vision (**10503**). **CPU speech services** remain separate: run them **locally in the TAFA App** or on an **external speech server**. Keep these APIs on a firewall-restricted trusted LAN.
+**GPU Worker 2.2.6** adds GPU Wyoming Whisper (TCP **10300**), Qwen streaming TTS (**10502**), optional Ollama text AI (**11434**) and Vision (**10503**). **CPU speech services** remain separate: run them **locally in the TAFA App** or on an **external speech server**. Keep these APIs on a firewall-restricted trusted LAN.
 
 **Windows:** From `worker/` run **01-Installieren.bat**, then **04-Verbindungsdaten.bat** to generate `tafa-worker.json` and `GPU-Worker-Verbindungsdaten.txt`. Import under **TAFA → Connections → Quick setup via JSON**, **check and confirm**. The separate CPU backend is not included in this GPU export.
 
