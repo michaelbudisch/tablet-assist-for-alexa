@@ -16,7 +16,7 @@ class SettingsUI(unittest.TestCase):
         defaults.update({"speech_mode": "local", "hardware_profile": "automatic",
                          "voice_variant": "default", "live_profile": "natural",
                          "conversation_mode": "intelligent", "mp3_profile": "natural",
-                         "rooms_json": "{}", "sources_json": "{}"})
+                         })
         defaults.update(changes)
         return {k: [v] for k,v in defaults.items()}
 
