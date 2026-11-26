@@ -1,6 +1,6 @@
 # TAFA: one speech path, one management UI
 
-**TAFA App 0.3.36 / HA integration 0.4.21 / Device Bridge 1.0.3**
+**TAFA App 0.3.38 / HA integration 0.4.22 / Device Bridge 1.0.3**
 
 ## Architecture
 
@@ -15,7 +15,7 @@ TAFA no longer creates an extra dashboard sidebar panel. Manage voice and device
 3. Install **TAFA Device Bridge 1.0.3** on each tablet; sign in to HA securely, grant microphone access, and start native playback and wakeword recognition.
 4. Pair the desired Echo/Bluetooth speaker using **Android Bluetooth settings**, then verify ordinary media playback.
 5. Visit TAFA → **Devices & multiroom**. Each running tablet enrolls using its own stable device ID; control its wakeword, mute, mic parameters and status in HA.
-6. For multiple rooms, use a **separate non-admin HA user per audio room**. Sign the tablet in with that account and pair the user, room and device in the control center. No fixed four-device cap.
+6. Under **Devices & multiroom → Create new room** first create a room using a dedicated non-admin HA user, **even without an enrolled tablet**. Sign Device Bridge into the **test server** using this user token, start wakeword recognition to enroll the tablet, then pair it with the already created room. Transfers from other users require an explicit confirmation. No fixed four-device cap.
 
 ## Entities per tablet
 

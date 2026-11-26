@@ -140,6 +140,35 @@ class PairingTests(unittest.IsolatedAsyncioTestCase):
     async def call(self, hass, payload, admin=True):
         return await self.view().post(FakeRequest(hass, payload, admin))
 
+    async def test_fresh_room_can_be_created_without_tablet(self):
+        hass = FakeHass()
+        hass.transport.rooms.clear()
+        hass.transport.settings.clear()
+        hass.controller.devices.clear()
+        result = await self.call(hass, {
+            "action": "create", "room": "buero", "user_id": "tablet2"})
+        self.assertTrue(result["created"])
+        self.assertEqual(hass.transport.rooms, {"buero": "tablet2"})
+        self.assertEqual(hass.saves, 1)
+        self.assertEqual(hass.transport.provision_calls, [("buero", "tablet2")])
+        self.assertNotIn("session", str(result))
+        with self.assertRaises(Forbidden):
+            await self.call(FakeHass(), {
+                "action": "create", "room": "buero", "user_id": "tablet2"}, admin=False)
+
+    async def test_create_room_rejects_overwrites_and_invalid_users(self):
+        for change in (
+            {"room": "jarvis_tablet", "user_id": "tablet2"},
+            {"room": "buero", "user_id": "admin"},
+            {"room": "buero", "user_id": "unknown"},
+            {"room": "../bad", "user_id": "tablet2"},
+            {"room": "buero", "user_id": "tablet1"},
+        ):
+            hass = FakeHass()
+            result = await self.call(hass, {"action": "create", **change})
+            self.assertEqual(result["status"], 400)
+            self.assertEqual(hass.saves, 0)
+
     async def test_list_only_returns_admin_safe_information(self):
         hass = FakeHass()
         result = await self.call(hass, {"action": "list"})

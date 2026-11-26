@@ -1,6 +1,6 @@
 # TAFA: Ein Sprachweg, eine Benutzeroberfläche
 
-**Ab TAFA-App 0.3.36 / HA-Integration 0.4.21 / Device Bridge 1.0.3**
+**Ab TAFA-App 0.3.38 / HA-Integration 0.4.22 / Device Bridge 1.0.3**
 
 ## Architektur
 
@@ -15,7 +15,7 @@ Das alte zusätzliche **TAFA Dashboard** wird nicht mehr als Seitenleistenpanel 
 3. Installiere TAFA Device Bridge **1.0.3** auf dem Tablet. Verbinde die App mit Home Assistant über eine sichere HA-Anmeldung, erteile die Mikrofonberechtigung und starte den nativen Audio-Player sowie die Rufworterkennung.
 4. Verbinde den gewünschten Echo- oder Bluetooth-Lautsprecher **in den Android-Bluetooth-Einstellungen** und prüfe normale Medienwiedergabe. Die App steuert den Hardware-Lautsprecher nicht über Alexa-Sprachbefehle.
 5. Öffne TAFA → **Geräte & Multiroom**. Das gestartete Tablet registriert sich mit einer dauerhaften Geräte-ID. Stelle Rufwort, Stummschaltung und Mikrofonwerte direkt in HA ein. Änderungen werden regelmäßig von der App synchronisiert.
-6. Für weitere Tablets verwendet jeder Audioraum einen **eigenen, nicht administrativen HA-Benutzer**. Melde das Tablet damit an und kopple Benutzer, Gerät und Raum unter **Geräte & Multiroom**. Die Zahl der Räume ist nicht fest auf vier begrenzt.
+6. Unter **Geräte & Multiroom → Neuen Raum anlegen** kannst du einen Raum **vor der Tablet-Registrierung** mit einem eigenen Nicht-Admin-HA-Benutzer erstellen. In TAFA Device Bridge den **Testserver** und das Token dieses Benutzers hinterlegen, die Rufworterkennung zur Registrierung starten und anschließend das Tablet im bereits erstellten Raum zuordnen. War das Tablet zuvor mit einem anderen Benutzer registriert, erfordert die Übertragung eine ausdrückliche Bestätigung. Mehr als vier Räume sind möglich.
 
 ## Steuerung und Sensoren
 

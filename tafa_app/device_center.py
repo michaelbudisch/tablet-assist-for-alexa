@@ -78,6 +78,18 @@ def update_device(fields):
     return "Tablet setting saved."
 
 
+def create_room(fields):
+    """Create an audio room before any tablet is enrolled."""
+    room = fields.get("room", [""])[0].strip()
+    user_id = fields.get("user_id", [""])[0]
+    if (not ROOM.fullmatch(room) or not isinstance(user_id, str)
+            or not 1 <= len(user_id) <= 128):
+        raise ValueError("Ungültige Raum-ID oder Benutzer-ID / Invalid room or user")
+    ha_call("tablet_assist_for_alexa/room_admin", {
+        "action": "create", "room": room, "user_id": user_id})
+    return "Raum angelegt / Room created."
+
+
 def pair_device(fields):
     identifier = fields.get("device_id", [""])[0]
     room = fields.get("room", [""])[0].strip()
@@ -85,11 +97,13 @@ def pair_device(fields):
     if (not DEVICE_ID.fullmatch(identifier) or not ROOM.fullmatch(room)
             or not 1 <= len(user_id) <= 128):
         raise ValueError("Invalid multiroom assignment")
-    # The backend enforces ownership. No implicit transfer or replacement.
+    transfer = fields.get("transfer_device", ["0"])[0]
+    if transfer not in ("0", "1"):
+        raise ValueError("Invalid device transfer choice")
     ha_call("tablet_assist_for_alexa/room_admin", {
         "action": "pair", "device_id": identifier,
         "room": room, "user_id": user_id,
-        "replace": False, "transfer_device": False})
+        "replace": False, "transfer_device": transfer == "1"})
     return "Multiroom pairing saved."
 
 
@@ -204,25 +218,82 @@ def render_device_center(lang, csrf, state):
                 f'<div class="room-row"><strong>{h(item.get("room"))}</strong>'
                 f'<span>{t("bereit","ready") if item.get("ready") else t("nicht bereit","not ready")}</span>'
                 f'<small>{h(item.get("wake_device_id"))}</small></div>')
+    # The first room can be created before there is any registered tablet.
+    # A fresh install must not hide its creation form behind device enrollment.
     useropts = "".join(
-        f'<option value="{h(x.get("id"))}">{h(x.get("name") or x.get("id"))}</option>'
-        for x in users if isinstance(x, dict))
+        f'<option value="{h(u.get("id"))}">{h(u.get("name") or u.get("id"))}</option>'
+        for u in users if isinstance(u, dict)
+        and isinstance(u.get("id"), str) and 1 <= len(u["id"]) <= 128
+    )
     deviceopts = "".join(
-        f'<option value="{h(x.get("device_id"))}">{h(x.get("room") or "Tablet")}'
-        f' ({h(str(x.get("device_id",""))[:8])})</option>'
-        for x in devices if isinstance(x, dict) and DEVICE_ID.fullmatch(str(x.get("device_id",""))))
-    pairing = (f'<form class="pair-form" action="./" method="post">{hidden("room_pair")}'
-               f'<label>{t("Raum-ID (z. B. buero)","Room ID (e.g. office)")}'
-               '<input type="text" name="room" pattern="[a-z0-9][a-z0-9_-]*" maxlength="64" required></label>'
-               f'<label>{t("Tablet","Tablet")}<select name="device_id" required>{deviceopts}</select></label>'
-               f'<label>{t("Dedizierter Home-Assistant-Benutzer","Dedicated Home Assistant user")}'
-               f'<select name="user_id" required>{useropts}</select></label>'
-               f'<button class="btn btn-primary" type="submit">{t("Multiroom koppeln","Pair multiroom")}</button>'
-               '</form>' if useropts and deviceopts else
-               f'<p class="subtle">{t("Für jeden Raum einen eigenen Nicht-Admin-HA-Benutzer anlegen und die App damit anmelden.","Create a dedicated non-admin HA user for each room and sign the tablet in with it.")}</p>')
-    if state.get("room_error"):
-        pairing = f'<p class="subtle">{t("Raumkopplung derzeit nicht verfügbar.","Room pairing temporarily unavailable.")}</p>'
-    return (notice + device_section
-            +f'<section class="work-card multiroom-panel"><h3>{t("Multiroom · Bluetooth-Ausgabe","Multiroom · Bluetooth playback")}</h3>'
-            f'<p class="subtle">{t("Jedes Tablet ist einem eigenen Home-Assistant-Benutzer und Raum zugeordnet. Antworten werden über den nativen Audio-Player auf dem gekoppelten Bluetooth-Lautsprecher ausgegeben.","Each tablet is paired with its own HA user and room. Native playback routes answers to its Bluetooth speaker.")}</p>'
-            +'<div class="room-list">'+"".join(roomrows)+'</div>'+pairing+'</section>')
+        f'<option value="{h(d.get("device_id"))}">{h(d.get("room") or "Tablet")}'
+        f' ({h(str(d.get("device_id"))[:8])})</option>'
+        for d in devices if isinstance(d, dict)
+        and DEVICE_ID.fullmatch(str(d.get("device_id", "")))
+    )
+
+    guide = (
+        f'<div class="work-card first-room-guide">'
+        f'<h3>{t("Erste Einrichtung","First-time setup")}</h3>'
+        f'<p><strong>1.</strong> {t("In Home Assistant unter Einstellungen → Personen → Benutzer einen eigenen Nicht-Admin-Benutzer für den Raum anlegen.","Create a dedicated non-admin HA user for this room under Settings → People → Users.")}</p>'
+        f'<p><strong>2.</strong> {t("Hier einen Raum erstellen – auch wenn noch kein Tablet angemeldet ist.","Create the room here, even before a tablet is enrolled.")}</p>'
+        f'<p><strong>3.</strong> {t("Die native App mit der Adresse des Testservers und dem Token dieses Benutzers verbinden. Rufworterkennung starten, damit das Tablet registriert wird.","Connect the native app to the test-server address with this users token. Start wakeword detection to enroll the tablet.")}</p>'
+        f'<p><strong>4.</strong> {t("Das angemeldete Tablet dem erstellten Raum zuordnen und danach den Bluetooth-Player starten.","Pair the enrolled tablet with the new room, then start Bluetooth playback.")}</p>'
+        '</div>'
+    )
+
+    ready = bool(useropts) and not state.get("room_error")
+    userhint = (
+        f'<p class="subtle">{t("Noch kein Nicht-Admin-Benutzer vorhanden. Lege zuerst einen in Home Assistant an und aktualisiere diese Seite.","No non-admin HA user yet. Create one in Home Assistant first and refresh this page.")}</p>'
+        if not useropts else ""
+    )
+    api_hint = (
+        f'<p class="subtle">{t("TAFA-Raum-API nicht erreichbar. Prüfe, ob die neue Integration auf diesem Testserver geladen ist und der Zugriff autorisiert ist.","TAFA room API unavailable. Check that the updated integration is loaded and authorized on this test server.")}</p>'
+        if state.get("room_error") else ""
+    )
+    disabled = " disabled" if not ready else ""
+    room_create = (
+        f'<section class="work-card multiroom-panel">'
+        f'<h3>{t("Neuen Raum anlegen","Create a new room")}</h3>'
+        f'<p class="subtle">{t("Dafür muss noch kein Tablet registriert sein.","No enrolled tablet is required.")}</p>'
+        f'<form class="pair-form" action="./" method="post">{hidden("room_create")}'
+        f'<label>{t("Raum-ID (z. B. buero)","Room ID (e.g. office)")}'
+        '<input name="room" type="text" pattern="[a-z0-9][a-z0-9_-]*" maxlength="64" required></label>'
+        f'<label>{t("Home-Assistant-Raumnutzer","Home Assistant room user")}'
+        f'<select name="user_id" required{disabled}>{useropts}</select></label>'
+        f'<button class="btn btn-primary" type="submit"{disabled}>{t("Raum anlegen","Create room")}</button>'
+        '</form>' + userhint + api_hint + '</section>'
+    )
+
+    pair_forms = []
+    if not state.get("room_error") and deviceopts:
+        for room in rooms:
+            if not isinstance(room, dict):
+                continue
+            rid, uid = room.get("room"), room.get("user_id")
+            if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
+                    or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
+                continue
+            pair_forms.append(
+                f'<form class="pair-form" action="./" method="post">{hidden("room_pair")}'
+                f'<input type="hidden" name="room" value="{h(rid)}">'
+                f'<input type="hidden" name="user_id" value="{h(uid)}">'
+                f'<strong>{h(rid)}</strong>'
+                f'<label>{t("Tablet auswählen","Select tablet")}'
+                f'<select name="device_id" required>{deviceopts}</select></label>'
+                f'<label class="pair-consent"><input type="checkbox" name="transfer_device" value="1"> '
+                f'{t("Gerätebesitz ausdrücklich übertragen (nur wenn das Tablet unter einem anderen HA-Benutzer registriert wurde). Danach in Android das Token des Raumnutzers verwenden.","Explicitly transfer device ownership only if enrolled under a different user. Then use the room users token in Android.")}</label>'
+                f'<button class="btn btn-primary" type="submit">{t("Tablet zuordnen","Pair tablet")}</button>'
+                '</form>'
+            )
+    pairing_note = (
+        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>'
+        if not pair_forms else ""
+    )
+    pairing = (
+        f'<section class="work-card multiroom-panel">'
+        f'<h3>{t("Tablet einem Raum zuordnen","Pair a tablet with a room")}</h3>'
+        '<div class="room-list">' + "".join(roomrows) + '</div>'
+        + "".join(pair_forms) + pairing_note + '</section>'
+    )
+    return notice + device_section + guide + room_create + pairing

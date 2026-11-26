@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.38 — Guided multiroom creation on clean HA servers
+- Create a native room before a tablet enrolls, then assign the enrolled tablet to that existing room.
+- Give fresh installations a four-step setup guide: dedicated non-admin HA user, room, native tablet registration, pairing.
+- Require explicit admin checkbox to transfer ownership of a device enrolled under another user; never silently replace room owners or active player sessions.
+- Keep existing automations and dashboards unchanged. Private/test HA servers need their own app and integration updates.
+
+
 ## 0.3.37 — Keep tablet controls visible when multiroom API fails
 - Query native tablet enrollment and room administration independently; an error in one no longer hides the other.
 - Show redacted endpoint status codes (for example HTTP 403/404) and log only sanitized status; never return bearer tokens or backend response bodies.
