@@ -22,6 +22,43 @@ def call(path,data=None,method="POST"):
     with urllib.request.urlopen(req,timeout=8) as response:
         return json.loads(response.read(65536).decode())
 
+def device_admin_rpc(action, **data):
+    """HA-admin WebSocket request via the existing Supervisor token.
+
+    The Supervisor bearer token never reaches the browser or Android device.
+    All device and room writes are checked again by the HA admin command.
+    """
+    if not TOKEN:
+        raise RuntimeError("Supervisor WebSocket unavailable")
+    from websockets.sync.client import connect
+    with connect("ws://supervisor/core/websocket",
+                 open_timeout=6, close_timeout=2) as ws:
+        first = json.loads(ws.recv(timeout=8))
+        if first.get("type") != "auth_required":
+            raise RuntimeError("HA WebSocket greeting unavailable")
+        ws.send(json.dumps({"type": "auth", "access_token": TOKEN}))
+        auth = json.loads(ws.recv(timeout=8))
+        if auth.get("type") != "auth_ok":
+            raise RuntimeError("HA WebSocket authorization failed")
+        ws.send(json.dumps({"id": 1,
+                            "type": "tablet_assist_for_alexa/device_admin",
+                            "action": action, **data}))
+        while True:
+            reply = json.loads(ws.recv(timeout=10))
+            if reply.get("id") != 1:
+                continue
+            if not reply.get("success"):
+                raw = str(reply.get("error", {}).get("code", "unknown"))
+                code = raw if raw in ("unknown_command", "unauthorized",
+                                      "not_ready", "invalid_request",
+                                      "not_found") else "unknown"
+                raise RuntimeError("TAFA WebSocket: " + code)
+            result = reply.get("result")
+            if not isinstance(result, dict):
+                raise ValueError("Invalid TAFA WebSocket result")
+            return result
+
+
 def configure(piper_base, preferences=None):
     """Create HA's TAFA entry using the App Configuration as the first-run source.
 
