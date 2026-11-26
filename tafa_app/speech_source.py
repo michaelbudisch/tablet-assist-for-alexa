@@ -111,7 +111,7 @@ def _mapping(value, label):
 
 def _advanced(values):
     rooms = _mapping(values.get("rooms_json", "{}"), "rooms_json")
-    if len(rooms) > len(ROOMS) or any(k not in ROOMS for k in rooms):
+    if len(rooms) > 32 or any(not isinstance(k, str) or not 1 <= len(k) <= 48 or not re.fullmatch(r"[\w äöüÄÖÜß-]+", k) or k != k.strip() for k in rooms):
         raise ValueError("Unrecognized Alexa room")
     for room in rooms.values():
         if not isinstance(room, dict) or set(room) - {"notify", "dnd", "quiet"} or not room.get("notify"):
