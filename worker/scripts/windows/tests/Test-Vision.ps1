@@ -8,7 +8,8 @@ $image = Get-Item -LiteralPath $ImagePath
 if ($image.Length -gt 2097152 -or $image.Extension -notin '.jpg','.jpeg','.png') {
     throw 'Use a consented non-private JPEG or PNG up to 2 MiB.'
 }
-Set-Location $PSScriptRoot
+$WorkerRoot=Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+Set-Location -LiteralPath $WorkerRoot
 if (-not (Test-Path .env)) { throw 'Use the existing private .env file.' }
 $cfg = @{}
 Get-Content .env | ForEach-Object { if ($_ -match '^([^=]+)=(.*)$') { $cfg[$matches[1]] = $matches[2] } }

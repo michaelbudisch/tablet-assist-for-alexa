@@ -206,7 +206,7 @@ def render_connection_form(options, lang, csrf, checks=None):
             '</div>'
         )
     groups = ((t("GPU-Zusatzrechner", "GPU worker"), ("gpu_stt_host", "gpu_base")),
-              (t("CPU-Fallback / Homeserver", "CPU fallback / home server"), ("external_piper_base",)),
+              (t("CPU-Fallback: Whisper & Piper (Wyoming für Whisper in HA einrichten)", "CPU fallback: Whisper & Piper (set up Whisper via HA Wyoming)"), ("external_piper_base",)),
               (t("Alexa-Audioausgabe", "Alexa audio output"), ("mp3_base", "public_audio_base")))
     grouped = "".join(f'<section class="connection-group"><h3>{esc(title)}</h3><div class="connection-grid">' + "".join(cards[key] for key in keys) + "</div></section>" for title, keys in groups)
     return (

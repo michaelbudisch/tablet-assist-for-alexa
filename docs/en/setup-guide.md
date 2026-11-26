@@ -22,7 +22,7 @@ External mode checks private Proxmox Piper `/health` and can prepare the TAFA in
 
 ## 2. Optional Qwen GPU voice
 
-On the GPU computer, run `00-Konfiguration.bat` and `01-Installieren.bat` on Windows, or `bash setup-linux.sh` on Linux. These create a local token-free `.env` if needed. Then run `docker compose --profile stream up -d --build qwen-stream`.
+On the GPU computer, run `00-Konfiguration.bat` and `01-Installieren.bat` on Windows, or `bash scripts/linux/setup-linux.sh` on Linux. These create a local token-free `.env` if needed. Then run `docker compose --profile stream up -d --build qwen-stream`.
 
 Under **Apps → TAFA → Configuration**, set **Automatic**, streaming URL `http://GPU-PC:10502`, (no API token needed). GPU Wyoming STT on port `10300` is optional. Select **Tablet Assist Stream** as the Assist pipeline's TTS engine. Qwen takes over when healthy; Piper falls back when the GPU fails **before audio playback starts**. Existing Assist pipelines are not silently changed. [GPU worker guide](worker.md).
 

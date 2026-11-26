@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
-Set-Location $PSScriptRoot
-if (-not (Test-Path .env)) { throw 'Run Setup.ps1 first.' }
+$WorkerRoot=Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+Set-Location -LiteralPath $WorkerRoot
+if (-not (Test-Path .env)) { throw 'Run 01-Installieren.bat or scripts/windows/Setup.ps1 first.' }
 $cfg = ConvertFrom-StringData (Get-Content .env -Raw)
 $uri = "http://$($cfg.LAN_IP):10501"
 Invoke-RestMethod "$uri/health"

@@ -27,7 +27,7 @@ Im externen Modus prüft das TAFA Control Center die Proxmox-Piper-API (`/health
 Auf dem GPU-Rechner im Ordner `worker/`:
 
 - Windows: `00-Konfiguration.bat` und `01-Installieren.bat` (oder das bestehende Worker-Update unverändert lassen)
-- Linux: `bash setup-linux.sh`
+- Linux: `bash scripts/linux/setup-linux.sh`
 - Danach `docker compose --profile stream up -d --build qwen-stream`
 
 Die Skripte legen eine `.env` ausschließlich mit LAN-IP und Modelloptionen an. **Kein API-Token erforderlich.** Im TAFA-Menü **Sprachserver & GPU** folgende Angaben vornehmen:

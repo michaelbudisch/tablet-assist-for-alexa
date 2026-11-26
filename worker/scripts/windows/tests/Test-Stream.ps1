@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
-Set-Location $PSScriptRoot
+$WorkerRoot=Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+Set-Location -LiteralPath $WorkerRoot
 if (-not (Test-Path .env)) { throw 'Use the existing private .env file.' }
 $cfg = @{}
 Get-Content .env | ForEach-Object { if ($_ -match '^([^=]+)=(.*)$') { $cfg[$matches[1]] = $matches[2] } }
