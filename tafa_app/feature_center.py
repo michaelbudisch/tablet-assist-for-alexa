@@ -118,7 +118,7 @@ def discover_entities(token):
         ident = raw.get("entity_id", "")
         if not isinstance(ident, str) or not ENTITY_RE.fullmatch(ident):
             continue
-        if ident.split(".", 1)[0] not in {"sensor", "weather", "todo", "switch", "schedule", "camera", "light", "climate"}:
+        if ident.split(".", 1)[0] not in {"sensor", "weather", "todo", "switch", "schedule", "camera", "light", "climate", "notify"}:
             continue
         attributes = raw.get("attributes") if isinstance(raw.get("attributes"), dict) else {}
         unit = attributes.get("unit_of_measurement") or ""
@@ -389,7 +389,7 @@ def save_announcement_room(fields, options, entities, notify_services):
         if value and (not ENTITY_RE.fullmatch(value) or not value.startswith(domain + ".")):
             raise ValueError("Invalid " + key + " selection")
         if value and value != old.get(key):
-            if value not in (notify_services if key == "notify" else valid_entities):
+            if value not in ((set(notify_services) | {i for i in valid_entities if i.startswith("notify.")}) if key == "notify" else valid_entities):
                 raise ValueError("New " + key + " selection not found in Home Assistant")
         if value:
             values[key] = value
@@ -421,6 +421,7 @@ def render_announcement_rooms(options, lang, csrf, entities, services):
             items.append('<option value="' + _esc(ident) + '"' +
                          (' selected' if ident == selected else '') + '>' + _esc(ident) + '</option>')
         return '<label class="feature-source"><span>' + _esc(title) + '</span><select name="' + name + '">' + "".join(items) + '</select></label>'
+    services = sorted(set(services) | {e["id"] for e in entities if e["id"].startswith("notify.")})
     dnd = sorted(e["id"] for e in entities if e["id"].startswith("switch."))
     quiet = sorted(e["id"] for e in entities if e["id"].startswith("schedule."))
     forms = []
