@@ -250,7 +250,7 @@ def render_panel(lang,csrf,notice="",review=None):
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
 <input type="hidden" name="lang" value="{esc(lang)}">
-<input type="hidden" name="tab" value="setup">
+<input type="hidden" name="tab" value="connections">
 <input type="hidden" name="ticket" value="{esc(ticket)}">
 <label class="restart-opt-in"><input type="checkbox" name="restart_core_if_needed" value="1"> {t("Falls für eine neu installierte Integration nötig: Home Assistant Core nach dem Import neu starten und Einrichtung fortsetzen.","If required for a newly installed backend: restart Home Assistant Core after import and continue setup.")}</label>
 <button class="btn btn-primary" type="submit" name="action" value="manifest_apply">{t("Änderungen übernehmen","Apply reviewed changes")}</button>
@@ -262,14 +262,12 @@ def render_panel(lang,csrf,notice="",review=None):
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
 <input type="hidden" name="lang" value="{esc(lang)}">
-<input type="hidden" name="tab" value="setup">
+<input type="hidden" name="tab" value="connections">
 <label for="manifest-file">{t("JSON-Datei auswählen","Select JSON file")}</label>
-<input type="file" id="manifest-file" accept=".json,application/json">
-<label for="manifest-json">{t("JSON-Konfiguration","JSON configuration")}</label>
-<textarea id="manifest-json" name="manifest_json" maxlength="10000" rows="6"
-placeholder='{{"schema":"tafa-connection-v1",...}}' required></textarea>
-<p class="subtle">{t("Datei auswählen oder JSON hier einfügen. Die Datei wird nur lokal im Browser gelesen.","Choose a file or paste JSON here. File reading stays in your browser.")}</p>
-<button class="btn btn-outline" type="submit" name="action" value="manifest_preview">{t("Konfiguration prüfen","Preview configuration")}</button>
+<input type="file" id="manifest-file" accept=".json,application/json" required>
+<input type="hidden" id="manifest-json" name="manifest_json" value="">
+<p class="subtle" id="manifest-file-status" role="status" aria-live="polite">{t("Noch keine Datei ausgewählt. Die Datei wird lokal gelesen; TAFA überträgt nur die JSON-Konfiguration zur Prüfung.","No file selected. Read locally; only the JSON configuration is sent for validation.")}</p>
+<button class="btn btn-outline" id="manifest-check" disabled type="submit" name="action" value="manifest_preview">{t("Konfiguration prüfen","Check configuration")}</button>
 </form>
 {confirmation}
 </section>"""

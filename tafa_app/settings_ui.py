@@ -9,6 +9,7 @@ import urllib.request
 
 from speech_source import load_options, private_http_origin, setup_settings_values
 from endpoint_checks import suggested_gpu_stt_host
+from connection_probes import ADDRESS_FIELDS
 from wyoming_picker import SUPERVISOR_OPTIONS
 
 CHOICES = {
@@ -26,6 +27,7 @@ TEXT_FIELDS = (
 )
 BOOL_FIELDS = ("chime", "learning_enabled", "reminders_enabled")
 FORM_FIELDS = frozenset((*CHOICES, *TEXT_FIELDS, *BOOL_FIELDS))
+SETTINGS_FIELDS = FORM_FIELDS - ADDRESS_FIELDS
 
 
 def _value(options, key):
@@ -112,19 +114,17 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 
     return f"""
 <section id="tafa-settings" class="settings-card">
-<h2>{t("Einstellungen – zentral verwalten", "Settings – one place")}</h2>
-<p>{t("Hier richtest du TAFA vollständig ein. Alle Werte landen direkt in derselben Home-Assistant-App-Konfiguration. Die technische Konfigurationsseite wird nur für Fehlerbehebung benötigt.",
-"Configure TAFA here. All values are saved directly to the same Home Assistant App configuration. The technical configuration page is only needed for troubleshooting.")}</p>
+<h2>{t("Sprachassistent und KI", "Voice assistant and AI")}</h2>
+<p>{t("Sprachverarbeitung, KI-Auswahl und Verhalten. Serveradressen und JSON-Import findest du unter Verbindungen.",
+"Configure speech, AI and behavior here. Service addresses and JSON import are under Connections.")}</p>
 <form action="./" method="post">
 <input type="hidden" name="csrf" value="{esc(csrf)}">
 <input type="hidden" name="lang" value="{esc(lang)}"><input type="hidden" name="tab" value="setup">
-<details open><summary>1 · {t("Sprachserver und Whisper", "Speech server and Whisper")}</summary>
+<details open><summary>1 · {t("Sprachverarbeitung und Whisper", "Speech processing and Whisper")}</summary>
 {select("speech_mode",t("Wo läuft Piper?", "Where does Piper run?"),
  [("setup",t("Einrichtung: zunächst keinen Sprachserver starten", "Setup: do not start speech yet")),
   ("local",t("In der TAFA-App (mit CPU-Fallback)", "Inside TAFA (CPU fallback)")),
   ("external",t("Extern auf Proxmox", "External Proxmox server"))])}
-{field("external_piper_base",t("Proxmox-Piper (Adresse samt Port 5000)", "Proxmox Piper (URL with port 5000)"),
- t("Im lokalen Modus ignoriert.", "Ignored in local mode."),"http://192.168.1.50:5000")}
 <div id="wyoming-picker"><p class="muted">{esc(note)}</p>{recent}
 {stt_picker("cpu_stt",t("CPU-Whisper / Proxmox", "CPU Whisper / Proxmox"))}
 {stt_picker("gpu_stt",t("GPU-Whisper / Windows (optional)", "GPU Whisper / Windows (optional)"))}
@@ -132,8 +132,6 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 <p><a href="/config/integrations" target="_top">{t("Wyoming in Home Assistant hinzufügen", "Add Wyoming in Home Assistant")}</a></p></div>
 </details>
 <details><summary>2 · {t("GPU, KI und Gesprächssteuerung", "GPU, AI and conversation")}</summary>
-{field("gpu_base",t("Qwen-Sprachausgabe (Adresse samt Port 10502)", "Qwen speech (URL with port 10502)"),"","http://192.168.1.60:10502")}
-{field("gpu_stt_host",t("GPU-Whisper-IP (nur IP, ohne Port)", "GPU Whisper IP (IP only, no port)"))}
 {field("llm_agent",t("Text-KI: Home-Assistant-Gesprächsentität", "Text AI: Home Assistant conversation entity"),
  t("Ollama zuerst unter Geräte & Dienste hinzufügen. Beispiel: conversation.ollama.", "Add Ollama in Devices & services first. Example: conversation.ollama."),"conversation.ollama")}
 {select("hardware_profile",t("Sprachausgabe", "Speech output"),
@@ -150,8 +148,6 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
  [(i,i.title()) for i in CHOICES["live_profile"]])}
 </details>
 <details><summary>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</summary>
-{field("mp3_base",t("MP3-Generator (Adresse samt Port 5001)", "MP3 generator (URL with port 5001)"),"","http://192.168.1.50:5001")}
-{field("public_audio_base",t("Öffentliche Audio-HTTPS-Adresse (keine LAN-IP)", "Public audio HTTPS URL (not a LAN IP)"),"","https://audio.example.org")}
 {select("mp3_profile",t("Durchsage-Klang", "Announcement sound"),[(i,i.title()) for i in CHOICES["mp3_profile"]])}
 {check("chime",t("Hinweiston verwenden", "Use chime"))}
 {field("rooms_json",t("Alexa-Raumzuordnung (JSON, erweitert)", "Alexa room mapping (JSON, advanced)"))}
@@ -169,12 +165,100 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 """
 
 
+CONNECTION_FIELDS = ("external_piper_base", "gpu_base", "gpu_stt_host",
+                     "mp3_base", "public_audio_base")
+
+
+def render_connection_form(options, lang, csrf, checks=None):
+    """Edit addresses in Connections, without repeating them in AI settings."""
+    en = lang == "en"
+    t = lambda de, eng: eng if en else de
+    esc = lambda value: html.escape(str(value or ""), quote=True)
+    checks = checks or {}
+    definitions = (
+        ("external_piper_base", "Piper · Proxmox", "http://192.168.1.50:5000",
+         t("Privater Piper-Dienst, HTTP mit Port.", "Private Piper service, HTTP with port.")),
+        ("gpu_base", "Qwen · TTS", "http://192.168.1.60:10502",
+         t("GPU-TTS-Worker, HTTP mit Port.", "GPU TTS worker, HTTP with port.")),
+        ("gpu_stt_host", "GPU Whisper · Wyoming TCP 10300", "192.168.1.60",
+         t("Nur LAN-IP oder .local-Hostname; Wyoming-Port 10300 wird geprüft.", "LAN IP or .local hostname only; checks Wyoming TCP port 10300.")),
+        ("mp3_base", "Alexa · MP3", "http://192.168.1.50:5001",
+         t("Privater MP3-Generator, HTTP mit Port.", "Private MP3 generator, HTTP with port.")),
+        ("public_audio_base", "Alexa · HTTPS", "https://audio.example.org",
+         t("Öffentlicher Domainname. DNS und TLS werden geprüft, nicht der Abruf von Amazon aus.", "Public domain. DNS and TLS are checked, not Amazon's external retrieval.")),
+    )
+    cards = []
+    for key, label, placeholder, detail in definitions:
+        value = _value(options, key)
+        if key == "gpu_stt_host" and not value:
+            value = suggested_gpu_stt_host(options.get("gpu_base", ""))
+        state = str(checks.get(key, "missing"))
+        if state not in ("ready", "reachable", "offline", "invalid", "not_ready",
+                         "missing", "configured_unchecked", "unused"):
+            state = "unverified"
+        cards.append(
+            '<div class="connection-field">'
+            f'<label for="connection-{key}">{esc(label)}</label>'
+            f'<input id="connection-{key}" name="{key}" type="text" '
+            f'value="{esc(value)}" placeholder="{esc(placeholder)}" '
+            f'data-connection-probe="{key}" maxlength="256" autocomplete="off" spellcheck="false">'
+            f'<p class="field-help">{esc(detail)}</p>'
+            f'<p class="probe-feedback" role="status" aria-live="polite" data-probe-result="{key}" '
+            f'data-state="{esc(state)}">{t("Gespeicherter Status", "Saved status")}: {esc(state)}</p>'
+            '</div>'
+        )
+    return (
+        '<section class="settings-card connection-editor">'
+        f'<h2>{t("Serveradressen", "Service addresses")}</h2>'
+        f'<p>{t("Adressen direkt bearbeiten. Nach dem Tippen wird die jeweilige Verbindung geprüft; erst Speichern übernimmt den Wert.", "Edit service addresses here. Checks run after typing; only Save stores the new values.")}</p>'
+        '<form id="tafa-connections" action="./" method="post">'
+        f'<input type="hidden" name="csrf" value="{esc(csrf)}">'
+        f'<input type="hidden" name="lang" value="{esc(lang)}">'
+        '<input type="hidden" name="tab" value="connections">'
+        '<div class="connection-grid">' + "".join(cards) + '</div>'
+        f'<p class="subtle">{t("Ein erfolgreicher Test bestätigt nicht den gesamten Sprachweg. Für Alexa-HTTPS kann TAFA das Zertifikat prüfen, aber keinen externen Amazon-Abruf bestätigen.", "A successful connection test does not prove the complete voice route. Alexa HTTPS certificate checking cannot confirm Amazon can download the file.")}</p>'
+        f'<div class="form-actions"><span class="form-actions-note">{t("Ungespeicherte Änderungen bleiben nur in diesem Formular.", "Changes are not applied until saved.")}</span>'
+        f'<button class="btn btn-primary" type="submit" name="action" value="connection_settings">{t("Verbindungen speichern", "Save connections")}</button></div>'
+        '</form></section>'
+    )
+
+
+def validate_connection_form(fields, current):
+    """Strictly accept the address fields; preserve AI settings on save."""
+    expected = frozenset(CONNECTION_FIELDS)
+    if not expected.issubset(fields) or set(fields) - expected - {"csrf", "lang", "action", "tab"}:
+        raise ValueError("Incomplete or unexpected connection settings")
+    if any(len(parts) != 1 for parts in fields.values()):
+        raise ValueError("Duplicate connection field")
+    update = {}
+    for key in CONNECTION_FIELDS:
+        value = fields[key][0]
+        if not isinstance(value, str) or len(value) > 256:
+            raise ValueError("Invalid address: " + key)
+        value = value.strip()
+        if key == "gpu_stt_host" and value:
+            private_http_origin("http://" + value + ":10300")
+        elif key not in ("public_audio_base", "gpu_stt_host") and value:
+            private_http_origin(value)
+        update[key] = value
+    setup_settings_values({**current, **update})
+    return update
+
+
+def save_connection_form(token, fields):
+    if not token:
+        raise RuntimeError("Supervisor authentication unavailable")
+    current = load_options()
+    changes = validate_connection_form(fields, current)
+    return save_app_changes(token, changes)
+
+
 def validate_settings_form(fields, current, available):
     """Require the complete editor submission; preserve unrelated App keys."""
-    required = FORM_FIELDS - set(BOOL_FIELDS)
+    required = SETTINGS_FIELDS - set(BOOL_FIELDS)
     if not required.issubset(fields):
         raise ValueError("Incomplete TAFA settings form")
-    if set(fields) - FORM_FIELDS - {"csrf", "lang", "action", "tab"}:
+    if set(fields) - SETTINGS_FIELDS - {"csrf", "lang", "action", "tab"}:
         raise ValueError("Unknown TAFA settings field")
     if any(len(parts) != 1 for parts in fields.values()):
         raise ValueError("Duplicate TAFA settings field")
@@ -192,9 +276,9 @@ def validate_settings_form(fields, current, available):
     for name, choices in CHOICES.items():
         if update[name] not in choices:
             raise ValueError("Invalid selection: " + name)
-    if update["speech_mode"] == "external":
-        private_http_origin(update["external_piper_base"])
     candidate = {**current, **update}
+    if update["speech_mode"] == "external":
+        private_http_origin(candidate.get("external_piper_base", ""))
     setup_settings_values(candidate)
     valid = {item["id"] for item in available}
     for key in ("cpu_stt", "gpu_stt"):

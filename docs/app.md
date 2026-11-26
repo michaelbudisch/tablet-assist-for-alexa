@@ -1,5 +1,24 @@
 # TAFA als Home-Assistant-App installieren
 
+## Aktuelle Oberfläche · TAFA App 0.3.41 / Integration 0.4.25
+
+Das **TAFA Control Center** ist in fünf Bereiche aufgeteilt:
+
+1. **Übersicht:** Status des Sprachwegs und der Komponenten, ohne Konfigurationsformular.
+2. **Verbindungen:** Piper-/Proxmox-, Qwen-, GPU-Whisper-, MP3- und Alexa-HTTPS-Adressen bearbeiten. Alle Felder werden nach dem Tippen automatisch geprüft. **JSON-Datei auswählen → Konfiguration prüfen** zeigt die erkannten Änderungen; erst nach Bestätigung werden Integrationen eingerichtet. Die große JSON-Eingabefläche entfällt.
+3. **Einstellungen:** Modus (lokal/extern), KI- und STT-Zuordnung, Stimme, Gesprächsverhalten, optionale Alexa-Durchsagen und Datenquellen. **Keine IP-/Domainfelder.**
+4. **Geräte & Multiroom:** Tablet registrieren, einem Raum zuordnen und bei Bedarf **Tablet lösen**, **Tablet entfernen** oder **Raum löschen**. Dabei werden nur TAFA-Zuordnungen und ggf. TAFA-eigene Entitäten entfernt. Home-Assistant-Benutzer und Automatisierungen bleiben bestehen; Automatisierungen mit gelöschten Entitätsreferenzen müssen gegebenenfalls neu zugeordnet werden.
+5. **Wartung & Hilfe:** Backend-Status, Modelldateien, Neustart und Dokumentation.
+
+**Reichweite der Prüfungen:** Eine erfolgreiche HTTP-/TCP-Verbindung bestätigt nicht die Sprachverarbeitung. Alexa-HTTPS wird auf öffentliche DNS-Adresse und gültige TLS-Verbindung geprüft; die Erreichbarkeit einer konkreten Audiodatei *von Amazon aus* wird damit nicht bestätigt. Serveradressen werden erst beim Speichern übernommen.
+
+Vor dem dauerhaften Entfernen eines Tablets dessen Rufworterkennung und Audioplayer stoppen, da die native App eine laufende Installation wieder bei TAFA registrieren kann. Nach dem Backend-Update Home Assistant Core einmal neu starten.
+
+---
+
+## Ältere Installationshinweise (historische Versionen)
+
+
 [English](en/app.md) · [Projektübersicht](../README.de.md)
 
 > **Ab App 0.3.20:** Das **TAFA Control Center → Einstellungen** ist die zentrale Oberfläche für alle TAFA-Optionen. Die technische **Apps → TAFA → Konfiguration** ist eine alternative Ansicht auf dieselben gespeicherten Werte, hauptsächlich für Fehlerbehebung und für die Proxmox-Vorauswahl vor dem ersten App-Start. Nach Änderungen TAFA neu starten. Wyoming und Ollama werden einmalig unter Geräte & Dienste hinzugefügt. Bestehende Pipelines bleiben unverändert.

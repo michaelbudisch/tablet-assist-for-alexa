@@ -75,6 +75,42 @@ class DeviceCenterTests(unittest.TestCase):
                 panel.set_room_camera({"room": ["buero"], "user_id": ["user1"],
                                        "camera_enabled": [val]})
 
+    def test_reset_actions_need_explicit_confirmation(self):
+        with patch.object(panel, "ws_call", return_value={"removed": True}) as api:
+            panel.remove_device({"device_id": [ID], "confirm": ["1"]})
+            self.assertEqual(api.call_args.args, ("delete_device",))
+            self.assertTrue(api.call_args.kwargs["confirmed"])
+            panel.unpair_device({"device_id": [ID], "room": ["buero"],
+                                 "user_id": ["tablet"], "confirm": ["1"]})
+            self.assertEqual(api.call_args.args, ("unpair",))
+            panel.delete_room({"room": ["buero"], "user_id": ["tablet"],
+                               "confirm": ["1"]})
+            self.assertEqual(api.call_args.args, ("delete_room",))
+        for callback, fields in (
+            (panel.remove_device, {"device_id": [ID]}),
+            (panel.unpair_device, {"device_id": [ID], "room": ["buero"], "user_id": ["tablet"]}),
+            (panel.delete_room, {"room": ["buero"], "user_id": ["tablet"]}),
+            (panel.delete_room, {"room": ["../bad"], "user_id": ["tablet"], "confirm": ["1"]}),
+            (panel.remove_device, {"device_id": ["x"], "confirm": ["1"]}),
+        ):
+            with self.assertRaises(ValueError):
+                callback(fields)
+
+    def test_reset_buttons_are_scoped_to_correct_room_and_tablet(self):
+        page = panel.render_device_center("de", "nonce", {
+            "devices": [{"device_id": ID, "room": "Tablet", "online": False}],
+            "rooms": [{"room": "buero", "user_id": "tablet",
+                       "wake_device_id": ID}],
+            "users": [{"id": "tablet", "name": "Tablet Büro"}],
+            "error": "", "room_error": ""})
+        for action in ("device_delete", "room_unpair", "room_delete"):
+            self.assertIn(f'name="action" value="{action}"', page)
+        self.assertIn('name="confirm" type="checkbox" value="1" required', page)
+        self.assertIn('name="user_id" value="tablet"', page)
+        self.assertIn('name="device_id" value="' + ID + '"', page)
+        self.assertIn("HA-Benutzer", page)
+        self.assertIn("Automatisierungen", page)
+
     def test_create_room_without_any_tablet(self):
         with patch.object(panel, "ws_call", return_value={"created": True}) as api:
             self.assertIn("Raum angelegt", panel.create_room({

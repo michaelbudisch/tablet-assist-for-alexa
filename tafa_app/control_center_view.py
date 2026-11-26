@@ -7,12 +7,12 @@ import html
 
 
 def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
-                     cards, picker, import_panel, devices_panel, checks, options, setup, pipeline, links, latest,
+                     cards, picker, connection_panel, import_panel, devices_panel, checks, options, setup, pipeline, links, latest,
                      cache_info, note, install, retry_button, remove_button, mode):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
     esc = lambda value: html.escape(str(value or ""), quote=True)
-    allowed_tabs = ("overview", "setup", "devices", "connections", "maintenance")
+    allowed_tabs = ("overview", "connections", "setup", "devices", "maintenance")
     if default_tab not in allowed_tabs:
         default_tab = "overview"
 
@@ -95,9 +95,9 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     notice = f'<div class="notice" role="status">{esc(message)}</div>' if message else ""
     nav_items = [
         ("overview",t("Übersicht","Overview")),
-        ("setup",t("Einrichtung","Settings")),
-        ("devices",t("Geräte & Multiroom","Devices & multiroom")),
         ("connections",t("Verbindungen","Connections")),
+        ("setup",t("Einstellungen","Settings")),
+        ("devices",t("Geräte & Multiroom","Devices & multiroom")),
         ("maintenance",t("Wartung & Hilfe","Maintenance & help")),
     ]
     nav = "".join(
@@ -127,8 +127,8 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <div class="brand-mark" aria-hidden="true"><img src="assets/brand.svg?v={version}" alt="" width="54" height="54"></div>
     <div class="hero-text">
       <p class="eyebrow">TAFA Control Center</p>
-      <h1>{t("Alles im Blick. Einfach eingestellt.","Everything in view. Easy to configure.")}</h1>
-      <p>{t("Einrichtung, Verbindungen und Wartung an einem Ort.","Settings, connections and maintenance in one place.")}</p>
+      <h1>{t("TAFA – Verwaltung und Konfiguration","TAFA – Configuration and management")}</h1>
+      <p>{t("Sprachassistent, Verbindungen und Geräte in Home Assistant verwalten.","Manage voice assistance, connections and devices in Home Assistant.")}</p>
     </div>
   </div>
   <div class="hero-actions">
@@ -145,8 +145,8 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 <section class="tab-panel" id="overview" role="tabpanel" aria-labelledby="tab-overview">
   <div class="section-heading">
     <p class="kicker">{t("SYSTEMSTATUS","SYSTEM STATUS")}</p>
-    <h2>{t("Dein System auf einen Blick","Your system at a glance")}</h2>
-    <p>{t("Kompakt und ohne unnötige technische Details.","Clear information without unnecessary technical details.")}</p>
+    <h2>{t("Systemstatus","System status")}</h2>
+    <p>{t("Status der eingerichteten Komponenten.","Status of configured components.")}</p>
   </div>
   <div class="route-card">
     <div><span class="route-caption">{t("Geplanter Sprachweg","Expected speech output route")}</span>
@@ -170,47 +170,43 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <a class="btn btn-outline" href="/config/voice-assistants" target="_top">{t("Sprachassistent auswählen","Select voice assistant")}</a>
   </div>
   <div class="shortcut-grid">
-    <a href="#setup" class="shortcut"><span class="shortcut-icon" aria-hidden="true">01</span><strong>{t("TAFA einrichten","Configure TAFA")}</strong><small>{t("Sprachserver, GPU und Alexa","Speech server, GPU and Alexa")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
-    <a href="#connections" class="shortcut"><span class="shortcut-icon" aria-hidden="true">02</span><strong>{t("Verbindungen prüfen","Check connections")}</strong><small>{t("Endpunkte und Erreichbarkeit","Endpoints and reachability")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
-    <a href="#maintenance" class="shortcut"><span class="shortcut-icon" aria-hidden="true">03</span><strong>{t("Wartung & Hilfe","Maintenance & help")}</strong><small>{t("Modelle, Setup und Dokumentation","Models, setup and documentation")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
+    <a href="#connections" class="shortcut"><span class="shortcut-icon" aria-hidden="true">01</span><strong>{t("Verbindungen","Connections")}</strong><small>{t("Serveradressen und JSON-Import","Server addresses and JSON import")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
+    <a href="#setup" class="shortcut"><span class="shortcut-icon" aria-hidden="true">02</span><strong>{t("Einstellungen","Settings")}</strong><small>{t("Sprachverarbeitung und KI","Speech processing and AI")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
+    <a href="#devices" class="shortcut"><span class="shortcut-icon" aria-hidden="true">03</span><strong>{t("Geräte & Multiroom","Devices & multiroom")}</strong><small>{t("Tablet- und Raumverwaltung","Tablet and room management")}</small><span class="shortcut-go" aria-hidden="true">→</span></a>
   </div>
+</section>
+
+<section class="tab-panel" id="connections" role="tabpanel" aria-labelledby="tab-connections">
+  <div class="section-heading">
+    <p class="kicker">{t("VERBINDUNGEN","CONNECTIONS")}</p>
+    <h2>{t("Server und Komponenten verbinden","Connect servers and components")}</h2>
+    <p>{t("Adressen bearbeiten, erreichbar prüfen und Proxmox-/GPU-Konfigurationen importieren.","Edit addresses, check connectivity and import Proxmox/GPU configuration files.")}</p>
+  </div>
+  {connection_panel}
+  {import_panel}
 </section>
 
 <section class="tab-panel" id="setup" role="tabpanel" aria-labelledby="tab-setup">
   <div class="section-heading">
-    <p class="kicker">{t("EINRICHTUNG","CONFIGURATION")}</p>
-    <h2>{t("Einstellungen","Settings")}</h2>
-    <p>{t("Nur die gewünschten Bereiche öffnen. Alle Werte werden zentral gespeichert.","Expand only what you need. All settings share a single store.")}</p>
+    <p class="kicker">{t("EINSTELLUNGEN","SETTINGS")}</p>
+    <h2>{t("Sprachassistent und KI","Voice assistant and AI")}</h2>
+    <p>{t("Sprachverarbeitung, KI und Ausgabeprofile. Netzwerkadressen stehen unter Verbindungen.","Speech processing, AI and voice profiles. Network addresses are under Connections.")}</p>
   </div>
-  {import_panel}
   {picker}
 </section>
 
 <section class="tab-panel" id="devices" role="tabpanel" aria-labelledby="tab-devices">
-  <div class="section-heading"><p class="kicker">{t("TABLETS & MULTIROOM","TABLETS & MULTIROOM")}</p>
-    <h2>{t("Alle Sprachgeräte an einem Ort","All speech devices in one place")}</h2>
-    <p>{t("Rufwort, Mikrofon, Displayhelligkeit, Status und Raumzuordnung direkt aus Home Assistant steuern.","Control wakeword, microphone, brightness, diagnostics and rooms directly in Home Assistant.")}</p>
+  <div class="section-heading"><p class="kicker">{t("GERÄTE UND RÄUME","DEVICES AND ROOMS")}</p>
+    <h2>{t("TAFA-Geräte und Räume","TAFA devices and rooms")}</h2>
+    <p>{t("Tablet-Einstellungen, Multiroom und Raumverwaltung.","Tablet settings, multiroom and room management.")}</p>
   </div>
   {devices_panel}
-</section>
-
-<section class="tab-panel" id="connections" role="tabpanel" aria-labelledby="tab-connections">
-  <div class="section-heading with-action">
-    <div><p class="kicker">{t("VERBINDUNGEN","CONNECTIONS")}</p>
-      <h2>{t("Dienste & Endpunkte","Services & endpoints")}</h2>
-      <p>{t("Adresse und Status für jeden konfigurierten Dienst.","Address and status for each configured service.")}</p>
-    </div>
-    <a class="btn btn-outline" href="?lang={lang}&tab=connections#connections">{t("Status aktualisieren","Refresh status")}</a>
-  </div>
-  <div class="endpoint-grid">{endpoints}</div>
-  <div class="info-note"><strong>{t("Hinweis zur GPU-Spracherkennung","About GPU speech recognition")}</strong>
-    <p>{t("„Erreichbar“ bedeutet bei GPU-Whisper nur, dass Port 10300 antwortet. Welche Hardware tatsächlich erkannt hat, steht auf der Übersicht.","For GPU Whisper, “reachable” only confirms port 10300 accepts connections. Overview shows which backend actually handled the last request.")}</p></div>
 </section>
 
 <section class="tab-panel" id="maintenance" role="tabpanel" aria-labelledby="tab-maintenance">
   <div class="section-heading"><p class="kicker">{t("WARTUNG","MAINTENANCE")}</p>
     <h2>{t("Wartung & Hilfe","Maintenance & help")}</h2>
-    <p>{t("Selten benötigte Funktionen sind bewusst hier gebündelt.","Less-frequent tasks live here, away from everyday settings.")}</p>
+    <p>{t("Backend, Modelle und Dokumentation.","Backend, models and documentation.")}</p>
   </div>
   {('<div class="work-card"><h3>'+t("Einrichtung fortsetzen","Resume setup")+'</h3><p class="subtle">'+t("Die neue TAFA-Integration wurde gespeichert, aber Home Assistant Core muss sie einmal laden. Dein bestätigter JSON-Import wird anschließend automatisch abgeschlossen.","The new TAFA backend has been staged and HA Core needs one restart to load it. Your approved JSON import resumes automatically afterwards.")+'</p><form action="./" method="post"><input type="hidden" name="csrf" value="'+esc(csrf)+'"><input type="hidden" name="lang" value="'+lang+'"><input type="hidden" name="tab" value="maintenance"><label>'+t("Zur Bestätigung RESTART eingeben","Type RESTART to confirm")+'<input type="text" name="confirmation" required maxlength="7" pattern="RESTART"></label><button class="btn btn-primary" type="submit" name="action" value="restart_core">'+t("Home Assistant Core neu starten","Restart Home Assistant Core")+'</button></form></div>' if setup.get("status")=="awaiting_core_restart" else "")}
   <div class="maintenance-grid">
@@ -229,7 +225,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
       <h3>{t("Lokale Sprachmodelle verwalten","Manage local speech models")}</h3>
       <p class="setup-code">{esc(cache_info)}</p>
       <p class="subtle">{t("Nur TAFA-eigene Piper-/Whisper-Dateien. Proxmox und Wyoming bleiben unberührt.","Only TAFA-owned Piper/Whisper files. Proxmox and Wyoming are untouched.")}</p>
-      <p class="subtle">{t("Vor dem Löschen externen Sprachserver unter Einrichtung wählen und TAFA neu starten.","Before deleting, select an external speech server under Settings and restart TAFA.")}</p>
+      <p class="subtle">{t("Vor dem Löschen einen externen Sprachserver unter Einstellungen wählen und TAFA neu starten.","Before deleting, select an external speech server under Settings and restart TAFA.")}</p>
       {remove_button}
     </section>
   </div>
@@ -237,7 +233,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
     <div class="support-body"><ol class="steps">
       <li>{t("TAFA installiert das Backend beim Start automatisch.","TAFA stages its backend automatically on startup.")}</li>
       <li>{t("Nach einem Backend-Update Home Assistant Core einmal neu starten.","Restart Home Assistant Core once after a backend update.")}</li>
-      <li>{t("GPU-/Proxmox-JSON unter Einrichtung importieren. TAFA verbindet Wyoming und Ollama automatisch, soweit die Dienste verfügbar sind.","Import GPU/Proxmox JSON under Settings. TAFA connects Wyoming and Ollama automatically when the services are available.")}</li>
+      <li>{t("GPU-/Proxmox-JSON unter Verbindungen importieren. TAFA richtet Wyoming und Ollama ein, soweit verfügbar.","Import GPU/Proxmox JSON under Connections. TAFA configures Wyoming and Ollama when services are available.")}</li>
       <li>{t("TAFA Device Bridge für Rufwort und Audio verbinden.","Connect TAFA Device Bridge for wake words and audio.")}</li>
     </ol><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open Devices & services")}</a>
     <span aria-hidden="true"> · </span><a href="#devices">{t("Geräte &amp; Multiroom","Devices &amp; multiroom")}</a></div>
@@ -250,6 +246,6 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 </section>
 </main>
 <footer><span>TAFA <span aria-hidden="true">·</span> {version}</span>
-  <span>{t("Lokal verwalten. Klar entscheiden.","Local control. Clear choices.")}</span></footer>
+  <span>{t("Konfiguration über Home Assistant","Configuration in Home Assistant")}</span></footer>
 </div>
 </body></html>"""

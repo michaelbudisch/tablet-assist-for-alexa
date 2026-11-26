@@ -107,6 +107,33 @@ def set_room_camera(fields):
     return "Kamera für Raum aktiviert." if enabled else "Kamera für Raum deaktiviert."
 
 
+def remove_device(fields):
+    identifier = fields.get("device_id", [""])[0]
+    if not DEVICE_ID.fullmatch(identifier) or fields.get("confirm", [""])[0] != "1":
+        raise ValueError("Confirm the registered tablet before removal")
+    ws_call("delete_device", device_id=identifier, confirmed=True)
+    return "Tablet entfernt / Tablet removed."
+
+
+def unpair_device(fields):
+    identifier = fields.get("device_id", [""])[0]
+    room, user_id = fields.get("room", [""])[0], fields.get("user_id", [""])[0]
+    if (not DEVICE_ID.fullmatch(identifier) or not ROOM.fullmatch(room)
+            or not 1 <= len(user_id) <= 128 or fields.get("confirm", [""])[0] != "1"):
+        raise ValueError("Confirm the current tablet pairing")
+    ws_call("unpair", room=room, user_id=user_id, device_id=identifier, confirmed=True)
+    return "Tablet vom Raum gelöst / Tablet unpaired."
+
+
+def delete_room(fields):
+    room, user_id = fields.get("room", [""])[0], fields.get("user_id", [""])[0]
+    if (not ROOM.fullmatch(room) or not 1 <= len(user_id) <= 128
+            or fields.get("confirm", [""])[0] != "1"):
+        raise ValueError("Confirm room deletion")
+    ws_call("delete_room", room=room, user_id=user_id, confirmed=True)
+    return "Raum entfernt / Room deleted. HA-Benutzer bleibt erhalten."
+
+
 def render_device_center(lang, csrf, state):
     en = lang == "en"
     t = lambda de, eng: eng if en else de
@@ -184,6 +211,15 @@ def render_device_center(lang, csrf, state):
                               ("bluetooth","Bluetooth"), ("audio","Audio"),
                               ("battery",t("Akku","Battery")), ("app_version","App"))
         )
+        delete_form = (
+            '<details class="device-removal">'
+            f'<summary>{t("Tablet aus TAFA entfernen","Remove tablet from TAFA")}</summary>'
+            f'<p class="subtle">{t("Stoppe zuerst TAFA Device Bridge auf dem Tablet (Rufwort und Player), sonst meldet es sich automatisch erneut an. Nur die TAFA-Geräteregistrierung und ihre Entitäten werden entfernt; der HA-Benutzer bleibt erhalten.","Stop wakeword and player on the tablet first, otherwise it will automatically enroll again. Only the TAFA registration and its entities are removed; the HA user is preserved.")}</p>'
+            f'<form method="post" action="./" class="pair-form">{hidden("device_delete", did)}'
+            f'<label class="pair-consent"><input name="confirm" type="checkbox" value="1" required> {t("Ich möchte dieses Tablet zurücksetzen.","I want to reset this tablet.")}</label>'
+            f'<button class="btn btn-outline" type="submit">{t("Tablet entfernen","Remove tablet")}</button>'
+            '</form></details>'
+        )
         parts.append(f'<article class="work-card tablet-card">'
                      f'<header><h3>{h(device.get("room") or "Tablet")}</h3>'
                      f'<span class="status-pill status-{"good" if connected else "neutral"}">'
@@ -207,7 +243,7 @@ def render_device_center(lang, csrf, state):
                      setting(device,"display_control_enabled",t("Displaysteuerung erlauben","Enable brightness control"),kind="boolean")+
                      setting(device,"screen_awake",t("Display hell statt gedimmt","Bright instead of dim"),kind="boolean")+
                      setting(device,"brightness",t("Helligkeit (%)","Brightness (%)"),lo=1,hi=100)+
-                     '</div></details></article>')
+                     '</div></details>'+delete_form+'</article>')
     device_section = '<div class="device-grid">'+"".join(parts)+'</div>' if parts else (
         f'<div class="work-card"><p>{t("Noch kein Tablet angemeldet. Starte TAFA Device Bridge auf einem Tablet und verbinde es mit HA.","No tablets enrolled. Start TAFA Device Bridge and connect it to HA.")}</p></div>')
 
@@ -218,6 +254,42 @@ def render_device_center(lang, csrf, state):
                 f'<div class="room-row"><strong>{h(item.get("room"))}</strong>'
                 f'<span>{t("bereit","ready") if item.get("ready") else t("nicht bereit","not ready")}</span>'
                 f'<small>{h(item.get("wake_device_id"))}</small></div>')
+    room_management_forms = []
+    if not state.get("room_error"):
+        for item in rooms:
+            if not isinstance(item, dict):
+                continue
+            rid, uid = item.get("room"), item.get("user_id")
+            paired = item.get("wake_device_id")
+            if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
+                    or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
+                continue
+            if isinstance(paired, str) and DEVICE_ID.fullmatch(paired):
+                room_management_forms.append(
+                    f'<form class="pair-form" method="post" action="./">{hidden("room_unpair", paired)}'
+                    f'<input type="hidden" name="room" value="{h(rid)}">'
+                    f'<input type="hidden" name="user_id" value="{h(uid)}">'
+                    f'<strong>{h(rid)} – {t("Tablet lösen","Unpair tablet")}</strong>'
+                    f'<p class="subtle">{t("Trennt die Gerätezuordnung und beendet die aktive Raum-Audio-/Kamerasitzung. Der Raum und das Tablet bleiben gespeichert.","Clears the assignment and stops active room audio/camera sessions. The room and tablet remain registered.")}</p>'
+                    f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required> {t("Zuordnung zurücksetzen","Reset assignment")}</label>'
+                    f'<button type="submit" class="btn btn-outline">{t("Tablet lösen","Unpair tablet")}</button></form>'
+                )
+            room_management_forms.append(
+                f'<form class="pair-form" method="post" action="./">{hidden("room_delete")}'
+                f'<input type="hidden" name="room" value="{h(rid)}">'
+                f'<input type="hidden" name="user_id" value="{h(uid)}">'
+                f'<strong>{h(rid)} – {t("Raum löschen","Delete room")}</strong>'
+                f'<p class="subtle">{t("Löscht den TAFA-Raum und seine Kamera-/Bewegungsentitäten, aber nicht den HA-Benutzer oder Automatisierungen. Der Raumnutzer kann danach neu zugeordnet werden.","Deletes the TAFA room and its camera/motion entities, not the HA user or automations. The room user can then be reassigned.")}</p>'
+                f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required> {t("Raum wirklich löschen","Confirm room deletion")}</label>'
+                f'<button type="submit" class="btn btn-outline">{t("Raum löschen","Delete room")}</button></form>'
+            )
+    room_management = (
+        f'<section class="work-card multiroom-panel"><h3>{t("Räume und Zuordnungen zurücksetzen","Reset rooms and assignments")}</h3>'
+        f'<p class="subtle">{t("Keine Home-Assistant-Benutzer oder Automatisierungen werden gelöscht. Bereits darauf verweisende Automatisierungen können nach dem Entfernen einer Kamera-/Geräteentität eine erneute Zuordnung benötigen.","No HA users or automations are deleted. Automations referring to removed camera/device entities may need to be reconfigured.")}</p>'
+        + "".join(room_management_forms)
+        + (f'<p class="subtle">{t("Noch keine Räume angelegt.","No rooms created.")}</p>' if not room_management_forms else "")
+        + '</section>'
+    )
     # The first room can be created before there is any registered tablet.
     # A fresh install must not hide its creation form behind device enrollment.
     useropts = "".join(
@@ -237,7 +309,7 @@ def render_device_center(lang, csrf, state):
         f'<h3>{t("Erste Einrichtung","First-time setup")}</h3>'
         f'<p><strong>1.</strong> {t("In Home Assistant unter Einstellungen → Personen → Benutzer einen eigenen Nicht-Admin-Benutzer für den Raum anlegen.","Create a dedicated non-admin HA user for this room under Settings → People → Users.")}</p>'
         f'<p><strong>2.</strong> {t("Hier einen Raum erstellen – auch wenn noch kein Tablet angemeldet ist.","Create the room here, even before a tablet is enrolled.")}</p>'
-        f'<p><strong>3.</strong> {t("Die native App mit der Adresse des Testservers und dem Token dieses Benutzers verbinden. Rufworterkennung starten, damit das Tablet registriert wird.","Connect the native app to the test-server address with this users token. Start wakeword detection to enroll the tablet.")}</p>'
+        f'<p><strong>3.</strong> {t("Die native App mit der Serveradresse und dem Token dieses Benutzers verbinden, dann den Audioplayer starten. TAFA registriert das Tablet automatisch – auch ohne Rufworterkennung.","Connect the native app to the server with this user's token and start the audio player. TAFA enrolls automatically, without requiring wakeword.")}</p>'
         f'<p><strong>4.</strong> {t("Das angemeldete Tablet dem erstellten Raum zuordnen und danach den Bluetooth-Player starten.","Pair the enrolled tablet with the new room, then start Bluetooth playback.")}</p>'
         '</div>'
     )
@@ -320,7 +392,7 @@ def render_device_center(lang, csrf, state):
         + '</section>'
     )
     pairing_note = (
-        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über die Rufworterkennung erscheint hier die Zuordnung.","After enrolling a tablet with wakeword recognition, pairing appears here.")}</p>'
+        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über den Audioplayer erscheint hier die Zuordnung.","After enrolling a tablet using the audio player, pairing appears here.")}</p>'
         if not pair_forms else ""
     )
     pairing = (
@@ -329,4 +401,4 @@ def render_device_center(lang, csrf, state):
         '<div class="room-list">' + "".join(roomrows) + '</div>'
         + "".join(pair_forms) + pairing_note + '</section>'
     )
-    return notice + device_section + guide + room_create + camera_panel + pairing
+    return notice + device_section + guide + room_create + camera_panel + pairing + room_management
