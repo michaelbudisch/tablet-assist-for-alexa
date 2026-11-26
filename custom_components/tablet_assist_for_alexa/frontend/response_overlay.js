@@ -18,7 +18,7 @@ export class TafaResponseOverlay extends HTMLElement {
   }
   connectedCallback(){this.subscribe();}
   disconnectedCallback(){this._unsubscribe?.();this._unsubscribe=null;clearTimeout(this._timer);}
-  set hass(value){this._hass=value;this.subscribe();if(this._last)this.render();}
+  set hass(value){this._hass=value;this.subscribe();if(this._last)this.updateValues();}
   get hass(){return this._hass;}
   set options(value){this._options=value||{};this.settings={...DEFAULT,...(value?.presentation||value?.settings||{})};}
   subscribe(){
