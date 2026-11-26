@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.51 — migration pairing diagnostics
+
+- Admin-only `camera_diagnostics` one-shot WebSocket command reports whether an enrolled tablet has a valid active owner and which audio room is assigned, without exposing user IDs or access credentials.
+- No automatic user transfer or reassignment of an active audio room.
+
+
 ## 0.3.50 — tablet camera migration into the unified TAFA device
 
 - Integrated camera and image-motion platforms are now available during the legacy `jarvis_tablet_audio` migration. Previously they were disabled whenever the old integration was installed.

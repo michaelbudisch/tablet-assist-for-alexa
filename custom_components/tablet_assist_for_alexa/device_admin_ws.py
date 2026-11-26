@@ -64,6 +64,33 @@ async def perform_device_admin(hass, user, msg):
         await controller.handle(user, "delete", identifier, {})
         cleanup_tablet(hass, identifier)
         return {"device_id": identifier, "removed": True}
+    if action == "camera_diagnostics":
+        # Read-only administrator troubleshooting; no user IDs or tokens
+        # in the response. Never alter room, pairing or camera consent here.
+        identifier = msg.get("device_id")
+        if not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier):
+            raise ValueError("Invalid device")
+        device = controller.devices.get(identifier)
+        if not device:
+            raise ValueError("Tablet not enrolled")
+        principal = device.get("user_id")
+        owner = await hass.auth.async_get_user(principal) if principal else None
+        assigned_rooms = [room for room, user_id in transport.rooms.items()
+                          if user_id == principal]
+        return {
+            "enrolled": True,
+            "owner_active": bool(owner and owner.is_active),
+            "owner_admin": bool(owner and owner.is_admin),
+            "owner_system": bool(owner and owner.system_generated),
+            "assigned_rooms": [
+                {"room": room,
+                 "paired_to_this_tablet": transport.settings.get(room, {}).get("wake_device_id") == identifier,
+                 "paired_to_another_tablet": bool(transport.settings.get(room, {}).get("wake_device_id") not in ("", None, identifier)),
+                 "camera_enabled": transport.settings.get(room, {}).get("camera_enabled") is True,
+                 "online": bool(transport.status(principal).get("online"))}
+                for room in assigned_rooms
+            ],
+        }
     if action == "camera_setup":
         # Explicit one-shot migration for an already enrolled tablet.
         # Derive the actual HA user from its registered owner; never trust a
@@ -192,7 +219,7 @@ async def perform_device_admin(hass, user, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): COMMAND,
-    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera", "camera_setup",
+    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera", "camera_setup", "camera_diagnostics",
                         "unpair", "delete_device", "delete_room")),
     vol.Optional("room"): str,
     vol.Optional("user_id"): str,
