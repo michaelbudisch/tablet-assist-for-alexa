@@ -208,7 +208,7 @@ async def read_public_article(url):
     link = public_link(url)
     if not link or not re.fullmatch(r"[A-Za-z0-9.-]{3,253}", urlsplit(link).hostname or ""):
         raise ValueError("Only public HTTPS article URLs are supported")
-    timeout = aiohttp.ClientTimeout(total=16, connect=5, sock_read=8)
+    timeout = aiohttp.ClientTimeout(total=13, connect=5, sock_read=7)
     connector = aiohttp.TCPConnector(resolver=PublicResolver(), use_dns_cache=False,
                                     limit=2, ttl_dns_cache=0)
     async with aiohttp.ClientSession(connector=connector, trust_env=False,
