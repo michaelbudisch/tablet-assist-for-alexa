@@ -76,7 +76,7 @@ Der **[Schritt-für-Schritt-Einrichtungsleitfaden](docs/setup-guide.md)** beschr
 
 TAFA wird aktiv weiterentwickelt. Das integrierte Dashboard und der native Sprachweg sind im Projekt enthalten; eine frische Installation und die Audioausgabe sollten auf der jeweiligen Hardware geprüft werden. **Der Android-Quellcode kann neuer sein als die zuletzt veröffentlichte signierte APK.** Für ein Update über die vorhandene Device Bridge muss die APK mit *demselben Zertifikat* signiert sein. Eine Debug-APK aus GitHub Actions ist kein Ersatz für eine bereits signierte App.
 
-In der signierten Device Bridge 1.2.2 ist der optionale native Modus **„Immer an“** enthalten: Er erkennt Sprachaktivität ohne Rufwort und kann dabei auch durch Hintergrundgespräche ausgelöst werden. Der bewährte Rufwortmodus bleibt die Standardeinstellung. Siehe [Android-Installation](android/README.de.md).
+In der signierten Device Bridge 1.2.3 ist der optionale native Modus **„Immer an“** enthalten: Er erkennt Sprachaktivität ohne Rufwort und kann dabei auch durch Hintergrundgespräche ausgelöst werden. Der bewährte Rufwortmodus bleibt die Standardeinstellung. Siehe [Android-Installation](android/README.de.md).
 
 ## Datenschutz und Kompatibilität
 

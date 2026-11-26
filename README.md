@@ -78,7 +78,7 @@ The **[step-by-step setup guide](docs/en/setup-guide.md)** covers installation c
 
 TAFA is an actively developed project. The integrated dashboard and native voice path are available in source, but new-device setup and physical audio behaviour should be verified on your hardware. **The Android source may be newer than the latest signed APK**: use a release signed with the *same certificate* as your installed Device Bridge for in-place updates; a CI debug APK is not a replacement for an existing release-signed app.
 
-The opt-in native **Always on** mode is included in the signed Device Bridge 1.2.2 release; it listens for speech activity without a wake word and can also react to background conversations. The familiar wake-word mode remains the default. See [Android releases and installation](android/README.md).
+The opt-in native **Always on** mode is included in the signed Device Bridge 1.2.3 release; it listens for speech activity without a wake word and can also react to background conversations. The familiar wake-word mode remains the default. See [Android releases and installation](android/README.md).
 
 ## Privacy and compatibility
 

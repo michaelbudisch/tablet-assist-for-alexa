@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.2.3 · Device acknowledgement and WebSocket diagnostics
+- Acknowledge applied HA control revisions so Control Center can measure per-tablet round-trip time.
+- Report WebSocket, REST fallback or inactive service, plus the local follow-up ceiling.
+- Ignore events from stale settings sockets after reconnecting.
+- Version code 24; signed with the original update certificate.
+- Validation: 46 JVM tests, Android lint without errors, UI-test compilation and three documentation checks. Physical tablet/Echo testing remains outstanding.
+
 ## 1.2.2 · Instant HA settings and extended follow-ups
 - Authenticated per-device HA WebSocket for microphone and conversation settings; immediate acknowledgement and REST reconciliation while disconnected.
 - Optional local limits of 1–100 additional questions or explicitly unlimited; HA may reduce the local ceiling. Silence, errors and mute end follow-ups.

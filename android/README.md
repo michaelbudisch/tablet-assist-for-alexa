@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.2.2
+# TAFA Device Bridge · Android 1.2.3
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -28,9 +28,11 @@ The application ID `de.jarvis.audio`, encrypted credentials, device identity and
 
 Under **Settings → Native voice conversation → Native microphone mode**, choose **Muted**, **Wake word** or **Always on**. Home Assistant stores the mode per tablet; TAFA integration **0.4.26 or newer** is required. Always on can start a new request from local sound activity without a wakeword. The current utterance is held only in RAM until speech ends, then passed to Assist in full. The local monitor pauses during recognition and Bluetooth replies. To require a wakeword for each new request, use Wake word with follow-ups disabled.
 
-## Direct HA control in 1.2.2
+## Direct HA control in 1.2.3
 
-With TAFA integration **0.4.27**, microphone and conversation settings arrive directly through the authenticated device WebSocket. Without a push connection the app reconciles the state over REST. Switching from Always on to Wake word loads the offline model on demand.
+With TAFA integration **0.4.28**, microphone and conversation settings arrive directly through the authenticated device WebSocket. Without a push connection the app reconciles the state over REST. Switching from Always on to Wake word loads the offline model on demand.
+
+After an applied setting is acknowledged, Control Center can display the measured control round-trip time. The app also reports the active settings channel and its local follow-up ceiling. Actual switching latency needs testing on the tablet.
 
 ## Wakeword and follow-up questions
 
@@ -48,7 +50,7 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-[Download signed APK 1.2.2](downloads/TAFA-Device-Bridge-1.2.2.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.2) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **23**. Install over the existing app to retain credentials and device identity.
+[Download signed APK 1.2.3](downloads/TAFA-Device-Bridge-1.2.3.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.3) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **24**. Install over the existing app to retain credentials and device identity.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 
