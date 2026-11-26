@@ -135,6 +135,24 @@ def proposed_options(manifest, current):
     return {key:value for key,value in delta.items() if current.get(key)!=value}
 
 
+def reconcile_imported_stt(current, changes, kind):
+    """Keep CPU and GPU Wyoming roles distinct during confirmed JSON imports.
+
+    The explicit imported device owns its verified STT role. If that exact
+    entity was previously put in the opposite role, clear only that stale
+    assignment. Distinct existing providers stay untouched.
+    """
+    if kind not in KINDS:
+        raise ValueError("Unknown imported device kind")
+    preferred="gpu_stt" if kind=="gpu_worker" else "cpu_stt"
+    other="cpu_stt" if preferred=="gpu_stt" else "gpu_stt"
+    delta=dict(changes)
+    merged={**current,**delta}
+    if merged.get(preferred) and merged[preferred]==merged.get(other):
+        delta[other]=""
+    return delta
+
+
 def load_records(path=RECORD):
     try:
         rows=json.loads(path.read_text(encoding="utf-8"))

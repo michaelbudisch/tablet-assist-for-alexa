@@ -9,7 +9,7 @@
 
 [![Add TAFA App repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.25**, HA integration **0.4.12**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
+> **Release candidate / developer preview:** TAFA Home Assistant App **0.3.27**, HA integration **0.4.13**, Device Bridge **1.0.1**. Automated integration, container build and API checks are provided. A complete HA OS fresh-install and physical tablet/audio test is still required before declaring a stable release.
 
 **[Simplified setup guide: TAFA local, Proxmox, GPU and Alexa HTTPS](docs/en/setup-guide.md)**
 
@@ -91,3 +91,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 **TAFA App 0.3.22:** The Control Center now uses four accessible responsive tabs (Overview, Settings, Connections, Maintenance & help), a calmer navy/teal palette with light/dark variants, and more compact system status and connection cards. Existing settings and backend endpoints remain unchanged.
 
 **TAFA 0.3.26 compatibility fix:** If HA Core is still running older integration code and a deleted Wyoming entry triggers `Previously mapped integration missing; review first`, TAFA retries the approved JSON import with the stale stored entry association cleared. Only this exact error triggers the retry. The permanent HA integration fix remains 0.4.12; restart HA Core to activate it. No worker changes are required.
+
+**TAFA 0.3.27 / HA integration 0.4.13:** JSON imports assign the imported GPU or CPU device to its actual Wyoming STT role. A stale opposite role is cleared only when it points to exactly the same entity; legitimate distinct providers are kept. The HA integration no longer automatically treats the only GPU provider as the CPU fallback. For a distinct external CPU fallback, also import the Proxmox speech server JSON. Restart HA Core after updating the integration.

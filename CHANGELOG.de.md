@@ -1,5 +1,11 @@
 # Changelog
 
+## TAFA-App 0.3.27 / HA-Integration 0.4.13 — CPU/GPU-Wyoming getrennt
+- Wenn ein bestätigter GPU-/Proxmox-JSON-Import dieselbe STT-Entität in beiden Rollen vorfindet, wird nur die alte Gegenzuordnung gelöscht. Unterschiedliche CPU- und GPU-Anbieter bleiben unverändert.
+- Der Import validiert die korrigierte Zielkonfiguration, nicht die bereits fehlerhafte alte. Auch die spätere Registrierung neuer Entitäten wird abgefangen.
+- Die HA-Integration wählt eine ausdrücklich als GPU eingetragene Wyoming-STT-Entität nicht mehr automatisch als CPU.
+
+
 ## TAFA-App 0.3.25 / HA-Integration 0.4.12 — gelöschte Wyoming-Integration erneut einrichten
 - Beim erneuten JSON-Import blockiert eine veraltete Zuordnung nach Löschen von Wyoming/Ollama in Home Assistant nicht mehr. Der passende Dienst wird neu angelegt, wenn verfügbar; fremde Integrationen bleiben unverändert.
 - Statt nur »provision_failed« erscheinen die konkreten HA-Fehlergründe, beispielsweise »cannot_connect«. Die GPU-Worker-JSON muss nicht geändert werden.

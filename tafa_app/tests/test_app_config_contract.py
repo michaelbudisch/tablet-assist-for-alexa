@@ -132,6 +132,39 @@ class Tests(unittest.TestCase):
             merge(entry, parse(self.sample(), Registry([provider, wrong])),
                   Registry([provider, wrong]))["cpu_stt"], "")
 
+    def test_gpu_only_provider_is_never_auto_selected_as_cpu(self):
+        provider=SimpleNamespace(entity_id="stt.gpu_only",platform="wyoming",
+                                 disabled_by=None)
+        registry=Registry([provider])
+        parse=self.funcs["parse_settings"]
+        merge=self.funcs["merge_settings"]
+        entry=SimpleNamespace(data={},options={})
+        updated=merge(entry,parse(self.sample(gpu_stt="stt.gpu_only"),registry),registry)
+        self.assertEqual(updated["gpu_stt"],"stt.gpu_only")
+        self.assertEqual(updated["cpu_stt"],"")
+
+    def test_first_sync_does_not_restore_old_cpu_alias_of_imported_gpu(self):
+        provider=SimpleNamespace(entity_id="stt.gpu_only",platform="wyoming",
+                                 disabled_by=None)
+        registry=Registry([provider])
+        parse=self.funcs["parse_settings"]
+        merge=self.funcs["merge_settings"]
+        old=SimpleNamespace(data={"cpu_stt":"stt.gpu_only"},options={})
+        updated=merge(old,parse(self.sample(gpu_stt="stt.gpu_only"),registry),registry)
+        self.assertEqual(updated["cpu_stt"],"")
+        self.assertEqual(updated["gpu_stt"],"stt.gpu_only")
+
+    def test_first_sync_keeps_separate_existing_cpu(self):
+        cpu=SimpleNamespace(entity_id="stt.cpu",platform="wyoming",disabled_by=None)
+        gpu=SimpleNamespace(entity_id="stt.gpu",platform="wyoming",disabled_by=None)
+        registry=Registry([cpu,gpu])
+        parse=self.funcs["parse_settings"]
+        merge=self.funcs["merge_settings"]
+        old=SimpleNamespace(data={"cpu_stt":"stt.cpu"},options={})
+        updated=merge(old,parse(self.sample(gpu_stt="stt.gpu"),registry),registry)
+        self.assertEqual(updated["cpu_stt"],"stt.cpu")
+        self.assertEqual(updated["gpu_stt"],"stt.gpu")
+
     def test_bad_urls_and_unrecognized_entities_are_rejected(self):
         parse = self.funcs["parse_settings"]
         for changes in [

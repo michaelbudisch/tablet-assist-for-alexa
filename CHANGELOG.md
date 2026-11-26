@@ -1,3 +1,6 @@
+## TAFA App 0.3.27 / HA integration 0.4.13 — distinct CPU/GPU Wyoming
+- Confirmed JSON imports reconcile a conflicting old opposite role without touching distinct STT providers. Future HA provider discovery uses the same rules. Integration 0.4.13 will not mis-assign the configured GPU provider as CPU merely because it is the only Wyoming endpoint.
+
 ## TAFA App 0.3.25 / integration 0.4.12 — deleted integration recovery
 - Re-importing an approved manifest now recreates explicitly removed Wyoming/Ollama config entries instead of failing on their stale stored IDs; only the approved endpoint is used. Show HA flow errors when setup cannot reach a service; no worker re-installation required.
 

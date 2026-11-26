@@ -89,7 +89,7 @@ def sync_app_configuration(piper_base, preferences):
             return "changed" if reply.get("result", {}).get("changed") else "unchanged"
 
 
-def ensure_pipeline(external_wyoming=False, configured_stt=""):
+def ensure_pipeline(external_wyoming=False, configured_stt="", excluded_stt=""):
     """Create one TAFA Assist pipeline only after all three HA entities exist.
 
     Never replace the preferred pipeline or alter another device's settings.
@@ -127,9 +127,11 @@ def ensure_pipeline(external_wyoming=False, configured_stt=""):
                 and not item.get("disabled_by")
             ]
             if configured_stt:
-                if configured_stt not in wyoming:
+                if configured_stt not in wyoming or configured_stt==excluded_stt:
                     return "waiting_for_external_stt"
-            elif len(wyoming) != 1:
+            elif len(wyoming)!=1 or wyoming[0]==excluded_stt:
+                # The only visible Wyoming provider may be the GPU service,
+                # which cannot fill the Proxmox CPU fallback slot.
                 return "waiting_for_external_stt"
         def select(domain,suffix):
             matches=[item.get("entity_id") for item in registry

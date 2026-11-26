@@ -121,6 +121,17 @@ class Tests(unittest.TestCase):
             self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create"
                                  for msg in sent))
 
+    def test_proxmox_never_uses_gpu_as_sole_cpu_provider(self):
+        result,sent=self.invoke({"wyoming_count":1},external_wyoming=True,
+                                excluded_stt="stt.wyoming_0")
+        self.assertEqual(result,"waiting_for_external_stt")
+        self.assertFalse(any(msg.get("type")=="assist_pipeline/pipeline/create"
+                             for msg in sent))
+        result,sent=self.invoke({"wyoming_count":1},external_wyoming=True,
+                                configured_stt="stt.wyoming_0",
+                                excluded_stt="stt.wyoming_0")
+        self.assertEqual(result,"waiting_for_external_stt")
+
     def test_external_proxmox_auto_selects_one_wyoming_provider(self):
         result, sent = self.invoke({"wyoming_count":1}, external_wyoming=True)
         self.assertEqual(result,"pipeline_created")

@@ -105,8 +105,15 @@ def merge_settings(entry, values, registry):
         if first_sync and key in {
             "cpu_stt", "gpu_stt", "gpu_stt_host", "llm_agent", "reminder_room"
         } and not value and previous.get(key):
-            result[key] = previous[key]
-            continue
+            # Do not resurrect a pre-App CPU mapping when it points to the
+            # GPU provider now explicitly imported (or vice versa).
+            if key == "cpu_stt" and previous[key] == values.get("gpu_stt"):
+                pass
+            elif key == "gpu_stt" and previous[key] == values.get("cpu_stt"):
+                pass
+            else:
+                result[key] = previous[key]
+                continue
         if first_sync and key in {"rooms", "sources"} and not value and previous.get(key):
             result[key] = previous[key]
             continue
@@ -119,7 +126,9 @@ def merge_settings(entry, values, registry):
         result[key] = value
     if not result.get("cpu_stt"):
         detected = _unique_wyoming_stt(registry)
-        if detected:
+        if detected and detected != result.get("gpu_stt"):
+            # The sole Wyoming provider might be GPU Whisper. Never silently
+            # assign that exact provider to CPU as well.
             result["cpu_stt"] = detected
     if result.get("cpu_stt") and result.get("gpu_stt") == result["cpu_stt"]:
         raise ValueError("CPU and GPU STT must differ")

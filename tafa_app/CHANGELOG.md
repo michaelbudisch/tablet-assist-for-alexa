@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.3.27 — automatically resolve conflicting CPU/GPU Wyoming mappings
+- JSON import assigns the verified Wyoming STT entity to the role of the imported worker (GPU) or speech CT (CPU). If an old opposite-role field points to that exact same entity, TAFA clears only that stale field; distinct providers remain intact.
+- Validate the repaired proposed options before HA configuration, even if the current saved options have a conflicting CPU/GPU STT pair. This also applies to deferred HA entity resolution and import resume after HA Core restarts.
+- Integration 0.4.13 no longer picks the explicitly selected GPU Wyoming as CPU merely because it is the only provider; initial migration does not resurrect a CPU alias for the GPU.
+- TAFA Lokal external Proxmox setup does not substitute GPU Whisper as its CPU fallback provider.
+
+
 ## 0.3.26 — recover stale Wyoming mappings even when HA still runs old code
 - Compatibility retry for HA Core processes still running integration 0.4.11: when the backend reports exactly "Previously mapped integration missing; review first", TAFA retries the approved manifest after dropping only the stale recorded mapping(s).
 - Never retry for connectivity errors, invalid JSON, missing backend or other provisioning failures; keep existing unrelated HA entries untouched.

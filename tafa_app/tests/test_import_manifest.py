@@ -55,6 +55,33 @@ class ImportTests(unittest.TestCase):
         self.assertEqual(changes["mp3_base"],"http://192.168.178.120:5001")
         self.assertNotIn("public_audio_base",changes)
 
+    def test_gpu_json_clears_only_stale_same_entity_cpu_mapping(self):
+        current={"cpu_stt":"stt.gpu_whisper","gpu_stt":"",
+                 "llm_agent":"conversation.existing"}
+        result=imp.reconcile_imported_stt(
+            current,{"gpu_stt":"stt.gpu_whisper"},"gpu_worker")
+        self.assertEqual(result,{"gpu_stt":"stt.gpu_whisper","cpu_stt":""})
+        self.assertEqual(current["cpu_stt"],"stt.gpu_whisper")
+
+    def test_real_distinct_cpu_is_retained_and_no_change_is_needed(self):
+        current={"cpu_stt":"stt.cpu_whisper","gpu_stt":"stt.old_gpu"}
+        changes=imp.reconcile_imported_stt(
+            current,{"gpu_stt":"stt.new_gpu"},"gpu_worker")
+        self.assertEqual(changes,{"gpu_stt":"stt.new_gpu"})
+
+    def test_cpu_json_fixes_old_gpu_collision_without_losing_cpu(self):
+        current={"cpu_stt":"","gpu_stt":"stt.proxmox"}
+        changes=imp.reconcile_imported_stt(
+            current,{"cpu_stt":"stt.proxmox"},"speech_server")
+        self.assertEqual(changes,{"cpu_stt":"stt.proxmox","gpu_stt":""})
+
+    def test_reimport_can_fix_existing_duplicate_options(self):
+        current={"cpu_stt":"stt.whisper","gpu_stt":"stt.whisper"}
+        self.assertEqual(imp.reconcile_imported_stt(
+            current,{},"gpu_worker"),{"cpu_stt":""})
+        with self.assertRaises(ValueError):
+            imp.reconcile_imported_stt(current,{},"unknown")
+
     def test_reject_unknown_fields_remote_hosts_and_credentials(self):
         valid=gpu()
         for item in [

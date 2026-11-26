@@ -86,6 +86,52 @@ class SetupAndBrandTests(unittest.TestCase):
         save.assert_called_once_with("private-test-token",{"gpu_stt":"stt.gpu_1"})
         sync.assert_called_once()
 
+    def test_delayed_gpu_registration_clears_cpu_alias_for_same_entity(self):
+        with patch.object(server,"_tracked_profiles",return_value={
+                  "gpu_worker":{"wyoming_stt":"gpu-entry",
+                                "expected":{"wyoming_stt":True,"ollama":False}}}), \
+             patch.object(server,"load_records",return_value={"worker":{
+                 "kind":"gpu_worker","provision_pending":False}}), \
+             patch.object(server,"resolve_import_entities",return_value={
+                 "entities":{"gpu_stt":"stt.gpu_whisper"},"pending":[]}), \
+             patch.object(server,"load_options",return_value={
+                 "cpu_stt":"stt.gpu_whisper","gpu_stt":""}), \
+             patch.object(server,"save_app_changes") as save, \
+             patch.object(server,"choose_speech_source",return_value=("local","")), \
+             patch.object(server,"_internal_address",return_value="http://tafa-internal:5000"), \
+             patch.object(server,"setup_settings",return_value={
+                 "cpu_stt":"","gpu_stt":"stt.gpu_whisper"}), \
+             patch.object(server,"sync_app_configuration"), \
+             patch.object(server,"TOKEN","test-internal-token"):
+            server._complete_imports()
+        save.assert_called_once_with(
+            "test-internal-token",{"gpu_stt":"stt.gpu_whisper","cpu_stt":""})
+
+    def test_delayed_resolution_repairs_existing_saved_duplicate(self):
+        with patch.object(server,"_tracked_profiles",return_value={
+                  "gpu_worker":{"wyoming_stt":"gpu-entry",
+                                "expected":{"wyoming_stt":True,"ollama":False}}}), \
+             patch.object(server,"load_records",return_value={"worker":{
+                 "kind":"gpu_worker","provision_pending":False}}), \
+             patch.object(server,"resolve_import_entities",return_value={
+                 "entities":{"gpu_stt":"stt.gpu_whisper"},"pending":[]}), \
+             patch.object(server,"load_options",return_value={
+                 "cpu_stt":"stt.gpu_whisper","gpu_stt":"stt.gpu_whisper"}), \
+             patch.object(server,"save_app_changes") as save, \
+             patch.object(server,"choose_speech_source",return_value=("local","")), \
+             patch.object(server,"_internal_address",return_value="http://tafa-internal:5000"), \
+             patch.object(server,"setup_settings",return_value={
+                 "cpu_stt":"","gpu_stt":"stt.gpu_whisper"}), \
+             patch.object(server,"sync_app_configuration"), \
+             patch.object(server,"TOKEN","test-internal-token"):
+            server._complete_imports()
+        save.assert_called_once_with("test-internal-token",{"cpu_stt":""})
+
+    def test_import_will_validate_repaired_proposed_options(self):
+        source=(APP/"server.py").read_text(encoding="utf-8")
+        self.assertIn("configure(piper,setup_settings_values(proposed))",source)
+        self.assertIn("current,proposed_options(manifest,current),manifest",source)
+
     def test_android_launcher_vector_is_identical_on_both_web_surfaces(self):
         original=(ROOT/"android/app/src/main/res/drawable/ic_launcher_foreground.xml").read_text()
         geometry=re.findall(r'android:pathData="([^"]+)"',original)

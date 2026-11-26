@@ -9,7 +9,7 @@
 
 [![TAFA-App-Repository hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fmichaelbudisch%2Ftablet-assist-for-alexa)
 
-> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.25**, HA-Integration **0.4.12**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
+> **Release-Kandidat / Entwicklungsvorschau:** TAFA Home-Assistant-App **0.3.27**, HA-Integration **0.4.13**, Device Bridge **1.0.1**. Automatisierte Prüfungen für Integration, Container-Build und Schnittstellen sind eingerichtet. Eine vollständige HA-OS-Neuinstallation und ein praktischer Audio-/Tablet-Test fehlen noch vor einem stabilen Release.
 
 **[Einfacher Einrichtungsleitfaden: TAFA lokal, Proxmox, GPU und Alexa-HTTPS](docs/setup-guide.md)**
 
@@ -91,3 +91,5 @@ Eigener Projektcode: [MIT](LICENSE). Drittanbieterbibliotheken und heruntergelad
 **TAFA App 0.3.22:** Das Control Center nutzt vier übersichtliche Tabs (Übersicht, Einrichtung, Verbindungen, Wartung & Hilfe) sowie eine ruhigere Navy-/Petrol-Farbpalette mit Hell-/Dunkelmodus. Status und Verbindungen sind kompakter; vorhandene Einstellungen und Endpunkte bleiben unverändert.
 
 **TAFA 0.3.26 (Kompatibilitätskorrektur):** Falls Home Assistant trotz Aktualisierung noch die ältere Integration im Speicher hat und beim erneuten Wyoming-JSON-Import `Previously mapped integration missing; review first` meldet, versucht TAFA den bestätigten Import einmal mit bereinigten alten Zuordnungen. Nur diese spezielle Fehlermeldung löst eine Wiederholung aus; andere Fehler bleiben sichtbar. Auf Dauer die HA-Integration 0.4.12 laden (Home Assistant Core neu starten). Keine Änderungen am Worker nötig.
+
+**TAFA 0.3.27 / Integration 0.4.13:** Beim JSON-Import prüft TAFA die getrennten Rollen für CPU- und GPU-Wyoming. Falls das importierte GPU-Whisper bereits im alten CPU-Feld steht, wird nur diese veraltete Gegenzuordnung bereinigt. Eine tatsächlich andere CPU-STT-Entität bleibt erhalten. Gleiches gilt umgekehrt für den Import des Proxmox-Sprachservers. Der HA-Abgleich setzt eine GPU-Entität nicht mehr automatisch als CPU ein. Für einen echten externen CPU-Fallback den Proxmox-JSON-Import nutzen. Nach Update der HA-Integration Home Assistant Core einmal neu starten.
