@@ -39,6 +39,9 @@ from import_manifest import preview as preview_import, consume as consume_import
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
 from speech_source import load_options
+from feature_center import (discover_entities, discover_notify_services, render_feature_center,
+                            render_announcement_rooms, save_source_group,
+                            save_announcement_room, active_dashboard_modules, add_dashboard_module)
 
 LOG=logging.getLogger("tafa.app")
 CONFIG=Path("/homeassistant")
@@ -525,11 +528,15 @@ def display(message="",lang="de",default_tab="overview",review=None):
                     device_state.get("room_error") or "ok")
     devices_panel=render_device_center(lang,CSRF,device_state)
     voice_panel=render_voice_panel(lang,CSRF,device_state)
+    entities, can_read = discover_entities(TOKEN)
+    active_modules = active_dashboard_modules(TOKEN)
+    features_panel = (render_feature_center(load_options(),lang,CSRF,entities,can_read,active_modules)
+                      + render_announcement_rooms(load_options(),lang,CSRF,entities,discover_notify_services(TOKEN)))
     return render_dashboard(
         pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
-        cards=cards, picker=picker, connection_panel=connection_panel, import_panel=import_panel, devices_panel=devices_panel, voice_panel=voice_panel, checks=checks,
+        cards=cards, picker=picker, connection_panel=connection_panel, import_panel=import_panel, devices_panel=devices_panel, voice_panel=voice_panel, features_panel=features_panel, checks=checks,
         options={**load_options(), **preferences}, setup=setup,
         links=links, latest=latest, cache_info=cache_info,
         note=note, install=install, retry_button=retry_button,
@@ -629,7 +636,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(403)
         lang="en" if fields.get("lang")==["en"] else "de"
         tab=fields.get("tab",["maintenance"])[0]
-        if tab not in ("overview","connections","setup","devices","maintenance","voice"):
+        if tab not in ("overview","connections","setup","features","devices","maintenance","voice"):
             tab="maintenance"
         try:
             action=fields.get("action",["backend"])[0]
@@ -814,6 +821,29 @@ class Handler(BaseHTTPRequestHandler):
             elif action=="device_delete":
                 msg=remove_device(fields)
                 tab="devices"
+            elif action=="feature_sources":
+                entities, ok = discover_entities(TOKEN)
+                changes = save_source_group(fields, load_options(), entities)
+                save_app_changes(TOKEN, changes)
+                activate_configured_services()
+                tab = "features"
+                msg = "Datenquellen gespeichert; bestehende Zuordnungen erhalten. / Sources saved; existing assignments preserved."
+            elif action=="feature_room":
+                entities, ok = discover_entities(TOKEN)
+                services = discover_notify_services(TOKEN)
+                changes = save_announcement_room(fields, load_options(), entities, services)
+                save_app_changes(TOKEN, changes)
+                activate_configured_services()
+                tab = "features"
+                msg = "Alexa-Ausgaberäume gespeichert. / Alexa rooms saved."
+            elif action=="feature_add":
+                expected = {"csrf", "lang", "tab", "action", "feature_id"}
+                if set(fields) != expected or len(fields.get("feature_id", [])) != 1:
+                    raise ValueError("Invalid TAFA module request")
+                changed = add_dashboard_module(TOKEN, fields["feature_id"][0])
+                tab = "features"
+                msg = ("Modul zum TAFA-Dashboard hinzugefügt. / Module added to TAFA dashboard."
+                       if changed else "Dieses Modul ist bereits aktiviert. / Module already enabled.")
             elif action=="settings":
                 changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
                 activate_configured_services()
