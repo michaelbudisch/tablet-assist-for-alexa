@@ -1,84 +1,35 @@
-# TAFA als Home-Assistant-App installieren
+# TAFA Home-Assistant-App installieren
 
-## Aktuelle Oberfläche · TAFA App 0.3.44 / Integration 0.4.25
+[English](en/app.md) · [Projektübersicht](../README.de.md) · [Vollständiger Einrichtungsweg](setup-guide.md)
 
-Das **TAFA Control Center** ist in fünf Bereiche aufgeteilt:
+TAFA stellt ein **Control Center**, eine gemeinsame HA-Integration und optional CPU-Piper/Faster-Whisper bereit. Voraussetzung: **Home Assistant OS ab 2026.11** mit Apps auf `amd64` oder `aarch64`.
 
-1. **Übersicht:** Status des Sprachwegs und der Komponenten, ohne Konfigurationsformular.
-2. **Verbindungen:** In drei Gruppen: **GPU/KI bevorzugt** mit direkter GPU-PC-IP, Qwen-TTS, GPU-Wyoming-STT und optional Ollama-`conversation.*`; **CPU-Fallback** mit Piper und CPU-Wyoming-STT; **Alexa** mit MP3-Generator und öffentlichem HTTPS. Die IP-/URL-Felder werden während der Eingabe geprüft. JSON-Datei auswählen → Konfiguration prüfen → Änderungen bestätigen ist ebenfalls hier.
-3. **Einstellungen:** Modus (lokal/extern), GPU-/Piper-Ausgabeverhalten, Stimmvarianten, Gesprächsmodus, optionale Alexa-Durchsagen und Datenquellen. **Keine IP-/Domain- oder Wyoming-Entitätsfelder.**
-4. **Geräte & Multiroom:** Tablet registrieren, einem Raum zuordnen und bei Bedarf **Tablet lösen**, **Tablet entfernen** oder **Raum löschen**. Dabei werden nur TAFA-Zuordnungen und ggf. TAFA-eigene Entitäten entfernt. Home-Assistant-Benutzer und Automatisierungen bleiben bestehen; Automatisierungen mit gelöschten Entitätsreferenzen müssen gegebenenfalls neu zugeordnet werden.
-5. **Wartung & Hilfe:** Backend-Status, Modelldateien, Neustart und Dokumentation.
+## Neuinstallation
 
-**GPU-Schnellprüfung:** Im Feld **GPU-PC-IP – Schnellprüfung (Wyoming Port 10300)** die lokale GPU-IP (z. B. `192.168.178.115`) eintragen. Der TAFA-STT-Router prüft diesen Port vor GPU-Whisper mit **0,8 s Timeout**. Ist die GPU offline, nutzt er die ausgewählte CPU-Wyoming-Entität. Die GPU-Wyoming-Entität selbst führt die tatsächliche Erkennung aus. Qwen-TTS prüft unabhängig davon seine `/health`-Bereitschaft und verwendet bei Ausfall Piper. Ein offener Port allein ist kein erfolgreicher STT-Test. CPU- und GPU-Wyoming müssen verschiedene HA-Entitäten sein.
+1. Home Assistant sichern. **Einstellungen → Apps → App installieren → Repositories** öffnen und `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen.
+2. **TAFA** installieren und starten. Eine neue Installation verwendet `speech_mode=setup`, **nicht** bereits den lokalen Modellmodus. Im Control Center unter **Einstellungen** bewusst **Lokal** (Piper/Whisper in der TAFA-App) oder **Extern** (bestehender kompatibler Sprachserver) wählen. Im Modus `setup` werden keine CPU-Modelle heruntergeladen.
+3. Für **Extern** die Piper-HTTP-Adresse im Tab **Verbindungen → CPU-Fallback** eintragen. Bei Wyoming-Whisper die **Wyoming Protocol**-Integration unter HA **Geräte & Dienste** hinzufügen (CPU-Host, Port 10300) und danach in **TAFA → Verbindungen** die CPU-`stt.*`-Entität auswählen. Im Modus **Lokal** werden die Modelle nach Auswahl und Neustart der App geladen.
+4. TAFA richtet `custom_components/tablet_assist_for_alexa` ein. **Home Assistant Core einmal neu starten** und unter **Geräte & Dienste** prüfen, ob die TAFA-Integration geladen ist. Bei Bedarf die TAFA-App neu starten. **Keine zweite Marketplace-Kopie** installieren.
+5. Unter **Einstellungen → Sprachassistenten** die Pipeline **TAFA Lokal** prüfen: **Tablet Assist Sprachrouter** (STT), **Tablet Assist Gesprächsrouter** (Gespräch), **Tablet Assist Stream** (TTS). Fehlende Komponenten erst in TAFA/HA konfigurieren; vorhandene Pipelines werden nicht überschrieben.
+6. Die [signierte TAFA Device Bridge](../android/README.de.md) auf Android installieren, verbinden und native Sprache/Ausgabe testen. Weitere Schritte im [Einrichtungsleitfaden](setup-guide.md).
 
-**Reichweite der Prüfungen:** Eine erfolgreiche HTTP-/TCP-Verbindung bestätigt nicht die Sprachverarbeitung. Alexa-HTTPS wird auf öffentliche DNS-Adresse und gültige TLS-Verbindung geprüft; die Erreichbarkeit einer konkreten Audiodatei *von Amazon aus* wird damit nicht bestätigt. Serveradressen werden erst beim Speichern übernommen.
+## Bereiche des Control Centers
 
-Vor dem dauerhaften Entfernen eines Tablets dessen Rufworterkennung und Audioplayer stoppen, da die native App eine laufende Installation wieder bei TAFA registrieren kann. Nach dem Backend-Update Home Assistant Core einmal neu starten.
+| Bereich | Inhalt |
+| --- | --- |
+| **Übersicht** | Status des Sprachwegs und Hinweise |
+| **Verbindungen** | **Schnelleinrichtung per JSON**, GPU-PC-IP/Schnellprüfung, GPU-Whisper-/Qwen-/Ollama-Verbindungen, CPU-Piper/Wyoming und Alexa-MP3/HTTPS |
+| **Einstellungen** | Sprachmodus, Routing, Stimme, Gesprächsverhalten und optionale Funktionen |
+| **Geräte & Multiroom** | Tabletregistrierung, Benutzer, Raum- und Kamera-Freigaben |
+| **Wartung & Hilfe** | Diagnose, Backend/Modelle und Neustart |
+| **Jetzt sprechen** | Separater **Browser-Sprachtest**: Stumm/Rufwort/Immer an, Transkript, Antwort und Zeiten; HTTPS/localhost für Browser-Mikrofon erforderlich |
 
----
+**Wichtig:** Eine erfolgreiche TCP-/HTTP-Prüfung beweist nur Erreichbarkeit, **keine** erfolgreiche Spracherkennung oder Bluetooth-Ausgabe. Der Browser-Test **Jetzt sprechen** spielt im Browser ab und ist von der nativen Android/Echo-Ausgabe getrennt. Die Android-App bietet ihren eigenen Rufwortdienst, der unabhängig vom offenen HA-Dashboard läuft.
 
-## Ältere Installationshinweise (historische Versionen)
+## Updates und vorhandene Installationen
 
+TAFA aktualisiert nur die von **dieser App** verwaltete, unveränderte Integration und legt vor dem Austausch eine Sicherung unter `<HA-Konfiguration>/.tafa/rollback` an. Von Marketplace/HACS oder manuell verwaltete Integrationen werden nicht still überschrieben. Nach Backend-Updates HA Core einmal neu starten. Bereits vorhandene Automatisierungen, eigene Dashboards und andere Assist-Pipelines nicht automatisch löschen oder migrieren.
 
-[English](en/app.md) · [Projektübersicht](../README.de.md)
+Für einen dedizierten externen CPU-Server gilt [Proxmox](proxmox.md); für optionale GPU-KI [Worker](worker.md); für die reine Integration ohne diese App [Marketplace](marketplace.md). Die [historische Jarvis-Anleitung](home-assistant.md) ist **kein** Neuinstallationsweg.
 
-> **Ab App 0.3.20:** Das **TAFA Control Center → Einstellungen** ist die zentrale Oberfläche für alle TAFA-Optionen. Die technische **Apps → TAFA → Konfiguration** ist eine alternative Ansicht auf dieselben gespeicherten Werte, hauptsächlich für Fehlerbehebung und für die Proxmox-Vorauswahl vor dem ersten App-Start. Nach Änderungen TAFA neu starten. Wyoming und Ollama werden einmalig unter Geräte & Dienste hinzugefügt. Bestehende Pipelines bleiben unverändert.
-
-
-**TAFA App 0.3.12 — Release-Kandidat, noch nicht auf einem frisch installierten HA OS zertifiziert.** Voraussetzungen: Home Assistant OS ab 2026.11, unterstütztes amd64/aarch64-System sowie ausreichend RAM und Speicher für die deutschen CPU-Sprachmodelle. Die Android Device Bridge 1.0.0 bleibt unverändert.
-
-**Neu:** [Geführte Einrichtung für TAFA lokal, Proxmox, GPU-Worker und Alexa-MP3](setup-guide.md). Alle TAFA-Optionen werden im **Control Center → Einstellungen** gemeinsam bearbeitet.
-
-## App-Konfiguration und Verbindungsdiagnose
-
-Nutze **TAFA Control Center → Einstellungen** als erste Anlaufstelle: Sprachserver (lokal/Proxmox), GPU-Qwen-Adresse, Automatik mit Piper-Fallback, Stimmvariante, Klangprofil und optionale Alexa-MP3-/HTTPS-Adressen. Die Felder sind auf Deutsch/Englisch beschrieben. Nach dem Speichern die TAFA-App neu starten. Bei einer **neuen** HA-Integration werden diese Werte zur Ersteinrichtung übernommen; bestehende HA-Einträge werden beim Neustart mit der App-Konfiguration synchronisiert.
-
-Im **Control Center → Verbindungsdiagnose** zeigt **Verbindungen jetzt erneut prüfen**, ob Qwen bereit, beschäftigt oder nicht erreichbar ist, ob Piper als Reserve verfügbar ist und ob der MP3-Generator antwortet. Es wird weder Audio erzeugt noch eine Durchsage gesendet. Die Vorhersage des Sprachwegs basiert auf den App-Optionen.
-
-Im **Control Center → Lokale Sprachmodelle verwalten** siehst du die Größe der heruntergeladenen TAFA-Modelle. Zum Entfernen zuerst in der App-Konfiguration **external** wählen, App neu starten und die Löschung mit **ENTFERNEN** bestätigen. Andere HA-Apps, Wyoming und Proxmox werden nicht bereinigt.
-
-## Installation mit einer App
-
-1. Home-Assistant-Sicherung erstellen. Für die erste Bereitstellung möglichst eine frische Testinstallation nutzen.
-2. **Einstellungen → Apps → App installieren → Repositories** öffnen, `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen und **TAFA** installieren. **Vor dem Start** im App-Reiter **Konfiguration** den Sprachmodus auswählen: `local` oder `external` mit `external_piper_base=http://PROXMOX-IP:5000`.
-3. App starten und das **TAFA Control Center** öffnen. Nur bei `local` werden CPU-Sprachmodelle heruntergeladen. Bei `external` bleibt die lokale CPU-Verarbeitung aus; die Proxmox-Piper-Verbindung wird geprüft.
-4. TAFA stellt **eine** Integration bereit: `custom_components/tablet_assist_for_alexa`. Home Assistant über die normalen Einstellungen **einmal neu starten**. Keine YAML-Bearbeitung und keine zweite HA-Integration bei einer Neuinstallation nötig.
-5. Die App versucht den TAFA-Konfigurationsdialog automatisch abzuschließen. Bei `local` wird anschließend die **TAFA Lokal**-Pipeline eingerichtet. Bei `external` zuerst **Wyoming** für `PROXMOX-IP:10300` hinzufügen, die STT-Entität im Feld `cpu_stt` unter **Apps → TAFA → Konfiguration** auswählen (bei genau einer Wyoming-STT-Entität erfolgt die Auswahl automatisch) und eine Assist-Pipeline mit **TAFA STT-Router** und **Tablet Assist Stream** anlegen. Vorhandene Pipelines bleiben unverändert; keine `.storage`-Änderungen.
-6. Die vorhandene [TAFA Device Bridge 1.0.0](../android/README.de.md) für Rufwort und Audio verbinden. **TAFA Lokal** in Home Assistant Assist beziehungsweise in der HA Companion App wählen, nicht in der Device Bridge. Optional den Echo über Android-Bluetooth als Lautsprecher koppeln. Audio-, Kamera- und Rufwortberechtigungen bleiben unter Android-Kontrolle.
-
-## Einschränkung bei der Rufwortübergabe
-
-Device Bridge 1.0.0 sendet das erkannte Rufwort und gibt anschließend das Mikrofon frei, überträgt aber nicht die Frage. Nach dem Ereignis muss ein aktiver Assist-Client die Frage mit eigener Mikrofonfreigabe aufnehmen; diese fehlenden Audiodaten kann das Backend allein nicht erzeugen. Manuelles Assist funktioniert unabhängig davon. Vollständig freihändige Nutzung mit nur der unveränderten Bridge und TAFA-App darf deshalb noch nicht als unterstützt gelten.
-
-## Automatische Qwen-/Piper-Sprachausgabe
-
-Ab TAFA App 0.3.12 verwendet eine **neu erstellte** Assist-Pipeline `TAFA Lokal` standardmäßig den **Tablet Assist Stream**-TTS-Provider. Solange kein GPU-Worker konfiguriert oder erreichbar ist, erzeugt Piper die Sprache. Ist ein Qwen-Worker ohne zusätzlichen API-Schlüssel über die **TAFA-Integration unter Einstellungen → Geräte & Dienste** eingerichtet und bereit, wird Qwen verwendet. Bei Ausfall fällt der Router wieder auf Piper zurück. Ein GPU-Worker wird nicht automatisch im Netzwerk gesucht; Die Adresse muss bewusst eingerichtet werden.
-
-**Bereits vorhandene TAFA-Lokal-Pipelines werden nicht automatisch geändert.** Wer die bisherige Piper-only-Engine verwendet, stellt in der Assist-Pipeline die Sprachausgabe auf **Tablet Assist Stream** um. Das gilt für die normale Assist-Sprachausgabe; Alexa-MP3-Durchsagen über den HTTPS-Proxy bleiben ein separater Pfad.
-
-## Inhalt der App
-
-- Eine gemeinsame HA-Integration mit STT, TTS, Gesprächsrouter, nativem Wake-Geräteregister, authentifizierter Kompatibilitätsschnittstelle, Multiroom, optionalen Kamera-/Bewegungsdaten und Vision-Diensten.
-- **Lokaler Modus:** deutsche CPU-Sprachdienste Piper und Faster-Whisper laufen im App-Container, Modelle bleiben in `/data`. **Externer Modus:** keine lokalen CPU-Prozesse oder Modell-Downloads; Piper und Wyoming-Whisper bleiben auf Proxmox. Keine öffentlich freigegebenen Ports.
-- GPU-Worker, Ollama und Alexa-MP3-/HTTPS-Durchsagen sind optional und werden separat eingerichtet.
-- Das private TAFA-Dashboard und der Android-APK-Quellcode bleiben unverändert.
-
-## Fehlerbehebung: Update bricht beim Docker-Build ab
-
-Wenn das Supervisor-Protokoll meldet `NumPy was built with baseline optimizations: (X86_V2) but your machine doesn't support (X86_V2)`, wird das durch eine ältere CPU beziehungsweise ein generisches virtuelles CPU-Profil ausgelöst. **App 0.3.9 pinnt NumPy 1.26.4**, das die X86_V2-Baseline von NumPy ab 2.4 nicht voraussetzt. Zuerst das App-Repository aktualisieren und **TAFA 0.3.12** installieren; keine Neuinstallation und keine HA-Integration löschen. Bleibt ein anderer Fehler wie `illegal instruction`, im Virtualisierungshost die CPU-Kompatibilität prüfen; weitere native Bibliotheken haben eigene CPU-Anforderungen.
-
-## Fehlerbehebung: Piper oder Whisper nicht bereit
-
-In der ersten Testinstallation mit App 0.3.4 konnten Piper mit `RuntimeError` und Whisper mit `ImportError` abbrechen. Ab 0.3.9 werden native Sprachbibliotheken beim Docker-Build geladen, eSpeak-Systemdaten installiert und der tatsächliche Fehler (nicht nur die Fehlerklasse) im Control Center angezeigt.
-
-Unter **Einstellungen → Apps → TAFA → Aktualisieren** die neue Version installieren, TAFA neu starten und im Control Center die beiden Modellzustände prüfen. Herunterladen kann beim ersten Start Zeit und Internet benötigen. Bei einem Fehler **Sprachmodelle erneut laden** wählen; bei weiterhin bestehendem Fehler die vollständige Meldung aus dem Control Center beziehungsweise dem TAFA-App-Protokoll prüfen. Die HA-Integration muss hierfür nicht neu installiert werden.
-
-## Updates, Sicherheit und Grenzen
-
-- Die App aktualisiert ausschließlich unveränderte, selbst installierte Integrationsdateien. Vorherige Versionen werden unter `<HA-Konfiguration>/.tafa/rollback` gesichert. Manuelle/HACS-Installationen und veränderte Dateien bleiben unangetastet. Nach Backend-Updates HA neu starten.
-- Ist `jarvis_tablet_audio` noch eingerichtet, verhindert TAFA die doppelte Registrierung der alten Native-Endpunkte; die Altinstallation wird **nicht automatisch migriert**. Vorher sichern und getrennt umstellen.
-- Mikrofone und Kameras werden nur nach bewusster Aktivierung verwendet. Audio wird im Speicher verarbeitet, die CPU-Schnittstellen haben Größenbegrenzungen. Der erstmalige Modell-Download benötigt Internet.
-- Offene Release-Prüfungen: saubere HA-OS-Installation, Modell-Download, Assist/Device Bridge/Bluetooth sowie mehrere echte Tablets gleichzeitig. Siehe [Release-Checkliste](release.md).
-
-[Marketplace ohne App](marketplace.md) · [Multiroom](../homeassistant/examples/MULTIROOM.de.md) · [Optionaler GPU-Worker](worker.md)
+**Sicherheit:** CPU-/GPU-Dienste nur im vertrauenswürdigen LAN erreichbar machen. Zusätzliche TAFA-API-Tokens für die neuen lokalen Worker-Endpunkte sind nicht erforderlich, die normale Home-Assistant-Anmeldung und Berechtigungen jedoch weiterhin.

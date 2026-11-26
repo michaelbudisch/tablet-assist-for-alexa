@@ -1,98 +1,65 @@
-# CPU speech server
+# Optional CPU speech server on Proxmox
 
-**English** | [Deutsch](../proxmox.md) · [Project overview](../../README.md)
+[Deutsch](../proxmox.md) · [Project](../../README.md) · [Setup guide](setup-guide.md)
 
-Requirements: current Proxmox VE or Debian 12/13 with systemd. Start with 4 vCPUs, 4 GiB RAM and 20 GiB disk, depending on model size. Check the architecture and Python requirements of dependencies. No NVIDIA GPU is required. Downloading models requires Internet access; inference can run locally afterwards.
+**Not required for every TAFA setup:** The TAFA App can run CPU Piper and Faster-Whisper on its own. This guide is for running these CPU services in a **new Debian LXC on Proxmox VE**. Optional Alexa MP3 HTTPS delivery is a **separate** feature; ordinary Android-to-Echo Bluetooth playback needs no public gateway.
 
-**Existing speech server:** To update only the MP3 generator from an older token-based version, use the source checkout inside the dedicated Debian guest and run `sudo bash proxmox/update-mp3-generator.sh`. It backs up the existing `api.py` and restarts only `jarvis-mp3.service`, rolling back if health checks fail. This does not replace Piper, Whisper, data or your proxy. Update the matching TAFA integration to 0.4.3. Never run this script on the Proxmox host. No public forwarding for port 5001.
+## Recommended: new combined LXC
 
-## Recommended: one combined CT with a one-line PVE installer
-
-For a **fresh installation**, a single unprivileged Debian LXC hosts Piper, Wyoming-Whisper, the MP3 generator, and Nginx. Existing CTs, VMs and proxy sites are never modified.
-
-Run this in an interactive **root Proxmox VE host shell**:
+Run from an interactive **root shell on the Proxmox host**:
 
 ```bash
-curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh && bash /root/tafa-pve-install.sh
+curl -fsSLo /root/tafa-pve-install.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/quick-install.sh
+bash /root/tafa-pve-install.sh
 ```
 
-**English interface and custom container name:** All setup dialogs, recovery prompts and CT console status screens are in English. Immediately after selecting the CT ID, the wizard asks `Container hostname [tafa-voice]`. Enter any valid single-label Linux hostname (1–63 lowercase letters, numbers or hyphens; e.g. `jarvis-speech`) or press Enter for the default. This is passed directly to Proxmox `pct create --hostname`; it does not rename an existing or already running installation.
+Review the downloaded script before running it. The English wizard asks for a **free CT ID**, custom **container hostname**, template/storage, networking, resources, and optional GPU and Alexa audio host. Default resources are **4 vCPU, 4 GiB RAM, 32 GiB disk**. After confirmation, it creates a **new** CT and prompts for a container root password. Never run this first-install wizard against a production CT.
 
-You can review `/root/tafa-pve-install.sh` before running it. The interactive wizard asks for an unused CT ID, Proxmox root/template storage, bridge and DHCP/static IP, 4 cores/4 GiB RAM/32 GiB disk defaults, and optional LAN GPU Qwen and public Alexa audio hostname. Only after confirming the CT ID is a new CT created.
+| Port | Service | Public Internet |
+| --- | --- | --- |
+| `5000` | Piper HTTP/TTS | **Never** |
+| `10300` | Wyoming Whisper/STT | **Never** |
+| `5001` | MP3 generator for optional Alexa messages | **Never** |
+| `8080` | Temporary MP3 files for internal proxy delivery | **Never directly** |
 
-It installs private Piper (5000), MP3 generation (5001), Wyoming Whisper (10300), a **loopback-only** audio file backend (127.0.0.1:8080), and Nginx. Neither public DNS nor router port forwarding is changed. HTTPS remains pending until you have a public hostname, suitable routing and a certificate.
+Inside the **new CT**, `tafa-info` lists services and endpoints. `tafa-setup` configures optional dedicated HTTPS after DNS, routing and certificate requirements are met. The installer does **not** create router port forwards.
 
-The new container's pre-login `/etc/issue` and interactive console show IP, ports and service information; a periodic job refreshes the banner. Inside the new guest:
+## Connect to Home Assistant
+
+1. Set **TAFA → Settings → Speech mode: External**.
+2. Enter `http://CPU-SERVER-IP:5000` as Piper under **TAFA → Connections → CPU fallback**.
+3. Add **Wyoming Protocol** under **HA → Settings → Devices & services**, host **CPU-SERVER-IP**, port **10300**.
+4. Choose the resulting **actual** CPU `stt.*` entity in **TAFA → Connections**. Restart HA Core after integration updates and TAFA after settings changes when required.
+5. Check the **TAFA Lokal** Assist pipeline's STT, conversation and **Tablet Assist Stream** routers, then run an actual voice test.
+
+## Existing central Nginx/HTTPS proxy
+
+If another proxy CT already handles public TCP 80/443, **keep that forwarding**. In the wizard choose **HTTPS mode: shared**, enter the **real ID of your existing Nginx CT**, and explicitly approve the creation of **one new audio site**. There is **no universal proxy CT number**. Review/back up the existing domain, sites and certificates first. `proxmox/audit-shared-proxy.sh` is a read-only audit tool.
+
+For **shared**, internal MP3 delivery must be reachable from the selected proxy IP only. For **dedicated**, the temporary file server binds to `127.0.0.1:8080`, which another CT cannot reach. The `dedicated`, `shared` and `none` modes are alternatives. See [Nginx/HTTPS](nginx-proxy.md). Public audio hosting is required **only** for optional Alexa MP3 announcements; the MP3 generator and public URL must refer to the same backend.
+
+**DuckDNS:** Register the subdomain on your DuckDNS account first. The optional updater asks for a **DuckDNS account token**, which is **not** a TAFA API token. Never commit it. Restrict private worker ports with your firewall.
+
+## Resume an interrupted fresh installation
+
+Only for a **new, still-empty** CT or the explicitly supported incomplete Python-venv stage:
 
 ```bash
-tafa-info               # Current IP, endpoints, service state
-tafa-setup              # Guided Nginx/Certbot HTTPS completion
+curl -fsSLo /root/tafa-resume.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/resume-install.sh
+bash /root/tafa-resume.sh
 ```
 
-**Root password:** During `pct create`, Proxmox prompts you to enter and confirm the CT's root password with hidden input. You can then immediately sign in as `root` through the CT's normal console. No password is stored in TAFA scripts, command-line arguments or setup logs. Previously created CTs without a root password still need a one-time `pct enter CTID` followed by `passwd root` inside the guest. Only expose the Nginx 80/443 entry point when intentionally configured; **never publish** 5000, 5001, 8080, 10300, or GPU ports. If another proxy already owns port forwarding, keep it in place until a deliberate migration.
+Supply **your** CT ID, and if using shared mode the **actual** proxy CT ID. This is **not** a generic repair tool for arbitrary production installations.
 
-## New VM/container
-
-Download a Debian template in Proxmox and clone or extract this repository. On the Proxmox host as administrator:
+## Verify inside the new CT
 
 ```bash
-bash proxmox/create-ct.sh CTID TEMPLATE_VOLUME STORAGE [BRIDGE]
-```
-
-Replace placeholders with an unused CT ID, a Debian template volume, storage and optionally a bridge. Review storage and networking first. The script asks for the CT ID as confirmation and creates a new unprivileged DHCP container without port forwarding. Alternatively, inside an existing **empty** Debian VM/CT:
-
-```bash
-sudo bash proxmox/install-speechserver.sh
-```
-
-The script refuses to run on the PVE host or overwrite an existing installation or occupied ports. It installs a Python environment, Piper, Whisper, FFmpeg, the MP3 API, temporary audio delivery, systemd services and a cleanup timer. The default voice is German Thorsten. Dependencies and models may change; a fresh installation still requires end-to-end validation.
-
-## Verify
-
-```bash
+tafa-info
 systemctl status jarvis-piper jarvis-mp3 jarvis-whisper jarvis-audio
 curl -fsS http://127.0.0.1:5001/health
 journalctl -u jarvis-whisper -n 50 --no-pager
 ```
 
-The local configuration remains in `/etc/jarvis-local.env` (root only). The current MP3 generator needs **no additional API token**. Enter `http://SERVER:5001` and the public HTTPS audio origin in TAFA Options. Keep generator port 5001 restricted to your trusted private LAN. Use CPU host port 10300 for Wyoming STT.
+Token-free internal generator/worker ports must stay on the **trusted LAN**; never publish 5000, 5001, 10300 or 8080. An optional [GPU worker](worker.md) is configured independently.
 
-| Port | Service | Access |
-|---|---|---|
-| 5000 | Piper HTTP (WAV) | Trusted internal clients only |
-| 5001 | MP3 API | Trusted private LAN only, no token |
-| 10300 | Wyoming STT | Internal only |
-| 8080 | Temporary audio files | Internal; optional restricted HTTPS proxy |
-
-Configure firewall rules to allow only the required HA and proxy hosts. No automatic router configuration. The GPU address initially remains empty; see [GPU worker](worker.md).
-
-## Resume a newly created CT after interrupted shell installation
-
-The guided recovery wizard supports **two verified stages**: **(1) a newly created, empty Debian CT with no TAFA services**, such as a browser shell that was closed before guest setup started, and **(2) a partial Python venv that failed at `runuser ... Permission denied` after pip setup**. An existing, configured TAFA system is never overwritten.
-
-Earlier installer versions created the venv under `umask 077`; new installations use `umask 022` only around non-secret venv/pip setup. Existing downloaded packages need not be discarded.
-
-Run on the **Proxmox host**:
-
-```bash
-curl -fsSLo /root/tafa-resume.sh https://raw.githubusercontent.com/michaelbudisch/tablet-assist-for-alexa/main/proxmox/resume-install.sh && bash /root/tafa-resume.sh
-```
-
-The wizard checks whether the CT is empty or at the known interrupted Python-venv stage. It asks for the CT ID, registered audio hostname, optional GPU URL and existing proxy CT, and requires the explicit `RESUME` confirmation. It installs TAFA into the existing empty CT or repairs the interrupted venv, without creating or destroying a CT. It prepares a **new** HTTPS site on the existing proxy, leaving current websites untouched, and prints the subsequent certificate commands.
-
-## Fresh installation behind an existing central Nginx proxy
-
-A new DuckDNS domain can be registered in the [DuckDNS dashboard](https://www.duckdns.org); the published update endpoint maintains existing domains and does not register names. Use a separate new name, leaving the existing domain and router forwarding intact.
-
-1. Run the PVE host installer shown above; choose a **new CT** and select HTTPS mode `shared`, then the **existing proxy CT ID** (for example 101). Explicitly confirm the addition of a new audio virtual host.
-2. The new CT installs Piper, Whisper and MP3 generation, but **no second public Nginx**. Temporary MP3 files on port 8080 respond only to requests from the chosen Nginx proxy IP. Restrict internal network access with host/guest firewalls too.
-3. The host wizard copies new, isolated setup scripts to the existing proxy CT and prepares **one new audio hostname**, without modifying pre-existing Nginx sites or certificates.
-4. After DuckDNS points at your existing public address, run the printed `certbot certonly --webroot` and `install-nginx-proxy.sh enable ... --shared` commands **on the existing proxy CT**; 80/443 continue to point there.
-5. Optionally run `install-duckdns-updater.sh NEW-NAME.duckdns.org` from the new setup folder on the existing proxy CT. The DuckDNS-account token is prompted privately and stored only in a local root-only file (0600), updated every ten minutes. It is not a TAFA API token.
-6. In the **test HA installation**, configure Piper, Wyoming, new CT's MP3 generator and the new public audio hostname together. A new domain pointing to the new CT cannot serve files generated on the old CT: always migrate the MP3-generator URL and public-audio URL as a pair after successful tests.
-
-Keep the old public hostname, all pre-existing proxy sites, and the production HA installation unchanged during testing.
-
-## Optional HTTPS proxy
-
-**With the new combined single-CT installer Nginx is already installed.** Run `tafa-setup` inside the new guest once public DNS/routing has been prepared. A separate proxy CT remains available as an alternative in the [Nginx guide](nginx-proxy.md). No public proxy is needed for tablet-to-Echo Bluetooth.
+**Legacy only:** `proxmox/update-mp3-generator.sh` updates an **older token-based** MP3 server. It is **not** a clean-install step and must never be run on the PVE host.

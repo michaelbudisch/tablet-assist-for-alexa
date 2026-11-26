@@ -1,133 +1,69 @@
-# TAFA – einfacher Einrichtungsassistent
+# TAFA einrichten – Schritt für Schritt
 
-[English](en/setup-guide.md) · [App installieren](app.md)
+[English](en/setup-guide.md) · [Projektübersicht](../README.de.md) · [App-Anleitung](app.md)
 
-> **Neu ab App 0.3.12:** Die TAFA-Einstellungen liegen zentral unter **Einstellungen → Apps → TAFA → Konfiguration**. Nach dem Speichern die App neu starten. Bei einem Update Home Assistant einmal neu starten, damit die Integration geladen wird, dann die App neu starten. Die HA-eigene Wyoming-Integration wird einmal unter Geräte & Dienste hinzugefügt; die TAFA-Auswahl und alle weiteren Einstellungen erfolgen in der App. Vorhandene Assist-Pipelines werden nicht überschrieben. Für reine Marketplace-Installationen bleibt der HA-Optionsdialog erhalten.
+Dieser Leitfaden beschreibt **Neuinstallationen**. Die TAFA-App enthält das Control Center und kann CPU-Sprachdienste selbst bereitstellen. Ein Proxmox-Sprachserver, GPU-Worker, Ollama und öffentliche Alexa-MP3-Durchsagen sind **optional**. Alte Jarvis-Integrationen und Tokens aus früheren Versionen gehören nicht zur Neuinstallation; siehe [Migration und Altinstallation](home-assistant.md).
 
+## 1. TAFA in Home Assistant installieren
 
-TAFA App **0.3.12** kann Piper/Whisper entweder lokal betreiben oder deinen vorhandenen **Proxmox-Sprachserver exklusiv nutzen**. Die Wahl erfolgt vor dem App-Start unter **Einstellungen → Apps → TAFA → Konfiguration**. Es gibt drei voneinander unabhängige Entscheidungen:
+Voraussetzungen: Home Assistant OS mit **Apps**, Version ab **2026.11**, auf `amd64` oder `aarch64`; ein Android-Gerät (Android 9+) für die Device Bridge. Vorhandene Home-Assistant-Konfiguration sichern.
 
-**Bestehender Proxmox-Sprachserver:** Um ausschließlich den bisherigen tokenpflichtigen MP3-Generator zu aktualisieren, die aktuellen Repository-Dateien im dedizierten Debian-Gast bereitstellen und dort `sudo bash proxmox/update-mp3-generator.sh` ausführen. Das Skript sichert die vorhandene `api.py`, startet nur `jarvis-mp3.service` neu und stellt bei Fehlern die Vorgängerversion wieder her. Piper, Whisper, Audiodateien und HTTPS-Proxy bleiben unverändert. Passend dazu TAFA-Integration 0.4.3 verwenden. **Nicht auf dem Proxmox-Host ausführen.** Port 5001 niemals ins Internet weiterleiten.
+1. Unter **Einstellungen → Apps → App installieren → Repositories** das Repository `https://github.com/michaelbudisch/tablet-assist-for-alexa` hinzufügen, die App **TAFA** installieren und starten.
+2. **Apps → TAFA → Benutzeroberfläche** öffnen. Eine neue Installation startet mit `speech_mode=setup`: CPU-Modelle werden zunächst **nicht** heruntergeladen. Den Sprachmodus bei **Einstellungen** bewusst auswählen (lokal oder extern).
+3. Die App legt eine gemeinsame HA-Integration `tablet_assist_for_alexa` bereit. **Home Assistant Core einmal neu starten**, wenn die Integration erstmals installiert oder aktualisiert wurde; danach gegebenenfalls die TAFA-App neu starten. Nicht zusätzlich die Marketplace-Version installieren.
+4. Unter **Einstellungen → Geräte & Dienste** sicherstellen, dass **TAFA** eingerichtet ist. Unter **Einstellungen → Sprachassistenten** die Pipeline **TAFA Lokal** kontrollieren; falls sie nicht automatisch erstellt wurde, mit den TAFA-Routern anlegen: **Tablet Assist Sprachrouter** (STT), **Tablet Assist Gesprächsrouter** (Gespräch), **Tablet Assist Stream** (TTS). Vorhandene andere Pipelines bleiben bestehen.
 
-## 1. Wo sollen Piper und Whisper laufen?
+Die tägliche Bedienung erfolgt über **Übersicht**, **Verbindungen**, **Einstellungen**, **Geräte & Multiroom**, **Wartung & Hilfe** und den separaten Menüpunkt **Jetzt sprechen**. In **Verbindungen** stehen IPs, URLs, CPU-/GPU-Wyoming-Entitäten, Ollama-Agent und der JSON-Import. **Einstellungen** enthält Sprachmodus, Stimmen und Verhalten, nicht die Serveradressen.
 
-| Variante | Ergebnis | Konfiguration |
-|---|---|---|
-| **TAFA lokal (Standard)** | Piper und Whisper laufen in der TAFA-App | App starten, HA einmal neu starten; die automatisierte TAFA-Lokal-Pipeline prüfen |
-| **Externer Proxmox-Sprachserver** | Kein CPU-Modellstart in der TAFA-App | `speech_mode=external`, `external_piper_base=http://SERVER:5000`; App neu starten, danach Wyoming-STT `SERVER:10300` in HA hinzufügen |
+## 2. CPU-Spracherkennung und CPU-Stimme einrichten
 
-Für Proxmox die [CPU-Sprachserver-Anleitung](proxmox.md) öffnen. Nur in einem **frischen Debian-Gast** `install-speechserver.sh` ausführen – **niemals auf dem Proxmox-Host** und niemals blind über eine vorhandene Jarvis-Installation. Ein neuer CT wird mit `create-ct.sh` auf dem Proxmox-Host nach ausdrücklicher Bestätigung erstellt (4 vCPU, 4 GiB RAM, 20 GiB Speicher, DHCP). Der Installer richtet außerdem optional nutzbare Dienste für MP3-Durchsagen ein.
+Es gibt zwei alternative Betriebsarten:
 
-Im externen Modus prüft das TAFA Control Center die Proxmox-Piper-API (`/health`) und versucht bei Erreichbarkeit, die TAFA-HA-Integration vorzubereiten. Unter **Apps → TAFA → Konfiguration** die externe Piper-Adresse kontrollieren, die Wyoming-Integration für `SERVER:10300` einmalig hinzufügen; die STT-Entität im Feld `cpu_stt` der TAFA-App eintragen (oder automatisch erkennen lassen). Anschließend unter **Einstellungen → Sprachassistenten** eine eigene Pipeline für TAFA mit STT-Router und **Tablet Assist Stream** erstellen. Die externe Proxmox-Piper-API besitzt selbst keinen `/stt`-Endpunkt, deshalb ist Wyoming zwingend für die externe Spracherkennung.
+| Betriebsart | Was wird benötigt? | Einrichtung |
+| --- | --- | --- |
+| **TAFA lokal** | Ausreichend RAM und Speicherplatz für Piper und Faster-Whisper im TAFA-App-Container | **Einstellungen → Sprachmodus: Lokal** wählen, speichern und TAFA neu starten. Ersten Modell-Download und Bereitschaft abwarten. |
+| **Externer CPU-Sprachserver** | Ein separater Debian-/Proxmox-Sprachserver mit Piper HTTP und Wyoming-Whisper | Zuerst [CPU-Sprachserver installieren](proxmox.md), dann **Sprachmodus: Extern** und unter **Verbindungen** `http://CPU-SERVER:5000` als Piper-Adresse eintragen. |
 
-## 2. Soll der GPU-Hauptrechner die Qwen-Stimme übernehmen?
+**Bei externem CPU-Whisper zusätzlich:** Unter **HA → Einstellungen → Geräte & Dienste → Integration hinzufügen → Wyoming Protocol** den CPU-Host mit Port **10300** hinzufügen. Anschließend unter **TAFA → Verbindungen → CPU-Fallback** die **tatsächlich in HA angelegte** `stt.*`-Entität auswählen. Der Piper-Port 5000 ist **kein STT-Port**. Bei mehreren Wyoming-Instanzen CPU und GPU nicht vertauschen.
 
-**Optional.** Mit Qwen wird die Sprachausgabe bevorzugt auf dem GPU-Rechner erzeugt; bei Ausfall **vor Beginn der Audioausgabe** übernimmt Piper.
+Bei lokalem TAFA-Modus werden die eingebauten CPU-Dienste verwendet; ein zweiter Proxmox-Server ist dafür nicht erforderlich. Die CPU-Rückfallebene betrifft **Whisper/STT und Piper/TTS**. Sie stellt ohne separaten Konversationsagenten **kein CPU-Ollama-LLM** bereit.
 
-Auf dem GPU-Rechner im Ordner `worker/`:
+## 3. GPU-Worker und freie KI optional ergänzen
 
-- Windows: `00-Konfiguration.bat` und `01-Installieren.bat` (oder das bestehende Worker-Update unverändert lassen)
-- Linux: `bash scripts/linux/setup-linux.sh`
-- Danach `docker compose --profile stream up -d --build qwen-stream`
+Auf einem Windows-PC mit passender NVIDIA-GPU, Docker Desktop/WSL2, oder Linux mit Docker/NVIDIA Toolkit den [GPU Worker](worker.md) einrichten. Windows im Verzeichnis `worker/`:
 
-Die Skripte legen eine `.env` ausschließlich mit LAN-IP und Modelloptionen an. **Kein API-Token erforderlich.** Im TAFA-Menü **Sprachserver & GPU** folgende Angaben vornehmen:
+1. `01-Installieren.bat` ausführen; bei Bedarf vorher `00-Konfiguration.bat`. Whisper und Qwen werden eingerichtet; Ollama ist optional und benötigt ein installiertes Textmodell.
+2. `04-Verbindungsdaten.bat` ausführen. Das Skript erzeugt **`tafa-worker.json`** und **`GPU-Worker-Verbindungsdaten.txt`**.
+3. In **TAFA → Verbindungen → Schnelleinrichtung per JSON** die JSON-Datei auswählen, **Konfiguration prüfen** und die vorgeschlagenen GPU-Adressen übernehmen. Die TXT erklärt die Ports. CPU-Serveradressen stehen **nicht** in diesem GPU-Export und werden separat konfiguriert.
+4. Für GPU-Whisper unter **HA → Geräte & Dienste → Wyoming Protocol** die GPU-IP, Port **10300**, hinzufügen und die daraus entstehende GPU-`stt.*`-Entität unter **TAFA → Verbindungen → GPU/KI** auswählen. Die GPU-IP für die schnelle Erreichbarkeitsprüfung ist die **reine IP ohne Port**. Nur eine Qwen-URL einzutragen aktiviert **kein** GPU-Whisper.
+5. Optional **Ollama** als HA-Integration mit `http://GPU-IP:11434` hinzufügen, den Konversationsagenten einrichten und seine echte `conversation.*`-Entität in **TAFA → Verbindungen** auswählen. **Ollama für Text/KI ist ein eigener Dienst**, nicht Qwen-TTS.
 
-| Feld | Angabe |
-|---|---|
-| Routing-Modus | **Automatisch** |
-| GPU-Streaming-Adresse | `http://GPU-PC:10502` |
-| GPU-Wyoming-STT | Optional, falls GPU-Whisper auf Port `10300` eingerichtet wurde |
+Für die Sprachausgabe wird Qwen über `http://GPU-IP:10502` bevorzugt; **Tablet Assist Stream** schaltet bei Nichterreichbarkeit vor Wiedergabebeginn auf Piper zurück. Der **Tablet Assist Sprachrouter** kann von GPU-Wyoming auf eingerichtetes CPU-STT zurückfallen. Bei einem Ausfall des GPU-PCs sind freie LLM-Antworten ohne eigenen zusätzlichen CPU-Konversationsagenten möglicherweise nicht verfügbar.
 
-**Wichtig:** Die Assist-Pipeline muss als Sprachausgabe **Tablet Assist Stream** auswählen, sonst bleibt die Qwen/Piper-Umschaltung trotz korrekter Zugangsdaten ungenutzt. Vorhandene Pipelines werden nicht automatisch geändert. Einzelheiten und optionale LLM-/Vision-Dienste: [GPU-Worker](worker.md).
+## 4. Android-Gerät mit Home Assistant verbinden
 
-## 3. Sollen Alexa-Echos MP3-Durchsagen erhalten?
+1. Die aktuelle signierte [TAFA Device Bridge](../android/README.de.md) installieren. Pro Tablet in HA einen **eigenen aktiven Benutzer ohne Administratorrechte** anlegen und dessen Zugangsdaten beziehungsweise Zugriffstoken nur auf diesem Gerät verwenden.
+2. In der Device Bridge unter **Verbinden** die HA-Basisadresse (ohne Dashboard-Pfad) und den Zugriff einrichten. Mikrofonberechtigung ausdrücklich erteilen.
+3. Bei Bedarf den Echo **in Android über Bluetooth als Medienlautsprecher** koppeln und unter **Einstellungen → Echo & Audioplayer** den Player starten. Das **Echo-Mikrofon** nimmt die TAFA-Frage nicht entgegen.
+4. Unter **Einstellungen → Rufwort** das lokale Modell einrichten, Rufwort auswählen und den Dienst starten. Im nativen Mikrofonmodus stehen **Stumm**, **Rufwort** und optional **Immer an** zur Wahl; „Immer an“ kann auch auf Hintergrundgespräche reagieren.
+5. Unter **TAFA → Geräte & Multiroom** das registrierte Tablet einem Raum und dessen HA-Benutzer zuordnen. [Multiroom-Anleitung](../homeassistant/examples/MULTIROOM.de.md).
 
-**Nur dann** ist ein erreichbarer HTTPS-Audiohost nötig. Tablet → Echo per Bluetooth funktioniert unabhängig davon.
+## 5. Eine vollständige Anfrage prüfen
 
-Der [Proxmox-Sprachserver](proxmox.md) enthält zusätzlich:
+1. Unter **TAFA → Verbindungen** die tatsächlich benötigten CPU-/GPU-Dienste kontrollieren. Ein erreichbarer Port beweist noch keine erfolgreiche Spracherkennung.
+2. Unter **HA → Einstellungen → Sprachassistenten → TAFA Lokal** die drei TAFA-Router prüfen.
+3. Unter **TAFA → Jetzt sprechen** Mikrofonzugriff **über HTTPS oder localhost** erteilen, eine Frage stellen und STT-, Gesprächs- und TTS-Zeiten ansehen. Das ist ein **Browser-Diagnosetest**, dessen Wiedergabe im Browser läuft, **kein Echo-/Tablet-Ausgabetest**.
+4. Auf dem Tablet **Jetzt sprechen** und danach das eingestellte Rufwort testen. Für echte Echo-Ausgabe müssen der Android-Player aktiv und der Echo per Bluetooth verbunden sein.
+5. Mit eingeschaltetem GPU-PC eine Frage testen, dann den GPU-Worker gezielt stoppen und Whisper-/Piper-CPU-Fallback prüfen. Für GPU-/CPU-STT die Router-Attribute zum tatsächlich verwendeten Backend kontrollieren.
 
-| Port | Aufgabe |
-|---|---|
-| `5001` | Tokenfreie MP3-Erzeugung nur im privaten LAN (`/generate`) |
-| `8080` | Kurzlebige MP3-Dateien, nur für den internen Nginx-Proxy |
+Fehlt ein `stt.*`- oder `conversation.*`-Eintrag, diesen zunächst **in Home Assistant** über die betreffende Integration erzeugen; das reine Eintragen einer IP in TAFA erzeugt keine Wyoming- oder Ollama-Entität.
 
-Für Alexa einen eigenen HTTPS-Hostnamen mit gültigem Zertifikat bereitstellen. Der [Nginx-Proxy-Leitfaden](nginx-proxy.md) beschreibt einen neuen CT oder das sichere Ergänzen eines bestehenden Proxy-CT. In **Apps → TAFA → Konfiguration** anschließend MP3-Generator und öffentliche HTTPS-Adresse und Raum-/Notify-Zuordnung angeben. Keine Ports 5000/5001/10300/10502 öffentlich freigeben. Die internen Generator-Ports niemals aus dem Internet erreichbar machen.
+## 6. Zusätzliche Funktionen
 
-### Alexa Devices: für Qwen-MP3 »Sprechen« statt »Durchsagen« verwenden
+- **Mehrere Tablets:** [Geräte & Multiroom](../homeassistant/examples/MULTIROOM.de.md) – Benutzer und Räume getrennt verwalten.
+- **Kamera/Vision:** [Kameraberechtigungen und Einrichtung](../android/docs/camera-preparation.de.md); Kamera ist standardmäßig deaktiviert.
+- **Alexa-MP3-Durchsagen:** [Proxmox/HTTPS](proxmox.md) und [Nginx](nginx-proxy.md). **Nur** hierfür benötigt Alexa öffentlich erreichbare, gültige HTTPS-Audiodateien. Normale Bluetooth-Antworten benötigen keine öffentliche Domain.
+- **Alternative ohne TAFA-App:** [Marketplace-Installation](marketplace.md), nicht gleichzeitig mit der App-verwalteten Integration.
+- **Sicherheit:** [Hinweise](security.md). Keine CPU-/GPU-Modellports öffentlich freigeben; normale HA-Zugriffstokens bleiben erforderlich, auch wenn Worker-LAN-APIs keine zusätzlichen TAFA-API-Tokens verwenden.
 
-**Im getesteten Setup mit der Home-Assistant-Integration „Alexa Devices“:** Die Entität **„Durchsagen“** (`notify.…_durchsagen`) spielte nur den Alexa-Ankündigungston, jedoch nicht die generierte MP3-Datei. Mit **„Sprechen“** (`notify.…_sprechen`) wurde die Qwen-MP3 tatsächlich abgespielt. TAFA übergibt einen `<audio src="https://…/datei.mp3"/>`-Tag an die Notify-Entität. Normale Text-Durchsagen können auf „Durchsagen“ trotzdem funktionieren; das beweist noch keine MP3-Unterstützung.
-
-1. Unter **Einstellungen → Geräte & Dienste → Entitäten** die exakte Entity-ID von **„[Echo-Name] – Sprechen“** kontrollieren (nicht den Anzeigenamen übernehmen).
-2. In **Einstellungen → Apps → TAFA → Konfiguration → Alexa-Räume (JSON)** die Sprechen-Entität eintragen, z. B.:
-
-   ```json
-   {"Büro":{"notify":"notify.buro_dot_sprechen"}}
-   ```
-
-3. App-Konfiguration speichern, TAFA neu starten und die Testdurchsage unter **TAFA → Alexa-Durchsage** erneut auslösen. Bei Bedarf die HA-Integration neu laden.
-
-Bei **Gong ohne Sprache** zuerst die verwendete Notify-Entität prüfen und danach testen, ob die erzeugte MP3-Datei über die öffentliche HTTPS-Adresse abrufbar ist. **„Sprechen“** erzeugt nicht zwingend den Alexa-Ankündigungsgong; falls gewünscht, den **TAFA-Signalton** für MP3-Durchsagen aktivieren. Die Zuordnung gilt für das getestete Alexa-Devices-Setup; andere Alexa-Integrationen können andere Möglichkeiten haben.
-
-### Tablet und Multiroom ohne YAML einrichten
-
-1. Android **TAFA Device Bridge → Verbinden** mit einem aktiven, **nicht-administrativen HA-Benutzer** und dessen persönlichem Token verbinden; unter **Rufwort** die Erkennung starten, damit das Gerät unter **TAFA → Geräte** registriert wird.
-2. Als **HA-Administrator** unter **TAFA → Geräte** das erkannte Tablet öffnen. Dort **Multiroom-Audio → HA-Benutzer** auswählen; die vorgeschlagene Raumkennung bestätigen und **Audio-Raum verbinden** klicken. Bereits verbundene Räume und Player werden bei unveränderter Zuordnung nicht getrennt.
-3. Falls das Tablet zuvor einem anderen HA-Benutzer zugeordnet war, muss der Administrator die Übertragung ausdrücklich bestätigen; anschließend auf dem Tablet den neuen Benutzer-Token verwenden.
-4. Auf dem Tablet **Multiroom-Audio** aktivieren und **Player starten**. Der Status unter **TAFA → Geräte** zeigt „Audio verbunden“, „Player offline“ oder „Wiedergabe noch nicht bereit“ an. Für letzteres den Bluetooth-Medienausgang prüfen.
-4. **Kamerazugriff (optional):** Unter **TAFA → Geräte → Multiroom-Audio** den Schalter **„Kamerazugriff für diesen Raum erlauben“** bewusst aktivieren. Standardmäßig ist die Kamera für jeden Raum deaktiviert. Anschließend auf dem Tablet **Multiroom-Audio** eingeschaltet lassen und die Kameraübertragung *ausdrücklich* starten. Der Raum-Benutzer-Token genügt, ein Administrator-Token ist nicht erforderlich. Die Freigabe startet niemals automatisch die Kamera; Deaktivieren verwirft gepufferte Bilder.
-
-**Wichtig:** Die Rufwort-Geräteliste und die Audio-Räume sind getrennte Dienste. „Tablet registriert“ beweist nicht, dass der Audio-Player verbunden ist. Der Audio-Raum benötigt einen **eigenen aktiven HA-Benutzer ohne Administratorrechte**; der Administrator ordnet diesen über das TAFA-Dashboard zu, statt über Entwicklerwerkzeuge. Ein Token wird nie im Dashboard angezeigt oder hinterlegt. Der alte Helfer `input_text.jarvis_native_audio_command` ist im Multiroom-Modus nicht erforderlich.
-
-
-
-### Sprachausgabe über die lokale HTTP-Adresse testen
-
-Ist die Tablet-Audioverbindung unter **TAFA → Geräte** grün, lässt sich dort unter **Sprachtest** die neue Schaltfläche **„Sprachausgabe testen“** verwenden. Du kannst den Testtext ändern und mit einem Klick Qwen/Piper über die gewählte **TAFA Lokal**-Assist-Pipeline sprechen lassen. Die Testansage wird ausschließlich an den zugeordneten Android-/Bluetooth-Player gesendet. TAFA zeigt **Erzeugung → Übertragung → Wiedergabe → bestätigt/fehlgeschlagen** an. Diese Funktion benötigt **kein Browser-Mikrofon** und funktioniert auch bei lokaler HTTP-Nutzung.
-
-**„Einmal sprechen“** bleibt der vollständige Mikrofon- und Assist-Test; hierfür verlangt der Browser eine vertrauenswürdige HTTPS-Adresse (oder localhost). Auf einer reinen HTTP-Adresse wird der Mikrofontest daher nicht eingeblendet und es erscheint eine Erklärung statt eines irreführenden Fehlers. Die HTTP-Audio-Testfunktion erfordert einen verbundenen, bereiten Tablet-Player und einen gültigen HA-Benutzer, keine neuen Tokens oder Android-App-Updates.
-
-### Sprachtest nach der Tablet-Einrichtung
-
-**TAFA → Geräte → [Tablet] → Sprachtest · Einmal sprechen** aufrufen und den Abschnitt aufklappen. TAFA wählt die vorhandene **TAFA Lokal**-Assist-Pipeline mit Whisper und **Tablet Assist Stream** automatisch; andere vollständige Pipelines lassen sich auswählen. Tippe auf **Einmal sprechen**, erlaube dem Browser das Mikrofon, stelle eine kurze Frage und höre die Antwort über den verbundenen Tablet-/Bluetooth-Player. Das verwendet den bereits getesteten Assist- und Multiroom-Audioweg, keine zusätzlichen HA-Helfer oder Scripts.
-
-Der Browser benötigt eine **vertrauenswürdige HTTPS-Adresse** (oder localhost) für Mikrofonzugriff. Der Test kann auch mit einem angemeldeten HA-Administrator gezielt auf einen ihm angezeigten, bereits gekoppelten Tablet-Raum ausgeben; reguläre Tablet-Benutzer testen ausschließlich ihren eigenen Audio-Raum. Die Sprachausgabe wählt wie gewohnt Qwen mit Piper als Fallback. Beim Verlassen der Seite beziehungsweise Schließen des Sprachtests wird die Mikrofonaufnahme gestoppt. Wenn keine vollständige Assist-Pipeline (STT + TTS) existiert, wird auf die HA-Sprachassistenten-Konfiguration verwiesen.
-
-Der Sprachtest ist eine Funktion des **HA-Browsers/Dashboards**. Die Android **Device Bridge 1.0.0** überträgt weiterhin nur das Rufwort-Ereignis, nicht die nachfolgende Frage aus dem Hintergrund.
-
-### Neue Android-Sprachaufnahme (Device Bridge 1.0.1)
-
-Für **Hey Jarvis → Frage → Whisper → Qwen/Piper → Bluetooth** braucht Android die Home-Assistant-Assist-Pipeline **TAFA Lokal** mit drei Komponenten: TAFA-Sprachrouter (Whisper/STT), TAFA-Gesprächsrouter und TAFA-Stream (TTS). Die TAFA-App erstellt diese Pipeline automatisch, sobald alle drei HA-Entitäten vorhanden sind – auch bei **externem Proxmox-Sprachserver**. Vorher zeigt die App **waiting_for_entities** statt fälschlich **external_ready**. Voraussetzung im externen Modus: Wyoming-STT von deinem Sprachserver in Home Assistant einrichten. Ist genau eine Wyoming-STT-Entität vorhanden, wählt TAFA sie automatisch; bei mehreren die gewünschte Entität in **Einstellungen → Apps → TAFA → Konfiguration → cpu_stt** auswählen.
-
-Unter **TAFA → Geräte → Sprachtest** wird angezeigt, ob eine vollständige Assist-Pipeline konfiguriert ist. Das prüft die Konfiguration, **nicht** die Live-Erreichbarkeit von Whisper. Auf Android 1.0.1 dann unter **Rufwort → Native Sprachunterhaltung** den optionalen Modus einschalten; die bestehende Gerätezuordnung und der normale HA-Benutzer-Token bleiben erhalten. Für die native Aufnahme ist kein Browsermikrofon und kein Browser-HTTPS nötig. Lokales HTTP bleibt auf dem Transportweg unverschlüsselt. Die Android-App 1.0.1 muss weiterhin mit dem Original-Signierschlüssel erstellt werden.
-
-## Wo sind die Einstellungen?
-
-**Erster Schritt:** Unter **Einstellungen → Apps → TAFA → Konfiguration** die Adressen für Proxmox/Piper, GPU/Qwen und Alexa-MP3 sowie den automatischen Piper-Fallback, Stimmen und Klangprofile festlegen. Danach App neu starten. Die **Verbindungsdiagnose** und das gezielte Löschen TAFA-eigener CPU-Modelle befinden sich unter **Apps → TAFA → Weboberfläche**. Bestehende App-eigene HA-Einträge werden beim Neustart automatisch synchronisiert.
-
-
-1. **TAFA Control Center** unter Home Assistant **Apps → TAFA → Weboberfläche** öffnen. Dort sind Zustände und diese Schritte erklärt.
-2. **Einstellungen → Apps → TAFA → Konfiguration** öffnen.
-3. Einen Abschnitt auswählen: **Sprachserver & GPU**, **Alexa-Durchsagen & HTTPS** oder **Datenquellen & Erinnerungen**.
-4. Werte speichern; TAFA lädt die Integration neu. GPU- und MP3-Generator benötigen keine zusätzlichen TAFA-API-Tokens. Ein leerer GPU-Host deaktiviert GPU-TTS.
-5. **Einstellungen → Sprachassistenten → TAFA Lokal** prüfen. Für automatisches Qwen/Piper-TTS **Tablet Assist Stream** wählen.
-
-## Kurzer Funktionstest
-
-- **TAFA lokal:** Piper und Whisper im Control Center auf „Bereit“ prüfen; eine Assist-Anfrage manuell starten.
-- **Externer Proxmox-Server:** `curl -fsS http://SERVER:5000/health` prüfen. In TAFA muss „Piper · extern“ bereit sein, lokal dürfen keine Piper-/Whisper-Downloads starten. Wyoming-STT `SERVER:10300` in HA einrichten, CPU-STT über das Feld `cpu_stt` in der App einstellen (bei eindeutigem Wyoming automatisch) und Assist-Pipeline erstellen.
-- **GPU:** Qwen bei laufendem PC testen; PC ausschalten und dieselbe Assist-Ausgabe erneut prüfen → Piper-Fallback.
-- **Alexa-MP3 (optional):** Eine unkritische Testdurchsage senden und die kurzlebige öffentliche HTTPS-Datei prüfen.
-
-Die unveränderte **TAFA Device Bridge 1.0.0** meldet Rufwörter, überträgt aber nicht die folgende Frage. Ein aktiver Assist-Client mit Mikrofon ist dafür weiterhin notwendig. Das private TAFA-Dashboard wird nicht installiert.
-
-Die Geräte-/Worker-Konfiguration ist nicht automatisch: Qwen-Host sowie DNS-/Router-/HTTPS-Einrichtung werden bewusst nicht durchs Netz ermittelt oder ungefragt verändert.
-
-### Ollama antwortet bei der ersten Frage nicht (TAFA 0.3.17 / Integration 0.4.9)
-
-Ein neuer Ollama-Gesprächsassistent hat in Home Assistant bis zum ersten Aufruf den Zustand `unknown` („Unbekannt“). Dies ist **normal**; TAFA hat dies bis Integration 0.4.8 fälschlich blockiert. Seit 0.4.9 wird die Frage weitergereicht. Die echte Entitäts-ID des Ollama-Agenten unter **Einstellungen → Geräte & Dienste → Ollama → Gesprächsassistent → Entität** ablesen und unter **Apps → TAFA → Konfiguration → llm_agent** speichern. Nach dem TAFA-App-Update **Home Assistant Core einmal neu starten**, anschließend **TAFA-App neu starten**, um die Einstellungen zu synchronisieren. `unavailable` ist weiterhin ein tatsächlicher Fehlerzustand. Das CPU-Hardwareprofil regelt nur Qwen/Piper-Sprachausgabe und unterbindet Ollama nicht länger. Die Android-App muss dafür nicht geändert werden.
-
-### Wyoming-CPU/GPU-Entitäten ohne Abschreiben auswählen (TAFA App 0.3.18)
-
-Unter **Einstellungen → Apps → TAFA → Control Center** werden im Abschnitt **„Wyoming-STT automatisch erkennen“** alle aktuell in Home Assistant registrierten und aktivierten Wyoming-`stt.*`-Entitäten in zwei Dropdowns angeboten. Weise **CPU-Whisper / Proxmox** und **GPU-Whisper / Windows** jeweils die korrekte Entität zu und speichere. Beide dürfen **nicht identisch** sein. Danach die **TAFA-App neu starten**. Andere Optionen und vorhandene Audio-/Kameraeinstellungen bleiben erhalten.
-
-Wenn nur die CPU-Entität erscheint, ist GPU-Whisper in Home Assistant noch nicht eingebunden: unter **Geräte & Dienste → Integration hinzufügen → Wyoming Protocol** den GPU-Rechner (Port **10300**) hinzufügen, danach das Control Center erneut öffnen. Die Qwen-TTS-Adresse auf Port 10502 reicht hierfür **nicht**. Nach einem Sprachtest beim **Tablet Assist Sprachrouter** das Attribut `letztes_backend` kontrollieren: `zusatzrechner` = GPU, `homeserver` = CPU. Ein alter Fast-Whisper-Logeintrag ist allein kein Erkennungsnachweis.
+**Versionshinweis:** Funktionen und UI dieser Anleitung beziehen sich auf die TAFA-App, die im Repository ausgeliefert wird. Den installierten Stand in der App, die HA-Integration und die signierte Device Bridge getrennt prüfen. Ein vollständiger physischer Erstinstallationstest auf jeder unterstützten Hardware ist dadurch nicht ersetzt.
