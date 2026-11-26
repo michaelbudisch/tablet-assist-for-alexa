@@ -1,4 +1,4 @@
-# TAFA Device Bridge · Android 1.1.0
+# TAFA Device Bridge · Android 1.2.0
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -6,11 +6,11 @@ Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback
 
 ## Three simple tabs
 
-**Status** is read-only: HA and Bluetooth connections, current voice/Assist activity, wakeword, keepalive and camera state, plus battery.
+**Status** shows connections and activity, with **Connect**, **Speak now**, **Start wakeword**, **End conversation** and **Start camera** quick actions. Speak now starts a question without a wakeword; missing credentials open Connect, and a missing wakeword model opens Settings.
 
 **Connect** is for one-time setup: find the target HA server, enter its base URL without dashboard paths, scan/paste the dedicated non-admin HA room user's token, and save/start the connection. Plain HTTP requires explicit per-origin LAN consent.
 
-**Settings** has all controls: audio player start/stop, Android Bluetooth pairing, silent Echo keepalive, wakeword/model/microphone, native Assist speech pause/manual test, optional display brightness permission, camera lens/interval/motion/start-stop, help and diagnostics. Fine-tuning no longer hides general device settings.
+**Settings** has detailed controls: audio player start/stop, Android Bluetooth pairing, silent Echo keepalive, wakeword/model/microphone, native Assist speech pause/manual test, optional display brightness permission, camera lens/interval/motion/start-stop, help and diagnostics. Fine-tuning no longer hides general device settings.
 
 ## Set up audio and voice
 
@@ -22,6 +22,14 @@ Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback
 
 The application ID `de.jarvis.audio`, encrypted credentials, device identity and preferences survive properly signed upgrades. Do not uninstall the previous app if preserving identity matters. Android's optional display permission supports brightness/dimming, not dependable full screen power on/off.
 
+## Wakeword and follow-up questions
+
+In **Settings → Native Assist → Questions without another wakeword**, the default is **Require wakeword for every question**. Upgrading does not opt an existing unlimited conversation into automatic follow-ups.
+
+Optionally allow **1–10 additional questions per conversation**. For example, 1 allows the original question plus one follow-up. A new wakeword or Speak now starts a fresh conversation. Silence, missing/failed replies, mute or an exhausted limit ends follow-ups. End conversation and local-limit changes also cancel a queued recording. To turn off the microphone entirely, stop the wakeword service or mute the device in HA.
+
+The local limit is a hard ceiling independent of the dashboard. HA may reduce it with its device followup_limit (0 = none, -1 = unlimited on the server), but cannot raise it. The app previously ignored this value. Browser control additionally considers continue_conversation and ends on silence. Native silence detection measures audio levels: background sounds can still be mistaken for speech during an allowed follow-up window. Use the wakeword-only default in noisy rooms.
+
 ## Camera and motion
 
 Under **Settings → Camera**, select the lens and image interval (1/2/3/5/10 s). Enable **Report image motion** to calculate coarse pixel changes. If the TAFA room is allowed to use its camera in HA and the tablet camera has been explicitly started, the camera uploads still images through the authenticated TAFA room API. HA provides a room camera and a motion binary sensor. The sensor is unavailable without fresh frames or when motion is disabled; it does not identify people or objects.
@@ -30,7 +38,7 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-[Download signed APK 1.1.0](downloads/TAFA-Device-Bridge-1.1.0.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.1.0) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **20**. Install over the existing app to retain credentials and device identity.
+[Download signed APK 1.2.0](downloads/TAFA-Device-Bridge-1.2.0.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.0) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **21**. Install over the existing app to retain credentials and device identity.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 

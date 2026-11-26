@@ -97,7 +97,7 @@ final class WakePilotSettings {
             clamp(dev.getInt("strict"),1,3),
             clamp(dev.getInt("cooldown"),3,30),
             clamp(dev.getInt("hold"),10,90),
-            -1,
+            clamp(dev.optInt("followup_limit",-1),-1,100),
             clamp(dev.optInt("pause_ms",1700),900,3200),
             clamp(dev.optInt("mic_gain",100),50,200),
             clamp(dev.optInt("brightness",80),1,100),
@@ -108,7 +108,7 @@ final class WakePilotSettings {
             .putBoolean("wake_muted",s.muted).putString("wake_choice",s.word)
             .putInt("wake_strict",s.strictness).putInt("wake_cooldown",s.cooldownSeconds)
             .putInt("wake_hold",s.holdSeconds)
-            .putInt("native_followup_limit",-1)
+            .putInt("native_followup_limit",s.followupLimit)
             .putInt("native_pause_ms",s.pauseMs).putInt("mic_gain",s.micGain)
             .putInt("display_brightness",s.brightness)
             .putBoolean("screen_awake",s.screenAwake)

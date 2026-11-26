@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
     private Spinner cameraLens, cameraRefresh;
     private ArrayList<CameraPreviewController.Lens> availableCameras=new ArrayList<>();
     private static final int CAMERA_PERMISSION=220;
-    private boolean pendingCameraStart=false;
+    private boolean pendingCameraStart=false,pendingNativeQuestion=false;
     private String consentForAddress = "";
     private TextView setupMessage, searchMessage;
     private Button searchButton;
@@ -147,6 +147,14 @@ public class MainActivity extends Activity {
         });
         initializeNativeWake();
         initializeNativeAssistControls();
+        findViewById(R.id.status_connect).setOnClickListener(v->startPlayer());
+        findViewById(R.id.status_speak).setOnClickListener(v->startNativeWake(true));
+        findViewById(R.id.status_wake).setOnClickListener(v->startNativeWake());
+        findViewById(R.id.status_camera).setOnClickListener(v->requestCameraRelay());
+        findViewById(R.id.status_end_conversation).setOnClickListener(v->{
+            if(WakeWordService.running)
+                startService(new Intent(this,WakeWordService.class).setAction(WakeWordService.NATIVE_SETTINGS));
+        });
         initializeCameraSettings();
         languageButton(R.id.language_de, "de");
         languageButton(R.id.language_en, "en");
@@ -402,12 +410,28 @@ public class MainActivity extends Activity {
         TextView pauseLabel=findViewById(R.id.native_pause_label);
         Button test=findViewById(R.id.native_assist_test);
         // Native HA Assist + tablet Bluetooth is the only audio route.
-        // Follow-ups continue until silence; HA owns microphone parameters.
+        // A separate local hard ceiling survives HA sync and defaults to wakeword-only.
         enabled.setChecked(true);
         enabled.setVisibility(View.GONE);
         followups.setVisibility(View.GONE);
         preferences.edit().putBoolean("native_assist_enabled",true)
             .putBoolean("room_audio_enabled",true).apply();
+        Spinner limit=findViewById(R.id.native_followup_limit);
+        ArrayList<String> choices=new ArrayList<>();
+        choices.add(getString(R.string.followup_wakeword_only));
+        for(int i=1;i<=10;i++)choices.add(getResources().getQuantityString(R.plurals.followup_count,i,i));
+        limit.setAdapter(BridgeChoices.create(this,choices));
+        limit.setSelection(FollowupPolicy.localLimit(preferences.getInt(FollowupPolicy.LOCAL_LIMIT,0)));
+        limit.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int value,long id){
+                if(value==preferences.getInt(FollowupPolicy.LOCAL_LIMIT,0))return;
+                preferences.edit().putInt(FollowupPolicy.LOCAL_LIMIT,value).apply();
+                if(WakeWordService.running)
+                    startService(new Intent(MainActivity.this,WakeWordService.class)
+                        .setAction(WakeWordService.NATIVE_SETTINGS));
+            }
+        });
         int value=Math.max(900,Math.min(3200,preferences.getInt("native_pause_ms",1700)));
         pause.setProgress((value-900)/100);
         pauseLabel.setText(getString(R.string.native_pause_label,value));
@@ -429,13 +453,7 @@ public class MainActivity extends Activity {
                 android.net.Uri.parse("package:"+getPackageName()));
             startActivity(settings);
         });
-        test.setOnClickListener(v->{
-            if(!WakeWordService.running||!AudioService.running){
-                Toast.makeText(this,R.string.native_assist_requirements,Toast.LENGTH_LONG).show();
-                return;
-            }
-            startService(new Intent(this,WakeWordService.class).setAction(WakeWordService.NATIVE_TEST));
-        });
+        test.setOnClickListener(v->startNativeWake(true));
         refreshNativeAssistStatus();
     }
 
@@ -502,19 +520,36 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void startNativeWake(){
+    private void startNativeWake(){startNativeWake(false);}
+
+    private void startNativeWake(boolean manual){
+        pendingNativeQuestion=manual;
         if(!WakeModelInstaller.installed(this)){
-            wakeStatus.setText(R.string.wake_model_missing);return;
+            pendingNativeQuestion=false;
+            showSection("settings",true);
+            wakeStatus.setText(R.string.wake_model_missing);
+            Toast.makeText(this,R.string.wake_model_missing,Toast.LENGTH_LONG).show();
+            return;
         }
-        if(!saveConnectionForWake())return;
+        if(!saveConnectionForWake()){
+            pendingNativeQuestion=false;
+            setupMessage.setText(wakeStatus.getText());
+            showSection("connection",true);return;
+        }
         if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
             wakeStatus.setText(R.string.wake_permission);
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},WAKE_MICROPHONE_PERMISSION);
             return;
         }
+        pendingNativeQuestion=false;
+        if(manual&&WakeWordService.running&&WakeWordService.muted){
+            Toast.makeText(this,R.string.quick_microphone_muted,Toast.LENGTH_LONG).show();
+            return;
+        }
+        if(manual&&!AudioService.running&&!startPlayer())return;
         try{
-            stopService(new Intent(this,WakeWordService.class));
-            startForegroundService(new Intent(this,WakeWordService.class).setAction(WakeWordService.START));
+            startForegroundService(new Intent(this,WakeWordService.class)
+                .setAction(manual?WakeWordService.NATIVE_TEST:WakeWordService.START));
             wakeStatus.setText("");
         }catch(Exception error){
             wakeStatus.setText(getString(R.string.wake_download_failed,
@@ -534,12 +569,25 @@ public class MainActivity extends Activity {
             return;
         }
         if(requestCode!=WAKE_MICROPHONE_PERMISSION)return;
-        if(grants.length>0&&grants[0]==PackageManager.PERMISSION_GRANTED)startNativeWake();
-        else wakeStatus.setText(R.string.wake_permission);
+        if(grants.length>0&&grants[0]==PackageManager.PERMISSION_GRANTED)startNativeWake(pendingNativeQuestion);
+        else {pendingNativeQuestion=false;wakeStatus.setText(R.string.wake_permission);
+            Toast.makeText(this,R.string.wake_permission,Toast.LENGTH_LONG).show();}
     }
 
     private void configureColumns() {
         int width = getResources().getConfiguration().screenWidthDp;
+        GridLayout quickActions=findViewById(R.id.status_quick_actions);
+        int quickColumns=getResources().getConfiguration().fontScale>=1.3f?1:width>=600?3:2;
+        quickActions.setColumnCount(quickColumns);
+        int[] actions={R.id.status_connect,R.id.status_speak,R.id.status_wake,
+                R.id.status_camera,R.id.status_end_conversation};
+        for(int i=0;i<actions.length;i++){
+            GridLayout.LayoutParams action=new GridLayout.LayoutParams(
+                    GridLayout.spec(i/quickColumns),GridLayout.spec(i%quickColumns,1f));
+            action.width=0;action.height=GridLayout.LayoutParams.WRAP_CONTENT;
+            action.setMargins(dp(4),dp(4),dp(4),dp(4));
+            findViewById(actions[i]).setLayoutParams(action);
+        }
         int tabColumns = getResources().getConfiguration().fontScale >= 1.3f || width < 360 ? 1 : 3;
         GridLayout navigation = findViewById(R.id.section_tabs);
         navigation.setColumnCount(tabColumns);
@@ -756,6 +804,11 @@ public class MainActivity extends Activity {
         boolean cameraRunning=CameraRelayService.running;
         findViewById(R.id.camera_relay_start).setEnabled(!cameraRunning&&!availableCameras.isEmpty());
         findViewById(R.id.camera_relay_stop).setEnabled(cameraRunning);
+        findViewById(R.id.status_camera).setEnabled(!cameraRunning&&!availableCameras.isEmpty());
+        findViewById(R.id.status_wake).setEnabled(!WakeWordService.running);
+        boolean busy=WakeWordService.running&&WakeWordService.status.startsWith("native_");
+        findViewById(R.id.status_speak).setEnabled(!busy);
+        findViewById(R.id.status_end_conversation).setEnabled(WakeWordService.running);
         cameraLens.setEnabled(!cameraRunning);
         ((TextView)findViewById(R.id.camera_relay_status)).setText(CameraActivity.relayMessage(this));
         ((TextView)findViewById(R.id.status_room)).setText(

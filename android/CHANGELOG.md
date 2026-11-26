@@ -1,5 +1,13 @@
 # Android changelog
 
+## 1.2.0 · Quick actions and bounded conversations
+- Status quick actions: Connect, Speak now, Start wakeword, End conversation, Start camera.
+- Require a wakeword for every question by default, including upgrades from unlimited follow-ups.
+- Optional local ceiling of 1–10 additional questions; HA may only reduce it. Respect the previously ignored HA followup_limit.
+- Cancel queued follow-up capture on settings changes, mute and conversation end; recheck the effective limit before opening the microphone. Keep wakeword and Assist recorder ownership exclusive.
+- Manual questions can explicitly start the foreground service after model, credentials and permission checks; HA mute remains authoritative.
+- DE/EN setup guidance, version code 21, original signing certificate.
+
 ## 1.1.0 · One settings tab, informative status and focused setup
 - **Status:** information only (HA, Bluetooth, wakeword, Assist, camera, keepalive, battery).
 - **Connect:** HA discovery, URL, room-user token and save/connection actions only.
