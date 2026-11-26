@@ -37,7 +37,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     static volatile boolean running=false;
     static volatile String status="off";
     private static final String CHANNEL="jarvis-wake",TAG="JarvisWake";
-    private static final long SYNC_INTERVAL_MS=2500;
+    private static final long SYNC_INTERVAL_MS=500;
     private final Handler main=new Handler(Looper.getMainLooper());
     private boolean enabled=false,loading=false;
     static volatile boolean muted=true;
@@ -50,6 +50,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     private int strictness=1,cooldownSeconds=12,holdSeconds=50;
     private final WakeTriggerGate triggerGate=new WakeTriggerGate();
     private ScheduledExecutorService settingsExecutor;
+    private NativeSettingsSocket settingsSocket;
     private long lastFullSync=0;
     private volatile boolean registered=false;
     private Model model;
@@ -159,6 +160,25 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     private void startSettingsSync(){
         if(settingsExecutor!=null)return;
+        settingsSocket=new NativeSettingsSocket(this,new NativeSettingsSocket.Listener(){
+            @Override public void onReady(){
+                lastFullSync=0;
+            }
+            @Override public void onSettings(org.json.JSONObject update){
+                final boolean nextMuted=update.optBoolean("muted",true);
+                final String nextMode=update.optString("voice_mode","wake");
+                final int nextFollowups=update.optInt("followup_limit",-1);
+                if(nextFollowups < -1 || nextFollowups > 100)return;
+                main.post(()->{
+                    if(!enabled)return;
+                    getSharedPreferences(MainActivity.PREF,0).edit()
+                        .putInt("native_followup_limit",nextFollowups)
+                        .putBoolean("wake_muted",nextMuted)
+                        .putString("native_voice_mode",nextMode).apply();
+                    setVoiceSettings(nextMuted,nextMode);
+                });
+            }
+        });
         settingsExecutor=Executors.newSingleThreadScheduledExecutor(r->{
             Thread t=new Thread(r,"JarvisWakeHASettings");
             t.setDaemon(true);return t;
@@ -167,7 +187,11 @@ public final class WakeWordService extends Service implements RecognitionListene
             if(!enabled)return;
             try{
                 if(!registered){WakePilotSettings.register(this);registered=true;}
+                settingsSocket.connectIfNeeded();
+                // Healthy WebSocket: no repetitive HTTP requests. If push is
+                // disconnected, reconcile mute/mode every 500 ms.
                 boolean full=SystemClock.elapsedRealtime()-lastFullSync>=12000;
+                if(!full&&settingsSocket.isSubscribed())return;
                 if(full){
                     WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
                     lastFullSync=SystemClock.elapsedRealtime();
@@ -519,6 +543,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         main.removeCallbacks(rearm);
         main.removeCallbacks(followup);
         if(nativeSession!=null){nativeSession.close();nativeSession=null;}
+        if(settingsSocket!=null){settingsSocket.close();settingsSocket=null;}
         if(settingsExecutor!=null){settingsExecutor.shutdownNow();settingsExecutor=null;}
         releaseRecognizer();
         stopContinuousMonitor();
