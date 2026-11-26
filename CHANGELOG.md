@@ -1,3 +1,6 @@
+## TAFA App 0.3.35 / HA integration 0.4.20 — no duplicate camera entities during migration
+- Register TAFA camera/motion entities only if the TAFA camera relay is active, preventing null relay exceptions while preserving the separately running legacy camera integration. Audio/microphone services remain TAFA-owned.
+
 ## TAFA App 0.3.34 / HA 0.4.19 / Android 1.0.2 — direct audio only
 - One conversation transport: native Android → HA Assist TAFA Lokal → authenticated room-scoped Android player → Bluetooth. Follow-up limits per device configurable from Home Assistant (0–100 or unlimited). Dashboard microphone control and safe multiroom room picker. Legacy room pairing read-only migration.
 

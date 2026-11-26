@@ -106,12 +106,18 @@ async def async_setup_entry(hass, entry):
         await setup_relay_camera(hass, entry)
     else:
         _LOGGER.info("TAFA direct audio enabled with read-only legacy pairing migration; legacy camera/automations unchanged")
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Camera/binary-sensor platforms require our camera relay. An older
+    # Jarvis camera relay may still be configured during the Android
+    # migration; never create camera entities with a null relay in that case.
+    active_platforms = ([Platform.STT, Platform.TTS, Platform.CONVERSATION]
+                        if legacy_present else PLATFORMS)
+    data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
+    await hass.config_entries.async_forward_entry_setups(entry, active_platforms)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
         sidebar_title="TAFA Dashboard", sidebar_icon="mdi:view-dashboard-outline",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.19",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.20",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()
@@ -122,7 +128,9 @@ async def _reload(hass, entry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass, entry):
-    ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    active_platforms = hass.data.get(DOMAIN, {}).get("active_platforms", {}).pop(
+        entry.entry_id, PLATFORMS)
+    ok = await hass.config_entries.async_unload_platforms(entry, active_platforms)
     if ok:
         if hass.data.get(DOMAIN, {}).pop("relay_started", False):
             from .relay.relay_room_adapter import unload_room_audio

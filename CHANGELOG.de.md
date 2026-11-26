@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA-App 0.3.35 / HA-Integration 0.4.20 — Kamera-Kollision beim Übergang verhindern
+- Während die bisherige Jarvis-Kamera noch installiert ist, registriert TAFA nur eigene Sprach- und Gesprächsentitäten. Kamera- und Bewegungssensoren werden erst aktiviert, wenn TAFA den Kameradienst selbst betreibt.
+- Die neuen TAFA-Multiroom- und Mikrofon-Endpunkte bleiben aktiv. Keine Änderungen an bestehenden Automatisierungen, Kameras oder Pipelines.
+
+
 ## TAFA-App 0.3.34 / HA-Integration 0.4.19 / Android 1.0.2
 - Ein einziger Sprachweg: Tablet-Mikrofon → Home Assistant („TAFA Lokal“) → Antwort auf dem gleichen Tablet per Bluetooth, inklusive Multiroom.
 - Anschlussfragen pro Tablet in TAFA → Geräte einstellen: 0 bis 100 oder unbegrenzt (−1, bis zur Gesprächspause). Der alte feste App-Grenzwert entfällt.

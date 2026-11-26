@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.35 — avoid duplicate camera entities during old Jarvis → TAFA native audio migration
+- Keep the new TAFA audio/wake endpoints and read-only imported multiroom pairing while the old Jarvis camera integration is still installed.
+- Only register camera/binary-sensor platforms when TAFA owns the camera relay. Do not initialize orphan camera entities with a null relay; unload the same platform set that was actually loaded.
+- Existing automations, the legacy camera path and all HA Assist pipelines remain untouched.
+
+
 ## 0.3.34 — native tablet voice and Bluetooth multiroom as sole conversation transport
 - Authenticated, TAFA-owned REST endpoints receive native microphone settings and return per-room audio; stored legacy HA room/device pairings are read-only imported on first run.
 - Per-device HA setting followup_limit=0..100 or -1 (unlimited until silence) replaces the fixed Android app cap.
