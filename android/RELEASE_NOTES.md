@@ -1,15 +1,14 @@
-# TAFA Device Bridge 1.1.0
+# TAFA Device Bridge 1.2.0
 
-- Preserve the original streaming error across decoder/playback threads so HTTP and format errors cannot become a generic decoder failure.
+- Status now offers Connect, Speak now, Start wakeword, Start camera and End conversation directly at the top, with a responsive button layout.
+- Every question requires a fresh wakeword by default, including upgrades. Optionally choose 1–10 additional questions under Settings → Native Assist.
+- The local limit is a hard ceiling. Home Assistant may reduce it, but unlimited server-side follow-ups cannot override it.
+- Changing the local limit, ending the conversation or muting cancels queued follow-up recordings. The limit is checked again before opening the microphone.
+- Speak now can start native Assist directly after the model, connection, permission and HA mute checks. No dashboard is required.
+- Updated German and English setup guidance.
 
-The native app now has three focused tabs:
+Example: a limit of 1 allows the original question plus one follow-up. Silence, an error or the exhausted limit returns to local wakeword detection. Background sounds can still be mistaken for speech during an explicitly enabled follow-up; use the wakeword-only default in noisy rooms. End conversation leaves local wakeword detection running. To release the microphone, stop or mute the wakeword service.
 
-- **Status** – information only: HA, Bluetooth, current player/Assist/wakeword state, keepalive, camera, motion state and battery.
-- **Connect** – discover/configure Home Assistant and the dedicated room user's token; connection errors appear here.
-- **Settings** – all controls in one place: player, Echo Bluetooth, silent keepalive, wakeword/Vosk model, microphone/Assist, display permission, camera lens, frame interval, motion detection, start/stop, help and diagnostics.
+**Signed update:** TAFA-Device-Bridge-1.2.0.apk uses the existing certificate and application ID de.jarvis.audio, version code 21. Install over the current app to retain credentials, preferences and device identity.
 
-The separate local camera preview/test screen is removed from normal operation. Opt-in camera streaming still requires explicit user start and is shown as a foreground notification opening Settings. Frame-based movement continues to be exposed as a TAFA Home Assistant motion binary sensor while motion reporting is enabled and recent frames exist. The toggle takes effect during streaming.
-
-Native Assist, unlimited follow-ups, automatic Bluetooth keepalive recovery, encrypted credentials and stable device identity are retained. No HA automations are created or changed.
-
-**Signed release:** TAFA-Device-Bridge-1.1.0.apk is signed with the existing certificate. Unchanged de.jarvis.audio application ID, version code **20**. Install over the existing app to preserve encrypted credentials and device identity. Real Echo/tablet testing remains outstanding.
+Validation: 45 JVM tests; Android lint without errors; German/English UI smoke tests on phone and tablet emulator layouts. Real Echo/tablet audio and camera testing remains outstanding.

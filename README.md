@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and use the existing **TAFA Device Bridge 1.1.0** on your Android device. The native Android application is distributed separately as a signed APK.
+**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and use the existing **TAFA Device Bridge 1.2.0** on your Android device. The native Android application is distributed separately as a signed APK.
 
 **English** | [Deutsch](README.de.md)
 
@@ -30,7 +30,7 @@ Run as root in an interactive **Proxmox host shell**. Choose the CT ID, storage,
 3. Install and start **TAFA**, then open its built-in Control Center (Ingress).
 4. TAFA stages **one** Home Assistant integration at `custom_components/tablet_assist_for_alexa`. Restart Home Assistant once to discover the new component.
 5. **Before starting the App**, select `speech_mode=local` (CPU Piper/Whisper bundled) or `speech_mode=external` with `external_piper_base=http://PROXMOX-IP:5000` in App Configuration. External mode skips all bundled CPU models. Then add Proxmox Wyoming STT (`PROXMOX-IP:10300`) in HA, select it in Apps → TAFA → Configuration, and create an Assist pipeline. Local mode retains automatic **TAFA Lokal** pipeline creation.
-6. Connect [TAFA Device Bridge 1.1.0](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
+6. Connect [TAFA Device Bridge 1.2.0](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
 
 [Full installation guide](docs/en/app.md) · [Multiroom guide](homeassistant/examples/MULTIROOM.md) · [Android instructions](android/README.md)
 
@@ -110,6 +110,6 @@ TAFA Dashboard is now the default HA integration sidebar panel, based on the por
 
 **TAFA App 0.3.33 / integration 0.4.18:** The TAFA entry in the native dashboard navigation now renders voice service management in place, retaining dashboard navigation and visual styling. Status, devices, Alexa announcements, sources and learning use the same card and accent system. A standalone voice view remains available at `/tablet_assist_for_alexa?view=voice`. No automation migration is required.
 
-**TAFA App 0.3.34 / HA 0.4.19 / Android 1.0.2:** The only conversation route is native Android foreground capture (screen off supported) → HA Assist TAFA Lokal → tablet Bluetooth multiroom. No browser microphone or legacy input_text playback. Set 0–100 or unlimited follow-up turns per device in Dashboard → TAFA → Devices; the dashboard mic icon mutes/unmutes the native recorder and prompts for a room where multiple tablets exist. Old HA pairing data is imported read-only. Existing Android installation upgrades need the matching signing key.
+**TAFA App 0.3.34 / HA 0.4.19 / Android 1.0.2:** The only conversation route is native Android foreground capture (screen off supported) → HA Assist TAFA Lokal → tablet Bluetooth multiroom. No browser microphone or legacy input_text playback. Android 1.2.0 defaults to a wakeword for every question and allows a local hard ceiling of 1–10 follow-ups in Settings → Native Assist; HA's per-device followup_limit may reduce that ceiling; the dashboard mic icon mutes/unmutes the native recorder and prompts for a room where multiple tablets exist. Old HA pairing data is imported read-only. Existing Android installation upgrades need the matching signing key.
 
 **TAFA 0.3.35 / HA 0.4.20:** While legacy Jarvis continues to own the camera integration during native audio migration, TAFA loads only STT/TTS/conversation platforms plus its independent audio/wake APIs, avoiding duplicate orphan camera/motion entities. Restart HA Core after upgrading.

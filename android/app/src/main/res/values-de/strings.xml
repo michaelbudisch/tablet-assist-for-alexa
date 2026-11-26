@@ -164,7 +164,7 @@
     <string name="app_version">Version %1$s · Build %2$d</string>
     <string name="wake_label">OPTIONAL / SPRACH-EXPERIMENT</string>
     <string name="wake_title">Native Rufworterkennung</string>
-    <string name="wake_description">Die Rufworterkennung läuft auch bei ausgeschaltetem Tablet-Bildschirm. Danach wird deine Sprache direkt an Home Assistant übertragen. Anschlussfragen unter TAFA Dashboard → TAFA → Geräte einstellen.</string>
+    <string name="wake_description">Die Rufworterkennung läuft auch bei ausgeschaltetem Tablet-Bildschirm. Danach wird deine Sprache direkt an Home Assistant übertragen. Das lokale Folgefragen-Limit legst du unter Einstellungen → Native Assist fest.</string>
     <string name="wake_privacy">Optionales deutsches Modell (~45 MB). Einmal auf diesem Gerät herunterladen. Die Erkennungs-Audiodaten bleiben lokal. Vorher die Rufworterkennung im Dashboard abschalten; Alexa kann zugleich einen Echo auslösen.</string>
     <string name="wake_select">Rufwort wählen</string>
     <string name="wake_install">Deutsches Offline-Modell laden (~45 MB)</string>
@@ -234,7 +234,7 @@
     <string name="native_assist_test">Native Frage ohne Rufwort testen</string>
     <string name="native_assist_inactive">Native Spracheingabe ausgeschaltet</string>
     <string name="native_assist_requirements">Bluetooth-Player starten, Tablet in TAFA einem HA-Raum zuordnen und native Rufworterkennung starten.</string>
-    <string name="native_assist_privacy">Sprache geht erst nach einem Rufwort oder manuellen Test an deinen Home Assistant und wird nicht gespeichert. Zum Beenden den Rufwort-Dienst stummschalten oder stoppen.</string>
+    <string name="native_assist_privacy">Sprache wird nach dem Rufwort, Jetzt sprechen oder einer ausdrücklich erlaubten Folgefrage (höchstens bis zum lokalen Limit) an dein Home Assistant gesendet. Es werden keine Aufnahmen gespeichert. Gespräch beenden kehrt zur lokalen Rufwort-Erkennung zurück. Stoppen oder Stummschalten des Rufwort-Dienstes gibt das Mikrofon frei.</string>
     <string name="native_state_ready">Bereit für Hey Jarvis</string>
     <string name="native_state_connecting">Verbinde mit Home Assistant …</string>
     <string name="native_state_followup">Warte auf Anschlussfrage …</string>
@@ -254,7 +254,7 @@
     <string name="nav_settings">Einstellungen</string>
     <string name="section_settings_title">Alles an einem Ort</string>
     <string name="section_settings_description">Sprache, Bluetooth, Mikrofon, Display und Kamera für dieses Tablet.</string>
-    <string name="section_status_description">Live-Verbindung und aktueller Sprach-/Kamerastatus – keine Einstellungen.</string>
+    <string name="section_status_description">Verbindung, Sprache und Kamera im Blick. Häufige Aktionen direkt starten.</string>
     <string name="section_connection_description">Home Assistant suchen, Adresse und Raumnutzer-Token einrichten.</string>
     <string name="settings_audio_group">AUDIO &amp; BLUETOOTH</string>
     <string name="settings_audio_title">Echo &amp; Audioplayer</string>
@@ -272,4 +272,16 @@
     <string name="status_motion_description">Bewegungssensor: nur mit aktiver Kamera verfügbar</string>
     <string name="status_motion_on">Bewegungserkennung eingeschaltet (HA-Sensor bei Bildübertragung verfügbar)</string>
     <string name="status_motion_off">Bewegungserkennung ausgeschaltet</string>
+    <string name="quick_connect">Verbinden</string>
+    <string name="quick_connect_help">Verwendet deine gespeicherte Home-Assistant-Verbindung. Fehlende Angaben ergänzt du unter Verbinden.</string>
+    <string name="quick_speak">Jetzt sprechen</string>
+    <string name="quick_wake">Rufwort starten</string>
+    <string name="quick_camera">Kamera starten</string>
+    <string name="quick_end_conversation">Gespräch beenden</string>
+    <string name="quick_speech_help">Jetzt sprechen startet eine Frage ohne Rufwort. Rufwort starten lauscht lokal auf das Rufwort. Gespräch beenden kehrt zur Rufwort-Erkennung zurück; zum Abschalten des Mikrofons in Home Assistant stummschalten oder den Rufwort-Dienst stoppen.</string>
+    <string name="quick_microphone_muted">Das Mikrofon ist in Home Assistant stummgeschaltet. Hebe die Stummschaltung für dieses Gerät dort zuerst auf.</string>
+    <string name="followup_limit_label">Fragen ohne erneutes Rufwort</string>
+    <string name="followup_wakeword_only">Rufwort für jede Frage (Standard)</string>
+    <string name="followup_limit_help">Standard: Nach jeder Antwort ist das Rufwort erneut nötig. Optional sind 1–10 zusätzliche Fragen pro Gespräch möglich. Stille, ein Fehler oder das erreichte Limit beenden das Gespräch. Dieses lokale Höchstlimit gilt auch ohne Dashboard; Home Assistant darf es reduzieren. Während einer offenen Folgefrage können Hintergrundgeräusche weiterhin als Sprache fehlinterpretiert werden.</string>
+    <plurals name="followup_count"><item quantity="one">1 zusätzliche Frage</item><item quantity="other">%d zusätzliche Fragen</item></plurals>
 </resources>

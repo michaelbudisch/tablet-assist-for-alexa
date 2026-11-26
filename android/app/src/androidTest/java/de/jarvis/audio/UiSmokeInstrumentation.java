@@ -69,6 +69,17 @@ public class UiSmokeInstrumentation extends Instrumentation {
                         "Camera controls are included in Settings");
                 check(german.findViewById(R.id.display_permission).getVisibility()==View.VISIBLE,
                         "Display permission is included in Settings");
+                Spinner followups=german.findViewById(R.id.native_followup_limit);
+                check(followups.getAdapter().getCount()==11,"Wakeword only plus 1–10 follow-ups");
+                check(followups.getSelectedItemPosition()==0,"Every question requires wakeword by default");
+                followups.setSelection(3);
+                german.findViewById(R.id.nav_status).performClick();
+                check(german.findViewById(R.id.status_connect).isShown(),"Status offers Connect");
+                check(german.findViewById(R.id.status_speak).isShown(),"Status offers Speak now");
+                check(german.findViewById(R.id.status_wake).isShown(),"Status offers wakeword start");
+                german.findViewById(R.id.status_connect).performClick();
+                check(german.findViewById(R.id.section_connection).isShown(),"Missing credentials open Connect");
+                check(!AudioService.running&&!WakeWordService.running,"Invalid quick connection starts no services");
                 german.findViewById(R.id.nav_connection).performClick();
                 int orientation = ((LinearLayout) german.findViewById(R.id.columns)).getOrientation();
                 check(orientation == (layout.equals("tablet") ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL), "Responsive layout");
@@ -98,6 +109,11 @@ public class UiSmokeInstrumentation extends Instrumentation {
             Activity english = screen;
             runOnMainSync(() -> {
                 check(english.getString(R.string.player_start).equals("Start player"), "English resources");
+                check(((Spinner)english.findViewById(R.id.native_followup_limit)).getSelectedItemPosition()==3,
+                        "Local follow-up ceiling survives language change");
+                check(english.getSharedPreferences(MainActivity.PREF,0).getInt(FollowupPolicy.LOCAL_LIMIT,0)==3,
+                        "Local follow-up selection persists independently of HA");
+                ((Spinner)english.findViewById(R.id.native_followup_limit)).setSelection(0);
                 check(english.findViewById(R.id.section_settings).getVisibility() == View.VISIBLE, "Selected tab survives language change");
                 check(english.findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE, "Settings remain visible after recreation");
                 check(((EditText) english.findViewById(R.id.token)).getText().toString().equals("header.payload.test-signature"), "Language change retains unsaved token in memory");
@@ -136,9 +152,10 @@ public class UiSmokeInstrumentation extends Instrumentation {
                         "Motion detection switch is in Settings");
                 english.findViewById(R.id.nav_status).performClick();
                 check(english.findViewById(R.id.section_settings).getVisibility()==View.GONE,
-                        "Status is a read-only information panel");
+                        "Status hides Settings");
             });
-            result.putString("stream", "UI smoke passed: TAFA branding, navigation, disclosure/recreation, DE/EN, responsive layout, HTTP consent, transient token, keepalive opt-in and no-Bluetooth cleanup.\n");
+            screenshot(english,"en-"+layout+"-status");
+            result.putString("stream", "UI smoke passed: status quick actions, wakeword-only default, bounded follow-up settings, TAFA branding, navigation, disclosure/recreation, DE/EN, responsive layout, HTTP consent, transient token, keepalive opt-in and no-Bluetooth cleanup.\n");
             finish(Activity.RESULT_OK, result);
         } catch (Throwable error) {
             result.putString("stream", "UI SMOKE FAILED: " + error + "\n");
