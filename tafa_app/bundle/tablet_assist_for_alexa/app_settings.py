@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from .config_flow import CHOICES, origin, room_map
 from .const import DOMAIN
 from .sources import SOURCES
+from .web_search import validate_local_search_origin
 
 COMMAND = DOMAIN + "/sync_app_configuration"
 APP_MANAGED_MARKER = ".tafa-managed.json"
@@ -77,6 +78,16 @@ def parse_settings(raw, registry):
         if not isinstance(entity, str) or not re.fullmatch(SOURCES[key] + r"\.[a-z0-9_]+", entity):
             raise ValueError("Invalid data source entity")
     result["sources"] = sources
+    result["search_base"] = validate_local_search_origin(raw.get("search_base", "") or "")
+    family = {}
+    for raw_key, option_key in (("family_name_man", "name_man"),
+                                ("family_name_woman", "name_woman"),
+                                ("family_name_child", "name_child")):
+        value = raw.get(raw_key, "") or ""
+        if not isinstance(value, str) or len(value) > 40 or any(ord(ch) < 32 for ch in value):
+            raise ValueError("Invalid family name")
+        family[option_key] = value.strip()
+    result["family_names"] = family
     room = raw.get("reminder_room", "")
     if not isinstance(room, str) or (room and room not in rooms):
         raise ValueError("Reminder room missing from Alexa rooms")
@@ -102,6 +113,15 @@ def merge_settings(entry, values, registry):
     # Existing advanced configuration is retained during the first migration
     # when its newly-added App fields still hold empty defaults.
     for key, value in values.items():
+        if key == "family_names":
+            original = previous.get("proactive_settings", {})
+            profile = dict(original) if isinstance(original, dict) else {}
+            for name, text in value.items():
+                # Empty new App defaults must never erase existing users' names.
+                if text or not profile.get(name):
+                    profile[name] = text
+            result["proactive_settings"] = profile
+            continue
         if first_sync and key in {
             "cpu_stt", "gpu_stt", "gpu_stt_host", "llm_agent", "reminder_room"
         } and not value and previous.get(key):
