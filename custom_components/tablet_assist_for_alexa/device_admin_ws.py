@@ -64,6 +64,26 @@ async def perform_device_admin(hass, user, msg):
         await controller.handle(user, "delete", identifier, {})
         cleanup_tablet(hass, identifier)
         return {"device_id": identifier, "removed": True}
+    if action == "migrate_legacy_vision":
+        # One-time, opt-in config-entry transfer before deleting the old
+        # integration. No network or model changes, no secrets, no agent swap.
+        legacy = hass.config_entries.async_entries("jarvis_tablet_audio")
+        current = hass.config_entries.async_entries(DOMAIN)
+        if len(legacy) != 1 or len(current) != 1:
+            raise ValueError("Expected one old and one new integration")
+        from .relay.relay_models import VISION_MODELS, KEEP_ALIVE, CONTEXTS
+        allowed = {"vision_model": VISION_MODELS,
+                   "model_keep_alive": KEEP_ALIVE,
+                   "model_num_ctx": CONTEXTS}
+        values = {}
+        for name, choices in allowed.items():
+            value = legacy[0].options.get(name)
+            if name not in current[0].options and type(value) in (str, int) and value in choices:
+                values[name] = value
+        if values:
+            hass.config_entries.async_update_entry(
+                current[0], options={**current[0].options, **values})
+        return {"migrated": bool(values), "fields": sorted(values)}
     if action == "camera_diagnostics":
         # Read-only administrator troubleshooting; no user IDs or tokens
         # in the response. Never alter room, pairing or camera consent here.
@@ -219,7 +239,7 @@ async def perform_device_admin(hass, user, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): COMMAND,
-    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera", "camera_setup", "camera_diagnostics",
+    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera", "camera_setup", "camera_diagnostics", "migrate_legacy_vision",
                         "unpair", "delete_device", "delete_room")),
     vol.Optional("room"): str,
     vol.Optional("user_id"): str,

@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.52 — explicit vision preference migration before legacy removal
+
+- Administrator one-shot `migrate_legacy_vision` copies valid saved Qwen-Vision model, keep-alive and context values from the old Jarvis Tablet Audio config entry to TAFA once, without overwriting newer TAFA settings.
+- Does not require a running GPU worker or an Ollama conversation integration. Does not change camera ownership, active audio sessions or automations.
+
+
 ## 0.3.51 — migration pairing diagnostics
 
 - Admin-only `camera_diagnostics` one-shot WebSocket command reports whether an enrolled tablet has a valid active owner and which audio room is assigned, without exposing user IDs or access credentials.
