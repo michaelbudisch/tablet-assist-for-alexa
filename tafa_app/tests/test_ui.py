@@ -47,7 +47,13 @@ class Tests(unittest.TestCase):
    self.assertIn("Alexa",body)
    self.assertIn("waiting_for_home_assistant",body)
    self.assertEqual(headers.get("X-Content-Type-Options"),"nosniff")
-   self.assertIn("frame-ancestors 'self'",headers.get("Content-Security-Policy"))
+   policy=headers.get("Content-Security-Policy")
+   self.assertIn("frame-ancestors 'self'",policy)
+   self.assertIn("connect-src 'self'",policy)
+   self.assertIn("default-src 'none'",policy)
+   self.assertIn("script-src 'self'",policy)
+   self.assertNotIn("connect-src *",policy)
+   self.assertNotIn("connect-src https:",policy)
    code,body,_=self.get("/?lang=en")
    self.assertEqual(code,200)
    self.assertIn("Getting started",body)
@@ -58,6 +64,9 @@ class Tests(unittest.TestCase):
    self.assertEqual(code,200)
    self.assertIn('"status":"tls_ok"',body)
    probe.assert_called_once()
+   # JSON endpoints remain same-origin, authenticated and do not
+   # loosen the browser's page policy.
+   self.assertEqual(self.get("/?tab=connections")[0],200)
   code,_=self.post({"csrf":server.CSRF,"action":"connection_probe",
                     "field":"secret_token","value":"https://example.org"})
   self.assertEqual(code,400)
