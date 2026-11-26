@@ -99,7 +99,7 @@ class RoomAudioAdminView(HomeAssistantView):
             raise web.HTTPBadRequest()
         try:
             body = await request.json()
-            if not isinstance(body, dict) or body.get("action") not in ("list", "pair", "camera", "test"):
+            if not isinstance(body, dict) or body.get("action") not in ("list", "create", "pair", "camera", "test"):
                 raise ValueError("Invalid action")
             data = hass.data.get(DOMAIN, {})
             transport = data.get(KEY)
@@ -129,6 +129,31 @@ class RoomAudioAdminView(HomeAssistantView):
                     "rooms": paired,
                     "devices": devices,
                 }, headers={"Cache-Control": "no-store"})
+
+            if body["action"] == "create":
+                # Fresh installation: authorize the room before the tablet
+                # registers. Provisioning never requires an existing device.
+                room = body.get("room")
+                principal = body.get("user_id")
+                if (not isinstance(room, str)
+                        or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", room)
+                        or not isinstance(principal, str)
+                        or not 1 <= len(principal) <= 128):
+                    raise ValueError("Invalid room or user ID")
+                user_for_room = await hass.auth.async_get_user(principal)
+                if (not user_for_room or not user_for_room.is_active
+                        or user_for_room.is_admin or user_for_room.system_generated):
+                    raise ValueError("Choose a dedicated active non-admin Home Assistant user")
+                if room in transport.rooms:
+                    raise ValueError("Room already exists; use tablet pairing to link a device")
+                if any(owner == principal for owner in transport.rooms.values()):
+                    raise ValueError("Home Assistant user is already assigned to another room")
+                # The existing transport enforces the overall room limit.
+                transport.provision(room, principal)
+                await data["room_audio_save"]()
+                return web.json_response(
+                    {"room": room, "user_id": principal, "created": True},
+                    headers={"Cache-Control": "no-store"})
 
             if body["action"] == "test":
                 # Administrator explicitly tests one currently paired Android
