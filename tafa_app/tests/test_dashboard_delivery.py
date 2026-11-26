@@ -119,7 +119,7 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('document.createElement("tafa-integrated-dashboard")',panel)
         self.assertIn('document.createElement("tablet-assist-voice-tools")',panel)
         self.assertIn('type:"tablet_assist_for_alexa/dashboard/set"',panel)
-        self.assertIn("dashboard.js?v=0.4.31-native-mic-ack",panel)
+        self.assertIn("dashboard.js?v=0.4.31-native-mic-threeway",panel)
         dashboard=(HA/"frontend/dashboard.js").read_text()
         self.assertIn("./dashboard_model.js?v=0.4.20",dashboard)
         self.assertIn("tafa-open-voice-tools",dashboard)
@@ -155,7 +155,10 @@ class DashboardDelivery(unittest.TestCase):
 
     def test_dashboard_microphone_is_native_websocket_backed(self):
         dashboard=(HA/"frontend/dashboard.js").read_text()
-        self.assertIn('action:"configure",device_id:selected.device_id,settings:{muted:!selected.muted}',dashboard)
+        self.assertIn('action:"configure",device_id:selected.device_id,settings',dashboard)
+        self.assertIn('voice_mode:next==="off"?"continuous":next',dashboard)
+        self.assertIn('this.micNext(this.micMode(selected))',dashboard)
+        self.assertIn('this.micModeText(mode,de)',dashboard)
         self.assertIn('control?.pending',dashboard)
         self.assertIn('Nicht von App bestätigt',dashboard)
         self.assertIn('Date.now()-requested',dashboard)
