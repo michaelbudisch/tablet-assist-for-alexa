@@ -9,6 +9,7 @@ from homeassistant.helpers import intent
 
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN, settings
+from .local_intents import classify
 START = {"gespräch starten", "gespraech starten", "gesprächsmodus starten", "lass uns reden", "gespräch beginnen"}
 STOP = {"gespräch beenden", "gespraech beenden", "gesprächsmodus beenden", "stop", "stopp", "auf wiedersehen", "danke das war alles", "danke das reicht"}
 TIMEOUT = 90
@@ -122,9 +123,35 @@ class JarvisConversation(conversation.ConversationEntity):
     def supported_languages(self):
         return ["de", "de-DE"]
 
+    def _announce_response(self, user_input, message):
+        """Short-lived HA event for authorized dashboards, including native Android Assist.
+
+        The entity mapping is shared with voice queries. No household IDs are
+        hard-coded into the distributable dashboard; the frontend only reads
+        configured, permission-checked Home Assistant states.
+        """
+        if not isinstance(message, str) or not message.strip():
+            return
+        try:
+            text = str(user_input.text or "")[:240]
+            topic = classify(text)
+            category = topic if topic not in (None, "ambiguous", "bring_list") else "knowledge"
+            sources = dict(self._local_data.sources)
+            self.hass.bus.async_fire(
+                "tafa_assist_response",
+                {"question": text, "reply": message[:1800], "topic": category,
+                 "user_id": getattr(user_input.context, "user_id", None),
+                 "device_id": user_input.device_id or "",
+                 "sources": sources},
+                context=user_input.context,
+            )
+        except Exception:
+            _LOGGER.debug("TAFA dashboard response event could not be emitted", exc_info=True)
+
     def _reply(self, user_input, chat_log, message, keep=False):
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(message)
+        self._announce_response(user_input, message)
         chat_log.async_add_assistant_content_without_tools(
             conversation.AssistantContent(agent_id=self.entity_id, content=message)
         )
@@ -354,6 +381,12 @@ class JarvisConversation(conversation.ConversationEntity):
         keep = self._continue(key, active, mode, eligible)
         # Native clients may reopen a short, visible listening window.
         # No microphone capture is initiated from this server integration.
+        try:
+            speech = result.response.as_dict().get("speech", {}).get("plain", {}).get("speech", "")
+            if isinstance(speech, str):
+                self._announce_response(user_input, speech)
+        except Exception:
+            _LOGGER.debug("TAFA LLM visual response unavailable", exc_info=True)
         return conversation.ConversationResult(
             response=result.response, conversation_id=chat_log.conversation_id,
             continue_conversation=keep,
