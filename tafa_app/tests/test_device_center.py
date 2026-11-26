@@ -71,8 +71,9 @@ class DeviceCenterTests(unittest.TestCase):
             "error": "", "room_error": ""})
         self.assertIn("Neuen Raum anlegen", page)
         self.assertIn("Nicht-Admin-Benutzer", page)
-        self.assertIn("Zuerst einen eigenen", page)
-        self.assertNotIn('name="action" value="room_create"', page)
+        self.assertIn("Noch kein Nicht-Admin-Benutzer", page)
+        self.assertIn('name="action" value="room_create"', page)
+        self.assertIn('type="submit" disabled', page)
 
     def test_reject_invalid_room_name(self):
         for room in ("BÜRO", "../bad", "", "q"*65):
