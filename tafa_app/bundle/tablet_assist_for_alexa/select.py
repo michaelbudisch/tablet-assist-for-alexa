@@ -30,6 +30,33 @@ class TabletMicMode(TabletMixin, SelectEntity):
             raise ValueError("Unknown microphone mode")
         await self.controller.set_value(self.device_id, "voice_mode", self._mapping[option])
 
+class TabletFollowupLimit(TabletMixin, SelectEntity):
+    """Additional native questions without wakeword, configured per tablet."""
+    _mapping = {"App-Einstellung": -1, "Aus": 0, "1": 1, "2": 2,
+                "3": 3, "5": 5, "10": 10, "20": 20, "50": 50, "100": 100}
+
+    def __init__(self, controller, device_id):
+        super().__init__(controller, device_id, "followup_limit", "Anschlussfragen (HA-Grenze)")
+        self._attr_icon = "mdi:comment-multiple-outline"
+        saved = controller.devices.get(device_id, {}).get("followup_limit", -1)
+        self._attr_options = list(self._mapping)
+        if isinstance(saved, int) and 0 <= saved <= 100 and str(saved) not in self._attr_options:
+            self._attr_options.append(str(saved))
+
+    @property
+    def current_option(self):
+        value = self.controller.devices.get(self.device_id, {}).get("followup_limit", -1)
+        return "App-Einstellung" if value == -1 else str(value)
+
+    async def async_select_option(self, option):
+        if option not in self._attr_options:
+            raise ValueError("Unknown follow-up limit")
+        value = self._mapping.get(option)
+        if value is None:
+            value = int(option)
+        await self.controller.set_value(self.device_id, "followup_limit", value)
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     setup_tablets(hass, entry, async_add_entities,
-                  lambda controller, device: [TabletWakeword(controller, device), TabletMicMode(controller, device)])
+                  lambda controller, device: [TabletWakeword(controller, device), TabletMicMode(controller, device), TabletFollowupLimit(controller, device)])

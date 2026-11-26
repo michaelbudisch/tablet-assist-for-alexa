@@ -18,6 +18,7 @@ KEY = "wake_devices_dynamic"
 SIGNAL = DOMAIN + "_tablet_changed"
 REGISTERED_SIGNAL = DOMAIN + "_tablet_registered"
 REMOVED_SIGNAL = DOMAIN + "_tablet_removed"
+SETTINGS_SIGNAL = DOMAIN + "_tablet_settings_changed"
 DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
@@ -93,6 +94,14 @@ class WakeDevices:
         if registered:
             async_dispatcher_send(self.hass, REGISTERED_SIGNAL, identifier)
 
+    def settings_changed(self, identifier):
+        """Signal authenticated per-device WS subscribers only for config writes.
+
+        Telemetry and last-seen updates must not create control events.
+        The subscription checks device ownership before emitting data.
+        """
+        async_dispatcher_send(self.hass, SETTINGS_SIGNAL, identifier)
+
     @staticmethod
     def clean_settings(updates):
         if not isinstance(updates, dict) or not updates or len(updates) > 12:
@@ -122,6 +131,7 @@ class WakeDevices:
             self.devices[identifier].update(changes)
             await self.save()
             self.changed(identifier)
+            self.settings_changed(identifier)
 
     async def save(self):
         await self.store.async_save({"devices": self.devices})
@@ -161,6 +171,7 @@ class WakeDevices:
                 device.update(cleaned)
                 await self.save()
                 self.changed(identifier)
+                self.settings_changed(identifier)
                 return {"device": self.public(device)}
             if action == "delete":
                 # Only the administrator can remove an enrolled installation.
