@@ -62,7 +62,7 @@ SOURCE_LABELS = {
 # Validate units before proposing a mapping. Name similarity only changes sort order.
 UNITS = {
     "vorlauf": ("°C",), "ruecklauf": ("°C",), "spreizung": ("K", "°C"),
-    "heizoel": ("L", "l", "Liter", "m³"), "oelverbrauch": ("L", "l", "Liter", "m³"),
+    "heizoel": ("L", "l", "Liter"), "oelverbrauch": ("L", "l", "Liter"),
     "preis": ("ct/kWh", "¢/kWh", "Cent/kWh", "EUR/kWh", "€/kWh"),
     "guenstig": ("ct/kWh", "¢/kWh", "Cent/kWh", "EUR/kWh", "€/kWh"),
     "netz": ("W", "kW"), "solar": ("W", "kW"),
@@ -279,3 +279,61 @@ def render_feature_center(options, lang, csrf, entities, can_read, active=None):
                                 "JSON is reserved for export, import and troubleshooting. TAFA stores mappings internally.")
         + '</p><pre class="feature-json">' + _esc(json.dumps(assigned, ensure_ascii=False, indent=2)) + '</pre></details>'
     )
+
+
+def _dashboard_command(token, command, config=None):
+    """Use existing admin-authenticated HA WebSocket; do not touch Lovelace files."""
+    if not token:
+        raise RuntimeError("TAFA Home Assistant connection unavailable")
+    from websockets.sync.client import connect
+    with connect("ws://supervisor/core/websocket", open_timeout=6, close_timeout=2) as ws:
+        hello = json.loads(ws.recv(timeout=8))
+        if hello.get("type") != "auth_required":
+            raise RuntimeError("HA WebSocket unavailable")
+        ws.send(json.dumps({"type": "auth", "access_token": token}))
+        if json.loads(ws.recv(timeout=8)).get("type") != "auth_ok":
+            raise RuntimeError("HA WebSocket authorization failed")
+        payload = {"id": 1, "type": "tablet_assist_for_alexa/dashboard/" + command}
+        if config is not None:
+            payload["config"] = config
+        ws.send(json.dumps(payload))
+        while True:
+            reply = json.loads(ws.recv(timeout=10))
+            if reply.get("id") != 1:
+                continue
+            if not reply.get("success"):
+                raise RuntimeError("TAFA dashboard not available; install or restart TAFA first")
+            return reply.get("result") or {}
+
+
+def active_dashboard_modules(token):
+    try:
+        result = _dashboard_command(token, "get")
+        cfg = result.get("config")
+        if not isinstance(cfg, dict):
+            raise ValueError("Invalid dashboard response")
+        modules = cfg.get("modules", [])
+        return modules if isinstance(modules, list) else []
+    except (RuntimeError, OSError, ValueError, TimeoutError, KeyError):
+        return []
+
+
+def add_dashboard_module(token, feature_id):
+    """Add just one existing, known module; never reset tiles or mappings."""
+    feature = BY_FEATURE.get(feature_id)
+    if feature is None or feature[6] not in MODULES:
+        raise ValueError("Unknown TAFA module")
+    data = _dashboard_command(token, "get")
+    cfg = data.get("config")
+    if not isinstance(cfg, dict) or not isinstance(cfg.get("modules"), list):
+        raise RuntimeError("TAFA dashboard configuration not available")
+    name = feature[6]
+    if name in cfg["modules"]:
+        return False
+    if len(cfg["modules"]) >= len(MODULES):
+        raise ValueError("Dashboard already has all available modules")
+    # Copy only modules; do not rewrite the user's bindings/presentation/layout.
+    updated = dict(cfg)
+    updated["modules"] = [*cfg["modules"], name]
+    _dashboard_command(token, "set", updated)
+    return True
