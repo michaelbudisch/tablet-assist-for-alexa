@@ -1,6 +1,6 @@
 /* TAFA Dashboard: built-in, cross-device, admin-configurable Home Assistant panel. */
-import "./dashboard.js?v=0.4.14";
-import "./voice_tools.js?v=0.4.14";
+import "./dashboard.js?v=0.4.15";
+import "./voice_tools.js?v=0.4.15";
 const DEFAULT={type:"custom:tafa-home-dashboard",version:1,title:"TAFA Dashboard",
   language:"auto",theme:"dark",accent:"teal",density:"comfortable",gridSign:"import",
   modules:["weather","lights","energy","ev","heating","heatpump","fuel",
@@ -91,7 +91,7 @@ class TabletAssistPanel extends HTMLElement {
     const bar=document.createElement("div");bar.className="toolbar";
     const brand=document.createElement("div");brand.className="brand";
     const img=document.createElement("img");img.alt="";
-    img.src="/tablet_assist_for_alexa/brand.svg?v=0.4.14";
+    img.src="/tablet_assist_for_alexa/brand.svg?v=0.4.15";
     const name=document.createElement("span");name.textContent="TAFA Dashboard";
     brand.append(img,name);bar.append(brand);
     const controls=document.createElement("div");controls.className="controls";

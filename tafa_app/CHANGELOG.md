@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.30 — Dashboard-only initial HA configuration
+- New HA integration 0.4.15 allows an explicit dashboard-only first setup without a reachable Piper /health endpoint. Normal voice setup continues to require a healthy Piper service.
+- TAFA Dashboard and its admin-controlled HA storage mappings can now be initialized while the separate Proxmox/CPU speech server is configured later.
+- No existing automations or Jarvis Assist pipelines are changed.
+
+
 ## 0.3.29 — built-in, portable TAFA Dashboard replaces the Voice Center landing
 - The real household dashboard was inspected via HA MCP. Instead of publishing its private 20-module Kiosk resources and site-specific entity IDs, the portable TAFA Home Dashboard v0.2 visual architecture (energy, solar, battery, EV, heating, heatpump, fuel, appliances, cameras, waste, shopping, weather, lights and Assist) now ships directly inside the HA custom integration.
 - HA integration 0.4.14 opens TAFA Dashboard as its default sidebar panel. The former Voice Center continues inside Dashboard → Sprachdienste, retaining its device controls, learning, room announcements and pairing tools.

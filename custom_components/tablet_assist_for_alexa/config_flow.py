@@ -68,6 +68,7 @@ def translated_select(key, options):
 def schema():
     return vol.Schema({
         vol.Required("piper_base", default="http://speechserver.local:5000"): str,
+        vol.Optional("dashboard_only", default=False): bool,
         vol.Optional("cpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
         vol.Optional("gpu_base", default=""): str,
         vol.Optional("gpu_stt"): selector.EntitySelector(selector.EntitySelectorConfig(domain="stt")),
@@ -125,7 +126,9 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         raise ValueError("Recursive conversation agent")
             except (ValueError, TypeError, KeyError):
                 errors["base"] = "invalid_configuration"
-            if not errors:
+            # Dashboard-only first install is explicitly selected; normal
+            # voice setup continues to require Piper /health readiness.
+            if not errors and not data.get("dashboard_only", False):
                 try:
                     session = async_get_clientsession(self.hass)
                     async with session.get(data["piper_base"] + "/health",

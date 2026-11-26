@@ -1,3 +1,6 @@
+## TAFA App 0.3.30 / integration 0.4.15 — dashboard-first setup
+- Explicit dashboard-only setup of the HA integration before a speech server is ready. Keep the normal Piper health requirement for voice-enabled setup and preserve all automations.
+
 ## TAFA App 0.3.29 / integration 0.4.14 — portable TAFA Dashboard as the integration panel
 - Ship a portable, modular, entity-bindable home dashboard based on the local TAFA Home preview and original Kiosk visual language, replacing the Voice Center landing in the sidebar. Existing voice-management features remain available in the Voice services subview.
 - Store admin-approved dashboard bindings across devices via Home Assistant Store; avoid publishing home-specific private entities or modifying automations and existing Jarvis dashboards.

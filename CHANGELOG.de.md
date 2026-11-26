@@ -1,5 +1,10 @@
 # Changelog
 
+## TAFA App 0.3.30 / Integration 0.4.15 — Dashboard ohne Piper installieren
+- Die HA-Ersteinrichtung kann jetzt mit der ausdrücklich ausgewählten Option dashboard_only abgeschlossen werden, auch wenn Piper aktuell nicht erreichbar ist. Die normale Spracheinrichtung benötigt weiterhin einen bereiten Piper-Dienst.
+- TAFA Dashboard kann sofort mit zentralen Gerätezuordnungen eingerichtet werden. Bestehende Automatisierungen bleiben unverändert.
+
+
 ## TAFA-App 0.3.29 / Integration 0.4.14 — das auslieferbare TAFA Dashboard
 - Deine lokale Kiosk-Version wurde als Referenz geprüft; ihre privaten Sensor-IDs und Jarvis-Dateien werden nicht veröffentlicht. Die portable, vom Original-Design abgeleitete TAFA-Home-Oberfläche ist direkt in die Integration eingebaut und öffnet sich jetzt standardmäßig statt der bisherigen TAFA Sprachzentrale.
 - Die Sprachzentrale ist als Unterbereich **Sprachdienste** erreichbar, inklusive Geräteverwaltung, Ansagen und Lernfunktionen. Keine Automatisierungen werden verändert.

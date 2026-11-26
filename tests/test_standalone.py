@@ -27,6 +27,8 @@ class Standalone(unittest.TestCase):
         manifest = json.loads((D / "manifest.json").read_text())
         self.assertIn("panel_custom", manifest["dependencies"])
         self.assertIn("frontend", manifest["dependencies"])
+        flow=(D / 'config_flow.py').read_text()
+        self.assertIn('dashboard_only',flow)
 
     def test_translation_parity(self):
         def shape(obj):

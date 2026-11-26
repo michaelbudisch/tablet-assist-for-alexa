@@ -99,3 +99,5 @@ Original project code: [MIT](LICENSE). External libraries, downloaded voice and 
 ## TAFA Dashboard (App 0.3.29 / integration 0.4.14)
 
 TAFA Dashboard is now the default HA integration sidebar panel, based on the portable TAFA Home design rather than copying private household-specific Kiosk scripts. It offers configurable lights, solar and energy, batteries, EV, heating, heat pumps, fuel, appliances, cameras, weather, waste, shopping and Assist. HA administrators manage visible modules and select entity bindings in **Configure dashboard**; Home Assistant persists them for all users and tablets. The prior Voice Center remains accessible as **Voice services**, with device controls and announcements intact. No user automations or legacy Jarvis resources are changed.
+
+**TAFA 0.3.30 / integration 0.4.15:** A dashboard-only option in the HA config flow supports first installing the portable dashboard even when the Piper backend is not yet reachable. Home Assistant stores its entity bindings centrally. Normal voice-enabled setup still checks Piper /health and can be completed later through approved Proxmox/GPU JSON imports.
