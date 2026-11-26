@@ -313,7 +313,14 @@ async def setup_room_audio(hass, entry):
             raise ServiceValidationError("Specify both quiet times as HH:MM, or leave both empty")
         if device and not dr.async_get(hass).async_get(device):
             raise ServiceValidationError("Unknown Home Assistant device ID")
-        return {"quiet_start": start, "quiet_end": end, "device_id": device, "camera_enabled": values.get("camera_enabled", False)}
+        paired = values.get("wake_device_id", "")
+        if paired and (not isinstance(paired, str) or not re.fullmatch(r"[a-f0-9]{32}", paired)):
+            raise ServiceValidationError("Invalid registered tablet binding")
+        result = {"quiet_start": start, "quiet_end": end, "device_id": device,
+                  "camera_enabled": values.get("camera_enabled", False)}
+        if paired:
+            result["wake_device_id"] = paired
+        return result
 
     async def service(call):
         action = call.data["action"]
