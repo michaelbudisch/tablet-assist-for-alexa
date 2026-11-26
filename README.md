@@ -1,3 +1,5 @@
+![TAFA — Local AI voice assistant for Home Assistant](docs/assets/tafa-readme-banner.webp)
+
 <p align="center">
   <img src="tafa_app/brand.svg" alt="TAFA" width="88">
 </p>
