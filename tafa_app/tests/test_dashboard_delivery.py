@@ -113,15 +113,23 @@ class DashboardDelivery(unittest.TestCase):
         self.assertNotIn('if legacy_present else PLATFORMS',src)
         self.assertIn('active_platforms',src)
         self.assertIn('async_unload_platforms(entry, active_platforms)',src)
-        for js in ["panel.js","dashboard.js","dashboard_model.js","voice_tools.js"]:
+        for js in ["panel.js","dashboard.js","dashboard_model.js","voice_tools.js","response_overlay.js"]:
             self.assertIn('"/tablet_assist_for_alexa/'+js+'"',src)
         panel=(HA/"frontend/panel.js").read_text()
         self.assertIn('document.createElement("tafa-integrated-dashboard")',panel)
         self.assertIn('document.createElement("tablet-assist-voice-tools")',panel)
         self.assertIn('type:"tablet_assist_for_alexa/dashboard/set"',panel)
-        self.assertIn("dashboard.js?v=0.4.31-native-mic-threeway",panel)
+        self.assertIn("dashboard.js?v=0.4.32-unified",panel)
         dashboard=(HA/"frontend/dashboard.js").read_text()
-        self.assertIn("./dashboard_model.js?v=0.4.20",dashboard)
+        self.assertIn("./dashboard_model.js?v=0.4.32",dashboard)
+        self.assertIn("installTafaResponseOverlay",dashboard)
+        self.assertIn("response_overlay.js?v=0.4.32",dashboard)
+        self.assertIn("data-presentation",dashboard)
+        overlay=(HA/"frontend/response_overlay.js").read_text()
+        self.assertIn("tafa_assist_response",overlay)
+        self.assertIn("data-source",overlay)
+        self.assertIn("tablet_assist_for_alexa/search",overlay)
+        self.assertIn("knowledgeMedia",overlay)
         self.assertIn("tafa-open-voice-tools",dashboard)
         # "TAFA" now stays in the native dashboard navigation, not in a
         # separate fullscreen page with an unrelated header.
@@ -167,6 +175,20 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('void this.refreshMic(true)',dashboard)
         self.assertNotIn('getUserMedia(',dashboard)
         self.assertNotIn('jarvis_tablet_audio/wake_devices',dashboard)
+
+    def test_optional_search_and_visual_response_contracts(self):
+        import ast
+        for name in ("web_search.py","local_data.py","conversation.py","dashboard_config.py"):
+            ast.parse((HA/name).read_text(), filename=name)
+            self.assertEqual((HA/name).read_text(),(APP/"bundle/tablet_assist_for_alexa"/name).read_text())
+        backend=(HA/"conversation.py").read_text()
+        self.assertIn('"tafa_assist_response"',backend)
+        self.assertIn("self._announce_response(user_input, speech, chat_log)",backend)
+        self.assertIn("search_command", (HA/"__init__.py").read_text())
+        self.assertIn('"search_base"', (HA/"app_settings.py").read_text())
+        self.assertIn("PRESENTATION_DEFAULTS", (HA/"dashboard_config.py").read_text())
+        self.assertIn('search_base: str',(APP/"config.yaml").read_text())
+        self.assertIn('family_name_child: str',(APP/"config.yaml").read_text())
 
     def test_version_and_docs_consistent(self):
         self.assertIn('version: "0.3.52"',(APP/"config.yaml").read_text())
