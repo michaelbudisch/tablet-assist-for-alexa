@@ -21,7 +21,7 @@ class ControlCenterLayoutTests(unittest.TestCase):
         opts.update(kw)
         return opts
 
-    def test_six_accessible_tabs_in_both_languages(self):
+    def test_seven_accessible_tabs_in_both_languages(self):
         configs=self.mock_view()
         with patch.object(server,"choose_speech_source",return_value=configs["choose_speech_source"]),\
              patch.object(server,"external_piper_ready",return_value=True),\
@@ -35,10 +35,14 @@ class ControlCenterLayoutTests(unittest.TestCase):
              patch.object(server,"recent_stt_backend",return_value=None):
             de=server.display(lang="de",default_tab="connections")
             en=server.display(lang="en",default_tab="setup")
-        self.assertEqual(de.count('role="tab"'),6)
-        self.assertEqual(de.count('role="tabpanel"'),6)
+        self.assertEqual(de.count('role="tab"'),7)
+        self.assertEqual(de.count('role="tabpanel"'),7)
         self.assertIn('data-default-tab="connections"',de)
         self.assertIn('data-default-tab="setup"',en)
+        self.assertIn('id="tab-features"',de)
+        self.assertIn("Funktionen &amp; Datenquellen",de)
+        self.assertNotIn('name="sources_json"',de)
+        self.assertNotIn('name="rooms_json"',de)
         self.assertIn("Wartung &amp; Hilfe",de)
         self.assertIn("Connections",en)
         self.assertIn('href="#connections"',de)
