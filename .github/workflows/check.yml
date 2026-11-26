@@ -19,10 +19,12 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Validate local speech server and Proxmox upgrade scripts
         run: |
-          bash -n proxmox/*.sh worker/setup-linux.sh
+          bash -n proxmox/*.sh worker/scripts/linux/setup-linux.sh
           python -m py_compile speechserver/api.py speechserver/piper_service.py proxmox/tafa-export-json.py
           python -m unittest discover -s proxmox -p 'test_tafa_export_json.py' -v
       - run: python tests/check_sources.py
+      - name: Validate public TAFA documentation and links
+        run: python tests/test_docs_public.py
       - run: python tests/test_audio.py
       - run: python tests/test_install.py
       - run: python tests/test_marketplace.py
