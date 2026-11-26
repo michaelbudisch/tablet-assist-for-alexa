@@ -1,45 +1,33 @@
-# Marketplace installation — TAFA integration 0.4.3
+# TAFA integration through Marketplace (without TAFA App)
 
-**English** | [Deutsch](../marketplace.md) · [Project overview](../../README.md)
+[Deutsch](../marketplace.md) · [Project](../../README.md) · [Recommended App installation](app.md)
 
-Marketplace and Home Assistant Apps are two different installation methods. The recommended way to get CPU Piper + Whisper and the TAFA Control Center together is the **[one-App installation](app.md)**. **Do not install both routes on the same Home Assistant instance.**
+**Alternative path:** Marketplace installs the HA integration `tablet_assist_for_alexa`, **not** the TAFA Home Assistant App with its built-in CPU Piper/Whisper engines and standalone Control Center. On HA OS, the [App setup](setup-guide.md) is usually the easier first-install option. **Never let both Marketplace and TAFA App manage the same integration.**
 
-## What Marketplace installs
+## Requirements
 
-Home Assistant Marketplace installs the unified `tablet_assist_for_alexa` integration **0.4.3**, including HA STT, TTS, conversation, optional announcements, native wake-device registration, multiroom/room-audio compatibility APIs, and optional camera/motion and vision interfaces. The old separate `jarvis_tablet_audio` integration is **not required on a fresh install**. The unchanged Device Bridge 1.0.0 is a separate Android application.
+- Home Assistant Core **2026.11+**, compatible platform; back up your configuration.
+- A compatible **external CPU speech server**, with Piper HTTP and Wyoming Whisper (such as [TAFA Proxmox](proxmox.md)).
+- The signed [TAFA Device Bridge](../../android/README.md) for native microphone and Bluetooth media playback.
+- Optional [GPU worker](worker.md), HA Ollama conversation agent and Alexa MP3 announcements.
 
-Marketplace cannot deploy the running CPU processes. If you install via Marketplace alone, provide a compatible existing Piper HTTP server (with `/health` and `/synthesize`) and either a Wyoming STT entity or a compatible backend supporting `/stt` at the same Piper origin. [CPU server](proxmox.md) · [GPU worker](worker.md). The **TAFA Home Assistant App** bundles compatible CPU Piper/Whisper endpoints instead.
+Marketplace provides the unified TAFA integration. New installations do **not** need separate Jarvis Tablet Audio or Jarvis Speech Router. TAFA integration/dashboard functionality is part of this integration, while the TAFA App's **Control Center and bundled CPU processes** are **not** included in this route.
 
-## Installing the integration through Marketplace
+## Installation
 
-1. Back up Home Assistant, ideally test first. Home Assistant Core 2026.11 or later is targeted.
-2. Settings → Marketplace → Add from link. Paste `https://github.com/michaelbudisch/tablet-assist-for-alexa`, category Integration.
-3. Install and restart Home Assistant if prompted.
-4. Settings → Devices & services → Add integration → **TAFA**.
-5. Configure an accessible Piper origin, optionally select a Wyoming STT entity, GPU worker, conversation agent and external announcements.
-6. Create/select an Assist pipeline with the TAFA STT, conversation and TTS entities. Choose the pipeline in the Home Assistant Assist interface or Companion app, not in Device Bridge.
+1. Under **Settings → Marketplace → Add from link**, use `https://github.com/michaelbudisch/tablet-assist-for-alexa` with category **Integration**.
+2. Install **TAFA**, restart HA Core and add/configure **TAFA** under **Devices & services**.
+3. Enter the **external CPU Piper** origin, e.g. `http://CPU-SERVER:5000`.
+4. In **HA → Devices & services**, add **Wyoming Protocol** with the CPU server on TCP **10300** and select the resulting `stt.*` entity in TAFA integration options. Piper HTTP alone does not provide Wyoming recognition.
+5. Under **Settings → Voice assistants**, create/check **TAFA Lokal** with **Tablet Assist Sprachrouter**, **Tablet Assist Gespraechsrouter** and **Tablet Assist Stream**.
+6. Optionally add GPU/Ollama entities in HA. Install Device Bridge, connect a Bluetooth speaker, then test a live request.
 
-[Open in HA](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Start integration setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
+[Open Marketplace repository](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Start integration setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
 
-## Configuration
+## CPU/GPU, updates and security
 
-| Field | Meaning |
-|---|---|
-| Piper origin | Compatible local Piper HTTP API, e.g. `http://speechserver.local:5000` |
-| CPU STT entity | Optional Wyoming STT entity; without it, TAFA uses `/stt` on the Piper origin |
-| GPU streaming URL | Optional private-LAN Qwen streaming service; no extra API token |
-| GPU STT entity / host | Optional acceleration, with fallback to CPU |
-| Conversation agent | Optional existing HA agent for general knowledge |
-| Audio profile and voice | Optional preferences |
-| MP3 announcement settings | Optional HTTPS MP3 generator and room mapping |
+**CPU fallback:** Provide a working external CPU Wyoming STT entity and Piper when GPU Whisper/Qwen are unavailable. GPU TTS, GPU STT and Ollama are separate services. An offline GPU Ollama has **no automatically configured CPU LLM fallback**. Local HA intents can remain available without a text LLM.
 
-No custom YAML or private dashboard is necessary for the shared integration. Interface labels are DE/EN; shipped local voice commands and CPU models are German. Android camera/microphone permissions and wake-word activation remain under Device Bridge.
+Update this integration **only via Marketplace** when installed that way; avoid simultaneous TAFA App management. Do not delete an existing `jarvis_tablet_audio` legacy setup or automations without a separate migration check. Never expose worker ports publicly. See [security](security.md).
 
-## Existing installations, updates and limitations
-
-- Do not overwrite a configured `jarvis_tablet_audio` installation. The unified backend detects old config entries and avoids duplicate legacy REST and service registration. Existing room assignments and storage do **not** migrate automatically.
-- App-managed component files are never overwritten by a Marketplace install. If you choose Marketplace, manage integration updates there and do not also let the TAFA App manage its code.
-- New version **0.4.3** merges public native relay modules; private household dashboard and its resources are excluded. Optional GPU services remain external.
-- Automated validation includes source/static tests, HACS/hassfest, and HA runtime workflow; physical Device Bridge, Bluetooth, concurrent multiroom, and clean HA OS installation are still outstanding. Treat this as a **release candidate**, not a validated stable release.
-
-[App installation](app.md) · [Backend integration](backend-roadmap.md) · [Security](security.md) · [Multiroom](../../homeassistant/examples/MULTIROOM.md).
+**Versions:** Use `custom_components/tablet_assist_for_alexa/manifest.json` for the repository integration version; the App is versioned separately. Physical installation and playback still require validation on each device.

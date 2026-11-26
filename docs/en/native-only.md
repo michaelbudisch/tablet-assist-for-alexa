@@ -1,39 +1,27 @@
-# TAFA: one speech path, one management UI
+# TAFA – native voice path and central management
 
-**TAFA App 0.3.40 / HA integration 0.4.24 / Device Bridge 1.0.6**
+[Deutsch](../native-only.md) · [Setup](setup-guide.md) · [Android](../../android/README.md)
 
-## Architecture
+## Voice route
 
-Android wakeword → native tablet microphone → **Home Assistant Assist** pipeline **TAFA Lokal** (Whisper/Wyoming, Ollama, TTS) → authenticated TAFA room audio → native tablet playback to the paired **Bluetooth speaker**. There is no browser microphone mode or competing conversation transport. Qwen and Piper are alternative backend *voices*, not alternate tablet audio paths.
+**TAFA Device Bridge (Android)** detects the wake word and records the question → **Home Assistant Assist / TAFA Lokal** → **Whisper (GPU or CPU)** → HA intents or optional Ollama → **Qwen or Piper** → **Android media player** → optional Bluetooth Echo.
 
-TAFA no longer creates an extra dashboard sidebar panel. Manage voice and devices under **Home Assistant → Apps → TAFA → User interface**. Existing personal dashboards, automations and Assist pipelines are preserved.
+For ordinary conversations, Echo is a Bluetooth **speaker**, **not** the microphone. No public audio domain is required for this route. Optional Alexa MP3 announcements use a separate HTTPS path.
 
-## Setup
+## Setup and modes
 
-1. Update the TAFA App. Restart Home Assistant Core after installing the updated integration. The installer intentionally does not overwrite an externally managed integration.
-2. In TAFA → **Settings**, configure the speech server, Wyoming STT, and an Ollama conversation agent. Verify that the **TAFA Lokal** Assist pipeline works.
-3. Install **TAFA Device Bridge 1.0.3** on each tablet; sign in to HA securely, grant microphone access, and start native playback and wakeword recognition.
-4. Pair the desired Echo/Bluetooth speaker using **Android Bluetooth settings**, then verify ordinary media playback.
-5. Visit TAFA → **Devices & multiroom**. Each running tablet enrolls using its own stable device ID; control its wakeword, mute, mic parameters and status in HA.
-6. Under **Devices & multiroom → Create new room** first create a room using a dedicated non-admin HA user, **even without an enrolled tablet**. Sign Device Bridge into the **test server** using this user token, start wakeword recognition to enroll the tablet, then pair it with the already created room. Transfers from other users require an explicit confirmation. No fixed four-device cap.
+1. Install the [TAFA HA App](app.md) and choose **Local** or **External** CPU speech mode. Fresh installs start in `setup`, with no automatic CPU model download.
+2. Set IPs, Wyoming `stt.*` entities, and optional Ollama `conversation.*` under **TAFA → Connections**. The GPU JSON import is also there. Wyoming/Ollama entities must first be created in HA.
+3. Verify the three routers in the **TAFA Lokal** pipeline. Install the [signed Device Bridge](../../android/README.md) and use a separate non-admin HA user for each tablet.
+4. Optionally pair Echo via Bluetooth, start native playback, select a wake word, grant microphone permission.
+5. Register tablets under **TAFA → Devices & Multiroom** and assign rooms. There is **no fixed four-room limit**.
 
-## Tablet camera
+Native Android microphone modes are **Muted**, **Wake word** and optional **Always on**. Device Bridge supports a **limited** number of follow-up questions; unlimited follow-ups are **not the default**. Always on may mistake background speech for a request. **TAFA → Speak now** is a **separate browser test** with transcript, timing and browser playback, not a replacement for native wake detection or an automatic Echo output test.
 
-Under **Devices & multiroom → Tablet cameras per room**, explicitly allow camera uploads for each room (default **Off**). TAFA Device Bridge **1.0.6** uploads only after the user explicitly starts it, using the authenticated TAFA room-camera API with the non-admin room user. A legacy Jarvis receiver is not needed. Frames are temporary in HA RAM. See the [current camera setup](../../android/docs/camera-preparation.md).
+## Camera, display and limitations
 
+Explicitly enable the **tablet camera** per room in **Devices & Multiroom** (default off), then start it in Device Bridge. Uploads are authenticated; a normal non-admin room user does **not** need an administrator token. Image/motion reporting uses fresh stills and is fallible. [Camera setup](../../android/docs/camera-preparation.md).
 
-## Entities per tablet
+Optional Android display permissions support brightness adjustments; without privileged device management the app cannot reliably power the display fully on/off, wake from deep sleep or unlock it. Check the native microphone indication and device permissions after disconnection.
 
-HA dynamically exposes sensors for connectivity, wakeword, microphone, playback, Bluetooth, battery, app version, last contact and last wakeword; switches for microphone mute and optional display dimming; numeric controls for wakeword confirmation, cooldown, handoff, speech pause, digital input gain and brightness; and a wakeword selector.
-
-The Android app re-fetches HA-owned settings periodically. On HA connectivity loss the wakeword service fails closed to avoid ignoring remote mute.
-
-**Follow-ups have no numeric limit**. They continue after successful spoken responses, until a no-answer turn, mute or stop.
-
-## Display limitations
-
-Optional Android **Modify system settings** permission allows global brightness adjustments after explicit consent and TAFA enablement. It does **not** reliably turn off, unlock, or wake a sleeping screen without privileged Android device-management rights. Adaptive brightness and manufacturer power policies may interfere.
-
-## Compatibility and privacy
-
-Device settings are stored in authenticated HA storage, not hardcoded tablet slots. Diagnostic sensors never persist audio or transcripts. Updating an installed release APK requires the **same Android signing key**; a CI debug APK is not a drop-in replacement. Existing automations and dashboards are intentionally left untouched.
+Existing HA dashboards, automations and other Assist pipelines are not silently modified. Signed APK updates require the **same certificate**; a CI debug APK cannot replace a signed release in place.

@@ -1,47 +1,27 @@
-# TAFA: Ein Sprachweg, eine Benutzeroberfläche
+# TAFA – nativer Sprachweg und zentrale Steuerung
 
-**TAFA-App 0.3.40 / HA-Integration 0.4.24 / Device Bridge 1.0.6**
+[English](en/native-only.md) · [Einrichtungsleitfaden](setup-guide.md) · [Android](../android/README.de.md)
 
-## Architektur
+## Sprachweg
 
-Rufwort am Android-Tablet → native Mikrofonaufnahme → **Home Assistant Assist** mit der Pipeline **TAFA Lokal** (Whisper/Wyoming, Ollama und TTS) → TAFA-Raum-Audio-API → native Android-Wiedergabe über den gekoppelten **Bluetooth-Lautsprecher**. Es gibt keinen separaten Browser-Mikrofonmodus und keine konkurrierende Gesprächsübertragung. Qwen und Piper sind alternative *Stimmen beziehungsweise Backend-Dienste*, keine separaten Tablet-Audiowege.
+**TAFA Device Bridge (Android)** erkennt das Rufwort und nimmt die Frage auf → **Home Assistant Assist / TAFA Lokal** → **Whisper (GPU oder CPU)** → HA-Intents oder optional Ollama → **Qwen oder Piper** → **Android-Medienplayer** → optional Bluetooth-Echo.
 
-Das alte zusätzliche **TAFA Dashboard** wird nicht mehr als Seitenleistenpanel registriert. Die Verwaltung befindet sich in **Home Assistant → Apps → TAFA → Benutzeroberfläche**. Vorhandene persönliche Dashboards, Automatisierungen und Assist-Pipelines werden nicht automatisch gelöscht oder umgeschrieben.
+Das Echo ist bei normalen Gesprächen ein Bluetooth-Medienlautsprecher; **es liefert nicht das Mikrofon**. Eine öffentliche Audio-Domain braucht es dafür nicht. Die getrennte Alexa-MP3-Durchsage benötigt dagegen HTTPS.
 
-## Einrichtung
+## Einrichtung und Modi
 
-1. Installiere beziehungsweise aktualisiere die TAFA-App und starte Home Assistant Core nach der Aktualisierung des HA-Backends neu. Eine nicht von TAFA verwaltete HA-Integration überschreibt der Installer bewusst nicht.
-2. Öffne TAFA → **Einrichtung** und verbinde Sprachserver, Wyoming-STT und den Ollama-Konversationsagenten. Im HA-Sprachassistenten muss eine funktionierende Pipeline **TAFA Lokal** ausgewählt beziehungsweise angelegt sein.
-3. Installiere TAFA Device Bridge **1.0.3** auf dem Tablet. Verbinde die App mit Home Assistant über eine sichere HA-Anmeldung, erteile die Mikrofonberechtigung und starte den nativen Audio-Player sowie die Rufworterkennung.
-4. Verbinde den gewünschten Echo- oder Bluetooth-Lautsprecher **in den Android-Bluetooth-Einstellungen** und prüfe normale Medienwiedergabe. Die App steuert den Hardware-Lautsprecher nicht über Alexa-Sprachbefehle.
-5. Öffne TAFA → **Geräte & Multiroom**. Das gestartete Tablet registriert sich mit einer dauerhaften Geräte-ID. Stelle Rufwort, Stummschaltung und Mikrofonwerte direkt in HA ein. Änderungen werden regelmäßig von der App synchronisiert.
-6. Unter **Geräte & Multiroom → Neuen Raum anlegen** kannst du einen Raum **vor der Tablet-Registrierung** mit einem eigenen Nicht-Admin-HA-Benutzer erstellen. In TAFA Device Bridge den **Testserver** und das Token dieses Benutzers hinterlegen, die Rufworterkennung zur Registrierung starten und anschließend das Tablet im bereits erstellten Raum zuordnen. War das Tablet zuvor mit einem anderen Benutzer registriert, erfordert die Übertragung eine ausdrückliche Bestätigung. Mehr als vier Räume sind möglich.
+1. TAFA über die [Home-Assistant-App](app.md) installieren und **Lokal** oder **Extern** als CPU-Sprachmodus auswählen. Neue Installationen starten in `setup` und laden zunächst keine Modelle.
+2. IPs, Wyoming-`stt.*`-Entitäten und optionale Ollama-`conversation.*`-Entität unter **TAFA → Verbindungen** konfigurieren; GPU-Import per JSON ist dort möglich. Wyoming und Ollama müssen vorher in HA eingerichtet sein.
+3. Die Assist-Pipeline **TAFA Lokal** mit den drei TAFA-Routern prüfen. Die [signierte Device Bridge](../android/README.de.md) installieren und einen eigenen Nicht-Admin-HA-Benutzer für jedes Tablet verwenden.
+4. Optional Bluetooth-Echo koppeln, nativen Player starten, Rufwort wählen und Mikrofonberechtigung erteilen.
+5. Unter **TAFA → Geräte & Multiroom** Tablets registrieren und einem Raum zuordnen. Es gibt **keine feste Begrenzung auf vier Räume**.
 
-## Tablet-Kamera
+Der native Android-Mikrofonmodus bietet **Stumm**, **Rufwort** und optional **Immer an**. Eine begrenzte Zahl von Anschlussfragen lässt sich auf dem Tablet einstellen; **unbegrenzte Folgefragen sind nicht die Voreinstellung**. „Immer an“ kann Umgebungsgeräusche als Sprache fehlinterpretieren. Der eigene Bereich **TAFA → Jetzt sprechen** ist **ein separater Browser-Test** mit Transkript/Zeiten und Browser-Audio; er ersetzt weder den Android-Rufwortdienst noch testet er automatisch die Bluetooth-Ausgabe.
 
-Unter **Geräte & Multiroom → Tablet-Kameras je Raum** wird die Kamera pro Raum ausdrücklich freigeschaltet (Standard: **Aus**). TAFA Device Bridge **1.0.6** sendet erst nach manuellem Start Bilder über die authentifizierte TAFA-Raumkamera-API. Der normale Nicht-Admin-Raumnutzer genügt; es ist kein alter Jarvis-Kameraempfänger nötig. Bilder bleiben nur vorübergehend im Home-Assistant-Arbeitsspeicher. Details: [Aktuelle Kamera-Anleitung](../android/docs/camera-preparation.de.md).
+## Kamera, Display und Grenzen
 
+**Tablet-Kamera** pro Raum unter **Geräte & Multiroom** ausdrücklich freigeben (Standard: Aus), dann in Device Bridge starten. Bildübertragung ist authentifiziert; der normale Raumnutzer benötigt **keinen Administrator-Token**. Die Vorschau/Bewegungserkennung verwendet aktuelle Einzelbilder und kann irren. [Kamera-Einrichtung](../android/docs/camera-preparation.de.md).
 
-## Steuerung und Sensoren
+Display-Helligkeit kann mit optionaler Android-Berechtigung gesteuert werden. Ohne privilegierte Geräteverwaltung kann die App den Bildschirm nicht zuverlässig vollständig ein-/ausschalten oder aus Tiefschlaf entsperren. Bei Verbindungsausfall die native Mikrofonanzeige und Geräteberechtigungen prüfen.
 
-Für jedes registrierte Tablet erstellt TAFA eigene HA-Entitäten:
-
-- **Sensoren:** Sprachsteuerung online/offline, Wakeword-Status, Mikrofonstatus, Audioausgabe, Bluetooth, Akku, App-Version, letzter Kontakt und letztes Rufwort.
-- **Schalter:** Mikrofon stumm, Display hell/gedimmt, optionale Displaysteuerung aktivieren.
-- **Zahlenwerte:** Rufwort-Bestätigung und -Sperrzeit, Haltezeit, Sprechpause in Millisekunden, digitale Mikrofonverstärkung und Helligkeit.
-- **Auswahl:** Wakeword (Hey Jarvis, Jarvis, Alexa oder alle drei).
-
-Du kannst diese Entitäten in Home Assistant verwenden und die Einstellungen im TAFA Control Center ändern. Die App lädt sie periodisch erneut. Bei fehlender HA-Verbindung gibt die Rufworterkennung das Mikrofon aus Sicherheitsgründen frei, statt mit womöglich veralteten Stummschaltewerten weiterzulaufen.
-
-**Folgefragen haben keine Anzahlgrenze.** Die nächste Aufnahme beginnt nach einer erfolgreichen Sprachantwort. Sie endet nach einer nicht beantworteten Aufnahme, manueller Stummschaltung oder Stopp; der Android-Mikrofondienst bleibt nutzergesteuert.
-
-## Display und Android-Grenzen
-
-Die spezielle Android-Berechtigung **„Systemeinstellungen ändern“** wird nur für eine optionale Helligkeitssteuerung benötigt. Sie muss auf jedem Tablet bewusst freigegeben und die Displaysteuerung zusätzlich in TAFA aktiviert werden. TAFA kann die Helligkeit dimmen und wieder erhöhen, aber **ohne privilegierte Geräteverwaltung das Display nicht zuverlässig physisch ausschalten, entsperren oder aus einem Tiefschlaf aufwecken**. Automatische Helligkeit und Hersteller-Energiesparfunktionen können das Verhalten beeinflussen.
-
-## Updates und Datensicherheit
-
-- Geräteeinstellungen und Namen liegen im authentifizierten HA-Speicher; die Android-App enthält keine fest kodierten Tabletslots.
-- Weder Audioaufnahmen noch Sprachtranskripte werden in den Tablet-Telemetriesensoren gespeichert.
-- Die native App benötigt für ein Update über eine bereits installierte Release-APK **denselben Android-Signaturschlüssel**. Eine CI-Debug-APK kann nicht einfach darüber installiert werden.
-- Beim Wechsel von alten Jarvis-Routen die HA-Konfiguration und persönliche Dashboards sichern. Bestehende Automatisierungen bleiben unverändert; entferne veraltete Automatisierungen nur nach eigener Prüfung.
+Eigene HA-Dashboards, Automatisierungen und andere Assist-Pipelines werden nicht still verändert. Updates der signierten APK erfordern das **gleiche Signaturzertifikat**; eine Debug-APK ersetzt keine vorhandene signierte Installation.

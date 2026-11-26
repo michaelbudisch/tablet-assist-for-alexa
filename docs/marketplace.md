@@ -1,45 +1,33 @@
-# Marketplace-Installation — TAFA-Integration 0.4.3
+# TAFA-Integration über Marketplace (ohne TAFA-App)
 
-[English](en/marketplace.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+[English](en/marketplace.md) · [Projekt](../README.de.md) · [Empfohlene App-Installation](app.md)
 
-Marketplace und Home Assistant Apps sind unterschiedliche Installationswege. Die empfohlene Lösung für CPU-Piper, Whisper und das TAFA Control Center zusammen ist die **[Installation einer einzigen App](app.md)**. **Beide Wege nicht auf demselben Home Assistant installieren.**
+**Alternative Installationsart:** Marketplace installiert nur die HA-Integration `tablet_assist_for_alexa`, **nicht** die TAFA-App mit integriertem CPU-Piper/Whisper und Control Center. Für neue Nutzer mit Home Assistant OS ist der [TAFA-App-Einrichtungsweg](setup-guide.md) normalerweise einfacher. **Die gleiche Integration niemals gleichzeitig durch TAFA-App und Marketplace verwalten.**
 
-## Umfang der Marketplace-Integration
+## Voraussetzungen
 
-Marketplace installiert die zusammengeführte HA-Integration `tablet_assist_for_alexa` **0.4.3** mit STT, TTS, Gesprächsrouter, optionalen Durchsagen, nativer Rufwort-Geräteregistrierung, Multiroom/Room-Audio-Kompatibilitätsschnittstellen sowie optionaler Kamera-/Bewegungs- und Vision-Unterstützung. Die alte separate `jarvis_tablet_audio`-Integration ist bei einer Neuinstallation **nicht erforderlich**. Device Bridge 1.0.0 bleibt eine unveränderte Android-App.
+- Home Assistant Core ab **2026.11** mit kompatibler Plattform; HA-Konfiguration vorab sichern.
+- Ein erreichbarer **externer CPU-Sprachserver** mit kompatibler Piper-HTTP-API und Wyoming-Whisper (zum Beispiel [TAFA-Proxmox](proxmox.md)).
+- Die signierte [TAFA Device Bridge](../android/README.de.md) für native Android-Aufnahme und Bluetooth-Ausgabe.
+- Optional: [GPU Worker](worker.md), HA-Ollama-Konversationsagent und Alexa-MP3-Durchsagen.
 
-Marketplace kann keine laufenden CPU-Sprachdienste installieren. Bei alleiniger Marketplace-Einrichtung benötigst du einen bestehenden kompatiblen Piper-HTTP-Server (`/health`, `/synthesize`) sowie eine Wyoming-STT-Entität oder die kompatible Schnittstelle `/stt` auf demselben Server. [CPU-Sprachserver](proxmox.md) · [GPU-Worker](worker.md). Die **TAFA Home-Assistant-App** enthält Piper und Whisper für CPU bereits selbst.
+Marketplace stellt die gemeinsame TAFA-Integration bereit. **Ein extra Jarvis Tablet Audio oder Jarvis Speech Router wird bei Neuinstallationen nicht benötigt.** Die HA-Integration, das TAFA-Dashboard und die Device-Bridge-Funktionen gehören zum zusammengeführten Projekt; der eigenständige TAFA-App-**Control Center** und ihre CPU-Prozesse sind in diesem Installationsweg **nicht** enthalten.
 
-## Einrichtung über Marketplace
+## Installation
 
-1. Home Assistant sichern und möglichst eine Testinstallation verwenden. Ziel: Home Assistant Core ab 2026.11.
-2. Einstellungen → Marketplace → Über Link hinzufügen: `https://github.com/michaelbudisch/tablet-assist-for-alexa`, Kategorie Integration.
-3. Installieren und bei Bedarf Home Assistant neu starten.
-4. Einstellungen → Geräte & Dienste → Integration hinzufügen → **TAFA**.
-5. Erreichbare Piper-Adresse eintragen; optional Wyoming-STT, GPU-Worker, KI-Agent und Durchsagen konfigurieren.
-6. Assist-Pipeline mit TAFA STT, Gesprächsrouter und TTS erstellen/auswählen. Die Pipeline in Home Assistant Assist oder der HA Companion App auswählen, nicht in der Device Bridge.
+1. **Einstellungen → Marketplace → Über Link hinzufügen**: `https://github.com/michaelbudisch/tablet-assist-for-alexa` mit Kategorie **Integration** auswählen.
+2. **TAFA** installieren, HA Core neu starten und unter **Geräte & Dienste → Integration hinzufügen → TAFA** einrichten.
+3. Piper-HTTP-Adresse des **CPU-Servers** eintragen (z. B. `http://CPU-SERVER:5000`).
+4. Unter **HA → Geräte & Dienste → Wyoming Protocol** den CPU-Server an TCP **10300** hinzufügen und seine `stt.*`-Entität in den TAFA-Integrationsoptionen auswählen. Der reine Piper-HTTP-Endpunkt ist kein Wyoming-STT.
+5. Unter **Einstellungen → Sprachassistenten** eine **TAFA Lokal**-Pipeline mit **Tablet Assist Sprachrouter**, **Tablet Assist Gesprächsrouter** und **Tablet Assist Stream** erstellen beziehungsweise prüfen.
+6. Optional die GPU-/Ollama-Entitäten in HA ergänzen. Danach die Android Device Bridge und einen Bluetooth-Lautsprecher verbinden und eine echte Frage testen.
 
-[In HA öffnen](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Einrichtung starten](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
+[Marketplace in HA öffnen](https://my.home-assistant.io/redirect/hacs_repository/?owner=michaelbudisch&repository=tablet-assist-for-alexa&category=integration) · [Integration starten](https://my.home-assistant.io/redirect/config_flow_start/?domain=tablet_assist_for_alexa)
 
-## Einstellungen
+## CPU/GPU und Sicherheit
 
-| Feld | Bedeutung |
-|---|---|
-| Piper-Adresse | Kompatible lokale Piper-HTTP-API, z. B. `http://speechserver.local:5000` |
-| CPU-STT-Entität | Optionale Wyoming-STT-Entität; ohne diese wird `/stt` am Piper-Server verwendet |
-| GPU-Streaming-Adresse | Optionales externes Qwen-Streaming im privaten LAN; kein zusätzlicher API-Schlüssel |
-| GPU-STT-Entität/Host | Optionale Beschleunigung mit CPU-Reserve |
-| Konversationsagent | Optionaler bestehender HA-Agent für allgemeines Wissen |
-| Klangprofil und Stimme | Optionale Einstellungen |
-| MP3-Durchsagen | Optionale HTTPS-MP3-Erzeugung und Raumzuordnung |
+**CPU-Fallback:** Externe Wyoming-STT-Entität und Piper müssen erreichbar sein, auch wenn GPU-Whisper/Qwen nicht verfügbar sind. GPU-TTS, GPU-STT und Ollama sind unterschiedliche Dienste. Freie Textantworten über Ollama haben **keinen automatisch eingerichteten CPU-LLM-Fallback**. Ohne CPU-/GPU-Agenten bleiben lokale HA-Intents nutzbar.
 
-Keine manuelle YAML-Konfiguration und kein privates Dashboard nötig. Die Oberfläche ist DE/EN, Standard-Sprachbefehle und CPU-Modelle sind Deutsch. Die Android-App verwaltet Kamera-/Mikrofonberechtigungen und Wakeword-Aktivierung eigenständig.
+**Updates:** Die Marketplace-Integration nur über Marketplace aktualisieren; kein paralleler TAFA-App-Installer. Eine vorhandene Altintegration `jarvis_tablet_audio` nicht ungeprüft löschen oder überschreiben; Migration und eigene Automatisierungen separat prüfen. Keine Worker-Ports öffentlich freigeben. [Sicherheit](security.md).
 
-## Altinstallationen, Updates und Grenzen
-
-- Eine bestehende `jarvis_tablet_audio`-Installation nicht überschreiben. Die neue Integration erkennt alte Konfigurationseinträge und vermeidet doppelte API-/Dienst-Registrierungen. Bestehende Raumzuordnungen und Speicherstände werden **nicht** automatisch übernommen.
-- Eine durch die TAFA-App verwaltete Integration nicht parallel über Marketplace aktualisieren. Bei Marketplace-Installation Updates ausschließlich dort durchführen.
-- Version **0.4.3** vereinheitlicht öffentliche Native-Relay-Komponenten; das private Haushalts-Dashboard bleibt ausgeschlossen. Optionale GPU-Dienste bleiben extern.
-- Automatisierte Tests für Code, HACS/hassfest und HA-Laufzeit sind vorhanden. Der reale Test mit Device Bridge, Bluetooth, zwei Tablets und eine komplette neue HA-OS-Installation stehen noch aus. Deshalb **Release-Kandidat**, kein bestätigter stabiler Release.
-
-[App-Installation](app.md) · [Backend](backend-roadmap.md) · [Sicherheit](security.md) · [Multiroom](../homeassistant/examples/MULTIROOM.de.md).
+**Versionsstand:** Die im Repository enthaltene Integration wird über `custom_components/tablet_assist_for_alexa/manifest.json` versioniert; die App-Version ist unabhängig. Die tatsächliche Installation und Audiowiedergabe auf eigener Hardware prüfen.
