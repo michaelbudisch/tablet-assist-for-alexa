@@ -1,5 +1,7 @@
 # TAFA Device Bridge 1.1.0
 
+- Fehlerursachen beim parallelen Decodieren und Abspielen bleiben erhalten; HTTP- und Formatfehler werden nicht durch einen generischen Decoderfehler überlagert.
+
 Die App wurde auf drei klare Hauptbereiche umgestellt:
 
 - **Status** – nur Informationen zu Home Assistant, Bluetooth, aktuellem Audio-/Assist-Zustand, Rufwort, Keepalive, Kamera, Bewegungsschalter und Akku.

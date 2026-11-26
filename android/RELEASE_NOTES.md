@@ -1,5 +1,7 @@
 # TAFA Device Bridge 1.1.0
 
+- Preserve the original streaming error across decoder/playback threads so HTTP and format errors cannot become a generic decoder failure.
+
 The native app now has three focused tabs:
 
 - **Status** – information only: HA, Bluetooth, current player/Assist/wakeword state, keepalive, camera, motion state and battery.

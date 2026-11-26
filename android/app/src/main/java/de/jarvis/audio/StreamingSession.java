@@ -143,7 +143,6 @@ final class StreamingSession {
             else if(spool!=null)spool.delete();
             if(complete&&!cancelled)queue.finish();
             else if(failure!=null&&!cancelled){
-                queue.fail(new IOException("error_stream_decode",failure));
                 fail(failure);
             }
         }
@@ -183,12 +182,14 @@ final class StreamingSession {
     }
 
     private void fail(Exception error){
+        String code=error.getMessage();
+        if(code==null||!code.matches("error_[a-z0-9_]{1,90}"))code="error_stream_decode";
+        boolean firstFailure=terminal.compareAndSet(false,true);
         stopSound=true;
         Output current=output;if(current!=null)current.abort();
-        queue.fail(new IOException("error_stream_decode",error));
-        if(terminal.compareAndSet(false,true)){
-            String code=error.getMessage();
-            if(code==null||!code.matches("error_[a-z0-9_]{1,90}"))code="error_stream_decode";
+        // Preserve the cause while waking the peer; secondary shutdown errors cannot replace it.
+        queue.fail(new IOException(code,error));
+        if(firstFailure){
             listener.onError(code,diagnostics());
             if(producer!=null&&producer!=Thread.currentThread())producer.interrupt();
             Thread closer=new Thread(this::closeConnection,"relay-stream-failure");closer.setDaemon(true);closer.start();
