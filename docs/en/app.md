@@ -26,6 +26,22 @@ TAFA provides a **Control Center**, one integrated HA component, and optional CP
 
 **Note:** Successful HTTP/TCP checks prove network reachability, not speech recognition or Bluetooth playback. **Speak now** is a browser playback/diagnostic test; native Android/Echo playback is tested in Device Bridge.
 
+## Features & sources – no JSON required
+
+Open **TAFA Control Center → Features & sources**. New modules become available after updates without overwriting existing dashboard tiles or automations.
+
+1. Open a feature, for example **Fuel & tank**.
+2. Choose a Home Assistant sensor by its friendly name. TAFA validates its domain and measurement unit.
+3. **Save sources**: speech queries use the sensor. The built-in dashboard uses the same assignment when no custom tile binding exists.
+4. **Add to TAFA dashboard** activates a missing module while keeping existing tiles.
+5. Missing integrations may be installed later under **Settings → Devices & services**. Other features keep working.
+
+Alexa announcements also use graphical room selectors. An installed notify service is required. Additional output rooms can be created; native tablet pairing remains under **Devices & multiroom**.
+
+The internal sources_json and rooms_json formats are retained for compatibility but are no longer required in the normal setup UI.
+
+**Updates:** TAFA stores dashboard preferences separately from program code. Supported fields of older configurations are recovered individually, and the previous stored version is backed up before saving. Private Lovelace dashboards and existing automations are not changed.
+
 ## Updates and existing installations
 
 TAFA only updates intact integrations **originally managed by the App** and saves backups in `<HA config>/.tafa/rollback`. Marketplace/HACS/manual integrations are not overwritten. Restart HA Core once after backend updates. Existing automations, custom dashboards and other Assist pipelines are not silently modified.
