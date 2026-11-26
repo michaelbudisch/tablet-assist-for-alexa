@@ -120,7 +120,9 @@ class PickerTests(unittest.TestCase):
         self.assertIn("CPU-Whisper",german)
         self.assertIn("GPU Whisper",english)
         self.assertIn('value="stt.cpu" selected',german)
-        self.assertIn("wyoming-picker",english)
+        self.assertIn('name="cpu_stt"',english)
+        self.assertIn('name="gpu_stt"',english)
+        self.assertNotIn('name="gpu_stt"',english.split('id="tafa-settings"')[1].split("</section>")[0])
 
 
 if __name__=="__main__":

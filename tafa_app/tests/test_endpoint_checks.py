@@ -55,13 +55,16 @@ class EndpointTests(unittest.TestCase):
         self.assertEqual(result["cpu_stt"], "selected")
         self.assertEqual(result["public_audio_base"], "configured_unchecked")
         self.assertEqual(result["llm_agent"], "configured_unchecked")
-        html=settings_ui.render_settings_form(opts,[], "de", "csrf", "",
-                        checks=result, latest={"backend":"homeserver","duration_ms":1749})
-        self.assertIn("Letzte Spracherkennung: CPU-/Homeserver",html)
-        connections=settings_ui.render_connection_form(opts,"de","csrf",checks=result)
-        self.assertIn("Wyoming TCP 10300",connections)
+        html=settings_ui.render_settings_form(opts,[], "de", "csrf", "",checks=result)
+        self.assertNotIn('name="cpu_stt"',html)
+        connections=settings_ui.render_connection_form(
+            opts,"de","csrf",checks=result,
+            wyoming=[{"id":"stt.gpu"},{"id":"stt.cpu"}],
+            latest={"backend":"homeserver","duration_ms":1749})
+        self.assertIn("Wyoming Port 10300",connections)
+        self.assertIn("Letzte Spracherkennung: CPU / Homeserver",connections)
         self.assertIn('name="gpu_stt_host"',connections)
-        self.assertNotIn("Letzte Spracherkennung: GPU-Whisper",html)
+        self.assertIn('name="cpu_stt"',connections)
 
     def test_url_proposal_visible_but_not_persisted_automatically(self):
         opts={"gpu_base":"http://192.168.178.115:10502", "gpu_stt_host":""}
