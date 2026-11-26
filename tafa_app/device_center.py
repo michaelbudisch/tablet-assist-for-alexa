@@ -89,8 +89,8 @@ def render_device_center(lang, csrf, state):
         return (f'<input type="hidden" name="csrf" value="{h(csrf)}">'
                 f'<input type="hidden" name="lang" value="{h(lang)}">'
                 f'<input type="hidden" name="tab" value="devices">'
-                f'<input type="hidden" name="device_id" value="{h(identifier)}">'
-                f'<input type="hidden" name="action" value="{h(action)}">')
+                +(f'<input type="hidden" name="device_id" value="{h(identifier)}">' if identifier else "")
+                +f'<input type="hidden" name="action" value="{h(action)}">')
 
     def setting(device, key, label, kind="number", lo=1, hi=100, choices=None):
         value = device.get(key)
