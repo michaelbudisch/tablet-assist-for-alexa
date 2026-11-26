@@ -81,8 +81,8 @@ fi
 ask 'HTTPS mode [shared]' ''
 MODE="${REPLY_VALUE:-shared}"
 [[ "$MODE" == shared ]] || fail "This recovery wizard only supports shared proxy mode"
-ask 'Existing central Nginx proxy CT [101]' ''
-PROXY_CT="${REPLY_VALUE:-101}"
+ask 'Existing central Nginx proxy CT ID (required, no default)' ''
+PROXY_CT="$REPLY_VALUE"
 [[ "$PROXY_CT" =~ ^[1-9][0-9]{2,7}$ && "$PROXY_CT" != "$CTID" ]] || fail "Invalid proxy CT ID"
 [[ "$(pct status "$PROXY_CT" 2>/dev/null)" == *running* ]] || fail "Proxy CT is not running"
 pct exec "$PROXY_CT" -- nginx -t || fail "Proxy Nginx configuration failed validation"

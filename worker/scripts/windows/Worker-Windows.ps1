@@ -143,7 +143,7 @@ function Write-Report {
     ('   Status: '+$whisperState)
     '   Home Assistant: Geraete & Dienste > Wyoming Protocol hinzufuegen.'
     '   TAFA > Verbindungen: GPU-Schnellerkennung = GPU-LAN-IP.'
-    '   TAFA > Einstellungen: passende GPU-Wyoming-STT-Entitaet auswaehlen.'
+    '   TAFA > Verbindungen > GPU/KI: GPU-Wyoming-STT-Entitaet waehlen.'
     ''
     '2. Qwen (Sprachausgabe / TTS)'
     ('   Adresse: '+$manifest['services']['qwen_tts']['url'])
@@ -155,15 +155,19 @@ function Write-Report {
     ('   Status: '+$ollamaState)
     ('   Modell: '+$modelText)
     '   Home Assistant: Geraete & Dienste > Ollama hinzufuegen.'
-    '   TAFA > Einstellungen: Ollama-Gespraechsentitaet auswaehlen.'
+    '   TAFA > Verbindungen > GPU/KI: Ollama conversation.*-Entitaet waehlen.'
     ''
     '4. Automatische Einrichtung'
     '   TAFA > Verbindungen > Schnelleinrichtung per JSON.'
-    '   Datei: tafa-worker.json'
+    '   Datei: tafa-worker.json (nur GPU-Dienste; CPU getrennt einrichten)'
     ''
-    '5. CPU-Fallback auf Proxmox (nicht Teil des GPU-Exports)'
-    '   Whisper (STT): Wyoming Protocol auf dem CPU-Server, TCP 10300.'
-    '   Piper (TTS): HTTP-Adresse auf dem CPU-Server (typisch Port 5000).'
+    '5. CPU-Fallback separat einrichten (nicht Teil des GPU-Exports)'
+    '   TAFA lokal: CPU-Whisper und Piper werden von der TAFA-App bereitgestellt.'
+    '   Extern: CPU-Whisper via Wyoming Protocol, TCP 10300.'
+    '   Extern: Piper HTTP-Adresse des CPU-Servers, typischerweise Port 5000.'
+    '   TAFA > Verbindungen > CPU-Fallback: Piper und CPU-Wyoming pruefen.'
+    '   CPU- und GPU-STT-Entitaeten duerfen nicht identisch sein.'
+    '   Ein CPU-LLM-Fallback fuer Ollama wird hierdurch NICHT eingerichtet.'
     '   Die CPU-IP wird hier nicht geraten oder aus GPU-Adressen abgeleitet.'
     ''
     'Nicht gestartete GPU-Dienste sind im JSON als disabled gekennzeichnet.'
