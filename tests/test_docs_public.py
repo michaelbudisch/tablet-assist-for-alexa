@@ -69,7 +69,7 @@ class PublicDocumentationTests(unittest.TestCase):
         self.assertRegex(app, r"(?m)^  speech_mode: setup$")
         self.assertIn("version: \"0.3.", app)
         self.assertEqual((ROOT / "worker/VERSION").read_text().strip(), "2.2.5")
-        self.assertEqual((ROOT / "android/VERSION").read_text().strip(), "1.2.2")
+        self.assertEqual((ROOT / "android/VERSION").read_text().strip(), "1.2.3")
         for name in ("proxmox/quick-install.sh", "proxmox/resume-install.sh"):
             with self.subTest(script=name):
                 script = (ROOT / name).read_text(encoding="utf-8")

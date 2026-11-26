@@ -1,5 +1,14 @@
 # TAFA App changelog
 
+## 0.3.49 — Native WebSocket confirmations, measured control RTT and dashboard API guide
+
+- The Android Device Bridge 1.2.3 acknowledges the applied microphone configuration using authenticated, device-owned REST, including the HA-assigned control revision and active channel. Home Assistant measures the round trip with its own monotonic clock, distinguishes WebSocket push from 500-ms polling fallback, and discards stale acknowledgments.
+- The Control Center **Speak now** view shows channel status, pending/confirmed command, application time, last measured command RTT, and explicit HA follow-up ceiling. It also shows the app's local follow-up limit when the updated Android app reports it.
+- Extended dialogue remains opt-in at the tablet; HA can only lower its number of follow-up questions. No recordings or transcripts are uploaded for diagnostics.
+- Device-control APIs and standard HA entity controls are documented in English/German under `docs/en/dashboard-voice-control.md` and `docs/dashboard-voice-control.md`.
+- Main README, automations, dashboard storage and other HA pipelines are untouched.
+
+
 ## 0.3.48 — Instant native microphone push and follow-up settings
 
 - Native Device Bridge 1.2.2 subscribes to a private, device-scoped, authenticated HA WebSocket control stream. Mute, wake-word, continuous, and follow-up changes reach the tablet without periodic HTTP waits.

@@ -1,3 +1,11 @@
+# TAFA Device Bridge 1.2.3
+
+- **WebSocket diagnostics:** The app acknowledges each HA control revision after applying settings, allowing the Control Center to show measured HA-to-device-to-HA round-trip time.
+- **Channel telemetry:** Reports WebSocket, authenticated 500-ms polling fallback, or inactive voice service. A working push socket does not send continuous 500-ms HTTP requests.
+- **Follow-up diagnostics:** Reports the tablet's local follow-up ceiling so HA can show the effective restrictions. Unlimited follow-ups remain explicit opt-in in Android.
+- **Upgrade:** Package `de.jarvis.audio`, version code 24. In-place upgrades require the same original release-signing certificate; a CI debug APK cannot overwrite it.
+- Source and automated CI build; live end-to-end latency requires an installed Android 1.2.3 device.
+
 # TAFA Device Bridge 1.2.2
 
 **Signed build:** TAFA-Device-Bridge-1.2.2.apk uses the existing signing certificate, application ID de.jarvis.audio and version code 23. Install over the current app. Validation: 46 JVM tests passed, Android lint without errors, UI-test compilation and three documentation checks. Physical tablet/Echo testing remains outstanding.

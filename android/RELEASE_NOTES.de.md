@@ -1,3 +1,11 @@
+# TAFA Device Bridge 1.2.3
+
+- **WebSocket-Diagnose:** Nach Übernahme einer HA-Einstellung bestätigt die App die Änderungsnummer über ihre authentifizierte Geräteschnittstelle. Das Control Center kann so die echte Steuerungs-Rundlaufzeit anzeigen.
+- **Kanalstatus:** Die Statusmeldung unterscheidet WebSocket, HTTP-Fallback und inaktiven Sprachdienst. Der 500-ms-Abgleich bleibt Absicherung, nicht zusätzlicher Datenverkehr bei aktiver Verbindung.
+- **Gesprächsmodus:** Die App meldet auch ihre lokale Obergrenze für Anschlussfragen, damit das Control Center korrekt erklärt, ob HA sie weiter einschränkt. Unbegrenzt muss weiterhin ausdrücklich in der App aktiviert werden.
+- **Update:** Paket `de.jarvis.audio`, Versionscode 24. Für ein Update über eine bereits signierte Installation ist das ursprüngliche Signaturzertifikat nötig; nicht mit einer fremd signierten Debug-APK überschreiben.
+- **Status:** Der native Build wird in GitHub Actions geprüft. Reale Umschaltzeiten sind nur mit installierter 1.2.3 auf einem Tablet messbar.
+
 # TAFA Device Bridge 1.2.2
 
 **Signierter Build:** TAFA-Device-Bridge-1.2.2.apk verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode 23. Über die vorhandene App installieren. Prüfung: 46 Unit-Tests erfolgreich, Android Lint ohne Fehler, UI-Tests kompiliert und drei Dokumentationsprüfungen bestanden. Ein Praxistest auf Tablet/Echo steht noch aus.
