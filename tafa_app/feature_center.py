@@ -337,3 +337,102 @@ def add_dashboard_module(token, feature_id):
     updated["modules"] = [*cfg["modules"], name]
     _dashboard_command(token, "set", updated)
     return True
+
+
+def discover_notify_services(token):
+    try:
+        payload = _ha_json(token, "services", limit=900000)
+    except (OSError, RuntimeError, ValueError, urllib.error.URLError):
+        return []
+    if not isinstance(payload, list):
+        return []
+    result = []
+    for group in payload:
+        if not isinstance(group, dict) or group.get("domain") != "notify":
+            continue
+        services = group.get("services", {})
+        if isinstance(services, dict):
+            result.extend("notify." + name for name in services
+                          if isinstance(name, str) and re.fullmatch(r"[a-z0-9_]{1,100}", name))
+    return sorted(set(result))[:150]
+
+
+def save_announcement_room(fields, options, entities, notify_services):
+    allowed = {"csrf", "lang", "tab", "action", "room_name", "notify", "dnd", "quiet"}
+    if set(fields) - allowed:
+        raise ValueError("Invalid Alexa room form")
+    room = _single(fields, "room_name")
+    if room not in ROOMS:
+        raise ValueError("Unknown announcement room")
+    previous = json.loads(options.get("rooms_json", "{}") or "{}")
+    if not isinstance(previous, dict):
+        raise ValueError("Invalid existing room assignments")
+    old = previous.get(room, {})
+    if not isinstance(old, dict):
+        old = {}
+    valid_entities = {item["id"] for item in entities}
+    values = {}
+    for key, domain in (("notify", "notify"), ("dnd", "switch"), ("quiet", "schedule")):
+        value = _single(fields, key).strip()
+        if value and (not ENTITY_RE.fullmatch(value) or not value.startswith(domain + ".")):
+            raise ValueError("Invalid " + key + " selection")
+        if value and value != old.get(key):
+            if value not in (notify_services if key == "notify" else valid_entities):
+                raise ValueError("New " + key + " selection not found in Home Assistant")
+        if value:
+            values[key] = value
+    next_rooms = dict(previous)
+    if "notify" not in values:
+        next_rooms.pop(room, None)
+    else:
+        next_rooms[room] = values
+    new_value = json.dumps(next_rooms, ensure_ascii=False)
+    from speech_source import setup_settings_values
+    setup_settings_values({**options, "rooms_json": new_value})
+    return {"rooms_json": new_value}
+
+
+def render_announcement_rooms(options, lang, csrf, entities, services):
+    t = lambda de, en: en if lang == "en" else de
+    try:
+        mappings = json.loads(options.get("rooms_json", "{}") or "{}")
+    except (ValueError, TypeError):
+        mappings = {}
+    if not isinstance(mappings, dict):
+        mappings = {}
+    def combo(name, selected, choices, title):
+        items = ['<option value="">' + t("Nicht zugeordnet", "Unassigned") + '</option>']
+        if selected and selected not in choices:
+            items.append('<option value="' + _esc(selected) + '" selected>'
+                         + _esc(selected) + ' · ' + t("nicht gefunden", "missing") + '</option>')
+        for ident in choices:
+            items.append('<option value="' + _esc(ident) + '"' +
+                         (' selected' if ident == selected else '') + '>' + _esc(ident) + '</option>')
+        return '<label class="feature-source"><span>' + _esc(title) + '</span><select name="' + name + '">' + "".join(items) + '</select></label>'
+    dnd = sorted(e["id"] for e in entities if e["id"].startswith("switch."))
+    quiet = sorted(e["id"] for e in entities if e["id"].startswith("schedule."))
+    forms = []
+    for room in sorted(ROOMS):
+        current = mappings.get(room, {}) if isinstance(mappings.get(room), dict) else {}
+        body = (
+            combo("notify", current.get("notify", ""), services, t("Echo / Alexa-Benachrichtigung", "Echo / Alexa notify service")) +
+            combo("dnd", current.get("dnd", ""), dnd, t("Nicht stören (optional)", "Do not disturb (optional)")) +
+            combo("quiet", current.get("quiet", ""), quiet, t("Ruhezeiten (optional)", "Quiet hours (optional)"))
+        )
+        forms.append('<details class="feature-room"><summary>' + _esc(room) +
+                     (' · ' + t("zugeordnet", "assigned") if current.get("notify") else '') + '</summary>'
+                     '<form action="./" method="post" class="feature-form">'
+                     '<input type="hidden" name="csrf" value="' + _esc(csrf) + '">'
+                     '<input type="hidden" name="lang" value="' + _esc(lang) + '">'
+                     '<input type="hidden" name="tab" value="features">'
+                     '<input type="hidden" name="action" value="feature_room">'
+                     '<input type="hidden" name="room_name" value="' + _esc(room) + '">'
+                     + body + '<button type="submit" class="btn btn-primary">'
+                     + t("Raum speichern", "Save room") + '</button></form></details>')
+    return ('<section class="feature-room-section"><h3>'
+            + t("Alexa-Ausgaberäume", "Alexa output rooms")
+            + '</h3><p>' + t("Alexa-Ankündigungen sind optional und benötigen einen in Home Assistant eingerichteten notify-Dienst. "
+                             "Native TAFA-Tablets und deren Räume werden weiterhin unter Geräte & Multiroom gekoppelt.",
+                             "Alexa announcements are optional and require a Home Assistant notify service. "
+                             "Native TAFA tablets are still paired in Devices & multiroom.")
+            + '</p>' + "".join(forms) + '</section>')
