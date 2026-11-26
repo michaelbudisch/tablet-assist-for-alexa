@@ -127,7 +127,12 @@ class TafaHome extends HTMLElement{
    if(!devices.length)return {icon:"mdi:microphone-off",title:de?"Kein TAFA-Tablet verfügbar":"No TAFA tablet available"};
    if(devices.length>1)return {icon:"mdi:microphone-settings",title:de?"Tablet-Mikrofon auswählen":"Choose a tablet microphone"};
    const d=devices[0],room=d.room||"Tablet";
-   const status=d.control?.pending?(de?"Wird an die App übertragen":"Sending to app"):
+   const pending=d.control?.pending===true;
+   const requested=Number(d.control?.requested_at||0);
+   const age=requested>0?Date.now()-requested:Infinity;
+   const status=pending?(age>=0&&age<10000?
+     (de?"Wird an die App übertragen":"Sending to app"):
+     (de?"Nicht von App bestätigt":"Not acknowledged by app")):
      d.online===false?(de?"Offline – Einstellung gespeichert":"Offline – setting saved"):
      d.muted?(de?"stumm":"muted"):(de?"aktiv":"active");
    return {icon:d.muted?"mdi:microphone-off":"mdi:microphone",title:room+" · "+status};
