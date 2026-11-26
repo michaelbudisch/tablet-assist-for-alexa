@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.37 — Keep tablet controls visible when multiroom API fails
+- Query native tablet enrollment and room administration independently; an error in one no longer hides the other.
+- Show redacted endpoint status codes (for example HTTP 403/404) and log only sanitized status; never return bearer tokens or backend response bodies.
+- Disable the pairing form if the room administrator API is unavailable. Preserve existing HA automations, settings and tablet registrations.
+
+
 ## 0.3.36 — native-only Control Center and per-tablet Home Assistant controls
 - Remove the automatically registered TAFA sidebar dashboard, leaving all private dashboards and existing HA automations alone.
 - Add devices and multiroom management to the Supervisor TAFA Control Center; administrator-only validated changes use the existing HA backend.

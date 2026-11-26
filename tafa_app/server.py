@@ -50,7 +50,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.3.36"
+APP_VERSION="0.3.37"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -512,7 +512,12 @@ def display(message="",lang="de",default_tab="overview",review=None):
     latest=recent_stt_backend(TOKEN) if TOKEN else None
     picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     import_panel=render_panel(lang,CSRF,review=review)
-    devices_panel=render_device_center(lang,CSRF,read_device_data())
+    device_state = read_device_data()
+    if device_state.get("error") or device_state.get("room_error"):
+        LOG.warning("TAFA device endpoints: wake=%s room=%s",
+                    device_state.get("error") or "ok",
+                    device_state.get("room_error") or "ok")
+    devices_panel=render_device_center(lang,CSRF,device_state)
     return render_dashboard(
         pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
