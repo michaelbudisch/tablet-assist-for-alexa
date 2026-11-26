@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.4.33 — Suchstabilität und gemeinsame Sprachdienste
+
+- Lokale Sprachsuche und nummerierte Folgefragen funktionieren mit optionalem SearXNG; Abfragen sind zeitlich und größenmäßig begrenzt.
+- Größere JSON-Ergebnisse und kurzfristige Suchserver-Ausfälle werden robuster behandelt.
+- Suchbefehle lassen sich ohne optionale HTTP-Abhängigkeiten erkennen; TAFA bleibt auch ohne SearXNG installierbar.
+- Die TAFA-Sprachdienste erhalten ein eigenes optionales Suchfeld mit Ergebnis-Infobox.
+
 ## 0.4.32 — Gemeinsame TAFA-Dashboards
 
 - Native Assist-Antworten werden als kurzlebige Ereignisse an das Dashboard übergeben.
