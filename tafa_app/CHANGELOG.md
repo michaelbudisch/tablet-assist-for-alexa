@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.4.39 — SearXNG-Diagnose und Rezept-Fallback
+
+- Suchdiagnose unterscheidet gelieferte Ergebnisse, darstellbare HTTPS-Treffer und nicht antwortende Suchmaschinen.
+- Folgefragen bleiben auch mit älteren lokalen Gesprächsschlüsseln stabil.
+- Rezept- und Artikelquellen dürfen bis zu zwei geprüfte öffentliche HTTPS-Weiterleitungen verwenden.
+- Artikel-Abfragefehler werden verständlicher angezeigt, ohne fremde Inhalte einzubetten.
+
 ## 0.4.38 — Internetsuche, Trefferwahl und Rezept-Lesemodus
 
 - Die lokale SearXNG-Suche zeigt wieder nummerierte Treffer mit einer Anschlussfrage, welcher geöffnet werden soll.
