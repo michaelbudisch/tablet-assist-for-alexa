@@ -1,5 +1,5 @@
 /* TAFA Dashboard: built-in, cross-device, admin-configurable Home Assistant panel. */
-import "./dashboard.js?v=0.4.34-unified";
+import "./dashboard.js?v=0.4.36-features";
 import "./voice_tools.js?v=0.4.34";
 const DEFAULT={type:"custom:tafa-home-dashboard",version:1,title:"TAFA Dashboard",
   language:"auto",theme:"dark",accent:"teal",density:"comfortable",gridSign:"import",
