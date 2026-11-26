@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.4.34 — Gemeinsame Darstellung und kontextbezogene Navigation
+
+- Neue Hausdaten- und Wissens-Infoboxen nutzen denselben TAFA-Antwortkanal wie die native Android-App.
+- Interaktive Hausdaten öffnen optional die passende Ansicht mit Rückkehr zum gewählten Ziel.
+- Die Internetsuche ist direkt in den TAFA-Sprachdiensten verfügbar.
+- Frontend-Ladeversionen sind über Dashboard, Sprachdienste und App hinweg konsistent.
+
 ## 0.4.33 — Suchstabilität und gemeinsame Sprachdienste
 
 - Lokale Sprachsuche und nummerierte Folgefragen funktionieren mit optionalem SearXNG; Abfragen sind zeitlich und größenmäßig begrenzt.
