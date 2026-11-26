@@ -121,6 +121,45 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
             await self.action(hass, hass.admin, {
                 "action": "create", "room": "buero", "user_id": "tablet"})
 
+
+    async def test_explicit_camera_setup_reuses_enrolled_owner_without_transfer(self):
+        hass = Fixture()
+        did = "c" * 32
+        hass.devices[did] = {"device_id": did, "room": "Büro", "user_id": "tablet"}
+        with self.assertRaises(PermissionError):
+            await self.action(hass, hass.user, {
+                "action": "camera_setup", "room": "buero", "device_id": did})
+        result = await self.action(hass, hass.admin, {
+            "action": "camera_setup", "room": "buero", "device_id": did})
+        self.assertEqual(result, {"room": "buero", "paired": True, "camera_enabled": True})
+        self.assertEqual(hass.transport.rooms["buero"], "tablet")
+        self.assertEqual(hass.transport.settings["buero"]["wake_device_id"], did)
+        self.assertEqual(hass.devices[did]["user_id"], "tablet")
+        self.assertEqual(hass.saved, 1)
+        # Idempotent enable only. No owner transfer and no duplicate room.
+        again = await self.action(hass, hass.admin, {
+            "action": "camera_setup", "room": "buero", "device_id": did})
+        self.assertTrue(again["paired"])
+        self.assertEqual(len(hass.transport.rooms), 1)
+
+    async def test_camera_setup_rejects_cross_room_and_wrong_ownership(self):
+        hass = Fixture()
+        did = "d" * 32
+        hass.devices[did] = {"device_id": did, "room": "Büro", "user_id": "tablet"}
+        await self.action(hass, hass.admin, {
+            "action": "create", "room": "wohnzimmer", "user_id": "tablet"})
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "camera_setup", "room": "buero", "device_id": did})
+        self.assertNotIn("buero", hass.transport.rooms)
+        # A different HA user must not be able to bind someone else's tablet.
+        hass.transport.rooms.clear()
+        hass.transport.rooms["buero"] = "admin"
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "camera_setup", "room": "buero", "device_id": did})
+        self.assertNotIn("buero", hass.transport.settings)
+
     async def test_non_admin_cannot_read_or_create_rooms(self):
         hass = Fixture()
         for action in ("list", "create"):

@@ -108,7 +108,9 @@ class DashboardDelivery(unittest.TestCase):
         self.assertNotIn("async_register_panel(",src)
         self.assertIn("async_get_dashboard",src)
         self.assertIn("async_set_dashboard",src)
-        self.assertIn('if legacy_present else PLATFORMS',src)
+        self.assertIn('active_platforms = PLATFORMS',src)
+        self.assertIn('await setup_relay_camera(hass, entry)',src)
+        self.assertNotIn('if legacy_present else PLATFORMS',src)
         self.assertIn('active_platforms',src)
         self.assertIn('async_unload_platforms(entry, active_platforms)',src)
         for js in ["panel.js","dashboard.js","dashboard_model.js","voice_tools.js"]:
