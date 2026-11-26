@@ -25,13 +25,13 @@ from auto_setup import configure, sync_app_configuration, ensure_pipeline, save_
 from installer import bootstrap, status
 from speech_source import (choose as choose_speech_source,
                            piper_ready as external_piper_ready,
-                           setup_settings, connection_status)
+                           setup_settings, setup_settings_values, connection_status)
 from model_store import inventory as local_model_inventory, remove_local_models
 from wyoming_picker import discover_wyoming_stt, save_wyoming_selection
 from settings_ui import render_settings_form, save_settings_form
 from endpoint_checks import assess_endpoints, recent_stt_backend
 from control_center_view import render_dashboard
-from import_manifest import preview as preview_import, consume as consume_import, proposed_options, load_records, save_record, render_panel
+from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
 from speech_source import load_options
@@ -273,6 +273,8 @@ def _complete_imports():
                 if manifest["kind"]=="gpu_worker" and isinstance(entities.get("llm_agent"),str):
                     changes["llm_agent"]=entities["llm_agent"]
                 if changes:
+                    current=load_options()
+                    changes=reconcile_imported_stt(current,changes,manifest["kind"])
                     save_app_changes(TOKEN,changes)
                 save_record(manifest,assigned)
             except (OSError,RuntimeError,ValueError,TimeoutError) as exc:
@@ -296,7 +298,15 @@ def _complete_imports():
             changes={k:v for k,v in assigned.items()
                      if k in ("gpu_stt","cpu_stt","llm_agent")
                      and isinstance(v,str) and current.get(k)!=v}
-            if changes:
+            if changes or (current.get("cpu_stt") and current.get("cpu_stt")==current.get("gpu_stt")):
+                if changes.get("gpu_stt") and changes["gpu_stt"]==changes.get("cpu_stt"):
+                    LOG.warning("CPU and GPU manifests resolved to the same Wyoming STT; "
+                                "preferring the verified GPU mapping")
+                    changes.pop("cpu_stt",None)
+                preferred_kind=("gpu_worker" if "gpu_stt" in changes or
+                                ("cpu_stt" not in changes and "gpu_worker" in mappings)
+                                else "speech_server")
+                changes=reconcile_imported_stt(current,changes,preferred_kind)
                 save_app_changes(TOKEN,changes)
                 mode,base=choose_speech_source()
                 if mode!="setup":
@@ -572,7 +582,8 @@ class Handler(BaseHTTPRequestHandler):
             elif action=="manifest_apply":
                 manifest=consume_import(fields.get("ticket",[""])[0])
                 current=load_options()
-                changes=proposed_options(manifest,current)
+                changes=reconcile_imported_stt(
+                    current,proposed_options(manifest,current),manifest["kind"])
                 known=load_records().get(manifest["device_id"],{})
                 if known and known.get("kind")!=manifest["kind"]:
                     raise ValueError("Device identity was previously used for a different server type")
@@ -587,7 +598,9 @@ class Handler(BaseHTTPRequestHandler):
                     piper=_internal_address()
                 ready=False
                 try:
-                    configured=configure(piper,{**setup_settings(),**changes})
+                    # Validate repaired proposed options, not the potentially
+                    # conflicting already-saved CPU/GPU mappings.
+                    configured=configure(piper,setup_settings_values(proposed))
                     ready=configured in ("configured","already_configured")
                     if not ready:
                         pending=True
@@ -618,6 +631,7 @@ class Handler(BaseHTTPRequestHandler):
                     changes[role]=entities["stt"]
                 if entities.get("llm_agent") and manifest["kind"]=="gpu_worker":
                     changes["llm_agent"]=entities["llm_agent"]
+                changes=reconcile_imported_stt(current,changes,manifest["kind"])
                 if changes:
                     save_app_changes(TOKEN,changes)
                 save_record(manifest,entries,pending=pending)
