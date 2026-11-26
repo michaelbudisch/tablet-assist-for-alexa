@@ -10,6 +10,7 @@ from homeassistant.helpers import intent
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN, settings
 from .local_intents import classify, SEARCH_PATTERN, FOLLOW_PATTERN
+SEARCH_CONTINUATION = re.compile(r"^(?:zurück|zurueck|zeige|zeig|lies|lese|erzähl|erzaehl|erkläre|erklaere|fass|fasse)\b", re.I)
 START = {"gespräch starten", "gespraech starten", "gesprächsmodus starten", "lass uns reden", "gespräch beginnen"}
 STOP = {"gespräch beenden", "gespraech beenden", "gesprächsmodus beenden", "stop", "stopp", "auf wiedersehen", "danke das war alles", "danke das reicht"}
 TIMEOUT = 90
@@ -140,14 +141,20 @@ class JarvisConversation(conversation.ConversationEntity):
             event = {"question": text, "reply": message[:1800], "topic": category,
                      "user_id": getattr(user_input.context, "user_id", None),
                      "device_id": user_input.device_id or "", "sources": sources}
-            if SEARCH_PATTERN.match(text.strip()) or FOLLOW_PATTERN.match(text.strip()):
-                event["topic"] = "search"
+            search_request = bool(SEARCH_PATTERN.match(text.strip()))
+            follow_request = bool(FOLLOW_PATTERN.match(text.strip()))
+            more_search = bool(SEARCH_CONTINUATION.match(text.strip()))
+            if search_request or follow_request or more_search:
                 search = self._local_data.search_context(
                     (getattr(user_input.context, "user_id", None), user_input.device_id,
                      chat_log.conversation_id if chat_log is not None else None))
-                # Conversation IDs may be assigned after this input is made.
-                if search:
-                    event["results"] = search.get("results", [])[:10]
+                if search_request or search:
+                    event["topic"] = "search"
+                    event["results"] = search.get("results", [])[:10] if search else []
+                    if search and (follow_request or more_search):
+                        event["selected_index"] = search.get("selected", -1)
+                        if more_search and search.get("article"):
+                            event["article"] = search["article"]
             self.hass.bus.async_fire("tafa_assist_response", event,
                                      context=user_input.context)
         except Exception:
@@ -331,7 +338,13 @@ class JarvisConversation(conversation.ConversationEntity):
                 classify(user_input.text) == "heizoel"
                 and bool(self._local_data.sources.get("heizoel"))
             )
-            if handler is not None and not prefer_tafa_oil:
+            # Read-only search and its numbered follow-ups take precedence
+            # over legacy sentence automations while the search context exists.
+            prefer_tafa_search = bool(SEARCH_PATTERN.match(user_input.text.strip()))
+            if not prefer_tafa_search and self._local_data.search_context(key):
+                prefer_tafa_search = bool(FOLLOW_PATTERN.match(user_input.text.strip())
+                                          or SEARCH_CONTINUATION.match(user_input.text.strip()))
+            if handler is not None and not prefer_tafa_oil and not prefer_tafa_search:
                 local = await handler(self.hass, user_input, chat_log)
                 if isinstance(local, str):
                     self._local_data.followups.clear(key)
