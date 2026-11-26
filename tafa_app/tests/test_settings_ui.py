@@ -6,13 +6,13 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from settings_ui import FORM_FIELDS, BOOL_FIELDS, render_settings_form, validate_settings_form, save_app_changes
+from settings_ui import SETTINGS_FIELDS, BOOL_FIELDS, render_settings_form, render_connection_form, validate_settings_form, validate_connection_form, save_connection_form, save_app_changes
 from speech_source import setup_settings_values
 
 
 class SettingsUI(unittest.TestCase):
     def form(self, **changes):
-        defaults = {k: "" for k in FORM_FIELDS - set(BOOL_FIELDS)}
+        defaults = {k: "" for k in SETTINGS_FIELDS - set(BOOL_FIELDS)}
         defaults.update({"speech_mode": "local", "hardware_profile": "automatic",
                          "voice_variant": "default", "live_profile": "natural",
                          "conversation_mode": "intelligent", "mp3_profile": "natural",
@@ -21,8 +21,7 @@ class SettingsUI(unittest.TestCase):
         return {k: [v] for k,v in defaults.items()}
 
     def test_full_form_validates_and_preserves_existing_keys(self):
-        form = self.form(cpu_stt="stt.cpu", gpu_stt="stt.gpu",
-                         gpu_base="http://192.168.1.30:10502")
+        form = self.form(cpu_stt="stt.cpu", gpu_stt="stt.gpu")
         current = {"custom_future_setting": "preserve"}
         update = validate_settings_form(form,current,[{"id":"stt.cpu"},{"id":"stt.gpu"}])
         self.assertEqual(update["cpu_stt"],"stt.cpu")
@@ -35,7 +34,7 @@ class SettingsUI(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_settings_form(self.form(cpu_stt="stt.fabricated"),{},[])
         with self.assertRaises(ValueError):
-            validate_settings_form(self.form(gpu_base="http://example.org:10502"),{},[])
+            validate_settings_form({**self.form(), "gpu_base": ["http://example.org:10502"]},{},[])
         with self.assertRaises(ValueError):
             validate_settings_form(self.form(rooms_json="{broken"),{},[])
         with self.assertRaises(ValueError):
@@ -93,12 +92,38 @@ class SettingsUI(unittest.TestCase):
         rows = [{"id":"stt.cpu","name":"CPU & <Whisper>"}]
         de=render_settings_form(options,rows,"de","csrf","1 detected")
         en=render_settings_form(options,rows,"en","csrf","1 detected")
-        self.assertIn("Einstellungen – zentral verwalten",de)
-        self.assertIn("Settings – one place",en)
+        self.assertIn("Sprachassistent und KI",de)
+        self.assertIn("Voice assistant and AI",en)
         self.assertIn('value="stt.cpu" selected',de)
         self.assertIn("CPU &amp; &lt;Whisper&gt;",de)
         self.assertIn('id="wyoming-picker"',de)
         self.assertEqual(de.count('name="action" value="settings"'),1)
+        self.assertNotIn('name="gpu_base"',de)
+        self.assertNotIn('name="gpu_stt_host"',de)
+        self.assertNotIn('name="mp3_base"',de)
+        self.assertNotIn('name="public_audio_base"',de)
+
+    def test_connection_form_only_edits_addresses_and_checks_values(self):
+        options = {"gpu_base":"http://192.168.1.30:10502",
+                   "public_audio_base":"https://tafa.example.org"}
+        html = render_connection_form(options,"de","csrf",checks={"gpu_base":"ready"})
+        self.assertIn('name="gpu_base"',html)
+        self.assertIn('data-connection-probe="gpu_base"',html)
+        self.assertIn('data-connection-probe="public_audio_base"',html)
+        self.assertIn('name="action" value="connection_settings"',html)
+        self.assertNotIn('name="llm_agent"',html)
+        self.assertNotIn('name="rooms_json"',html)
+        fields = {name:[""] for name in (
+            "external_piper_base","gpu_base","gpu_stt_host","mp3_base","public_audio_base")}
+        fields.update({"gpu_base":["http://192.168.1.30:10502"],
+                       "public_audio_base":["https://tafa.example.org"]})
+        updated = validate_connection_form(fields,{"llm_agent":"conversation.ollama"})
+        self.assertEqual(updated["gpu_base"],"http://192.168.1.30:10502")
+        self.assertNotIn("llm_agent",updated)
+        with self.assertRaises(ValueError):
+            validate_connection_form({**fields,"llm_agent":["conversation.other"]},{})
+        with self.assertRaises(ValueError):
+            validate_connection_form({**fields,"gpu_base":["http://8.8.8.8:10502"]},{})
 
 
 if __name__=="__main__":

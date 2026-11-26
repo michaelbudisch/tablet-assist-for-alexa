@@ -51,6 +51,19 @@ class Tests(unittest.TestCase):
    code,body,_=self.get("/?lang=en")
    self.assertEqual(code,200)
    self.assertIn("Getting started",body)
+ def test_address_probe_requires_csrf_and_refuses_wrong_field(self):
+  with patch.object(server,"probe_connection",return_value={"status":"tls_ok","detail":"tls_only"}) as probe:
+   code,body=self.post({"csrf":server.CSRF,"action":"connection_probe",
+                        "field":"public_audio_base","value":"https://tafa.example.org"})
+   self.assertEqual(code,200)
+   self.assertIn('"status":"tls_ok"',body)
+   probe.assert_called_once()
+  code,_=self.post({"csrf":server.CSRF,"action":"connection_probe",
+                    "field":"secret_token","value":"https://example.org"})
+  self.assertEqual(code,400)
+  code,_=self.post({"csrf":"bad","action":"connection_probe",
+                    "field":"gpu_base","value":"http://192.168.1.5:10502"})
+  self.assertEqual(code,403)
  def test_csrf_required(self):
   code,_=self.post({"csrf":"wrong","lang":"de"})
   self.assertEqual(code,403)

@@ -58,14 +58,18 @@ class EndpointTests(unittest.TestCase):
         html=settings_ui.render_settings_form(opts,[], "de", "csrf", "",
                         checks=result, latest={"backend":"homeserver","duration_ms":1749})
         self.assertIn("Letzte Spracherkennung: CPU-/Homeserver",html)
-        self.assertIn("TCP 10300, kein Spracherkennungstest",html)
+        connections=settings_ui.render_connection_form(opts,"de","csrf",checks=result)
+        self.assertIn("Wyoming TCP 10300",connections)
+        self.assertIn('name="gpu_stt_host"',connections)
         self.assertNotIn("Letzte Spracherkennung: GPU-Whisper",html)
 
     def test_url_proposal_visible_but_not_persisted_automatically(self):
         opts={"gpu_base":"http://192.168.178.115:10502", "gpu_stt_host":""}
-        de=settings_ui.render_settings_form(opts,[],"de","csrf","")
-        self.assertIn('name="gpu_stt_host" type="text" value="192.168.178.115"',de)
-        self.assertIn("Aus der Qwen-IP vorgeschlagen",de)
+        de=settings_ui.render_connection_form(opts,"de","csrf")
+        self.assertIn('name="gpu_stt_host"',de)
+        self.assertIn('value="192.168.178.115"',de)
+        self.assertNotIn('name="gpu_stt_host"',
+                         settings_ui.render_settings_form(opts,[],"de","csrf",""))
 
     def test_router_last_backend_comes_from_home_assistant_state(self):
         requests=[]
