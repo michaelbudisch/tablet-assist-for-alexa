@@ -14,6 +14,22 @@ class TabletWakeword(TabletMixin, SelectEntity):
     async def async_select_option(self, option):
         await self.controller.set_value(self.device_id, "word", option)
 
+class TabletMicMode(TabletMixin, SelectEntity):
+    """Choose native voice triggering; muted remains an independent switch."""
+    _mapping = {"Rufwort": "wake", "Immer an": "continuous"}
+    def __init__(self, controller, device_id):
+        super().__init__(controller, device_id, "voice_mode", "Nativer Sprachmodus")
+        self._attr_options = list(self._mapping)
+        self._attr_icon = "mdi:microphone"
+    @property
+    def current_option(self):
+        mode = self.controller.devices.get(self.device_id, {}).get("voice_mode", "wake")
+        return next((name for name, value in self._mapping.items() if value == mode), "Rufwort")
+    async def async_select_option(self, option):
+        if option not in self._mapping:
+            raise ValueError("Unknown microphone mode")
+        await self.controller.set_value(self.device_id, "voice_mode", self._mapping[option])
+
 async def async_setup_entry(hass, entry, async_add_entities):
     setup_tablets(hass, entry, async_add_entities,
-                  lambda controller, device: [TabletWakeword(controller, device)])
+                  lambda controller, device: [TabletWakeword(controller, device), TabletMicMode(controller, device)])
