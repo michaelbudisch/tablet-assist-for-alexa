@@ -91,20 +91,21 @@ async def async_setup_entry(hass, entry):
     await learning.load()
     data = hass.data.setdefault(DOMAIN, {})
     data[entry.entry_id] = LocalData(hass, cfg, reminders, learning)
-    # Device Bridge REST paths and legacy service names are owned by the new
-    # single integration. Never register duplicate views if an older Jarvis
-    # Tablet Audio integration is still configured in this Home Assistant.
+    # TAFA owns the one supported audio/wake transport, even if an old
+    # Jarvis integration is installed for unrelated automations. Namespaced
+    # endpoints prevent conflicts; copy legacy room/device pairings read-only.
     legacy_present = bool(hass.config_entries.async_entries("jarvis_tablet_audio"))
-    data["relay_started"] = not legacy_present
-    if legacy_present:
-        _LOGGER.warning("Legacy Jarvis Tablet Audio detected; integrated relay disabled to avoid duplicate API routes. Migrate the old integration before enabling the unified backend.")
-    else:
+    from .relay.relay_room_adapter import setup_room_audio
+    from .relay.relay_wake_devices import setup_wake_devices
+    await setup_room_audio(hass, entry)
+    await setup_wake_devices(hass, entry)
+    data["relay_started"] = True
+    data["relay_camera_started"] = not legacy_present
+    if not legacy_present:
         from .relay.relay_camera import async_setup as setup_relay_camera
-        from .relay.relay_room_adapter import setup_room_audio
-        from .relay.relay_wake_devices import setup_wake_devices
         await setup_relay_camera(hass, entry)
-        await setup_room_audio(hass, entry)
-        await setup_wake_devices(hass, entry)
+    else:
+        _LOGGER.info("TAFA direct audio enabled with read-only legacy pairing migration; legacy camera/automations unchanged")
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
@@ -124,10 +125,11 @@ async def async_unload_entry(hass, entry):
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
         if hass.data.get(DOMAIN, {}).pop("relay_started", False):
-            from .relay.relay_camera import async_unload as unload_relay_camera
             from .relay.relay_room_adapter import unload_room_audio
             from .relay.relay_wake_devices import unload_wake_devices
-            unload_relay_camera(hass)
+            if hass.data.get(DOMAIN, {}).pop("relay_camera_started", False):
+                from .relay.relay_camera import async_unload as unload_relay_camera
+                unload_relay_camera(hass)
             unload_room_audio(hass)
             unload_wake_devices(hass)
         data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
