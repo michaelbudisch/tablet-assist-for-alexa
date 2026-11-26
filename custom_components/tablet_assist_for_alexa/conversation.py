@@ -9,8 +9,7 @@ from homeassistant.helpers import intent
 
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN, settings
-from .local_intents import classify
-from .web_search import SEARCH_PATTERN, FOLLOW_PATTERN
+from .local_intents import classify, SEARCH_PATTERN, FOLLOW_PATTERN
 START = {"gespräch starten", "gespraech starten", "gesprächsmodus starten", "lass uns reden", "gespräch beginnen"}
 STOP = {"gespräch beenden", "gespraech beenden", "gesprächsmodus beenden", "stop", "stopp", "auf wiedersehen", "danke das war alles", "danke das reicht"}
 TIMEOUT = 90
