@@ -25,7 +25,8 @@ from homeassistant.components import websocket_api
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.STT, Platform.TTS, Platform.CONVERSATION, Platform.CAMERA, Platform.BINARY_SENSOR]
+CONTROL_PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER, Platform.SELECT]
+PLATFORMS = [Platform.STT, Platform.TTS, Platform.CONVERSATION, Platform.CAMERA, Platform.BINARY_SENSOR, *CONTROL_PLATFORMS]
 _LOGGER = logging.getLogger(__name__)
 ANNOUNCE_SCHEMA = vol.Schema({
     vol.Required("text"): vol.All(cv.string, vol.Length(min=1, max=500)),
@@ -108,7 +109,7 @@ async def async_setup_entry(hass, entry):
     # Camera/binary-sensor platforms require our camera relay. An older
     # Jarvis camera relay may still be configured during the Android
     # migration; never create camera entities with a null relay in that case.
-    active_platforms = ([Platform.STT, Platform.TTS, Platform.CONVERSATION]
+    active_platforms = ([Platform.STT, Platform.TTS, Platform.CONVERSATION, *CONTROL_PLATFORMS]
                         if legacy_present else PLATFORMS)
     data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
     await hass.config_entries.async_forward_entry_setups(entry, active_platforms)

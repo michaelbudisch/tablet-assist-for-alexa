@@ -11,15 +11,24 @@ from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import DOMAIN
 
 KEY = "wake_devices_dynamic"
+SIGNAL = DOMAIN + "_tablet_changed"
+REGISTERED_SIGNAL = DOMAIN + "_tablet_registered"
 DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
-DEFAULTS = {"muted": False, "word": "Hey Jarvis",
-            "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1}
-VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90), "followup_limit": (-1, 100)}
+DEFAULTS = {"muted": False, "word": "Hey Jarvis", "room": "Jarvis Tablet",
+            "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1,
+            "pause_ms": 1700, "mic_gain": 100, "brightness": 80,
+            "screen_awake": True}
+VALID = {"strict": (1, 3), "cooldown": (3, 30), "hold": (10, 90),
+         "pause_ms": (900, 3200), "mic_gain": (50, 200),
+         "brightness": (1, 100)}
+TELEMETRY = {"wake_status", "microphone", "audio", "bluetooth", "battery",
+             "app_version", "display"}
 
 
 class WakeDeviceView(HomeAssistantView):
@@ -63,13 +72,53 @@ class WakeDevices:
         self.devices = saved
         self.lock = asyncio.Lock()
         self.last_wake = 0.0
+        self.telemetry = {}  # Volatile diagnostics, never persisted.
 
     def allowed(self, user, device):
         return user.is_admin or device["user_id"] == user.id
 
+    def public(self, device):
+        identifier = device["device_id"]
+        observed = self.telemetry.get(identifier, {})
+        seen = observed.get("seen", 0)
+        return {**DEFAULTS,
+                **{k: v for k, v in device.items() if k != "user_id"},
+                "online": bool(seen and time.time() - seen < 45),
+                "last_seen": int(seen) if seen else None,
+                "telemetry": {k: v for k, v in observed.items() if k != "seen"}}
+
+    def changed(self, identifier, registered=False):
+        async_dispatcher_send(self.hass, SIGNAL, identifier)
+        if registered:
+            async_dispatcher_send(self.hass, REGISTERED_SIGNAL, identifier)
+
     @staticmethod
-    def public(device):
-        return {**DEFAULTS, **{k: v for k, v in device.items() if k != "user_id"}}
+    def clean_settings(updates):
+        if not isinstance(updates, dict) or not updates or len(updates) > 12:
+            raise ValueError("Invalid settings")
+        cleaned = {}
+        for key, value in updates.items():
+            if key in ("muted", "screen_awake") and type(value) is bool:
+                cleaned[key] = value
+            elif key == "word" and isinstance(value, str) and value in CHOICES:
+                cleaned[key] = value
+            elif key == "room" and isinstance(value, str) and 0 < len(value.strip()) <= 48:
+                cleaned[key] = value.strip()
+            elif key in VALID and type(value) is int and VALID[key][0] <= value <= VALID[key][1]:
+                cleaned[key] = value
+            else:
+                raise ValueError("Invalid setting: " + str(key)[:32])
+        return cleaned
+
+    async def set_value(self, identifier, key, value):
+        """Native HA entity controls and the device API use one validated store."""
+        async with self.lock:
+            if identifier not in self.devices:
+                raise KeyError(identifier)
+            changes = self.clean_settings({key: value})
+            self.devices[identifier].update(changes)
+            await self.save()
+            self.changed(identifier)
 
     async def save(self):
         await self.store.async_save({"devices": self.devices})
@@ -90,6 +139,7 @@ class WakeDevices:
                     device = dict(DEFAULTS, device_id=identifier, room=room, user_id=user.id)
                     self.devices[identifier] = device
                     await self.save()
+                    self.changed(identifier, registered=True)
                 else:
                     if not self.allowed(user, device):
                         raise PermissionError()
@@ -104,32 +154,36 @@ class WakeDevices:
             if action == "get":
                 return {"device": self.public(device)}
             if action == "configure":
-                updates = payload.get("settings")
-                if not isinstance(updates, dict) or not updates or len(updates) > 6:
-                    raise ValueError("Invalid settings")
-                cleaned = {}
-                for key, value in updates.items():
-                    if key == "muted" and type(value) is bool:
-                        cleaned[key] = value
-                    elif key == "word" and isinstance(value, str) and value in CHOICES:
-                        cleaned[key] = value
-                    elif key == "room" and isinstance(value, str) and 0 < len(value.strip()) <= 48:
-                        cleaned[key] = value.strip()
-                    elif key in VALID and type(value) is int and VALID[key][0] <= value <= VALID[key][1]:
-                        cleaned[key] = value
-                    else:
-                        raise ValueError("Invalid setting")
-                if cleaned:
-                    device.update(cleaned)
-                    await self.save()
+                cleaned = self.clean_settings(payload.get("settings"))
+                device.update(cleaned)
+                await self.save()
+                self.changed(identifier)
                 return {"device": self.public(device)}
             if action == "delete":
                 # Only the administrator can remove an enrolled installation.
                 if not user.is_admin:
                     raise PermissionError()
                 del self.devices[identifier]
+                self.telemetry.pop(identifier, None)
                 await self.save()
+                self.changed(identifier)
                 return {"removed": True}
+            if action == "report":
+                report = payload.get("telemetry")
+                if not isinstance(report, dict) or len(report) > 7 or any(
+                        k not in TELEMETRY for k in report):
+                    raise ValueError("Invalid telemetry")
+                sanitized = {}
+                for key, value in report.items():
+                    if key == "battery" and type(value) is int and 0 <= value <= 100:
+                        sanitized[key] = value
+                    elif isinstance(value, str) and len(value) <= 80:
+                        sanitized[key] = value
+                    else:
+                        raise ValueError("Invalid telemetry value")
+                self.telemetry[identifier] = {"seen": time.time(), **sanitized}
+                self.changed(identifier)
+                return {"accepted": True}
             if action == "wake":
                 word = payload.get("wakeword")
                 stamp = payload.get("timestamp_ms")
@@ -152,6 +206,8 @@ class WakeDevices:
                 if now - self.last_wake < 3.0:
                     return {"accepted": False, "reason": "other_device_won"}
                 self.last_wake = now
+                self.telemetry.setdefault(identifier, {})["last_wake"] = int(time.time())
+                self.changed(identifier)
                 self.hass.bus.async_fire("jarvis_android_wakeword_routed", event)
                 return {"accepted": True}
             raise ValueError("Unknown action")
