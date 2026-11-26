@@ -15,6 +15,12 @@ from .const import DOMAIN
 
 STORE_KEY = DOMAIN + "_dashboard"
 STORE_VERSION = 1
+PRESENTATION_DEFAULTS = {
+    "captions": True, "houseCards": True, "knowledge": True,
+    "knowledgeMedia": False, "contextNav": True, "search": True,
+    "returnTarget": "previous", "returnSeconds": 20, "infoSeconds": 30,
+}
+
 GET_COMMAND = DOMAIN + "/dashboard/get"
 SET_COMMAND = DOMAIN + "/dashboard/set"
 
@@ -188,6 +194,7 @@ def default_dashboard():
         "modules": list(DEFAULT_MODULES),
         "bindings": {key: [] for key in ROLE_DOMAINS},
         "assist": {}, "title": "TAFA Dashboard",
+        "presentation": dict(PRESENTATION_DEFAULTS),
     }
 
 
@@ -195,7 +202,8 @@ def validate_dashboard(raw):
     if not isinstance(raw, dict):
         raise ValueError("Dashboard must be an object")
     allowed = {"type", "version", "modules", "bindings", "assist",
-               "language", "theme", "accent", "density", "gridSign", "title"}
+               "language", "theme", "accent", "density", "gridSign", "title",
+               "presentation"}
     if set(raw) - allowed:
         raise ValueError("Unsupported dashboard configuration fields")
     if raw.get("type") != "custom:tafa-home-dashboard" or raw.get("version") != 1:
@@ -243,6 +251,20 @@ def validate_dashboard(raw):
         if not isinstance(val, str) or (val and not PIPELINE.fullmatch(val)):
             raise ValueError("Invalid Assist pipeline ID")
         result["assist"][key] = val
+    presentation = raw.get("presentation", {})
+    if not isinstance(presentation, dict) or set(presentation) - PRESENTATION_DEFAULTS.keys():
+        raise ValueError("Invalid dashboard presentation options")
+    for key, default in PRESENTATION_DEFAULTS.items():
+        value = presentation.get(key, default)
+        if isinstance(default, bool):
+            if type(value) is not bool:
+                raise ValueError("Invalid presentation toggle " + key)
+        elif key == "returnTarget":
+            if value not in ("previous", "start"):
+                raise ValueError("Invalid return target")
+        elif type(value) is not int or not 5 <= value <= 180:
+            raise ValueError("Invalid presentation duration " + key)
+        result["presentation"][key] = value
     return result
 
 
