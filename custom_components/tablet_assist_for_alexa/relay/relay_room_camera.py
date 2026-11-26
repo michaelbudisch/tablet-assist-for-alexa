@@ -62,6 +62,13 @@ class RoomCameraHub:
             self.notify(room)
 
     @callback
+    def forget_room(self, room):
+        # A deleted room may later be created again under the same ID.
+        # Release its dynamic-entity creation guard for that case.
+        for known in self.known.values():
+            known.discard(room)
+
+    @callback
     def expire(self, _now):
         for room in self.store.expire():
             self.notify(room)

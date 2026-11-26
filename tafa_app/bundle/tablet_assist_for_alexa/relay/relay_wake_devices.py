@@ -17,6 +17,7 @@ from .const import DOMAIN
 KEY = "wake_devices_dynamic"
 SIGNAL = DOMAIN + "_tablet_changed"
 REGISTERED_SIGNAL = DOMAIN + "_tablet_registered"
+REMOVED_SIGNAL = DOMAIN + "_tablet_removed"
 DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
@@ -167,6 +168,7 @@ class WakeDevices:
                 self.telemetry.pop(identifier, None)
                 await self.save()
                 self.changed(identifier)
+                async_dispatcher_send(self.hass, REMOVED_SIGNAL, identifier)
                 return {"removed": True}
             if action == "report":
                 report = payload.get("telemetry")

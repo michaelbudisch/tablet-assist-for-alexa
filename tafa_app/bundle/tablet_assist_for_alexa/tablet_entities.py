@@ -2,7 +2,7 @@
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
 from .const import DOMAIN
-from .relay.relay_wake_devices import KEY, SIGNAL, REGISTERED_SIGNAL
+from .relay.relay_wake_devices import KEY, SIGNAL, REGISTERED_SIGNAL, REMOVED_SIGNAL
 
 class TabletMixin:
     _attr_has_entity_name = True
@@ -20,6 +20,10 @@ class TabletMixin:
         return {"identifiers": {(DOMAIN, self.device_id)},
                 "name": "TAFA · " + room, "manufacturer": "TAFA",
                 "model": "Device Bridge"}
+
+    @property
+    def available(self):
+        return self.device_id in self.controller.devices
 
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
@@ -47,3 +51,10 @@ def setup_tablets(hass, entry, add_entities, factory):
     add()
     entry.async_on_unload(async_dispatcher_connect(
         hass, REGISTERED_SIGNAL, add))
+    @callback
+    def removed(identifier):
+        # Re-enrolling with the same physical device ID must recreate its
+        # entities, rather than being blocked by a stale enrolled cache.
+        enrolled.discard(identifier)
+    entry.async_on_unload(async_dispatcher_connect(
+        hass, REMOVED_SIGNAL, removed))

@@ -7,6 +7,7 @@ import re
 import voluptuous as vol
 from homeassistant.components import websocket_api
 from .const import DOMAIN
+from .device_cleanup import cleanup_tablet, cleanup_room
 
 COMMAND = DOMAIN + "/device_admin"
 DEVICE_ID = re.compile(r"[a-f0-9]{32}\Z")
@@ -37,6 +38,28 @@ async def perform_device_admin(hass, user, msg):
         return {"users": sorted(users, key=lambda u: u["name"].casefold()),
                 "devices": sorted(devices, key=lambda d: (d["room"].casefold(), d["device_id"])),
                 "rooms": sorted(rooms, key=lambda r: r["room"])}
+    if action == "delete_device":
+        identifier = msg.get("device_id")
+        if not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier):
+            raise ValueError("Invalid tablet ID")
+        if identifier not in controller.devices:
+            raise ValueError("Tablet is not registered")
+        # Unbind all rooms before deleting the HA registration. End active
+        # audio and camera sessions but preserve every HA user and room.
+        for assigned, settings in tuple(transport.settings.items()):
+            if settings.get("wake_device_id") == identifier and assigned in transport.rooms:
+                principal = transport.rooms[assigned]
+                transport.revoke(assigned)
+                transport.provision(assigned, principal)
+                transport.settings[assigned] = {
+                    **{key: value for key, value in settings.items()
+                       if key != "wake_device_id"},
+                    "camera_enabled": False,
+                }
+        await persist()
+        await controller.handle(user, "delete", identifier, {})
+        cleanup_tablet(hass, identifier)
+        return {"device_id": identifier, "removed": True}
     if action == "configure":
         identifier = msg.get("device_id")
         if not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier):
@@ -48,6 +71,31 @@ async def perform_device_admin(hass, user, msg):
     if (not isinstance(room, str) or not ROOM.fullmatch(room)
             or not isinstance(principal, str) or not 1 <= len(principal) <= 128):
         raise ValueError("Invalid room or user")
+    # A room can still be deleted when its former HA user has been
+    # disabled/deleted. Ownership must match the persisted room record.
+    if action in ("unpair", "delete_room"):
+        if transport.rooms.get(room) != principal:
+            raise ValueError("Room or ownership changed")
+        if action == "unpair":
+            identifier = msg.get("device_id")
+            if (not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier)
+                    or transport.settings.get(room, {}).get("wake_device_id") != identifier):
+                raise ValueError("Tablet pairing already changed")
+            settings = transport.settings.get(room, {})
+            transport.revoke(room)
+            transport.provision(room, principal)
+            transport.settings[room] = {
+                **{key: value for key, value in settings.items()
+                   if key != "wake_device_id"},
+                "camera_enabled": False,
+            }
+            await persist()
+            return {"room": room, "unpaired": True}
+        transport.revoke(room)
+        transport.settings.pop(room, None)
+        await persist()
+        cleanup_room(hass, room)
+        return {"room": room, "removed": True}
     selected = await hass.auth.async_get_user(principal)
     if (not selected or not selected.is_active or selected.is_admin
             or selected.system_generated):
@@ -105,7 +153,8 @@ async def perform_device_admin(hass, user, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): COMMAND,
-    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera")),
+    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera",
+                        "unpair", "delete_device", "delete_room")),
     vol.Optional("room"): str,
     vol.Optional("user_id"): str,
     vol.Optional("device_id"): str,
