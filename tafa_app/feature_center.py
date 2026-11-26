@@ -126,7 +126,8 @@ def discover_entities(token):
             unit = ""
         label = attributes.get("friendly_name") or ident
         result.append({"id": ident, "name": str(label)[:120],
-                       "unit": unit[:24], "online": raw.get("state") not in ("unknown", "unavailable", None)})
+                       "unit": unit[:24], "state": str(raw.get("state", ""))[:48],
+                       "online": raw.get("state") not in ("unknown", "unavailable", None)})
     return result, True
 
 
@@ -221,7 +222,8 @@ def render_feature_center(options, lang, csrf, entities, can_read, active=None):
             if value and not present:
                 options_html.append(f'<option value="{_esc(value)}" selected>{_esc(value)} · {t("momentan nicht gefunden", "currently missing")}</option>')
             for item in entries:
-                display = item["name"] + (" · " + item["unit"] if item["unit"] else "")
+                live = item.get("state", "") if item.get("online") else ""
+                display = item["name"] + (" · " + live if live else "") + (" " + item["unit"] if item["unit"] else "")
                 display += " · " + item["id"]
                 if not item.get("online"):
                     display += t(" (offline)", " (offline)")
