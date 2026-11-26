@@ -12,10 +12,6 @@
 
 TAFA brings together native Android voice input, Home Assistant, local speech recognition, optional AI models, and voice output. It is designed for everyday use without keeping a Home Assistant dashboard or the Companion app open. The Android **TAFA Device Bridge** handles wake-word detection and speech capture in the background; Home Assistant handles the request and sends the spoken response back to the tablet.
 
-![TAFA system overview: Android device, Home Assistant, local CPU/GPU speech processing and Echo audio](docs/tafa-architecture.jpg)
-
-*Simplified architecture overview. The standard conversational audio path uses the Android device's Bluetooth connection to the Echo. Alexa announcements are a separate, optional path.*
-
 ## What TAFA does
 
 | Area | Description |
