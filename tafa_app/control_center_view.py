@@ -228,7 +228,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
       <li>{t("GPU-/Proxmox-JSON unter Einrichtung importieren. TAFA verbindet Wyoming und Ollama automatisch, soweit die Dienste verfügbar sind.","Import GPU/Proxmox JSON under Settings. TAFA connects Wyoming and Ollama automatically when the services are available.")}</li>
       <li>{t("TAFA Device Bridge für Rufwort und Audio verbinden.","Connect TAFA Device Bridge for wake words and audio.")}</li>
     </ol><a href="/config/integrations" target="_top">{t("Geräte & Dienste öffnen","Open Devices & services")}</a>
-    <span aria-hidden="true"> · </span><a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Sprachzentrale","TAFA voice center")}</a></div>
+    <span aria-hidden="true"> · </span><a href="/tablet_assist_for_alexa" target="_top">{t("TAFA Dashboard","TAFA dashboard")}</a></div>
   </details>
   <section class="work-card support-links">
     <h3>{t("Dokumentation & Support","Documentation & support")}</h3>

@@ -1,3 +1,7 @@
+## TAFA App 0.3.29 / integration 0.4.14 — portable TAFA Dashboard as the integration panel
+- Ship a portable, modular, entity-bindable home dashboard based on the local TAFA Home preview and original Kiosk visual language, replacing the Voice Center landing in the sidebar. Existing voice-management features remain available in the Voice services subview.
+- Store admin-approved dashboard bindings across devices via Home Assistant Store; avoid publishing home-specific private entities or modifying automations and existing Jarvis dashboards.
+
 ## TAFA App 0.3.28 — reconcile CPU/GPU Wyoming at final import save
 - Fix stale CPU/GPU STT duplicates after confirmed JSON import by comparing against freshly loaded Supervisor options in the last write operation. Show prospective cleanup and preserve genuinely separate providers. Manual settings remain strict.
 

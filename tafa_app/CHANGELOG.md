@@ -1,5 +1,13 @@
 # TAFA App changelog
 
+## 0.3.29 — built-in, portable TAFA Dashboard replaces the Voice Center landing
+- The real household dashboard was inspected via HA MCP. Instead of publishing its private 20-module Kiosk resources and site-specific entity IDs, the portable TAFA Home Dashboard v0.2 visual architecture (energy, solar, battery, EV, heating, heatpump, fuel, appliances, cameras, waste, shopping, weather, lights and Assist) now ships directly inside the HA custom integration.
+- HA integration 0.4.14 opens TAFA Dashboard as its default sidebar panel. The former Voice Center continues inside Dashboard → Sprachdienste, retaining its device controls, learning, room announcements and pairing tools.
+- Administrator-editable Dashboard settings, section selection and per-role entity pickers are persisted centrally via Home Assistant's Store helper and admin-only WebSocket command. No hard-coded private entity IDs, external JavaScript resources, YAML edits or automation changes.
+- Built-in SVG icon, DE/EN UX, theme/fullscreen and built-in Home Assistant entity detail controls remain available. The bundle includes all dashboard JavaScript and is mirrored between standalone and App-managed integrations.
+- Legacy Jarvis dashboards and automation references are left unchanged for a gradual, testable migration.
+
+
 ## 0.3.28 — reconcile Wyoming roles at final Supervisor write
 - Fix duplicate CPU/GPU Wyoming STT validation that could still fail after a confirmed JSON import: the Supervisor App options are re-read inside the last write function, so role reconciliation must also happen there, on the freshest values.
 - Preserve the imported GPU/Proxmox role; remove only its exact duplicate in the opposite role. Unrelated and genuinely separate CPU/GPU STT entities remain unchanged; manual settings still reject duplicate assignments.

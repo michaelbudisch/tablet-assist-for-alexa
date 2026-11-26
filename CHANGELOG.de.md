@@ -1,5 +1,11 @@
 # Changelog
 
+## TAFA-App 0.3.29 / Integration 0.4.14 — das auslieferbare TAFA Dashboard
+- Deine lokale Kiosk-Version wurde als Referenz geprüft; ihre privaten Sensor-IDs und Jarvis-Dateien werden nicht veröffentlicht. Die portable, vom Original-Design abgeleitete TAFA-Home-Oberfläche ist direkt in die Integration eingebaut und öffnet sich jetzt standardmäßig statt der bisherigen TAFA Sprachzentrale.
+- Die Sprachzentrale ist als Unterbereich **Sprachdienste** erreichbar, inklusive Geräteverwaltung, Ansagen und Lernfunktionen. Keine Automatisierungen werden verändert.
+- Admins können Module aktivieren und Entitäten über die integrierte Oberfläche auswählen; die Konfiguration wird geräteübergreifend in Home Assistant gespeichert.
+
+
 ## TAFA-App 0.3.28 — Wyoming-Konflikt beim Speichern bereinigen
 - Bereinigung der CPU-/GPU-Doppelzuordnung jetzt auch nach dem erneuten Lesen der neuesten Supervisor-Einstellungen unmittelbar vor dem Speichern eines bestätigten JSON-Imports.
 - Importvorschau zeigt eine bereits bekannte Bereinigung. Unterschiedliche STT-Entitäten werden nicht verändert.

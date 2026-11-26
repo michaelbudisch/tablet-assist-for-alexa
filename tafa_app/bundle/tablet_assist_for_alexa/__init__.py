@@ -15,7 +15,8 @@ from homeassistant.components import frontend, panel_custom
 
 from .const import DOMAIN, ROOMS, settings
 from .app_settings import async_sync_from_app
-from .ha_provision import provision_manifest
+from .ha_provision import provision_manifest, resolve_manifest_entities
+from .dashboard_config import async_get_dashboard, async_set_dashboard
 from .announcement import audio_url, allowed_targets
 from .reminders import Reminders
 from .local_data import LocalData
@@ -36,6 +37,9 @@ async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, learning_command)
     websocket_api.async_register_command(hass, async_sync_from_app)
     websocket_api.async_register_command(hass, provision_manifest)
+    websocket_api.async_register_command(hass, resolve_manifest_entities)
+    websocket_api.async_register_command(hass, async_get_dashboard)
+    websocket_api.async_register_command(hass, async_set_dashboard)
     # All files required at runtime are part of this integration's directory.
     await hass.http.async_register_static_paths([
         StaticPathConfig("/tablet_assist_for_alexa/keepalive.js", str(Path(__file__).parent / "frontend" / "keepalive.js"), False),
@@ -44,6 +48,9 @@ async def async_setup(hass: HomeAssistant, config):
         StaticPathConfig("/tablet_assist_for_alexa/device_audio.js", str(Path(__file__).parent / "frontend" / "device_audio.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/panel.js", str(Path(__file__).parent / "frontend" / "panel.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/brand.svg", str(Path(__file__).parent / "frontend" / "brand.svg"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/dashboard.js", str(Path(__file__).parent / "frontend" / "dashboard.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/dashboard_model.js", str(Path(__file__).parent / "frontend" / "dashboard_model.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/voice_tools.js", str(Path(__file__).parent / "frontend" / "voice_tools.js"), False),
     ])
     return True
 
@@ -102,8 +109,8 @@ async def async_setup_entry(hass, entry):
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
     await panel_custom.async_register_panel(
         hass, webcomponent_name="tablet-assist-panel", frontend_url_path=DOMAIN,
-        sidebar_title="TAFA", sidebar_icon="mdi:microphone-message",
-        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.11",
+        sidebar_title="TAFA Dashboard", sidebar_icon="mdi:view-dashboard-outline",
+        module_url="/tablet_assist_for_alexa/panel.js?v=0.4.14",
         config={"rooms": list(cfg.get("rooms", {})), "sources": list(cfg.get("sources", {})), "reminders": bool(cfg.get("reminders_enabled"))}, require_admin=False,
     )
     await reminders.load()
