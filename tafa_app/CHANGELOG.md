@@ -1,7 +1,8 @@
 # TAFA App changelog
 
 ## 0.3.44 — GPU-first connections and discoverable CPU/GPU Wyoming entities
-- Keep **JSON quick setup at the top of Connections**, including file-only import and explicit review before apply.\n- Reorganize Connections into **1. GPU / AI (preferred), 2. CPU fallback, 3. Alexa (optional)**. Place the existing `gpu_stt_host` fast-check IP first, with explicit **Wyoming TCP :10300 / 0.8 s** explanation. Keep the independent Qwen TTS health check.
+- Keep **JSON quick setup at the top of Connections**, including file-only import and explicit review before apply.
+- Reorganize Connections into **1. GPU / AI (preferred), 2. CPU fallback, 3. Alexa (optional)**. Place the existing `gpu_stt_host` fast-check IP first, with explicit **Wyoming TCP :10300 / 0.8 s** explanation. Keep the independent Qwen TTS health check.
 - Move both dynamically discovered Wyoming `stt.*` provider selectors and the optional Ollama/conversation entity ID into Connections next to the relevant services, instead of hiding them in AI Settings.
 - Show last actual STT backend (GPU vs CPU and duration) in Connections, not only in the formerly collapsed Settings area.
 - Save connection addresses and entity IDs in one form with strict HA registry validation, distinct CPU/GPU STT roles, preservation of existing options and missing-entity warnings. Separate AI Settings now holds only operating mode, routing behavior, voices and advanced features.
