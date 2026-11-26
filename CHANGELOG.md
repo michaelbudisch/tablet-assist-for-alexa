@@ -1,3 +1,6 @@
+## TAFA App 0.3.32 / integration 0.4.17 — remove duplicate dashboard toolbar
+- Use the dashboard's native navigation and settings gear for Voice services and HA-stored configuration instead of an additional always-visible toolbar. Subviews retain contextual Back/Save/Cancel controls.
+
 ## TAFA App 0.3.31 / integration 0.4.16 — isolated dashboard custom elements
 - Namespace the built-in TAFA panel card and editor separately from an existing TAFA Home Lovelace preview. Preserve both UIs, avoid global custom card registration collision, and update frontend cache version.
 

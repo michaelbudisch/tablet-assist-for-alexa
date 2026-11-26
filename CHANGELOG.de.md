@@ -1,5 +1,11 @@
 # Changelog
 
+## TAFA-App 0.3.32 / HA-Integration 0.4.17 — doppelte Kopfzeile entfernt
+- Das ausgelieferte TAFA Dashboard zeigt keine zusätzliche Leiste mit „Dashboard / Sprachdienste / Dashboard einrichten“ mehr. Stattdessen steuern die vorhandene TAFA-Navigation unten und das Zahnrad in der Dashboard-Kopfzeile diese Funktionen.
+- Der zurückführende Bedienbereich mit Speichern/Abbrechen erscheint nur während der Einrichtung oder beim Öffnen der Sprachdienste.
+- Bestehende Jarvis-Pipelines, Automatisierungen und private Gerätezuordnungen bleiben unverändert.
+
+
 ## TAFA-App 0.3.31 / Integration 0.4.16 — keine Kollision mit TAFA-Home-Vorschau
 - Das integrierte Dashboard und sein Editor erhalten eigene Web-Komponentennamen. So funktionieren bereits installierte Lovelace-Vorschau und neues TAFA-Panel gleichzeitig, ohne sich gegenseitig zu überschreiben.
 - Keine Änderungen an Automatisierungen, privaten Lovelace-Einstellungen oder Jarvis-Pipelines.

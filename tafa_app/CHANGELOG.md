@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.3.32 — use the original TAFA dashboard navigation instead of a second toolbar
+- Remove the redundant dark top toolbar from the built-in Dashboard landing. Its only visible header, quick-action settings gear and bottom navigation now belong to the main dashboard, like the original local Kiosk view.
+- The existing TAFA bottom navigation entry opens the Voice services view directly. The existing settings gear opens the admin-only, centrally persisted Dashboard configuration. Secondary Voice and Edit views show only a compact back/save/cancel strip while active.
+- Keep prior user bindings, Alexa/Assist settings, all automations and old Jarvis pipelines unchanged. Dashboard frontend cache bumped to HA integration 0.4.17.
+
+
 ## 0.3.31 — no collision with local TAFA Home Lovelace preview
 - The bundled panel uses its own component names `tafa-integrated-dashboard` / `tafa-integrated-dashboard-editor` to prevent interference with older `tafa-home-dashboard` resources already loaded by users.
 - Keep the original Lovelace preview available, and do not register a redundant Lovelace custom card globally. Integration 0.4.16 version-busts the bundled frontend assets.

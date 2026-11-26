@@ -103,3 +103,6 @@ TAFA Dashboard is now the default HA integration sidebar panel, based on the por
 **TAFA 0.3.30 / integration 0.4.15:** A dashboard-only option in the HA config flow supports first installing the portable dashboard even when the Piper backend is not yet reachable. Home Assistant stores its entity bindings centrally. Normal voice-enabled setup still checks Piper /health and can be completed later through approved Proxmox/GPU JSON imports.
 
 **TAFA 0.3.31 / integration 0.4.16:** The built-in TAFA Dashboard and editor use distinct web component names from a separately installed `tafa-home-dashboard` Lovelace preview, preventing a registration collision when both are opened in the same browser session.
+
+
+**TAFA App 0.3.32 / integration 0.4.17:** No duplicate top toolbar on the integrated dashboard home view. The native bottom TAFA navigation opens Voice services; the native settings gear opens admin-only HA-persisted dashboard configuration. Contextual Back/Save/Cancel actions only appear while inside a subview.
