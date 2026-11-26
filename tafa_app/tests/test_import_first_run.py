@@ -148,8 +148,12 @@ class SetupAndBrandTests(unittest.TestCase):
         self.assertIn("#65E2CD",content[0])
         ElementTree.fromstring(content[0])
         self.assertIn("brand.svg",(APP/"Dockerfile").read_text())
+        # The integrated dashboard no longer has a duplicate logo toolbar.
+        # The brand asset remains registered and available for other TAFA UI.
         self.assertIn("/tablet_assist_for_alexa/brand.svg",
-                      (ROOT/"custom_components/tablet_assist_for_alexa/frontend/panel.js").read_text())
+                      (ROOT/"custom_components/tablet_assist_for_alexa/__init__.py").read_text())
+        self.assertNotIn('className="toolbar"',
+                         (ROOT/"custom_components/tablet_assist_for_alexa/frontend/panel.js").read_text())
         self.assertIn("assets/brand.svg",(APP/"control_center_view.py").read_text())
         self.assertIn("img-src 'self'",(APP/"server.py").read_text())
 
