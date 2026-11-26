@@ -88,6 +88,14 @@ class LocalData:
         if state and state["expires"] > monotonic():
             return state
         self.search_sessions.pop(key, None)
+        # Some native microphones start a new conversation_id for a follow-up.
+        # Recover only within the SAME authenticated user and the SAME device.
+        # An anonymous or unassigned device must not inherit another search.
+        if key[0] and key[1]:
+            for previous, value in reversed(list(self.search_sessions.items())):
+                if previous[:2] == key[:2] and value["expires"] > monotonic():
+                    self.search_sessions[key] = value
+                    return value
         return None
 
     async def handle(self,key,text,context):
