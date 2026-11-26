@@ -49,7 +49,7 @@
 - Offline-Tests, Docker-Build und Dokumentation ergänzt; echte GPU-Laufzeiten erfordern einen Test auf dem installierten Rechner mit erlaubter lokaler Aufnahme.
 
 
-[English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+[English](CHANGELOG.md) | **Deutsch** · [Projektübersicht](../../README.de.md)
 
 ## 2.0.0
 
