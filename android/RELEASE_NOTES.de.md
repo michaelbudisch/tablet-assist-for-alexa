@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.1
+
+- **Neuer nativer Mikrofonmodus „Immer an“:** Das Tablet erkennt Sprachaktivität lokal, ganz ohne Rufwort oder zusätzlichen Browser-Whisper-Durchlauf.
+- **Vollständige Äußerung:** Die aktuelle Frage wird bis zum Sprechende ausschließlich im Arbeitsspeicher gepuffert und erst dann vollständig an die bestehende Home-Assistant-Assist-Pipeline übergeben. Es wird keine Aufnahmedatei angelegt.
+- **Drei Modi:** Stumm / Rufwort / Immer an. Umschaltung direkt in den Android-Einstellungen oder über das TAFA Control Center; die Einstellungen gelten pro Gerät. Home Assistant benötigt die Integration 0.4.26 oder neuer.
+- Während KI-Antwort und Bluetooth-Wiedergabe ist die lokale Mikrofonaufnahme unterbrochen. Nach der Ausgabe läuft die Erkennung wieder an.
+- **Hinweis:** Im Dauerhörmodus können auch Gespräche, TV oder andere Geräusche unbeabsichtigt TAFA auslösen. Für lautere Umgebungen ist der Rufwortmodus zuverlässiger.
+- **Installation:** Die App-ID `de.jarvis.audio` bleibt unverändert; Versionscode **22**. Damit die neue APK über die vorhandene installierbar ist und deine verschlüsselten Zugangsdaten erhalten bleiben, muss sie mit dem *bisherigen privaten Signaturschlüssel* signiert werden. Ein GitHub-CI-Debug-APK ist kein kompatibles In-place-Update.
+
 # TAFA Device Bridge 1.1.0
 
 - Fehlerursachen beim parallelen Decodieren und Abspielen bleiben erhalten; HTTP- und Formatfehler werden nicht durch einen generischen Decoderfehler überlagert.

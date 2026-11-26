@@ -60,6 +60,23 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn('tablet_assist_for_alexa/wake_devices',wake)
         self.assertIn("TAFA Lokal",native)
         self.assertNotIn("if(chosen==null)chosen=first",native)
+    def test_continuous_voice_mode_is_native_and_preserves_speech(self):
+        wake=read("android/app/src/main/java/de/jarvis/audio/WakeWordService.java")
+        session=read("android/app/src/main/java/de/jarvis/audio/NativeAssistSession.java")
+        settings=read("android/app/src/main/java/de/jarvis/audio/WakePilotSettings.java")
+        integration=read("custom_components/tablet_assist_for_alexa/relay/relay_wake_devices.py")
+        client=read("tafa_app/voice-test.js")
+        self.assertIn('startContinuousMonitor()',wake)
+        self.assertIn('pending.toByteArray()',wake)
+        self.assertIn('beginNativeAssist("",false,captured)',wake)
+        self.assertIn('if(capturedPcm!=null)',session)
+        self.assertIn('new byte[]{(byte)(handler&0xff)}',session)
+        self.assertIn('class ContinuousSpeechTrigger',read("android/app/src/main/java/de/jarvis/audio/ContinuousSpeechTrigger.java"))
+        self.assertIn('"voice_mode": "wake"',integration)
+        self.assertIn('settings.put("voice_mode",selection)',settings)
+        self.assertNotIn('kind=wake',client)
+        self.assertNotIn('runLoop(',client)
+
     def test_player_enrolls_even_without_wakeword(self):
         audio=read("android/app/src/main/java/de/jarvis/audio/AudioService.java")
         self.assertIn("enrollmentIo.scheduleWithFixedDelay(this::syncTabletEnrollment",audio)
