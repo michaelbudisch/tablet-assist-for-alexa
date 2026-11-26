@@ -1,14 +1,16 @@
 # TAFA als Home-Assistant-App installieren
 
-## Aktuelle Oberfläche · TAFA App 0.3.41 / Integration 0.4.25
+## Aktuelle Oberfläche · TAFA App 0.3.43 / Integration 0.4.25
 
 Das **TAFA Control Center** ist in fünf Bereiche aufgeteilt:
 
 1. **Übersicht:** Status des Sprachwegs und der Komponenten, ohne Konfigurationsformular.
-2. **Verbindungen:** Piper-/Proxmox-, Qwen-, GPU-Whisper-, MP3- und Alexa-HTTPS-Adressen bearbeiten. Alle Felder werden nach dem Tippen automatisch geprüft. **JSON-Datei auswählen → Konfiguration prüfen** zeigt die erkannten Änderungen; erst nach Bestätigung werden Integrationen eingerichtet. Die große JSON-Eingabefläche entfällt.
-3. **Einstellungen:** Modus (lokal/extern), KI- und STT-Zuordnung, Stimme, Gesprächsverhalten, optionale Alexa-Durchsagen und Datenquellen. **Keine IP-/Domainfelder.**
+2. **Verbindungen:** In drei Gruppen: **GPU/KI bevorzugt** mit direkter GPU-PC-IP, Qwen-TTS, GPU-Wyoming-STT und optional Ollama-`conversation.*`; **CPU-Fallback** mit Piper und CPU-Wyoming-STT; **Alexa** mit MP3-Generator und öffentlichem HTTPS. Die IP-/URL-Felder werden während der Eingabe geprüft. JSON-Datei auswählen → Konfiguration prüfen → Änderungen bestätigen ist ebenfalls hier.
+3. **Einstellungen:** Modus (lokal/extern), GPU-/Piper-Ausgabeverhalten, Stimmvarianten, Gesprächsmodus, optionale Alexa-Durchsagen und Datenquellen. **Keine IP-/Domain- oder Wyoming-Entitätsfelder.**
 4. **Geräte & Multiroom:** Tablet registrieren, einem Raum zuordnen und bei Bedarf **Tablet lösen**, **Tablet entfernen** oder **Raum löschen**. Dabei werden nur TAFA-Zuordnungen und ggf. TAFA-eigene Entitäten entfernt. Home-Assistant-Benutzer und Automatisierungen bleiben bestehen; Automatisierungen mit gelöschten Entitätsreferenzen müssen gegebenenfalls neu zugeordnet werden.
 5. **Wartung & Hilfe:** Backend-Status, Modelldateien, Neustart und Dokumentation.
+
+**GPU-Schnellprüfung:** Im Feld **GPU-PC-IP – Schnellprüfung (Wyoming Port 10300)** die lokale GPU-IP (z. B. `192.168.178.115`) eintragen. Der TAFA-STT-Router prüft diesen Port vor GPU-Whisper mit **0,8 s Timeout**. Ist die GPU offline, nutzt er die ausgewählte CPU-Wyoming-Entität. Die GPU-Wyoming-Entität selbst führt die tatsächliche Erkennung aus. Qwen-TTS prüft unabhängig davon seine `/health`-Bereitschaft und verwendet bei Ausfall Piper. Ein offener Port allein ist kein erfolgreicher STT-Test. CPU- und GPU-Wyoming müssen verschiedene HA-Entitäten sein.
 
 **Reichweite der Prüfungen:** Eine erfolgreiche HTTP-/TCP-Verbindung bestätigt nicht die Sprachverarbeitung. Alexa-HTTPS wird auf öffentliche DNS-Adresse und gültige TLS-Verbindung geprüft; die Erreichbarkeit einer konkreten Audiodatei *von Amazon aus* wird damit nicht bestätigt. Serveradressen werden erst beim Speichern übernommen.
 

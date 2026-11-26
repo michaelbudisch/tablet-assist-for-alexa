@@ -1,14 +1,16 @@
 # Install TAFA from Home Assistant Apps
 
-## Current interface · TAFA App 0.3.41 / integration 0.4.25
+## Current interface · TAFA App 0.3.43 / integration 0.4.25
 
 The **TAFA Control Center** uses five areas:
 
 1. **Overview:** voice route and component status, without configuration fields.
-2. **Connections:** edit Piper/Proxmox, Qwen, GPU Whisper, MP3 and Alexa HTTPS addresses, with checks triggered as you type. **Choose JSON file → Check configuration** reviews the detected changes; nothing is applied until confirmation. No large raw JSON editor.
-3. **Settings:** local/external mode, AI and STT provider selection, voice, conversation behavior, optional Alexa announcements and HA data sources. **No IP/domain fields.**
+2. **Connections:** Three groups: **GPU/AI preferred route** (direct GPU PC IP, Qwen TTS, GPU Wyoming STT dropdown and optional Ollama `conversation.*` entity); **CPU fallback** (Piper and CPU Wyoming STT); **Alexa** (MP3 generator and public HTTPS). Live address checks run while typing; choose JSON file → check → confirm changes remains here.
+3. **Settings:** Local/external mode, GPU/Piper speech routing, voices, conversation behavior, optional Alexa announcements and HA sources. **No IP/domain or Wyoming entity fields.**
 4. **Devices & multiroom:** enroll, pair, **unpair**, **remove tablet** or **delete room**. Only TAFA assignments and TAFA-owned entities are cleared. HA users and automations remain, although automations referencing removed entities may need to be reconfigured.
 5. **Maintenance & help:** backend status, model files, restart and documentation.
+
+**Fast GPU check:** Enter the private GPU PC IP (e.g. `192.168.178.115`) into **GPU PC IP – fast probe (Wyoming port 10300)**. The TAFA STT router checks TCP port 10300 with a **0.8 s timeout** before GPU recognition; when offline it uses the CPU Wyoming fallback. The selected GPU Wyoming entity performs the actual transcription. Qwen TTS independently checks its `/health` endpoint and uses Piper when unavailable. A listening port is not proof of successful STT. CPU and GPU Wyoming entities must differ.
 
 **Verification limit:** HTTP/TCP connectivity does not prove live speech. Public Alexa HTTPS checks DNS and TLS validity, not actual audio-file retrieval from Amazon. Edits are only saved when you select Save.
 

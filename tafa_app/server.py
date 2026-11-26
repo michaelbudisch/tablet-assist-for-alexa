@@ -721,7 +721,14 @@ class Handler(BaseHTTPRequestHandler):
                 activate_configured_services()
                 msg="Einstellungen gespeichert. TAFA übernimmt die Änderung automatisch. / Settings saved; TAFA is applying changes automatically."
             elif action=="connection_settings":
-                save_connection_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
+                # Keep address editing available when HA's entity registry
+                # cannot be read. Unchanged provider IDs remain valid; new
+                # assignments still require a successful registry lookup.
+                try:
+                    providers=discover_wyoming_stt(TOKEN)
+                except Exception:
+                    providers=[]
+                save_connection_form(TOKEN,fields,providers)
                 activate_configured_services()
                 tab="connections"
                 msg="Verbindungsadressen gespeichert. / Connection addresses saved."
