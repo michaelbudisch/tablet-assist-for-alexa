@@ -167,7 +167,8 @@ public final class WakeWordService extends Service implements RecognitionListene
                 if(nextFollowups < -1 || nextFollowups > 100)return;
                 main.post(()->{
                     if(!enabled)return;
-                    boolean newWord=!wordChoice.equals(nextWord);
+                    AudioOutputMode.applyRemote(this,update.optString(AudioOutputMode.KEY,""));
+                     boolean newWord=!wordChoice.equals(nextWord);
                     wordChoice=nextWord;
                     strictness=nextStrict;
                     cooldownSeconds=nextCooldown;

@@ -89,12 +89,25 @@ final class WakePilotSettings {
             .put("device_id",WakeDeviceIdentity.get(ctx));
     }
 
+    static synchronized void syncAudioOutput(Context ctx)throws Exception{
+        SharedPreferences p=AudioOutputMode.prefs(ctx);
+        String pending=p.getString(AudioOutputMode.PENDING,"");
+        if(AudioOutputMode.valid(pending)){
+            request(ctx,body(ctx,"configure").put("settings",new JSONObject().put(AudioOutputMode.KEY,pending)));
+            if(pending.equals(p.getString(AudioOutputMode.PENDING,"")))p.edit().remove(AudioOutputMode.PENDING).apply();
+        }else{
+            JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
+            AudioOutputMode.applyRemote(ctx,dev.optString(AudioOutputMode.KEY,""));
+        }
+    }
+
     static void register(Context ctx) throws Exception {
         request(ctx,body(ctx,"register").put("room",WakeDeviceIdentity.room(ctx)));
     }
 
     static Snapshot readFull(Context ctx) throws Exception {
         JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
+        AudioOutputMode.applyRemote(ctx,dev.optString(AudioOutputMode.KEY,""));
         Snapshot s=new Snapshot(
             dev.getBoolean("muted"),modeFor(dev.optString("voice_mode","wake")),choiceFor(dev.getString("word")),
             dev.optString("room","Jarvis Tablet"),
@@ -172,6 +185,7 @@ final class WakePilotSettings {
     }
     static MicState readMic(Context ctx) throws Exception {
         JSONObject dev=request(ctx,body(ctx,"get")).getJSONObject("device");
+        AudioOutputMode.applyRemote(ctx,dev.optString(AudioOutputMode.KEY,""));
         MicState state=new MicState(dev.getBoolean("muted"),
             modeFor(dev.optString("voice_mode","wake")),
             dev.optInt("revision",0),clamp(dev.optInt("followup_limit",-1),-1,100));

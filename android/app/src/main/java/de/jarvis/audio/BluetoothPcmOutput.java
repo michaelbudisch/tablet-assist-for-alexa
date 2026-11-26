@@ -7,10 +7,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.function.BooleanSupplier;
 
-/** Warm up with zeros, then stream real PCM only over a verified and continuously monitored A2DP route. */
+/** Warm up with zeros, then stream real PCM only over a verified and continuously monitored output route. */
 final class BluetoothPcmOutput implements StreamingSession.Output {
     private final AudioManager manager;
     private final BooleanSupplier stopped;
+    private final String mode;
+    private volatile int outputType;
+    String routeLabel(){return AudioOutputMode.label(outputType);}
     private final Object trackLock=new Object();
     private volatile AudioTrack track;
     private volatile boolean aborted,routeLost;
@@ -18,18 +21,15 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
     private PcmFormat format;
     private long writtenFrames;
     private ByteBuffer transfer;
-    BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped){this.manager=manager;this.stopped=stopped;}
+    BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped){this(manager,stopped,AudioOutputMode.BLUETOOTH);}
+    BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped,String mode){this.manager=manager;this.stopped=stopped;this.mode=mode;outputType=AudioOutputMode.select(manager,mode);}
 
-    private AudioDeviceInfo bluetooth(){
-        for(AudioDeviceInfo device:manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
-            if(device.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)return device;
-        return null;
-    }
+    private AudioDeviceInfo outputDevice(){return AudioOutputMode.find(manager,outputType);}
     private boolean routed(){
         AudioTrack current=track;if(current==null)return false;
         try{
             AudioDeviceInfo device=current.getRoutedDevice();
-            return device!=null&&device.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP&&(confirmed<0||confirmed==device.getId());
+            return device!=null&&device.getType()==outputType&&(confirmed<0||confirmed==device.getId());
         }catch(RuntimeException closing){return false;}
     }
     private void check()throws IOException {
@@ -40,13 +40,13 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
         check();if(!routed()){routeLost=true;abort();throw new IOException("error_route_lost");}
     }
     private void prefer(){
-        AudioDeviceInfo device=bluetooth();AudioTrack current=track;
+        AudioDeviceInfo device=outputDevice();AudioTrack current=track;
         if(device!=null&&current!=null)try{current.setPreferredDevice(device);}catch(RuntimeException ignored){}
     }
 
     @Override public void open(PcmFormat format)throws Exception {
         this.format=format;check();
-        if(bluetooth()==null)throw new IOException("error_no_bluetooth");
+        if(outputDevice()==null)throw new IOException("error_route_unavailable");
         int mask=format.channels==1?AudioFormat.CHANNEL_OUT_MONO:AudioFormat.CHANNEL_OUT_STEREO;
         int minimum=AudioTrack.getMinBufferSize(format.sampleRate,mask,AudioFormat.ENCODING_PCM_16BIT);
         if(minimum<0)throw new IOException("error_stream_output_format");
@@ -73,6 +73,10 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
         int attempts=1;
         while(!routed()){
             check();long now=System.nanoTime();
+            if(AudioOutputMode.AUTO.equals(mode)&&outputType==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP&&
+                    (AudioOutputMode.find(manager,outputType)==null||now-start>1_500_000_000L)){
+                outputType=AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;prefer();start=now;retry=now+500_000_000L;attempts=1;
+            }
             if(now-start>4_000_000_000L)throw new IOException("error_route_unconfirmed");
             if(now>=retry&&attempts<3){prefer();attempts++;retry=now+500_000_000L;}
             // Retain the playback session without consuming the beginning of the answer.

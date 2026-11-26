@@ -15,6 +15,17 @@ public class AudioService extends Service {
     static volatile String ui="stopped", keepaliveStatus="off", streamDiagnostics="";
     static volatile boolean running=false, haConnected=false;
     private BluetoothKeepalive keepalive;
+    private volatile BluetoothPcmOutput pcmOutput;
+    private String playbackMode=AudioOutputMode.AUTO;
+    private int fileOutputType;
+    private final SharedPreferences.OnSharedPreferenceChangeListener outputPreferenceListener=(p,key)->{
+        if(AudioOutputMode.KEY.equals(key)||"keepalive_enabled".equals(key))updateKeepalive();
+    };
+    private void updateKeepalive(){
+        if(keepalive!=null)keepalive.setEnabled(!AudioOutputMode.TABLET.equals(AudioOutputMode.get(this))&&
+            getSharedPreferences(MainActivity.PREF,0).getBoolean("keepalive_enabled",false));
+    }
+    private AudioDeviceInfo selectedOutput(){return AudioOutputMode.find(am,AudioOutputMode.select(am,AudioOutputMode.get(this)));}
     // Direct TAFA multiroom playback is the only supported audio transport.
     static final Pattern PATH=Pattern.compile("/api/tts_proxy/[A-Za-z0-9_.~-]{1,200}");
     final Handler main=new Handler(Looper.getMainLooper());
@@ -43,6 +54,7 @@ public class AudioService extends Service {
         if(stale!=null)for(File f:stale)f.delete();
         am=(AudioManager)getSystemService(AUDIO_SERVICE);
         keepalive=new BluetoothKeepalive(this, status -> keepaliveStatus=status);
+        AudioOutputMode.prefs(this).registerOnSharedPreferenceChangeListener(outputPreferenceListener);
         running=true;
         updateNotification();
     }
@@ -64,7 +76,7 @@ public class AudioService extends Service {
         if("stop".equals(action)){stopSelf();return START_NOT_STICKY;}
         if("refresh_ui".equals(action)){updateNotification();return START_NOT_STICKY;}
         if(active){
-            if("update_keepalive".equals(action))keepalive.setEnabled(getSharedPreferences(MainActivity.PREF,0).getBoolean("keepalive_enabled",false));
+            if("update_keepalive".equals(action))updateKeepalive();
             return START_NOT_STICKY;
         }
         try{
@@ -73,7 +85,7 @@ public class AudioService extends Service {
             base=HaAddress.validateStored(prefs.getString("base",""),httpConsent);
             token=MainActivity.decrypt(prefs.getString("secret",""));
             active=true;ui="connecting";
-            keepalive.setEnabled(prefs.getBoolean("keepalive_enabled",false));
+            updateKeepalive();
             io.scheduleWithFixedDelay(this::poll,0,900,TimeUnit.MILLISECONDS);
             // The first successful room connection is sufficient to enroll
             // this tablet, even if native wakeword is not yet enabled.
@@ -97,6 +109,7 @@ public class AudioService extends Service {
                 WakePilotSettings.register(this);
                 tabletEnrolled=true;
             }
+            try{WakePilotSettings.syncAudioOutput(this);}catch(Exception ignored){/* Local playback remains usable with older HA versions. */}
             // Only the wakeword service should report live mic state when it
             // is running. Audio-only tablets still publish online telemetry.
             if(!WakeWordService.running){
@@ -147,7 +160,7 @@ public class AudioService extends Service {
                 roomSession=candidate;
             }
             if(!roomTerminal.isEmpty())reportRoom(roomTerminal);
-            boolean ready=!busy&&bluetooth()!=null;
+            boolean ready=!busy&&selectedOutput()!=null;
             JSONObject job=roomApi(new JSONObject().put("action","poll").put("session",roomSession).put("ready",ready));
             String next=job.optString("id"),path=job.optString("path");
             if(next.matches("[a-f0-9]{32}")){
@@ -160,7 +173,7 @@ public class AudioService extends Service {
                     roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",next).put("stage","error"));
                 }
             }
-            if(!busy){ui=(bluetooth()!=null?"ready|":"no_bluetooth|")+now;}
+            if(!busy){AudioDeviceInfo output=selectedOutput();ui=output==null?"no_bluetooth|"+now:"ready|"+now+"|"+AudioOutputMode.label(output.getType());}
             else if(!cachedStatus.isEmpty()&&now-heartbeat>5000){heartbeat=now;reportRoom(cachedStatus);}
             haConnected=true;
         }catch(Exception e){
@@ -192,13 +205,14 @@ public class AudioService extends Service {
 
     private void startStreaming(String request,String path) {
         if(!active||!busy||!request.equals(id))return;
-        if(bluetooth()==null){finish("error_no_bluetooth");return;}
+        playbackMode=AudioOutputMode.get(this);
+        if(AudioOutputMode.find(am,AudioOutputMode.select(am,playbackMode))==null){finish("error_route_unavailable");return;}
         if(!takeSpeechFocus()){finish("error_focus");return;}
         streamDiagnostics="mode=preparing; startup_buffer_ms="+StreamingSession.START_BUFFER_MS;
         StreamCallbacks callbacks=new StreamCallbacks(request);
         streaming=new StreamingSession(getCacheDir(),()->connection(path,"GET"),
                 first->new AndroidMp3Decoder(first,()->!active||!busy||!request.equals(id)),
-                stopped->new BluetoothPcmOutput(am,stopped),callbacks);
+                stopped->{BluetoothPcmOutput output=new BluetoothPcmOutput(am,stopped,playbackMode);pcmOutput=output;return output;},callbacks);
         callbacks.owner=streaming;
         StreamingSession session=streaming;
         streamWatchdog=()->{if(streaming==session&&busy)finish("error_stream_timeout");};
@@ -211,7 +225,7 @@ public class AudioService extends Service {
         StreamingSession owner;
         StreamCallbacks(String request){this.request=request;}
         boolean current(){return active&&busy&&request.equals(id)&&streaming==owner;}
-        public void onPlaying(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|playing|bluetooth");}});}
+        public void onPlaying(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|playing|"+(pcmOutput==null?AudioOutputMode.label(AudioOutputMode.select(am,playbackMode)):pcmOutput.routeLabel()));}});}
         public void onBuffering(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|buffering");}});}
         public void onDone(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;finish("done");}});}
         public void onError(String error,String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;finish(error);}});}
@@ -228,7 +242,8 @@ public class AudioService extends Service {
     private void startPlayer(File f) {
         file = f;
         try {
-            if (bluetooth() == null) { finish("error_no_bluetooth"); return; }
+            fileOutputType=AudioOutputMode.select(am,playbackMode);
+            if (AudioOutputMode.find(am,fileOutputType)==null) { finish("error_route_unavailable"); return; }
             AudioAttributes attrs = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
             if (!takeSpeechFocus()) {
@@ -239,7 +254,7 @@ public class AudioService extends Service {
             try (FileInputStream source = new FileInputStream(file)) { player.setDataSource(source.getFD()); }
             player.setVolume(0, 0);
             // setDataSource must initialize the player engine before requesting a device.
-            requestBluetoothRoute(player);
+            requestOutputRoute(player);
             player.setOnErrorListener((p, what, extra) -> {
                 if (p == player) finish("error_media_" + what + "_" + extra);
                 return true;
@@ -248,7 +263,7 @@ public class AudioService extends Service {
             player.setOnPreparedListener(p -> {
                 if (p != player || !busy || !active) return;
                 try {
-                    requestBluetoothRoute(p);
+                    requestOutputRoute(p);
                     p.start();
                     long now = SystemClock.elapsedRealtime();
                     checkUntil = now + 4000;
@@ -264,9 +279,9 @@ public class AudioService extends Service {
         } catch (Exception e) { finish("error_player"); }
     }
 
-    private void requestBluetoothRoute(MediaPlayer target) {
+    private void requestOutputRoute(MediaPlayer target) {
         routeAttempts++;
-        AudioDeviceInfo device = bluetooth();
+        AudioDeviceInfo device = AudioOutputMode.find(am,fileOutputType);
         try { preferredAccepted = device != null && target.setPreferredDevice(device); }
         catch (RuntimeException e) { preferredAccepted = false; }
         // A rejected preference is not proof of a bad route. Android may already be using A2DP.
@@ -274,11 +289,16 @@ public class AudioService extends Service {
     final Runnable routeCheck=new Runnable(){public void run(){
         if(!active||!busy||player==null)return;
         try{
-            AudioDeviceInfo d=player.getRoutedDevice();boolean routed=d!=null&&d.getType()==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP&&(!audible||d.getId()==preferredId);
+            AudioDeviceInfo d=player.getRoutedDevice();boolean routed=d!=null&&d.getType()==fileOutputType&&(!audible||d.getId()==preferredId);
             long now=SystemClock.elapsedRealtime();if(now>playUntil){finish("error_play_timeout");return;}
             if(audible){if(!routed){player.setVolume(0,0);finish("error_route_lost");return;}main.postDelayed(this,100);return;}
-            if(!routed){if(now>=checkUntil){finish("error_route_"+(d==null?"unknown":"type_"+d.getType())+(preferredAccepted?"_preferred_ok":"_preferred_rejected"));return;}if(routeAttempts<3&&now>=routeRetryAt)requestBluetoothRoute(player);main.postDelayed(this,60);return;}
-            if(seeked){preferredId=d.getId();player.setVolume(1,1);audible=true;state(id+"|playing|bluetooth");main.postDelayed(this,100);return;}
+            if(!routed){
+                if(AudioOutputMode.AUTO.equals(playbackMode)&&fileOutputType==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP&&
+                        (AudioOutputMode.find(am,fileOutputType)==null||now>=checkUntil)){
+                    fileOutputType=AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;routeAttempts=0;checkUntil=now+4000;requestOutputRoute(player);
+                }
+                if(now>=checkUntil){finish("error_route_"+(d==null?"unknown":"type_"+d.getType())+(preferredAccepted?"_preferred_ok":"_preferred_rejected"));return;}if(routeAttempts<3&&now>=routeRetryAt)requestOutputRoute(player);main.postDelayed(this,60);return;}
+            if(seeked){preferredId=d.getId();player.setVolume(1,1);audible=true;state(id+"|playing|"+AudioOutputMode.label(fileOutputType));main.postDelayed(this,100);return;}
             // Establish routing silently, then restart at the beginning of the buffered file.
             player.pause();
             player.setOnSeekCompleteListener(p->{if(p!=player||!busy||audible)return;try{seeked=true;checkUntil=SystemClock.elapsedRealtime()+2000;p.start();main.post(this);}catch(RuntimeException e){finish("error_player_restart");}});
@@ -286,6 +306,6 @@ public class AudioService extends Service {
             MediaPlayer waiting=player;main.postDelayed(()->{if(busy&&player==waiting&&!seeked)finish("error_seek");},2000);
         }catch(Exception e){finish("error_route");}
     }};
-    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);}
-    @Override public void onDestroy(){active=false;running=false;haConnected=false;enrollmentIo.shutdownNow();if(keepalive!=null)keepalive.close();finish("cancelled");try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
+    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;pcmOutput=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);}
+    @Override public void onDestroy(){AudioOutputMode.prefs(this).unregisterOnSharedPreferenceChangeListener(outputPreferenceListener);active=false;running=false;haConnected=false;enrollmentIo.shutdownNow();if(keepalive!=null)keepalive.close();finish("cancelled");try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }
