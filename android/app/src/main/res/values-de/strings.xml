@@ -68,7 +68,7 @@
     <string name="diagnostics">Diagnose</string>
     <string name="keepalive_title">Bluetooth wach halten</string>
     <string name="keepalive_option">Echo-Bluetooth-Verbindung aktiv halten</string>
-    <string name="keepalive_location">Player und Keepalive befinden sich unter Einstellungen → Echo & Audioplayer.</string>
+    <string name="keepalive_location">Player und Keepalive befinden sich unter Einstellungen → Echo &amp; Audioplayer.</string>
     <string name="keepalive_retrying">Keepalive verbindet sich automatisch erneut …</string>
     <string name="keepalive_help">Solange der Player läuft, hält eine lautlose Audioschleife Bluetooth-Medien aktiv. Kann wiederholte Echo-Ansagen reduzieren, aber nicht garantiert verhindern. Verbindet sich nach Bluetooth-Aussetzern automatisch erneut. Kann Alexa-Musik und Akkuverbrauch beeinflussen.</string>
     <string name="keepalive_one">Verwende entweder diesen Keepalive oder den HA-Dashboard-Keepalive. Bei Störungen der normalen Alexa-Wiedergabe ausschalten.</string>
