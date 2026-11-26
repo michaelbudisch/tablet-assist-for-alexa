@@ -76,11 +76,10 @@ public class CameraRelayService extends Service {
                 io.execute(()->{
                     String outcome="camera_relay_active";
                     try{
-                        CameraJpeg.Frame frame=CameraJpeg.prepare(snapshot.jpeg,motionEnabled);
-                        // Re-read opt-in on each image: can be changed in
-                        // Settings without interrupting the camera foreground service.
+                        // Opt-in can change while the foreground service runs.
                         boolean motionNow=getSharedPreferences(MainActivity.PREF,0)
                                 .getBoolean("camera_motion",false);
+                        CameraJpeg.Frame frame=CameraJpeg.prepare(snapshot.jpeg,motionNow);
                         if(!motionNow)motion.clear();
                         Boolean changed=motionNow?motion.changed(frame.gray):null;
                         if(!active)return;
