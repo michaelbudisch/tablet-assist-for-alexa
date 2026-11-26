@@ -13,9 +13,16 @@ class Standalone(unittest.TestCase):
         self.assertIn("frontend.async_remove_panel(hass, DOMAIN)", src)
         self.assertIn("/tablet_assist_for_alexa/panel.js", src)
         panel = (D / "frontend/panel.js").read_text()
-        for part in ("tablet-assist-panel", "assist/show", "tablet-assist-bt-keepalive", 'callService("tablet_assist_for_alexa","announce"'):
+        voice = (D / "frontend/voice_tools.js").read_text()
+        dashboard = (D / "frontend/dashboard.js").read_text()
+        for part in ("tablet-assist-panel", "tafa-home-dashboard",
+                     "dashboard/get", "dashboard/set", "tablet-assist-voice-tools"):
             self.assertIn(part, panel)
-        for forbidden in ("hauszentrale", "input_select.jarvis", "input_text.jarvis", "__JARVIS_"):
+        for part in ("assist/show", "tablet-assist-bt-keepalive",
+                     'callService("tablet_assist_for_alexa","announce"'):
+            self.assertIn(part, voice)
+        self.assertIn("tafa-open-voice-tools", dashboard)
+        for forbidden in ("input_select.jarvis", "input_text.jarvis", "__JARVIS_"):
             self.assertNotIn(forbidden, panel.lower())
         manifest = json.loads((D / "manifest.json").read_text())
         self.assertIn("panel_custom", manifest["dependencies"])
