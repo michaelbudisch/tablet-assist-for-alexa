@@ -116,6 +116,6 @@ export function installTafaResponseOverlay(host,hass,options={}){
   if(!document.body)return null;
   let overlay=document.querySelector("tafa-response-overlay");
   if(!overlay){overlay=document.createElement("tafa-response-overlay");document.body.append(overlay);}
-  overlay.options=options;overlay.hass=hass;
+  overlay._owner=host;overlay.options=options;overlay.hass=hass;
   return overlay;
 }
