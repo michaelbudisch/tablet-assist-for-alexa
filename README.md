@@ -1,6 +1,6 @@
 # TAFA — Tablet Assistant for Alexa
 
-**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and use the existing **TAFA Device Bridge 1.0.5** on your Android device. The native Android application is distributed separately as a signed APK.
+**One Home Assistant App for a local voice-assistant backend.** Install TAFA through Home Assistant Apps, and use the existing **TAFA Device Bridge 1.1.0** on your Android device. The native Android application is distributed separately as a signed APK.
 
 **English** | [Deutsch](README.de.md)
 
@@ -30,7 +30,7 @@ Run as root in an interactive **Proxmox host shell**. Choose the CT ID, storage,
 3. Install and start **TAFA**, then open its built-in Control Center (Ingress).
 4. TAFA stages **one** Home Assistant integration at `custom_components/tablet_assist_for_alexa`. Restart Home Assistant once to discover the new component.
 5. **Before starting the App**, select `speech_mode=local` (CPU Piper/Whisper bundled) or `speech_mode=external` with `external_piper_base=http://PROXMOX-IP:5000` in App Configuration. External mode skips all bundled CPU models. Then add Proxmox Wyoming STT (`PROXMOX-IP:10300`) in HA, select it in Apps → TAFA → Configuration, and create an Assist pipeline. Local mode retains automatic **TAFA Lokal** pipeline creation.
-6. Connect [TAFA Device Bridge 1.0.5](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
+6. Connect [TAFA Device Bridge 1.1.0](android/README.md) to HA for wake events and playback. Select **TAFA Lokal** in Home Assistant Assist (or the HA Companion app), not in Device Bridge. The Echo is an optional Bluetooth output device, not the microphone.
 
 [Full installation guide](docs/en/app.md) · [Multiroom guide](homeassistant/examples/MULTIROOM.md) · [Android instructions](android/README.md)
 

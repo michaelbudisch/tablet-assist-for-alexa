@@ -2,7 +2,7 @@
 
 The native app now has three focused tabs:
 
-- **Status** – information only: HA, Bluetooth, current player/Assist/wakeword state, keepalive, camera, motion toggle and battery.
+- **Status** – information only: HA, Bluetooth, current player/Assist/wakeword state, keepalive, camera, motion state and battery.
 - **Connect** – discover/configure Home Assistant and the dedicated room user's token; connection errors appear here.
 - **Settings** – all controls in one place: player, Echo Bluetooth, silent keepalive, wakeword/Vosk model, microphone/Assist, display permission, camera lens, frame interval, motion detection, start/stop, help and diagnostics.
 
@@ -10,4 +10,4 @@ The separate local camera preview/test screen is removed from normal operation. 
 
 Native Assist, unlimited follow-ups, automatic Bluetooth keepalive recovery, encrypted credentials and stable device identity are retained. No HA automations are created or changed.
 
-**Distribution:** The repository includes source and CI debug builds. A **1.1.0 APK signed with the existing release certificate has not yet been supplied**. In-place updates require the original certificate for the unchanged application ID `de.jarvis.audio`, version code **20**. Do not uninstall the existing app if preserving credentials and device identity matters. Real Echo/tablet validation is still outstanding.
+**Signed release:** TAFA-Device-Bridge-1.1.0.apk is signed with the existing certificate. Unchanged de.jarvis.audio application ID, version code **20**. Install over the existing app to preserve encrypted credentials and device identity. Real Echo/tablet testing remains outstanding.

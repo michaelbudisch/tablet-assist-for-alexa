@@ -10,4 +10,4 @@ Die separate Kamera-Testvorschau entfällt aus der App. Die Kameraübertragung b
 
 Native Assist, unbegrenzte Folgefragen, das bestehende Bluetooth-Keepalive (mit automatischem Wiederholversuch), Zugangsdatenverschlüsselung und die stabile Gerätekennung bleiben erhalten. Es werden keine Automatisierungen in Home Assistant angelegt oder verändert.
 
-**Veröffentlichungsstatus:** Das Repository enthält Quellcode und CI-Debug-Builds. Ein mit dem bestehenden Release-Schlüssel signiertes **1.1.0-APK** ist noch nicht bereitgestellt. Ein direktes Update über die installierte App erfordert exakt dasselbe Signaturzertifikat (Paket `de.jarvis.audio`), Versionscode **20**. Keine vorhandene App deinstallieren, um Zugangsdaten/Identität zu erhalten. Tests am echten Echo und Tablet bleiben erforderlich.
+**Signierter Release:** TAFA-Device-Bridge-1.1.0.apk ist mit dem bisherigen Zertifikat signiert. Unveränderte App-ID de.jarvis.audio, Versionscode **20**. Über die vorhandene App installieren, damit verschlüsselte Zugangsdaten und Gerätekennung erhalten bleiben. Tests am echten Echo und Tablet stehen weiterhin aus.

@@ -30,7 +30,7 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-**Version 1.1.0 is available as source and CI debug builds.** A 1.1.0 APK signed with the existing release certificate has **not** been published. In-place updates require the same signing certificate for package `de.jarvis.audio`, version code **20**. Previous signed APKs are listed under [Downloads](downloads/) but are **not** 1.1.0 updates.
+[Download signed APK 1.1.0](downloads/TAFA-Device-Bridge-1.1.0.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.1.0) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **20**. Install over the existing app to retain credentials and device identity.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 

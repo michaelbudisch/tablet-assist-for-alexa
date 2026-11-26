@@ -30,7 +30,7 @@ Die separate lokale Testvorschau wurde entfernt. Kameraaufnahmen erfolgen nur w�
 
 ## Veröffentlichung und Installation
 
-**Version 1.1.0 liegt als Quellcode und CI-Debug-Build vor.** Eine mit dem ursprünglichen Android-Zertifikat signierte Release-APK für Version 1.1.0 wurde noch **nicht** veröffentlicht. Ein direktes Update benötigt dieselbe Signatur wie die installierte App, Paket-ID `de.jarvis.audio`, Versionscode **20**. Die früheren signierten APKs sind unter [Downloads](downloads/) einsehbar; eine alte APK ist **kein** Update auf 1.1.0.
+[Signierte APK 1.1.0 herunterladen](downloads/TAFA-Device-Bridge-1.1.0.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.1.0) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **20**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
 
 Zum eigenen Bauen JDK 17, Android SDK Platform 35 und `build.ps1` verwenden; zum Signieren `sign-release.ps1` mit dem ursprünglichen Keystore. Private Schlüssel sind nicht im Repository enthalten. Die automatisierten Tests ersetzen keinen echten Bluetooth-/Mikrofontest.
 
