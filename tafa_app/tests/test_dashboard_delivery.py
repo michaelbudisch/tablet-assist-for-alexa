@@ -119,11 +119,11 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('document.createElement("tafa-integrated-dashboard")',panel)
         self.assertIn('document.createElement("tablet-assist-voice-tools")',panel)
         self.assertIn('type:"tablet_assist_for_alexa/dashboard/set"',panel)
-        self.assertIn("dashboard.js?v=0.4.32-unified",panel)
+        self.assertIn("dashboard.js?v=0.4.34-unified",panel)
         dashboard=(HA/"frontend/dashboard.js").read_text()
         self.assertIn("./dashboard_model.js?v=0.4.32",dashboard)
         self.assertIn("installTafaResponseOverlay",dashboard)
-        self.assertIn("response_overlay.js?v=0.4.32",dashboard)
+        self.assertIn("response_overlay.js?v=0.4.34",dashboard)
         self.assertIn("data-presentation",dashboard)
         overlay=(HA/"frontend/response_overlay.js").read_text()
         self.assertIn("tafa_assist_response",overlay)
@@ -191,9 +191,9 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('family_name_child: str',(APP/"config.yaml").read_text())
 
     def test_version_and_docs_consistent(self):
-        self.assertIn('version: "0.4.33"',(APP/"config.yaml").read_text())
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.33")
-        self.assertIn('"version": "0.4.33"',(HA/"manifest.json").read_text())
+        self.assertIn('version: "0.4.34"',(APP/"config.yaml").read_text())
+        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.34")
+        self.assertIn('"version": "0.4.34"',(HA/"manifest.json").read_text())
         self.assertIn("0.3.52",(APP/"CHANGELOG.md").read_text())
 
 
