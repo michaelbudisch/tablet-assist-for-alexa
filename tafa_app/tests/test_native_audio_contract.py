@@ -44,7 +44,8 @@ class NativeAudioContract(unittest.TestCase):
     def test_dashboard_microphone_is_a_real_ha_toggle(self):
         src=read("custom_components/tablet_assist_for_alexa/frontend/dashboard.js")
         self.assertIn("async toggleNativeMic(",src)
-        self.assertIn('action:"configure",device_id:selected.device_id,settings:{muted:nextMuted}',src)
+        self.assertIn('action:"configure",device_id:selected.device_id,settings:{muted:!selected.muted}',src)
+        self.assertIn('control?.pending',src)
         self.assertIn("showMicChoice(devices)",src)
         self.assertIn("micDevices",src)
         self.assertIn('quick("assist",',src)
