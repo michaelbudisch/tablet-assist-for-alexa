@@ -68,10 +68,25 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn("enrollmentIo.shutdownNow()",audio)
         self.assertIn("if(!WakeWordService.running)",audio)
 
+    def test_bluetooth_keepalive_visible_and_recovers(self):
+        layout=read("android/app/src/main/res/layout/activity_main.xml")
+        service=read("android/app/src/main/java/de/jarvis/audio/BluetoothKeepalive.java")
+        player=read("android/app/src/main/java/de/jarvis/audio/AudioService.java")
+        self.assertEqual(layout.count('android:id="@+id/keepalive"'),1)
+        self.assertIn('android:id="@+id/keepalive_status"',layout)
+        self.assertNotIn('android:id="@+id/bluetooth_advanced"',layout)
+        self.assertIn('retryAt = SystemClock.elapsedRealtime()',service)
+        self.assertIn('KeepaliveRetry.delayMs(failures)',service)
+        self.assertIn('current.setLooping(true)',service)
+        self.assertIn('current.setVolume(1, 1)',service)
+        self.assertIn('keepalive.setEnabled(prefs.getBoolean("keepalive_enabled",false))',player)
+        self.assertIn("enrollmentIo.scheduleWithFixedDelay",player)
+        self.assertNotIn("enabled = false;",service.split("void pauseForFocus()",1)[1].split("void close()",1)[0])
+
     def test_version_contract(self):
         self.assertIn('version: "0.3.39"',read("tafa_app/config.yaml"))
         self.assertEqual(read("VERSION").strip(),"0.4.23")
-        self.assertEqual(read("android/VERSION").strip(),"1.0.4")
+        self.assertEqual(read("android/VERSION").strip(),"1.0.5")
 
 if __name__=="__main__":
     unittest.main()
