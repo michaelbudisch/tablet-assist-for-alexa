@@ -3,6 +3,8 @@
 The integration never searches the internet without a user query. A search
 engine must be on a private LAN; result URLs are public HTTPS links only.
 """
+import asyncio
+import json
 import ipaddress
 import re
 from urllib.parse import urlsplit
@@ -44,15 +46,33 @@ async def query_searxng(hass, base, query):
     try:
         base = validate_local_search_origin(base)
         session = async_get_clientsession(hass)
-        async with session.get(base + "/search", params={"q": query, "format": "json", "language": "de"},
-                               timeout=aiohttp.ClientTimeout(total=12), allow_redirects=False) as response:
-            if response.status != 200 or response.content_length and response.content_length > 180000:
-                raise ValueError("SearXNG JSON API unavailable")
-            content = await response.content.read(180001)
-            if len(content) > 180000:
-                raise ValueError("Search result too large")
-            import json
-            payload = json.loads(content)
+        payload = None
+        # Some SearXNG engines briefly return 429/503 while aggregating.
+        # One bounded retry helps without repeatedly hammering the server.
+        for attempt in range(2):
+            try:
+                async with session.get(base + "/search",
+                                       params={"q": query, "format": "json", "language": "de", "safesearch": "2"},
+                                       timeout=aiohttp.ClientTimeout(total=18), allow_redirects=False) as response:
+                    if response.status in (429, 502, 503, 504) and attempt == 0:
+                        await asyncio.sleep(0.4)
+                        continue
+                    if response.status != 200:
+                        raise ValueError("SearXNG JSON API unavailable")
+                    if response.content_length and response.content_length > 1048576:
+                        raise ValueError("SearXNG response too large")
+                    content = await response.content.read(1048577)
+                    if len(content) > 1048576:
+                        raise ValueError("SearXNG response too large")
+                    payload = json.loads(content)
+                break
+            except (aiohttp.ClientError, TimeoutError):
+                if attempt == 0:
+                    await asyncio.sleep(0.4)
+                    continue
+                raise
+        if not isinstance(payload, dict):
+            raise ValueError("SearXNG did not return a JSON object")
         rows = []
         for item in payload.get("results", []):
             if not isinstance(item, dict):
