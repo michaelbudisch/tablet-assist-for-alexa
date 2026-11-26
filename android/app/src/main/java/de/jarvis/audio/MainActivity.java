@@ -165,9 +165,6 @@ public class MainActivity extends Activity {
             startPlayer();
             showSection("status", true);
         });
-        bindDisclosure(R.id.bluetooth_advanced_toggle, R.id.bluetooth_advanced,
-                R.string.bluetooth_advanced_title, R.string.bluetooth_advanced_collapse,
-                state != null && state.getBoolean("bluetooth_advanced_open", false));
         bindDisclosure(R.id.wake_advanced_toggle, R.id.wake_advanced,
                 R.string.wake_advanced_title, R.string.wake_advanced_collapse,
                 state != null && state.getBoolean("wake_advanced_open", false));
@@ -701,6 +698,7 @@ public class MainActivity extends Activity {
         String keepalive = AudioService.keepaliveStatus;
         int keepaliveText = keepalive.equals("active") ? R.string.keepalive_active : keepalive.equals("waiting")
                 ? R.string.keepalive_waiting : keepalive.equals("starting") ? R.string.keepalive_starting
+                : keepalive.equals("retrying") ? R.string.keepalive_retrying
                 : keepalive.equals("error") ? R.string.keepalive_error : R.string.keepalive_off;
         ((TextView) findViewById(R.id.keepalive_status)).setText(keepaliveText);
         findViewById(R.id.player_stop).setEnabled(AudioService.running);
@@ -752,7 +750,6 @@ public class MainActivity extends Activity {
         state.putBoolean("did_auto_search", didAutoSearch);
         state.putString("visible_section", selectedSection);
         state.putBoolean("wake_advanced_open", findViewById(R.id.wake_advanced).getVisibility() == View.VISIBLE);
-        state.putBoolean("bluetooth_advanced_open", findViewById(R.id.bluetooth_advanced).getVisibility() == View.VISIBLE);
         state.putBoolean("help_open", findViewById(R.id.help_details).getVisibility() == View.VISIBLE);
         state.putBoolean("diagnostics_open", findViewById(R.id.diagnostics_text).getVisibility() == View.VISIBLE);
         super.onSaveInstanceState(state);

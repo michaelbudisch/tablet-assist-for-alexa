@@ -1,5 +1,13 @@
 # Android-Änderungsverlauf
 
+## 1.0.5 · Sichtbarer, automatisch wiederverbindender Bluetooth-Keepalive
+- Der vorhandene optionale lautlose Bluetooth-Keepalive ist jetzt direkt auf der Statusseite beim Player zu sehen, mit Live-Status statt im versteckten Bluetooth-Untermenü.
+- Automatische Wiederaufnahme nach Bluetooth-Unterbrechungen, Audio-Routenwechseln, Audiofokusverlust oder MediaPlayer-Fehlern; begrenzte Wiederholungen mit 3–30 Sekunden Abstand und gespeicherter Einstellung.
+- Keine Änderung der Systemlautstärke, kein eigener Audiofokus und keine Änderung des nativen HA-Assist-/Raum-Audiowegs.
+- Pro Tablet ein- und ausschaltbar. Läuft nur bei gestartetem Player und kann Echo-Ansagen reduzieren, aber nicht garantiert unterdrücken.
+- Unveränderte Paket-ID; für ein Update über die vorhandene Release-App wird der ursprüngliche Signierschlüssel benötigt.
+
+
 ## 1.0.4 · Automatische Tablet-Anmeldung beim Bluetooth-Player
 - Nach erfolgreichem Verbindungsaufbau des nativen Audioplayers meldet sich das Tablet zusätzlich im authentifizierten TAFA-Geräteregister an, auch ohne gestartete Rufworterkennung.
 - Ohne laufenden Rufwortdienst sendet die App regelmäßig einen Status, damit das Tablet im Control Center unter **Apps → TAFA → Geräte & Multiroom** als online angezeigt und zugeordnet werden kann.

@@ -44,6 +44,10 @@
                         </LinearLayout>
                         <Button android:id="@+id/player_start" style="@style/Primary" android:text="@string/player_start" />
                         <Button android:id="@+id/player_stop" style="@style/Action" android:text="@string/player_stop" />
+                        <TextView style="@style/Heading" android:text="@string/keepalive_title" android:layout_marginTop="12dp" />
+                        <CheckBox android:id="@+id/keepalive" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/keepalive_option" android:textColor="@color/ink" android:textSize="14sp" />
+                        <TextView android:id="@+id/keepalive_status" style="@style/Body" android:text="@string/keepalive_off" android:textColor="@color/accent" android:accessibilityLiveRegion="polite" />
+                        <TextView style="@style/Body" android:text="@string/keepalive_help" android:textSize="12sp" />
                         <Button android:id="@+id/edit_connection" style="@style/Quiet" android:text="@string/edit_connection" />
                     </LinearLayout>
                 </LinearLayout>
@@ -97,14 +101,8 @@
                 <TextView style="@style/Heading" android:text="@string/bluetooth_title" />
                 <TextView style="@style/Body" android:text="@string/bluetooth_help" />
                 <Button android:id="@+id/bluetooth_settings" style="@style/Action" android:text="@string/bluetooth_settings" />
-                <Button android:id="@+id/bluetooth_advanced_toggle" style="@style/Quiet" android:text="@string/bluetooth_advanced_title" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/bluetooth_advanced" android:visibility="gone">
-                    <TextView style="@style/Heading" android:text="@string/keepalive_title" android:layout_marginTop="0dp" />
-                    <TextView style="@style/Body" android:text="@string/keepalive_help" />
-                    <CheckBox android:id="@+id/keepalive" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/keepalive_option" android:textColor="@color/ink" android:textSize="14sp" />
-                    <TextView android:id="@+id/keepalive_status" style="@style/Body" android:text="@string/keepalive_off" android:textColor="@color/accent" />
-                    <TextView style="@style/Body" android:text="@string/keepalive_one" android:textSize="12sp" />
-                </LinearLayout>
+                <TextView style="@style/Body" android:text="@string/keepalive_location" android:textSize="12sp" />
+                <TextView style="@style/Body" android:text="@string/keepalive_one" android:textSize="12sp" />
             </LinearLayout>
             <LinearLayout style="@style/Card">
                 <TextView style="@style/Heading" android:text="@string/room_settings_title" android:layout_marginTop="0dp" />

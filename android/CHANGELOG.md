@@ -1,5 +1,13 @@
 # Android changelog
 
+## 1.0.5 · Visible, self-recovering silent Bluetooth keepalive
+- Move the existing optional zero-PCM Bluetooth keepalive from a collapsed advanced menu to the player card on the Status page, with live status.
+- Recover automatically after Bluetooth disconnects, audio route changes, transient focus loss and MediaPlayer failures; bounded 3–30 second backoff, preserving the user's enable switch.
+- Keep the existing non-audible loop, never change system volume, never request independent audio focus; the native HA Assist/room audio path is unchanged.
+- User-controlled and saved per tablet. Runs only with the player service; may reduce but cannot guarantee suppression of Echo “Playing from…” messages.
+- App ID unchanged; in-place APK update requires the original Android release signing key.
+
+
 ## 1.0.4 · Auto-enroll when Bluetooth playback is connected
 - Starting the native HA Bluetooth player also enrolls the tablet in TAFA's authenticated device registry, even when wakeword recognition has not yet been started.
 - While playing audio without the wakeword service, the app sends periodic status heartbeats so the tablet appears online and can be paired/configured in **Apps → TAFA → Devices & multiroom**.
