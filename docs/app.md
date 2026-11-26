@@ -26,6 +26,22 @@ TAFA stellt ein **Control Center**, eine gemeinsame HA-Integration und optional 
 
 **Wichtig:** Eine erfolgreiche TCP-/HTTP-Prüfung beweist nur Erreichbarkeit, **keine** erfolgreiche Spracherkennung oder Bluetooth-Ausgabe. Der Browser-Test **Jetzt sprechen** spielt im Browser ab und ist von der nativen Android/Echo-Ausgabe getrennt. Die Android-App bietet ihren eigenen Rufwortdienst, der unabhängig vom offenen HA-Dashboard läuft.
 
+## Funktionen & Datenquellen – ohne JSON
+
+Unter **TAFA Control Center → Funktionen & Datenquellen** erscheinen alle verfügbaren Module. Neue Module stehen nach TAFA-Updates zur Auswahl, ohne bestehende Dashboard-Kacheln oder Automationen zu überschreiben.
+
+1. Funktion öffnen, beispielsweise **Heizöl & Tank**.
+2. Home-Assistant-Sensor anhand seines Anzeigenamens auswählen. TAFA prüft den Entitätstyp und die Maßeinheit.
+3. **Zuordnungen speichern**: Die Sprachabfrage verwendet den Sensor. Das integrierte Dashboard nutzt dieselbe Datenquelle, sofern keine eigene Zuordnung besteht.
+4. **Zum TAFA-Dashboard hinzufügen** aktiviert ein noch nicht angezeigtes Modul – die bestehenden Kacheln bleiben erhalten.
+5. Fehlende Integrationen lassen sich später unter **Einstellungen → Geräte & Dienste** installieren. Andere Funktionen bleiben verfügbar.
+
+Alexa-Ankündigungen werden ebenfalls grafisch zugeordnet. Dafür muss in Home Assistant ein passender notify-Dienst existieren. Weitere Alexa-Räume können angelegt werden; native Tablets bleiben unter **Geräte & Multiroom**.
+
+Die bisherigen internen Formate sources_json und rooms_json bleiben aus Kompatibilitätsgründen erhalten, sind aber nicht mehr für die normale Einrichtung erforderlich.
+
+**Updates:** TAFA speichert Dashboard-Einstellungen unabhängig vom Programmcode. Bei älteren Konfigurationen werden gültige Einstellungen einzeln übernommen. Vor einem neuen Speichern wird die vorherige Konfiguration gesichert. Das private Lovelace-Dashboard und bestehende Automationen werden nicht verändert.
+
 ## Updates und vorhandene Installationen
 
 TAFA aktualisiert nur die von **dieser App** verwaltete, unveränderte Integration und legt vor dem Austausch eine Sicherung unter `<HA-Konfiguration>/.tafa/rollback` an. Von Marketplace/HACS oder manuell verwaltete Integrationen werden nicht still überschrieben. Nach Backend-Updates HA Core einmal neu starten. Bereits vorhandene Automatisierungen, eigene Dashboards und andere Assist-Pipelines nicht automatisch löschen oder migrieren.
