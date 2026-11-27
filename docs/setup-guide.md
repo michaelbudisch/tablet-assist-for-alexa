@@ -32,11 +32,11 @@ Bei lokalem TAFA-Modus werden die eingebauten CPU-Dienste verwendet; ein zweiter
 
 Auf einem Windows-PC mit passender NVIDIA-GPU, Docker Desktop/WSL2, oder Linux mit Docker/NVIDIA Toolkit den [GPU Worker](worker.md) einrichten. Windows im Verzeichnis `worker/`:
 
-1. `01-Installieren.bat` ausführen; bei Bedarf vorher `00-Konfiguration.bat`. Whisper und Qwen werden eingerichtet; Ollama ist optional und benötigt ein installiertes Textmodell.
+1. `01-Installieren.bat` ausführen; bei Bedarf vorher `00-Konfiguration.bat`. Neben GPU-Whisper und Qwen-Sprachausgabe wird **`qwen3-vl:4b-instruct` als einziges Ollama-Modell für Text und Vision** installiert und mit `keep_alive=-1` vorgeladen.
 2. `04-Verbindungsdaten.bat` ausführen. Das Skript erzeugt **`tafa-worker.json`** und **`GPU-Worker-Verbindungsdaten.txt`**.
 3. In **TAFA → Verbindungen → Schnelleinrichtung per JSON** die JSON-Datei auswählen, **Konfiguration prüfen** und die vorgeschlagenen GPU-Adressen übernehmen. Die TXT erklärt die Ports. CPU-Serveradressen stehen **nicht** in diesem GPU-Export und werden separat konfiguriert.
 4. Für GPU-Whisper unter **HA → Geräte & Dienste → Wyoming Protocol** die GPU-IP, Port **10300**, hinzufügen und die daraus entstehende GPU-`stt.*`-Entität unter **TAFA → Verbindungen → GPU/KI** auswählen. Die GPU-IP für die schnelle Erreichbarkeitsprüfung ist die **reine IP ohne Port**. Nur eine Qwen-URL einzutragen aktiviert **kein** GPU-Whisper.
-5. Optional **Ollama** als HA-Integration mit `http://GPU-IP:11434` hinzufügen, den Konversationsagenten einrichten und seine echte `conversation.*`-Entität in **TAFA → Verbindungen** auswählen. **Ollama für Text/KI ist ein eigener Dienst**, nicht Qwen-TTS.
+5. **Ollama** als HA-Integration mit `http://GPU-IP:11434` hinzufügen. Für den Gesprächsassistenten **`qwen3-vl:4b-instruct`** auswählen, Thinking ausschalten, die Haltezeit auf **-1 (unbegrenzt)** setzen und die echte `conversation.*`-Entität in **TAFA → Verbindungen** auswählen. Qwen-TTS bleibt unabhängig.
 
 Für die Sprachausgabe wird Qwen über `http://GPU-IP:10502` bevorzugt; **Tablet Assist Stream** schaltet bei Nichterreichbarkeit vor Wiedergabebeginn auf Piper zurück. Der **Tablet Assist Sprachrouter** kann von GPU-Wyoming auf eingerichtetes CPU-STT zurückfallen. Bei einem Ausfall des GPU-PCs sind freie LLM-Antworten ohne eigenen zusätzlichen CPU-Konversationsagenten möglicherweise nicht verfügbar.
 
