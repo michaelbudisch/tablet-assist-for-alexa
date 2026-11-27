@@ -1,6 +1,8 @@
-# TAFA Device Bridge · Android 1.2.4
+# TAFA Device Bridge · Android 1.2.5 (Quellstand)
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+
+**Status 1.2.5:** Die Gesprächsphasen werden jetzt sofort bei Statuswechsel an Home Assistant gemeldet, nicht mehr nur im 12-Sekunden-Abgleich. Für ein Update über die installierte 1.2.4 muss die neue APK mit dem ursprünglichen Signaturschlüssel gebaut werden. Bis dahin bleibt 1.2.4 die letzte veröffentlichte signierte APK.
 
 Native Anbindung des Tablets an Home Assistant: Rufwort und Assist, Bluetooth-Ausgabe, Kamera und Bewegungserkennung – mit einer übersichtlichen Oberfläche. Android 9+.
 
