@@ -1,3 +1,14 @@
+# TAFA Device Bridge 1.2.5 — Sofortige Sprachphasen (Quellversion)
+
+**Buildstatus:** Neue Android-Quellversion mit Versionscode **26** und unveränderter App-ID `de.jarvis.audio`. Noch **keine signierte 1.2.5-APK veröffentlicht**. Ein direktes Update der vorhandenen signierten 1.2.4 benötigt das ursprüngliche Signaturzertifikat. Die letzte veröffentlichte signierte APK bleibt 1.2.4.
+
+- **Rufwort:** `detected`, `native_connecting`, `native_listening` und andere Phasen werden beim Wechsel sofort zur authentifizierten HA-Geräte-API übertragen.
+- **Verarbeitung:** `native_transcribing`, `native_thinking`, `native_playing` und die Rückkehr zur Bereitschaft werden ereignisgesteuert gemeldet.
+- **Kein Audio-Blockieren:** Eine separate Statuswarteschlange führt Netzwerkzugriffe unabhängig von Aufnahme und Benutzeroberfläche aus und fasst bei langsamen Verbindungen veraltete Zwischenstände zusammen.
+- **Rückfall:** Der bestehende 12-Sekunden-Statusabgleich bleibt zur Wiederherstellung nach Verbindungsproblemen; er verwendet dieselbe geordnete Warteschlange, damit alte Statusmeldungen nicht spätere überschreiben.
+- **Installation:** Mit `build.ps1 -Configuration Release -Check` bauen und mit `sign-release.ps1` unter Verwendung des ursprünglichen Schlüssels signieren. Erst danach kann die neue APK über 1.2.4 installiert werden.
+- **Prüfung:** Neue Unit-Tests für Reihenfolge, Zusammenfassung, Fehler und Stoppen von Statusmeldungen. Live-Reaktionszeit auf dem Tablet nach Installation zu überprüfen.
+
 # TAFA Device Bridge 1.2.4
 
 **Signierter Build:** TAFA-Device-Bridge-1.2.4.apk verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode 25. Über die vorhandene App installieren. Prüfung: 49 Unit-Tests, Android Lint ohne Fehler, DE/EN-Oberflächentests im Handy- und Tablet-Emulator sowie 25 Python-Vertrags-/Dokumentationsprüfungen. Echte Bluetooth-/Tablet-Audiotests stehen noch aus.
