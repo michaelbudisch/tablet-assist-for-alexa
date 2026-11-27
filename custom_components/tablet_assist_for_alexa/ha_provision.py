@@ -60,8 +60,8 @@ def validate_request(raw):
             if item.get("url")!=f"http://{host}:11434":
                 raise ValueError("Invalid Ollama URL")
             model=item.get("model","")
-            if not isinstance(model,str) or (model and not re.fullmatch(r"[A-Za-z0-9_.:/-]{1,100}",model)):
-                raise ValueError("Invalid model")
+            if model and model != "qwen3-vl:4b-instruct":
+                raise ValueError("The TAFA GPU worker uses only qwen3-vl:4b-instruct")
         if kind=="qwen_tts" and item.get("url")!=f"http://{host}:10502":
             raise ValueError("Invalid Qwen URL")
         if kind=="piper" and item.get("url")!=f"http://{host}:5000":
@@ -213,7 +213,7 @@ async def provision(hass,manifest,tracked):
                                 (entry.entry_id,"conversation"),context={"source":"user"})
                             if flow.get("type")=="form":
                                 outcome=await hass.config_entries.subentries.async_configure(
-                                    flow["flow_id"],{"name":"TAFA Ollama","model":model})
+                                    flow["flow_id"],{"name":"TAFA Ollama","model":model,"keep_alive":-1,"think":False})
                                 if outcome.get("type") not in ("create_entry","abort"):
                                     notices.append("Ollama conversation agent requires manual review")
                             else:
