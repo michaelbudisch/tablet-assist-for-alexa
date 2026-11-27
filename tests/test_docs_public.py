@@ -68,14 +68,14 @@ class PublicDocumentationTests(unittest.TestCase):
         app = (ROOT / "tafa_app/config.yaml").read_text(encoding="utf-8")
         self.assertRegex(app, r"(?m)^  speech_mode: setup$")
         integration_version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-        self.assertRegex(integration_version, r"^\\d+\\.\\d+\\.\\d+$")
+        self.assertRegex(integration_version, r"^[0-9]+[.][0-9]+[.][0-9]+$")
         self.assertIn(f'version: "{integration_version}"', app)
         self.assertEqual((ROOT / "worker/VERSION").read_text().strip(), "2.2.6")
         android_version = (ROOT / "android/VERSION").read_text(encoding="utf-8").strip()
         gradle = (ROOT / "android/app/build.gradle").read_text(encoding="utf-8")
-        self.assertRegex(android_version, r"^\\d+\\.\\d+\\.\\d+$")
+        self.assertRegex(android_version, r"^[0-9]+[.][0-9]+[.][0-9]+$")
         self.assertIn(f"versionName '{android_version}'", gradle)
-        self.assertRegex(gradle, r"versionCode\\s+[1-9]\\d*")
+        self.assertRegex(gradle, r"versionCode[ ]+[1-9][0-9]*")
         for name in ("proxmox/quick-install.sh", "proxmox/resume-install.sh"):
             with self.subTest(script=name):
                 script = (ROOT / name).read_text(encoding="utf-8")
