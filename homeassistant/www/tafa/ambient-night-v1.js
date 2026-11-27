@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.55 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.56 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -331,7 +331,8 @@
     const oldYaw=s.inertiaYaw||0,oldPitch=s.inertiaPitch||0;
     const step=frameDelta>0?(1-spinFade)*560:0;
     s.manualYaw+=oldYaw*step;
-    s.manualPitch=Math.max(-1.2,Math.min(1.2,s.manualPitch+oldPitch*step));
+    // Full 360° vertical turns remain free even while inertia fades.
+    s.manualPitch+=oldPitch*step;
     s.inertiaYaw=oldYaw*spinFade;
     s.inertiaPitch=oldPitch*spinFade;
     const from=s.autoBlend??1;
@@ -493,7 +494,8 @@
       const yawDelta=(event.clientX-pointer.lastX)*sensitivity;
       const pitchDelta=-(event.clientY-pointer.lastY)*sensitivity;
       s.manualYaw+=yawDelta;
-      s.manualPitch=Math.max(-1.2,Math.min(1.2,s.manualPitch+pitchDelta));
+      // Keep the vertical angle unbounded: any number of complete turns.
+      s.manualPitch+=pitchDelta;
       const now=performance.now();
       const dt=Math.max(12,Math.min(100,now-pointer.lastMoveAt));
       const weight=pointer.velocityYaw===0&&pointer.velocityPitch===0?.65:.32;
