@@ -90,11 +90,14 @@
     if(voice?.playing)return "speaking";
     if(voice?.processing)return "processing";
     if(voice?.info)return "listening";
-    if(/speaking|playing|antwort|tts/.test(mic))return "speaking";
-    if(/process|thinking|busy|verarbeit|erkenn|sent|gesendet/.test(mic+" "+wake))return "processing";
-    if(/listen|record|wake|detect|active|aufnah|hör|hoer/.test(mic+" "+wake)&&!/inactive|not_active/.test(mic+" "+wake))return "listening";
+    // A permanently armed native wakeword detector reports "listening: hey_jarvis".
+    // That is standby, NOT active Assist capture: keep the sphere quiet.
+    if(/^native_(?:waiting_for_playback|playing|speaking)/.test(wake)||/^(?:speaking|playing|tts)$/.test(mic))return "speaking";
+    if(/^native_(?:processing|thinking|generating_voice|transcribing|sending_audio|waiting_for_stt|authenticating|connected)/.test(wake)||/^(?:processing|thinking|busy)$/.test(mic))return "processing";
+    if(/^(?:detected(?::|$)|native_(?:connecting|followup|starting_microphone|listening))/.test(wake)||mic==="assist")return "listening";
     const last=h["sensor.tafa_jarvis_tablet_letztes_rufwort"]?.state;
-    if(last&&Date.now()-Date.parse(last)<7000)return "listening";
+    const ms=Date.now()-Date.parse(last||"");
+    if(Number.isFinite(ms)&&ms>=0&&ms<2000)return "listening";
     if(s.forceUntil>Date.now())return s.forcedPhase;
     return "idle";
   }
@@ -208,8 +211,8 @@
   const phase=s.phase;
   const hue=phase==="listening"?184:phase==="processing"?260:phase==="speaking"?295:215;
   const isIdle=phase==="idle";
-  const speed=isIdle?1:1.32;
-  const pulse=isIdle?0:Math.sin(t*.005)*.014;
+  const speed=isIdle?.55:1.32;
+  const pulse=isIdle?0:Math.sin(t*.004)*.023;
   const radius=Math.min(w*.42,h*.41)*(1+pulse);
   const cx=w*.5,cy=h*.51;
   const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius*1.22);
@@ -220,15 +223,15 @@
 
   // All particles and metric anchors pass through the same rotating camera.
   const ay=t*.00015*speed;
-  const ax=-.23+Math.sin(t*.00013)*.17;
-  const az=Math.sin(t*.000075)*.12;
+  const ax=-.23+Math.sin(t*(isIdle?.000045:.00013))*(isIdle?.022:.17);
+  const az=Math.sin(t*(isIdle?.000037:.000075))*(isIdle?.012:.12);
   const cosa=Math.cos(ay),sina=Math.sin(ay);
   const cosx=Math.cos(ax),sinx=Math.sin(ax);
   const cosz=Math.cos(az),sinz=Math.sin(az);
   const projected=mesh.points.map((p,i)=>{
-    const movement=1+Math.sin(t*.00042+p[3])*.028+Math.cos(t*.00023+p[3]*1.7)*.017;
-    const px=p[0]*movement+.012*Math.sin(t*.00033+p[3]*2);
-    const py=p[1]*movement+.012*Math.cos(t*.00027+p[3]);
+    const movement=isIdle?1:1+Math.sin(t*.00042+p[3])*.028+Math.cos(t*.00023+p[3]*1.7)*.017;
+    const px=p[0]*movement+(isIdle?0:.012*Math.sin(t*.00033+p[3]*2));
+    const py=p[1]*movement+(isIdle?0:.012*Math.cos(t*.00027+p[3]));
     const pz=p[2]*movement;
     const rx=px*cosa+pz*sina;
     const rz=pz*cosa-px*sina;
@@ -262,7 +265,7 @@
   ctx.lineWidth=.85*dpr;
   for(let i=0;i<4;i++){
     const direction=i%2?-1:1;
-    const angle=t*.00017*direction+i*1.67;
+    const angle=t*(isIdle?.000038:.00017)*direction+i*1.67;
     ctx.strokeStyle=isIdle?"rgba(218,232,250,.21)":`hsla(${hue},88%,82%,.28)`;
     ctx.beginPath();
     ctx.ellipse(cx,cy,radius*(1.03+.045*i),radius*(.52+.11*(i%3)),angle*.18,angle,angle+.72+(i%3)*.18);
@@ -274,11 +277,11 @@
     ctx.beginPath();ctx.arc(tipX,tipY,1.35*dpr,0,Math.PI*2);ctx.fill();
   }
   for(let i=0;i<11;i++){
-    const a=t*(i%2?-.00017:.00022)+i*2.113;
+    const a=t*(isIdle?(i%2?-.000025:.000032):(i%2?-.00017:.00022))+i*2.113;
     const orbit=radius*(.87+(i%5)*.062);
     const x=cx+Math.sin(a)*orbit;
     const y=cy+Math.cos(a*.83)*orbit*.72;
-    const flicker=.15+.45*(.5+.5*Math.sin(t*.0017+i*8.2));
+    const flicker=isIdle?.24+.045*Math.sin(t*.0004+i*8.2):.15+.45*(.5+.5*Math.sin(t*.0017+i*8.2));
     ctx.fillStyle=isIdle?`rgba(231,237,251,${flicker})`:`hsla(${hue},94%,86%,${flicker})`;
     ctx.beginPath();ctx.arc(x,y,(i%5===0?2.2:1.1)*dpr,0,Math.PI*2);ctx.fill();
   }
@@ -292,7 +295,7 @@
       const mid=rect.width/2;
       const x=Math.max(43,Math.min(rect.width-43,mid+(px-mid)*1.08));
       const y=Math.max(25,Math.min(rect.height-23,rect.height*.51+(py-rect.height*.51)*1.07));
-      const scale=.79+.22*Math.max(0,Math.min(1,(z+1)/2));
+      const scale=isIdle?.94:.79+.22*Math.max(0,Math.min(1,(z+1)/2));
       const alpha=z<-.34?.24:(.49+.43*Math.max(0,Math.min(1,(z+1)/2)));
       label.style.left=x.toFixed(1)+"px";
       label.style.top=y.toFixed(1)+"px";
