@@ -218,12 +218,7 @@ class DashboardDelivery(unittest.TestCase):
 
     def test_version_and_docs_consistent(self):
         config=(APP/"config.yaml").read_text()
-        release=re.search(r'^version: "([^"]+)"
-
-
-if __name__=="__main__":
-    unittest.main()
-,config,re.MULTILINE)
+        release=re.search(r'^version: "([^"]+)"$',config,re.MULTILINE)
         self.assertIsNotNone(release)
         self.assertIn('APP_VERSION="'+release.group(1)+'"',(APP/"server.py").read_text())
         self.assertIn("## "+release.group(1),(APP/"CHANGELOG.md").read_text())
