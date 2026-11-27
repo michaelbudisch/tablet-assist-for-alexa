@@ -17,8 +17,9 @@ public class WakePhaseReporterTest {
         reporter.submit("native_listening");
         assertEquals(1, tasks.size());
         tasks.remove(0).run();
-        assertEquals(1, sent.size());
-        assertEquals("native_listening", sent.get(0));
+        assertEquals(2, sent.size());
+        assertEquals("detected: hey jarvis", sent.get(0));
+        assertEquals("native_listening", sent.get(1));
     }
 
     @Test public void phaseChangeDuringSendIsDeliveredRightAfterward() {
