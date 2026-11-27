@@ -39,13 +39,13 @@ class VisionTests(unittest.TestCase):
         self.assertEqual(r.headers["Cache-Control"], "no-store")
         path, body, _ = self.calls[0]
         self.assertEqual(path, "/api/chat")
-        self.assertEqual(body["keep_alive"], 0)
+        self.assertEqual(body["keep_alive"], -1)
         self.assertFalse(body["stream"])
         self.assertEqual(len(body["messages"][1]["images"]), 1)
         self.assertTrue(base64.b64decode(body["messages"][1]["images"][0]).startswith(b"\xff\xd8"))
     def test_alternative(self):
-        self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,200)
-        self.assertEqual(self.calls[0][1]["model"], "gemma3:4b")
+        self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,400)
+        self.assertEqual(self.calls, []))
     def test_capabilities_and_vision_queue(self):
         response = self.client.get("/capabilities", headers=HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -64,11 +64,11 @@ class VisionTests(unittest.TestCase):
 
     def test_residency_and_matching_context(self):
         self.assertEqual(self.post({"image":fixture(),"keep_alive":300,"num_ctx":2048}).status_code,200)
-        self.assertEqual(self.calls[0][1]["keep_alive"],300)
+        self.assertEqual(self.calls[0][1]["keep_alive"],-1)
         self.assertEqual(self.calls[0][1]["options"]["num_ctx"],2048)
         self.assertFalse(self.calls[0][1]["think"])
     def test_residency_limits(self):
-        for extra in ({"keep_alive":-1},{"keep_alive":True},{"keep_alive":"300s"},{"keep_alive":86400},{"num_ctx":131072},{"num_ctx":True}):
+        for extra in ({"keep_alive":True},{"keep_alive":"300s"},{"keep_alive":86400},{"num_ctx":131072},{"num_ctx":True}):
             with self.subTest(extra=extra):
                 self.assertEqual(self.post({"image":fixture(),**extra}).status_code,400)
         self.assertEqual(self.calls,[])
@@ -118,7 +118,7 @@ class VisionTests(unittest.TestCase):
         self.assertEqual(response.json["labels"],["person","adult","woman"])
         self.assertEqual(calls[0]["format"]["additionalProperties"],False)
         self.assertFalse(calls[0]["think"])
-        self.assertEqual(calls[0]["keep_alive"],300)
+        self.assertEqual(calls[0]["keep_alive"],-1)
         self.assertEqual(calls[0]["options"]["num_ctx"],2048)
         self.assertIn("Never identify",calls[0]["messages"][0]["content"])
         self.assertIn("genders",calls[0]["format"]["properties"])
