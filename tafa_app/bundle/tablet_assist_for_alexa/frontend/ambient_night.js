@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.60 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.61 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -195,7 +195,19 @@
       if(node.textContent!==str)node.textContent=str;
     }
     const nextPhase=resolvePhase(card,s);
-    if(nextPhase!==s.phase){s.phase=nextPhase;s.phaseChangeAt=performance.now();}
+    if(nextPhase!==s.phase){
+      const previousPhase=s.phase,when=performance.now();
+      // Exactly one soft expanding circular pulse at each significant edge.
+      // Listening->processing marks the end of capture; processing->speaking
+      // marks the handoff to audio output. Never pulse continuously in idle.
+      if((previousPhase==="listening"&&nextPhase==="processing")||
+         (previousPhase==="processing"&&nextPhase==="speaking")){
+        if(!s.phaseRings)s.phaseRings=[];
+        s.phaseRings.push({born:when,kind:nextPhase});
+        if(s.phaseRings.length>3)s.phaseRings.shift();
+      }
+      s.phase=nextPhase;s.phaseChangeAt=when;
+    }
     stage.dataset.phase=s.phase;
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
@@ -321,53 +333,155 @@
 }
   const mesh=makeMesh();
 
-  function drawSignals(ctx,s,t,projected,dpr,visual){
-    // Short luminous packets travel along existing projected 3D edges. They
-    // are not detached 2D streaks and therefore stay attached during drag.
-    const dt=Math.max(0,Math.min(90,t-(s.lastFlowFrame??t)));
-    s.lastFlowFrame=t;
-    s.flowClock=(s.flowClock||0)+dt*(.00012+visual.listening*.00068
-      +visual.processing*.00120+visual.speaking*.00086);
-    const listen=visual.listening,think=visual.processing,speak=visual.speaking;
-    const activity=Math.min(1,listen+think+speak);
-    if(activity<.012)return;
-    const packets=listen*13+think*26+speak*19;
-    const tone=(184*listen+255*think+285*speak)/Math.max(.01,listen+think+speak);
-    const sat=(96*listen+16*think+36*speak)/Math.max(.01,listen+think+speak);
-    const light=(80*listen+94*think+90*speak)/Math.max(.01,listen+think+speak);
-    const oldCap=ctx.lineCap;
+  // Construct paths through the actual connected mesh. A carrier visits
+  // 5–8 successive nodes, then reverses at the end: never jumps between
+  // unrelated edges. All coordinates are projected by the same 3D camera.
+  const adjacency=Array.from({length:mesh.points.length},()=>[]);
+  for(const [a,b] of mesh.edges){adjacency[a].push(b);adjacency[b].push(a);}
+  const flowRoutes=Array.from({length:23},(_,seed)=>{
+    const nodes=[(seed*19+11)%mesh.points.length];
+    let previous=-1;
+    for(let hop=0;hop<5+(seed%3);hop++){
+      const current=nodes[nodes.length-1];
+      const neighbors=adjacency[current];
+      if(!neighbors.length)break;
+      let choice=(seed*7+hop*5+current)%neighbors.length;
+      if(neighbors.length>1&&neighbors[choice]===previous)choice=(choice+1)%neighbors.length;
+      const next=neighbors[choice];
+      previous=current;
+      nodes.push(next);
+    }
+    return nodes;
+  });
+  function flowPosition(route,travel,projected){
+    const segments=route.length-1;
+    if(segments<1)return projected[route[0]];
+    const cycle=segments*2;
+    let k=((travel%cycle)+cycle)%cycle;
+    if(k>segments)k=cycle-k;
+    const index=Math.min(segments-1,Math.floor(k));
+    const f=k-index,from=projected[route[index]],to=projected[route[index+1]];
+    return [from[0]+(to[0]-from[0])*f,from[1]+(to[1]-from[1])*f,
+            from[2]+(to[2]-from[2])*f];
+  }
+  function drawPhaseRings(ctx,s,t,cx,cy,radius,dpr){
+    if(!s.phaseRings?.length)return;
+    s.phaseRings=s.phaseRings.filter(r=>t-r.born<1000&&t-r.born>=-120);
+    const savedCap=ctx.lineCap;
     ctx.lineCap="round";
-    const pathCount=/Android/i.test(navigator.userAgent)?18:27;
-    for(let i=0;i<pathCount;i++){
-      // Fade individual paths in rather than making all 27 appear at once.
-      const enabled=Math.max(0,Math.min(1,(packets-i+1)/2.8));
-      if(enabled<.025)continue;
-      const edge=mesh.edges[(i*37+17)%mesh.edges.length];
-      if(!edge)continue;
-      const a=projected[edge[0]],b=projected[edge[1]];
-      if(!a||!b)continue;
-      const depth=Math.max(.22,Math.min(1,(a[2]+b[2]+2)/4));
-      const u=(s.flowClock*(.84+(i%4)*.13)+i*.381966)%1;
-      const gate=Math.min(1,u*8,(1-u)*8);
-      const alpha=activity*enabled*gate*depth;
-      if(alpha<.018)continue;
-      const from=Math.max(0,u-.26);
-      const ax=a[0]+(b[0]-a[0])*from,ay=a[1]+(b[1]-a[1])*from;
-      const hx=a[0]+(b[0]-a[0])*u,hy=a[1]+(b[1]-a[1])*u;
-      ctx.strokeStyle="hsla("+tone.toFixed(1)+","+sat.toFixed(0)+"%,"+light.toFixed(0)+"%,"+(alpha*.64).toFixed(3)+")";
-      ctx.lineWidth=(.78+1.2*alpha)*dpr;
-      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(hx,hy);ctx.stroke();
-      ctx.fillStyle="hsla("+tone.toFixed(1)+","+Math.min(100,sat+8).toFixed(0)+"%,96%,"+Math.min(1,alpha*.88).toFixed(3)+")";
-      ctx.beginPath();ctx.arc(hx,hy,(1.20+1.7*alpha)*dpr,0,Math.PI*2);ctx.fill();
-      if((i%5)===0&&alpha>.22){
-        const halo=ctx.createRadialGradient(hx,hy,0,hx,hy,8*dpr);
-        halo.addColorStop(0,"rgba(238,249,255,"+(alpha*.38).toFixed(3)+")");
-        halo.addColorStop(1,"rgba(238,249,255,0)");
-        ctx.fillStyle=halo;
-        ctx.beginPath();ctx.arc(hx,hy,8*dpr,0,Math.PI*2);ctx.fill();
+    for(const ring of s.phaseRings){
+      const age=Math.max(0,t-ring.born);
+      for(let echo=0;echo<2;echo++){
+        const u=Math.max(0,(age-echo*105)/780);
+        if(u>=1||age<echo*105)continue;
+        const ease=1-Math.pow(1-u,2.3);
+        const size=radius*(.16+1.17*ease);
+        const envelope=Math.sin(Math.PI*u);
+        const strength=ring.kind==="processing"?.21:.27;
+        const alpha=Math.max(0,strength*envelope*(echo===0?1:.48));
+        const hue=ring.kind==="processing"?197:264;
+        const sat=ring.kind==="processing"?77:24;
+        ctx.strokeStyle="hsla("+hue+","+sat+"%,88%,"+alpha.toFixed(3)+")";
+        ctx.lineWidth=(1.08+(1-u)*1.12)*dpr;
+        ctx.beginPath();ctx.arc(cx,cy,size,0,Math.PI*2);ctx.stroke();
+        // One diffuse halo, not a solid disk or a distracting shockwave.
+        if(echo===0&&u>.09&&u<.87){
+          ctx.strokeStyle="hsla("+hue+","+sat+"%,82%,"+(alpha*.16).toFixed(3)+")";
+          ctx.lineWidth=(9*(1-u)+2)*dpr;
+          ctx.beginPath();ctx.arc(cx,cy,size,0,Math.PI*2);ctx.stroke();
+        }
       }
     }
+    ctx.lineCap=savedCap;
+  }
+
+
+  function drawSignals(ctx,s,t,projected,dpr,visual){
+    const dt=Math.max(0,Math.min(90,t-(s.lastFlowFrame??t)));
+    s.lastFlowFrame=t;
+    s.flowClock=(s.flowClock||0)+dt*(.00022+visual.listening*.00114
+      +visual.processing*.00203+visual.speaking*.00146);
+    const listen=visual.listening,think=visual.processing,speak=visual.speaking;
+    const activity=Math.max(0,Math.min(1,listen+think+speak));
+    const packets=listen*12+think*22+speak*17;
+    const total=Math.min(flowRoutes.length,/Android/i.test(navigator.userAgent)?14:23);
+    const sat=(91*listen+18*think+36*speak)/Math.max(.01,listen+think+speak);
+    const hue=(185*listen+252*think+285*speak)/Math.max(.01,listen+think+speak);
+    if(!s.pathLastSteps)s.pathLastSteps=new Array(flowRoutes.length).fill(null);
+    if(!s.nodeFlashAt)s.nodeFlashAt=new Array(mesh.points.length).fill(-Infinity);
+    if(!s.nodeFlashHue)s.nodeFlashHue=new Array(mesh.points.length).fill(185);
+    const oldCap=ctx.lineCap;
+    ctx.lineCap="round";
+    for(let i=0;i<total;i++){
+      const enabled=Math.max(0,Math.min(1,(packets-i+1)/2.8));
+      const route=flowRoutes[i],count=route.length-1;
+      if(count<2)continue;
+      const travel=s.flowClock*(.23+.031*(i%5))*count+i*2.17;
+      const step=Math.floor(travel);
+      const previous=s.pathLastSteps[i];
+      if(previous!=null&&step>previous&&enabled>.015){
+        // Each boundary crossed represents an actual visited node. Flash it,
+        // not a disconnected random dot. The subsequent segment continues
+        // from exactly that node, including when a path reverses direction.
+        const last=Math.min(step,previous+4);
+        for(let k=previous+1;k<=last;k++){
+          const cycle=count*2;
+          const edge=((k%cycle)+cycle)%cycle;
+          const node=route[edge<=count?edge:cycle-edge];
+          s.nodeFlashAt[node]=t;
+          s.nodeFlashHue[node]=hue;
+          s.pathHops=(s.pathHops||0)+1;
+        }
+      }
+      s.pathLastSteps[i]=step;
+      if(enabled<.025||activity<.015)continue;
+      const head=flowPosition(route,travel,projected);
+      const depth=Math.max(.28,Math.min(1,(head[2]+1)*.54));
+      const gate=Math.min(1,(travel-Math.floor(travel))/.22+.24);
+      const alpha=enabled*activity*depth*gate;
+      if(alpha<.015)continue;
+      let prior=head;
+      // The trailing packet spans successive *connected* edges, so it
+      // remains continuous as the head crosses a graph vertex.
+      for(let j=1;j<=7;j++){
+        const earlier=flowPosition(route,travel-j*.20,projected);
+        const strength=Math.pow(1-j/8,1.5);
+        ctx.strokeStyle="hsla("+hue.toFixed(1)+","+sat.toFixed(0)+"%,92%,"+
+          Math.min(.9,alpha*strength*.82).toFixed(3)+")";
+        ctx.lineWidth=(.68+1.75*alpha*strength)*dpr;
+        ctx.beginPath();ctx.moveTo(prior[0],prior[1]);ctx.lineTo(earlier[0],earlier[1]);ctx.stroke();
+        prior=earlier;
+      }
+      ctx.fillStyle="hsla("+hue.toFixed(1)+","+Math.min(100,sat+7).toFixed(0)+
+        "%,96%,"+Math.min(1,alpha*.94).toFixed(3)+")";
+      ctx.beginPath();ctx.arc(head[0],head[1],(1.2+2.25*alpha)*dpr,0,Math.PI*2);ctx.fill();
+    }
     ctx.lineCap=oldCap;
+    // The hit flare belongs to the actual mesh node and is drawn with its
+    // 3D projection. A new hit refreshes its lifetime rather than blinking
+    // every node uniformly.
+    for(let i=0;i<s.nodeFlashAt.length;i++){
+      const age=t-s.nodeFlashAt[i];
+      if(age<0||age>680)continue;
+      const p=projected[i];
+      const rise=Math.min(1,age/38+.25);
+      const decay=Math.exp(-age/235);
+      const strength=rise*decay*Math.max(.1,activity);
+      if(strength<.055)continue;
+      const depth=Math.max(.30,Math.min(1,(p[2]+1)/2));
+      const intensity=Math.min(.98,strength*depth*1.45);
+      const color=s.nodeFlashHue[i];
+      ctx.fillStyle="hsla("+color.toFixed(0)+",28%,98%,"+intensity.toFixed(3)+")";
+      ctx.beginPath();ctx.arc(p[0],p[1],(2.5+4*strength)*dpr,0,Math.PI*2);ctx.fill();
+      if(intensity>.2){
+        const halo=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],(8+10*strength)*dpr);
+        halo.addColorStop(0,"rgba(244,250,255,"+(intensity*.46).toFixed(3)+")");
+        halo.addColorStop(.46,"rgba(185,225,255,"+(intensity*.13).toFixed(3)+")");
+        halo.addColorStop(1,"rgba(165,220,255,0)");
+        ctx.fillStyle=halo;
+        ctx.beginPath();ctx.arc(p[0],p[1],(8+10*strength)*dpr,0,Math.PI*2);ctx.fill();
+      }
+    }
     // In processing mode dozens of independent, brief white node flares
     // carry the rhythm. Unlike the listening state, the accents are white.
     const whiteIntensity=Math.min(1,think*1.4+speak*.55);
@@ -526,6 +640,7 @@
   glow.addColorStop(.56,`hsla(${hue.toFixed(1)},${coreSat.toFixed(1)}%,${coreLight.toFixed(1)}%,${(.052+.09*energy+.02*onset).toFixed(3)})`);
   glow.addColorStop(1,"rgba(12,22,42,0)");
   ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+  drawPhaseRings(ctx,s,t,cx,cy,radius,dpr);
 
   // All particles and metric anchors pass through the same rotating camera.
   // An independent orbit clock prevents a jump after dragging.
