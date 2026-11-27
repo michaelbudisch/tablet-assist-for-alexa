@@ -65,3 +65,19 @@ Die vier Leuchtkanten besitzen die spezifischen Klassennamen
 `edge-n`, `edge-e`, `edge-s`, `edge-w`, damit private und
 öffentliche Ambient-Dashboards mit ihren allgemeinen
 `.top`-Selektoren keine Linien ausblenden können.
+
+
+## Kalendertermine und Sternschnuppen (0.4.70)
+
+Die Kalender-Ansicht verarbeitet HA `calendar.get_events` über den
+WebSocket-Dienst und alternativ das lesende HA-Kalender-REST-API. Der
+aktuelle Termin aus `calendar.familie` (`message`, `start_time`,
+`end_time`, `all_day`) erscheint unmittelbar als Fallback, falls
+Serviceantworten im Gerätebrowser fehlen. Mehrtägige Termine erscheinen
+für alle betroffenen Tage; ganztägige Enddaten bleiben exklusiv.
+
+Beim Kalenderaufbau starten **vier Lichtpartikel** von verschiedenen
+Kugelpunkten und fliegen in die Kalenderfläche. Danach zeichnen sich
+Kalenderrasterlinien auf; Kreuzungspunkte blitzen beim Erreichen auf.
+Die Sternschnuppen und Rasterillumination laufen nur für rund zwei
+Sekunden. Kein permanentes Rendering, keine Änderungen am Android-Audio.
