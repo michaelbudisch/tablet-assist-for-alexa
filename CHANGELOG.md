@@ -1,3 +1,9 @@
+## TAFA App / HA integration 0.4.49 — Isolated Ambient module
+- The public TAFA integration now uses its own `tafa-ambient.integration.v1` symbol namespace so its renderer cannot overwrite private Hauszentrale Ambient mode.
+- Removed tablet diagnostic overlays from the normal night view; standalone WebView test remains separately accessible.
+- Private Hauszentrale uses its own `privateAmbient` registry and ready event. Frontend imports are cache-busted with `?v=0.4.49`.
+- Existing sphere visuals, shooting stars, and HA automations remain unchanged.
+
 ## TAFA App / HA integration 0.4.48 — Android WebView full-screen and diagnostics
 - Ambient mode on Android now uses viewport-fixed positioning instead of inheriting the Home Assistant dashboard card grid width.
 - Added a built-in exit button for returning to the day view and tablet-only frontend version, viewport, layout width and Canvas diagnostics.
