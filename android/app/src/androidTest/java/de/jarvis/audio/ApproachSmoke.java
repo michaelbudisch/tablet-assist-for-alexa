@@ -36,8 +36,12 @@ final class ApproachSmoke {
             for(int i=0;i<snapshot.length;i++)if(snapshot[i]!=(byte)(i<640*480?16:128))
                 throw new AssertionError("YUV plane strides were not normalized");
             image.close();image=null;
-            if(!Tasks.await(detector.process(InputImage.fromByteArray(snapshot,640,480,90,InputImage.IMAGE_FORMAT_NV21)),30,TimeUnit.SECONDS).isEmpty())
-                throw new AssertionError("Blank frame must not create presence");
+            for(int pose:new int[]{0,90,180,270}){
+                CameraRotation orientation=new CameraRotation();orientation.update(pose);
+                int rotation=orientation.imageDegrees(270,0,true);
+                if(!Tasks.await(detector.process(InputImage.fromByteArray(snapshot,640,480,rotation,InputImage.IMAGE_FORMAT_NV21)),30,TimeUnit.SECONDS).isEmpty())
+                    throw new AssertionError("Blank frame must not create presence at physical pose "+pose);
+            }
             return "Approach smoke passed: bundled detector processed synthetic Camera2 YUV with plane strides, rotation and a reusable private buffer; no false face, no real camera or HA used.";
         }finally{
             if(detector!=null)detector.close();if(image!=null)image.close();

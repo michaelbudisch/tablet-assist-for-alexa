@@ -3,10 +3,8 @@ package de.jarvis.audio;
 import android.app.*;
 import android.content.*;
 import android.content.pm.ServiceInfo;
-import android.hardware.display.DisplayManager;
 import android.os.*;
 import android.util.Size;
-import android.view.Display;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -26,11 +24,11 @@ public class CameraRelayService extends Service {
     private int retries;
     private String lens;
     private long captureStarted;
+    private int motionRotation=-1;
     private final Runnable capture=()->{
         if(active&&camera!=null){
             captureStarted=SystemClock.elapsedRealtime();
-            Display display=getSystemService(DisplayManager.class).getDisplay(Display.DEFAULT_DISPLAY);
-            camera.capture(display==null?0:display.getRotation()*90);
+            camera.capture();
         }
     };
     private final Runnable renewWake=new Runnable(){public void run(){
@@ -72,9 +70,9 @@ public class CameraRelayService extends Service {
         if(!active)return;
         camera=new CameraPreviewController(this,new CameraPreviewController.Listener(){
             public void onReady(Size size,int sensor,boolean front){main.post(capture);}
-            public boolean onAnalysis(android.media.Image image,int sensor,boolean front){
+            public boolean onAnalysis(android.media.Image image,int rotationDegrees,boolean front){
                 if(!active)return false;
-                return approach.accept(image,sensor,front);
+                return approach.accept(image,rotationDegrees,front);
             }
             public void onSnapshot(CameraPreviewController.Snapshot snapshot){
                 if(!active)return;
@@ -85,7 +83,8 @@ public class CameraRelayService extends Service {
                         boolean motionNow=getSharedPreferences(MainActivity.PREF,0)
                                 .getBoolean("camera_motion",false);
                         CameraJpeg.Frame frame=CameraJpeg.prepare(snapshot.jpeg,motionNow);
-                        if(!motionNow)motion.clear();
+                        if(!motionNow||motionRotation!=snapshot.rotationDegrees)motion.clear();
+                        motionRotation=snapshot.rotationDegrees;
                         Boolean changed=motionNow?motion.changed(frame.gray):null;
                         if(!active)return;
                         upload.upload(frame,snapshot.capturedAt,changed,getSharedPreferences(MainActivity.PREF,0).getInt(CameraRefresh.KEY,CameraRefresh.DEFAULT));

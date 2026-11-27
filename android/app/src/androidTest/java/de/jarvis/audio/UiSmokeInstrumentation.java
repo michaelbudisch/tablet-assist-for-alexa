@@ -20,7 +20,8 @@ public class UiSmokeInstrumentation extends Instrumentation {
     private boolean streamOnly;
     private boolean cameraOnly;
     private boolean relayOnly;
-    private boolean flowOnly,outputOnly,approachOnly;
+    private boolean flowOnly,outputOnly,approachOnly,orientationOnly;
+    private int physicalPose;
     @Override public void onCreate(Bundle args) {
         super.onCreate(args);
         if (args != null) layout = args.getString("layout", "phone");
@@ -30,6 +31,8 @@ public class UiSmokeInstrumentation extends Instrumentation {
         flowOnly=args!=null&&args.getString("flow_only","false").equals("true");
         outputOnly=args!=null&&args.getString("output_only","false").equals("true");
         approachOnly=args!=null&&args.getString("approach_only","false").equals("true");
+        orientationOnly=args!=null&&args.getString("orientation_only","false").equals("true");
+        physicalPose=args==null?0:Integer.parseInt(args.getString("physical_pose","0"));
         start();
     }
     private void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -37,6 +40,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         Activity screen = null;
         try {
+            if(orientationOnly){result.putString("stream",CameraOrientationSmoke.run(this,physicalPose));finish(Activity.RESULT_OK,result);return;}
             if(approachOnly){result.putString("stream",ApproachSmoke.run(this));finish(Activity.RESULT_OK,result);return;}
             if(outputOnly){result.putString("stream",NativePlaybackSmoke.run(this));finish(Activity.RESULT_OK,result);return;}
             if(flowOnly){result.putString("stream",NativeFlowSmoke.run(this,layout));finish(Activity.RESULT_OK,result);return;}

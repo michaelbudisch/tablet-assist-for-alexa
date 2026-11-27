@@ -39,8 +39,8 @@ public class ApproachStateTest {
         assertEquals(0,ApproachState.facePercent(0,480,0,0,100,100),0);
     }
     @Test public void frontAndRearRotationAreCompensated(){
-        assertEquals(0,ApproachState.rotation(270,90,true));
-        assertEquals(180,ApproachState.rotation(270,90,false));
-        assertEquals(270,ApproachState.rotation(0,90,false));
+        assertEquals(0,new CameraRotation().imageDegrees(270,90,true));
+        assertEquals(180,new CameraRotation().imageDegrees(270,90,false));
+        assertEquals(270,new CameraRotation().imageDegrees(0,90,false));
     }
 }

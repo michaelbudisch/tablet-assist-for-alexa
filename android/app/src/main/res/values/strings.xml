@@ -136,7 +136,7 @@
     <string name="language_en">EN</string>
     <string name="footer">TAFA Device Bridge · %1$s</string>
     <string name="camera_relay_title">Camera for Home Assistant</string>
-    <string name="camera_relay_help">Send JPEG snapshots to your TAFA room using the saved HA room-user login. First enable Camera for the room under Apps → TAFA → Devices &amp; multiroom. Start explicitly and stop here or via the notification. No recording or separate Jarvis receiver required.</string>
+    <string name="camera_relay_help">Send JPEG snapshots to your TAFA room using the saved HA room-user login. First enable Camera for the room under Apps → TAFA → Devices &amp; multiroom. Start explicitly and stop here or via the notification. Portrait and landscape mounting are detected from the physical device orientation, even with screen rotation locked. No recording or separate Jarvis receiver required.</string>
     <string name="camera_relay_start">Start camera for HA</string>
     <string name="camera_relay_stop">Stop HA camera</string>
     <string name="camera_local_title">Local camera test</string>

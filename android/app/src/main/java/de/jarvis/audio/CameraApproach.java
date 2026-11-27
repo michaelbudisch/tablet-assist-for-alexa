@@ -23,6 +23,8 @@ final class CameraApproach implements AutoCloseable {
     private ApproachReporter reporter;
     private volatile boolean closed;
     private long nextAt;
+    private int currentRotation=-1;
+    private long orientationGeneration;
     private Boolean previous;
     private long lastReported=-1;
     private int lastReportedThreshold=-1;
@@ -32,11 +34,16 @@ final class CameraApproach implements AutoCloseable {
         status="off";facePercent=0;delivery="off";
     }
     /** Called by the existing Camera2 drain thread. Image bytes are copied only at the bounded analysis rate. */
-    synchronized boolean accept(Image image,int sensor,boolean front){
+    synchronized boolean accept(Image image,int rotation,boolean front){
         if(closed)return false;
         if(!prefs.getBoolean(ENABLED,false)){
             if(!"off".equals(status)){state.clear();emit(null,null,25);status="off";facePercent=0;}
             return false;
+        }
+        if(currentRotation!=rotation){
+            boolean changed=currentRotation!=-1;
+            currentRotation=rotation;orientationGeneration++;state.clear();facePercent=0;
+            if(changed){status="checking";emit(null,null,Math.max(15,Math.min(60,prefs.getInt(THRESHOLD,25))));}
         }
         long now=SystemClock.elapsedRealtime();
         if(now<nextAt||busy.get())return false;
@@ -51,9 +58,7 @@ final class CameraApproach implements AutoCloseable {
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
                 .setMinFaceSize(.12f).build());
             if(previousThreshold!=threshold){state.clear();previousThreshold=threshold;}
-            android.view.Display display=app.getSystemService(android.hardware.display.DisplayManager.class)
-                .getDisplay(android.view.Display.DEFAULT_DISPLAY);
-            int rotation=ApproachState.rotation(sensor,display==null?0:display.getRotation()*90,front);
+            long generation=orientationGeneration;
             boolean swap=rotation%180!=0;
             int width=swap?image.getHeight():image.getWidth(),height=swap?image.getWidth():image.getHeight();
             busy.set(true);status="checking";
@@ -61,7 +66,7 @@ final class CameraApproach implements AutoCloseable {
             detector.process(InputImage.fromByteArray(pixels,image.getWidth(),image.getHeight(),rotation,InputImage.IMAGE_FORMAT_NV21))
                 .addOnSuccessListener(Runnable::run,faces->{
                     synchronized(CameraApproach.this){
-                        if(closed||!prefs.getBoolean(ENABLED,false))return;
+                        if(closed||generation!=orientationGeneration||!prefs.getBoolean(ENABLED,false))return;
                         double largest=0;
                         for(Face face:faces){Rect b=face.getBoundingBox();
                             largest=Math.max(largest,ApproachState.facePercent(width,height,b.left,b.top,b.right,b.bottom));}
@@ -71,7 +76,7 @@ final class CameraApproach implements AutoCloseable {
                     }
                 }).addOnFailureListener(Runnable::run,error->{
                     synchronized(CameraApproach.this){
-                        if(!closed){state.clear();status="error";facePercent=0;emit(null,null,threshold);}
+                        if(!closed&&generation==orientationGeneration){state.clear();status="error";facePercent=0;emit(null,null,threshold);}
                     }
                 }).addOnCompleteListener(Runnable::run,task->{
                     busy.set(false);

@@ -136,7 +136,7 @@
     <string name="language_en">EN</string>
     <string name="footer">TAFA Device Bridge · %1$s</string>
     <string name="camera_relay_title">Kamera für Home Assistant</string>
-    <string name="camera_relay_help">Überträgt Einzelbilder an deinen TAFA-Raum mit der gespeicherten Anmeldung des Raumnutzers. Zuerst unter Apps → TAFA → Geräte &amp; Multiroom die Kamera im Raum freigeben. Kamera ausdrücklich starten oder über die Benachrichtigung stoppen. Keine Aufzeichnung und kein separater Jarvis-Empfänger nötig.</string>
+    <string name="camera_relay_help">Überträgt Einzelbilder an deinen TAFA-Raum mit der gespeicherten Anmeldung des Raumnutzers. Zuerst unter Apps → TAFA → Geräte &amp; Multiroom die Kamera im Raum freigeben. Kamera ausdrücklich starten oder über die Benachrichtigung stoppen. Hoch- und Querformat werden anhand der Gerätelage automatisch erkannt, auch bei gesperrter Bildschirmdrehung. Keine Aufzeichnung und kein separater Jarvis-Empfänger nötig.</string>
     <string name="camera_relay_start">Kamera für HA starten</string>
     <string name="camera_relay_stop">HA-Kamera stoppen</string>
     <string name="camera_local_title">Lokaler Kameratest</string>

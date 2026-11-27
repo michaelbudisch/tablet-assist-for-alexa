@@ -68,7 +68,7 @@ public class CameraActivity extends Activity implements TextureView.SurfaceTextu
             if(controller==null)return;
             findViewById(R.id.camera_capture).setEnabled(false);
             snapshotStatus.setText(R.string.camera_capturing);
-            controller.capture(rotation());
+            controller.capture();
         });
         findViewById(R.id.camera_clear).setOnClickListener(v->clearSnapshot());
         Spinner refreshRate=findViewById(R.id.camera_refresh_rate);

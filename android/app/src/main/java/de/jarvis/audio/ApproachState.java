@@ -32,7 +32,4 @@ final class ApproachState {
         if(cx<.2||cx>.8||cy<.12||cy>.88)return 0;
         return Math.min(100,100.0*(right-left)/Math.min(width,height));
     }
-    static int rotation(int sensor,int display,boolean front){
-        return ((front?sensor+display:sensor-display)%360+360)%360;
-    }
 }

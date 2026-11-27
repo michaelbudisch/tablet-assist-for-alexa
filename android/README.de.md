@@ -1,6 +1,8 @@
-# TAFA Device Bridge · Android 1.2.10
+# TAFA Device Bridge · Android 1.2.11
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
+
+**1.2.11:** Kamerabilder und lokale Annäherungserkennung richten sich gemeinsam nach der tatsächlichen Tablet-Lage, auch bei gesperrter Bildschirmdrehung. Hochformat, Querformat und umgekehrte Montage werden automatisch berücksichtigt. Beim Drehen werden Bewegungsvergleich und Erkennungsbestätigung zurückgesetzt; veraltete Gesichtsergebnisse werden verworfen.
 
 **1.2.10:** Optionaler eigener HA-Sensor für Annäherung über die lokale Frontkamera. Mindestgesichtsgröße und Ausschaltverzögerung sind einstellbar. Enthält den aktuellen Git-Stand 1.2.8 mit lokal beendeten stillen Folgefragen. Mit bisheriger Signatur über die vorhandene App installieren.
 
@@ -60,7 +62,7 @@ Die separate lokale Testvorschau wurde entfernt. Kameraaufnahmen erfolgen nur w�
 
 ## Veröffentlichung und Installation
 
-[Signierte APK 1.2.10 herunterladen](downloads/TAFA-Device-Bridge-1.2.10.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.10) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **31**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+[Signierte APK 1.2.11 herunterladen](downloads/TAFA-Device-Bridge-1.2.11.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.11) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **32**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
 
 Zum eigenen Bauen JDK 17, Android SDK Platform 35 und `build.ps1` verwenden; zum Signieren `sign-release.ps1` mit dem ursprünglichen Keystore. Private Schlüssel sind nicht im Repository enthalten. Die automatisierten Tests ersetzen keinen echten Bluetooth-/Mikrofontest.
 

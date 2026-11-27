@@ -28,17 +28,19 @@ final class CameraPreviewController implements AutoCloseable {
     static final class Snapshot {
         final byte[] jpeg;
         final long capturedAt;
-        Snapshot(byte[] jpeg) { this.jpeg=jpeg; capturedAt=System.currentTimeMillis(); }
+        final int rotationDegrees;
+        Snapshot(byte[] jpeg,int rotationDegrees) { this.jpeg=jpeg;this.rotationDegrees=rotationDegrees; capturedAt=System.currentTimeMillis(); }
     }
     interface Listener {
         void onReady(Size preview, int sensorOrientation, boolean front);
         void onSnapshot(Snapshot snapshot);
         void onError();
-        /** Optional background YUV analysis; true means the listener closes the image. */
-        default boolean onAnalysis(Image image,int sensorOrientation,boolean front){return false;}
+        /** Rotation is the same upright correction used for JPEG. True transfers image ownership. */
+        default boolean onAnalysis(Image image,int rotationDegrees,boolean front){return false;}
     }
     private final Context context;
     private final Listener listener;
+    private final CameraOrientation orientation;
     private final Handler main=new Handler(Looper.getMainLooper());
     private final HandlerThread thread=new HandlerThread("relay-camera");
     private final Handler worker;
@@ -49,12 +51,13 @@ final class CameraPreviewController implements AutoCloseable {
     private ImageReader backgroundPreview;
     private Surface previewSurface;
     private boolean capturing,ready;
-    private int sensor;
+    private int sensor,captureRotation;
     private boolean front;
     private final Runnable captureTimeout=()->fail();
 
     CameraPreviewController(Context context, Listener listener) {
         this.context=context.getApplicationContext(); this.listener=listener;
+        orientation=new CameraOrientation(this.context);
         thread.start(); worker=new Handler(thread.getLooper());
     }
     static List<Lens> lenses(Context context) throws CameraAccessException {
@@ -85,8 +88,8 @@ final class CameraPreviewController implements AutoCloseable {
                 if(context.checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED){fail();return;}
                 CameraManager manager=context.getSystemService(CameraManager.class);
                 CameraCharacteristics characteristics=manager.getCameraCharacteristics(id);
-                Integer orientation=characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                sensor=orientation==null?0:orientation;
+                Integer sensorDegrees=characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                sensor=sensorDegrees==null?0:sensorDegrees;
                 front=Objects.equals(characteristics.get(CameraCharacteristics.LENS_FACING),CameraCharacteristics.LENS_FACING_FRONT);
                 StreamConfigurationMap config=characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 if(config==null){fail();return;}
@@ -104,7 +107,7 @@ final class CameraPreviewController implements AutoCloseable {
                         Image image=null;boolean owned=false;
                         try{
                             image=source.acquireLatestImage();
-                            if(image!=null&&!closed)owned=listener.onAnalysis(image,sensor,front);
+                            if(image!=null&&!closed)owned=listener.onAnalysis(image,orientation.imageDegrees(sensor,front),front);
                         }catch(RuntimeException ignored){}
                         finally{if(image!=null&&!owned)try{image.close();}catch(RuntimeException ignored){}}
                     },worker);
@@ -118,7 +121,7 @@ final class CameraPreviewController implements AutoCloseable {
                         if(data.remaining()==0||data.remaining()>8*1024*1024){fail();return;}
                         byte[] bytes=new byte[data.remaining()]; data.get(bytes);
                         capturing=false;worker.removeCallbacks(captureTimeout);
-                        Snapshot snapshot=new Snapshot(bytes);
+                        Snapshot snapshot=new Snapshot(bytes,captureRotation);
                         main.post(()->{if(!closed)listener.onSnapshot(snapshot);});
                     }catch(Exception error){fail();}
                 },worker);
@@ -156,14 +159,15 @@ final class CameraPreviewController implements AutoCloseable {
             }catch(Exception error){fail();}
         });
     }
-    void capture(int displayRotationDegrees) {
+    void capture() {
         worker.post(()->{
             if(closed||!ready||capturing||camera==null||session==null)return;
             try {
                 capturing=true;
                 CaptureRequest.Builder request=camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
                 request.addTarget(reader.getSurface());
-                request.set(CaptureRequest.JPEG_ORIENTATION,(sensor-displayRotationDegrees*(front?-1:1)+360)%360);
+                captureRotation=orientation.imageDegrees(sensor,front);
+                request.set(CaptureRequest.JPEG_ORIENTATION,captureRotation);
                 request.set(CaptureRequest.JPEG_QUALITY,(byte)85);
                 session.capture(request.build(),new CameraCaptureSession.CaptureCallback(){
                     @Override public void onCaptureFailed(CameraCaptureSession active,CaptureRequest request,CaptureFailure failure){fail();}
@@ -178,6 +182,7 @@ final class CameraPreviewController implements AutoCloseable {
         release();
     }
     private void release() {
+        orientation.close();
         worker.removeCallbacksAndMessages(null);
         ready=false;capturing=false;
         if(session!=null){session.close();session=null;}

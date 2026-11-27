@@ -1,3 +1,13 @@
+# TAFA Device Bridge 1.2.11
+
+- Camera snapshots and on-device approach detection now follow physical tablet orientation, including portrait and inverted mounting with Android screen rotation locked.
+- Both camera paths use one shared, low-rate orientation listener. Flat/uncertain readings retain the last reliable pose; devices without a usable sensor fall back to display rotation.
+- Rotation changes reset motion comparison and approach confirmation. Results from face analysis started before a rotation are discarded.
+- German and English setup help explains automatic mounting orientation.
+- Existing signing certificate and application ID retained; install over the existing app to keep settings and credentials. No Home Assistant or GPU worker update required.
+
+Validation: JVM rotation tests cover both lenses, all mounting angles, locked display, fallback, flat readings and hysteresis. Android instrumentation exercises physical orientation with display rotation locked, upright JPEG/motion normalization and the bundled face detector. Physical Samsung tablet mounting still needs user verification.
+
 # TAFA Device Bridge 1.2.10
 
 Signed final proximity build, version code 31. Includes local detection from 1.2.9 with correctly labelled exit-delay choices. Install over the existing app.
