@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.62 — Lichtimpulse bleiben in der Sphäre
+- Die beiden sanften Ringimpulse beim Übergang vom Zuhören zur Verarbeitung und von der Verarbeitung zur Sprachausgabe breiten sich weiterhin vom Kugelinneren aus, enden aber innerhalb des Kugelnetzes und verblassen vor dessen Rand. Die vorherige Ausdehnung auf 133 % des Kugelradius wurde entfernt.
+- Die zusammenhängenden Netzpfad-Signale und beim Erreichen aktivierten Knoten werden auf den Kugelbereich begrenzt, sodass keine Lichtspur oder Knoten-Halo nach außen reicht.
+- Die separat gezeichneten Sternschnuppen behalten ausdrücklich ihre äußeren Umlaufbahnen. 3D-Sensorknoten, freies Drehen, Nachlauf, Infobox-Aufbau und die native, sofortige Sprachphasenübertragung bleiben unverändert.
+- Bestehende Home-Assistant-Automationen und Dashboard-Zuordnungen nicht geändert.
+
 ## TAFA-App / HA-Integration 0.4.61 — Mehrteilige 3D-Lichtpfade und sanfte Kreisimpulse
 - HD-Referenzvideo (ca. 39–40 s und 68–70 s) genauer nachgebildet: Beim Übergang **Zuhören → Verarbeiten** und **Verarbeiten → Sprachausgabe** entsteht jeweils ein sehr dezenter, kreisförmig vom Kugelkern nach außen laufender Lichtimpuls mit kurzem Nachhall. Wiederholte Statusmeldungen lösen keinen zusätzlichen Ring aus.
 - Die Lichtpunkte laufen jetzt über vorberechnete, **zusammenhängende Routen durch 6–8 reale 3D-Netzknoten** statt über voneinander isolierte Einzelkanten. Die Pfade verwenden dieselbe Projektion wie Kugel und Sensorwerte; bei Erreichen eines Knotens blitzt genau dieser kurz auf und der Lichtpunkt läuft weiter. Am Routenende kehrt der Lichtpunkt ohne Sprung entlang der Verbindungskette zurück.
