@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.41 — Ambient-Nachtmodus
+- Zusätzlicher Animationsmodus im TAFA Dashboard: bewegte, vernetzte Lichtkugel, große Uhr, dynamische HA-Sensormesswerte und Spracherkennungs-Farbzustände.
+- Header-Schalter für Ambient-Ansicht; Tagesdashboard, Sprachdienste und bestehende Automationen bleiben erhalten.
+- TAFA-Assist-Ereignisse öffnen unten animierte Infoboxen für Antworten, Suchergebnisse und aktuelle Sensorwerte. Native Mikrofonstatus-Sensoren steuern die Farbzustände, soweit verfügbar.
+- Separates, ressourcenschonendes Canvas-Modul mit sauberem Stoppen beim Ansichtswechsel; private Alt-Dashboard-Ansicht kann denselben Modus nutzen.
+
 # Changelog
 
 ## TAFA-App 0.3.35 / HA-Integration 0.4.20 — Kamera-Kollision beim Übergang verhindern
