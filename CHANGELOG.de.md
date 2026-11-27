@@ -1,3 +1,8 @@
+## TAFA-App / HA-Integration 0.4.45 — Versionsgebundene Frontend-Ressourcen
+- Dashboard, Ambient-Modus und weitere JavaScript-Module erhalten neue `?v=0.4.45`-URLs; bei künftigen Frontend-Änderungen den Versionsparameter erhöhen.
+- Im privaten HA-Dashboard werden die Hauptkarte und Ambient-Datei jetzt aus zwei separaten `/local/tafa/`-Dateien mit versioniertem Dateinamen und `?v=0.4.45` geladen. So erhalten selbst hartnäckige Android-WebViews beim Update eine neue URL.
+- Die private Hauptkarte wird nicht in das öffentliche GitHub-Repository hochgeladen. Keine bestehenden Automationen oder Sensorzuordnungen geändert.
+
 ## TAFA-App / HA-Integration 0.4.44 — Ruhiger Ambient-Modus im Rufwort-Bereitschaftszustand
 - Die vernetzte Kugel dreht sich im normalen Bereitschaftszustand ruhig und verformt/pulsiert nicht. Lichtpunkte und Orbitalbewegungen wurden entsprechend verlangsamt.
 - Pulsieren, stärkere Verformung und lebhaftere Bewegung nur bei erkanntem Rufwort, aktiver Assist-Aufnahme, Verarbeitung oder Sprachausgabe.
