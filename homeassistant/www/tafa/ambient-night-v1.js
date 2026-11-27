@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.59 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.60 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -71,6 +71,69 @@
   .hz-ambient-item{border:1px solid #8aadd134;background:#0a213956;border-radius:10px;padding:7px 9px;min-width:0;font-size:12px;color:#cde2f3;overflow-wrap:anywhere}
   .hz-ambient-item b{color:#fff;font-weight:500}
   @keyframes hz-ambient-enter{from{opacity:0;transform:translate(-50%,28px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+
+  /* Materialized reply: a line from the sphere traces the card, then the
+     surface, title and content appear in staggered steps. */
+  .hz-ambient-body .hz-ambient-info{
+    transform-origin:50% 0;animation:hz-info-unfold .75s cubic-bezier(.18,.83,.2,1) both;
+    overflow:visible!important;
+    border-color:#a7d5f6aa;box-shadow:0 14px 50px #020d20a8,0 0 35px #50cfff22,inset 0 1px #e3f9ff40
+  }
+  .hz-ambient-info::before{
+    content:"";position:absolute;left:50%;top:-48px;height:48px;width:2px;
+    background:linear-gradient(180deg,transparent,#7fe3ffcc 70%,#dff9ff);
+    transform:translateX(-50%);transform-origin:50% 0;pointer-events:none;
+    filter:drop-shadow(0 0 7px #73eaff);animation:hz-info-conduit .48s ease both
+  }
+  .hz-ambient-info-trace{position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:inherit}
+  .hz-ambient-info-trace i{position:absolute;display:block;background:#a9e7ffd9;box-shadow:0 0 9px #9bdfff88}
+  .hz-ambient-info-trace .top{top:0;left:14px;width:calc(100% - 28px);height:1px;transform-origin:left;animation:hz-trace-x .30s ease .16s both}
+  .hz-ambient-info-trace .right{top:12px;right:0;width:1px;height:calc(100% - 24px);transform-origin:top;animation:hz-trace-y .20s ease .36s both}
+  .hz-ambient-info-trace .bottom{bottom:0;right:14px;width:calc(100% - 28px);height:1px;transform-origin:right;animation:hz-trace-x .24s ease .51s both}
+  .hz-ambient-info-trace .left{bottom:12px;left:0;width:1px;height:calc(100% - 24px);transform-origin:bottom;animation:hz-trace-y .20s ease .68s both}
+  .hz-ambient-info-content{position:relative;z-index:2;min-width:0;max-height:calc(33vh - 34px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#7799b370 transparent}
+  .hz-ambient-info-kicker{animation:hz-info-appear .32s ease .46s both}
+  .hz-ambient-info-title{animation:hz-info-appear .35s ease .57s both}
+  .hz-ambient-info-message{animation:hz-info-reveal .55s steps(20,end) .70s both}
+  .hz-ambient-info-content .hz-ambient-items{animation:hz-info-appear .38s ease .94s both}
+  .hz-ambient-info-symbol{
+    position:absolute;right:11px;bottom:10px;display:flex;align-items:center;justify-content:center;
+    width:41px;height:41px;pointer-events:none;opacity:.77;color:#c5e9ff;
+    filter:drop-shadow(0 0 10px #5ab4ff77);animation:hz-info-symbol .55s ease 1.01s both
+  }
+  .hz-ambient-info-symbol ha-icon{--mdc-icon-size:29px}
+  .hz-ambient-info-content.has-symbol .hz-ambient-info-message{padding-right:46px}
+  @keyframes hz-info-conduit{
+    0%{opacity:0;transform:translateX(-50%) scaleY(0)}
+    45%{opacity:1;transform:translateX(-50%) scaleY(1)}
+    100%{opacity:0;transform:translateX(-50%) scaleY(.6)}
+  }
+  @keyframes hz-info-unfold{
+    0%{opacity:0;transform:translate(-50%,-20px) scale(.14,.025);filter:blur(6px)}
+    30%{opacity:1;transform:translate(-50%,0) scale(.98,.055);filter:blur(1px)}
+    75%{opacity:1;transform:translate(-50%,0) scale(1,1);filter:blur(0)}
+    100%{opacity:1;transform:translate(-50%,0) scale(1,1);filter:none}
+  }
+  @keyframes hz-trace-x{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+  @keyframes hz-trace-y{from{opacity:0;transform:scaleY(0)}to{opacity:1;transform:scaleY(1)}}
+  @keyframes hz-info-appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes hz-info-reveal{
+    from{opacity:0;clip-path:inset(0 100% 0 0)}
+    15%{opacity:1}
+    to{opacity:1;clip-path:inset(0 0 0 0)}
+  }
+  @keyframes hz-info-symbol{
+    0%{opacity:0;transform:scale(.35) rotate(-20deg)}
+    70%{opacity:1;transform:scale(1.12) rotate(5deg)}
+    100%{opacity:.77;transform:scale(1) rotate(0)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .hz-ambient-body .hz-ambient-info,.hz-ambient-info::before,
+    .hz-ambient-info-trace i,.hz-ambient-info-kicker,.hz-ambient-info-title,
+    .hz-ambient-info-message,.hz-ambient-info-symbol,.hz-ambient-info-content .hz-ambient-items{
+      animation:none!important;clip-path:none!important;filter:none!important
+    }
+  }
   @media(max-width:800px){.hz-ambient-head{margin-top:72px}.hz-ambient-stage{width:100%;max-width:610px;height:clamp(270px,49dvh,570px);min-height:270px}.hz-ambient-time{font-size:clamp(60px,11vw,96px)}.hz-ambient-metric small{font-size:9px}.hz-ambient-metric b{font-size:12px}}
   @media(max-width:500px){.hz-ambient-body{padding:0 6px!important}.hz-ambient-head{margin-top:68px}.hz-ambient-stage{width:100%;min-height:280px;height:45dvh}.hz-ambient-time{font-size:clamp(56px,13vw,82px)}.hz-ambient-metric small{font-size:8px;letter-spacing:.06em}.hz-ambient-metric b{font-size:11px}}
   @media(prefers-reduced-motion:reduce){.hz-ambient-info,.hz-ambient-foot [data-ambient-state]{animation:none!important}}
@@ -104,6 +167,7 @@
     if(voice?.playing)return "speaking";
     if(voice?.processing)return "processing";
     if(voice?.info)return "listening";
+    if(s.host?.dataset?.info==="open"&&s.forceUntil>Date.now())return "speaking";
     // A permanently armed native wakeword detector reports "listening: hey_jarvis".
     // That is standby, NOT active Assist capture: keep the sphere quiet.
     // Match the app's native Assist lifecycle exactly. A WebSocket
@@ -130,7 +194,8 @@
       const id=choose(h,metrics[i]);const str=fmt(id?h[id]:null);
       if(node.textContent!==str)node.textContent=str;
     }
-    s.phase=resolvePhase(card,s);
+    const nextPhase=resolvePhase(card,s);
+    if(nextPhase!==s.phase){s.phase=nextPhase;s.phaseChangeAt=performance.now();}
     stage.dataset.phase=s.phase;
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
@@ -146,7 +211,7 @@
     const s=active.get(card);if(!s)return;
     clearTimeout(s.infoTimer);
     const info=s.host?.querySelector("[data-ambient-info]");
-    if(info){info.hidden=true;info.replaceChildren();s.host.dataset.info="closed";}
+    if(info){info.hidden=true;info.replaceChildren();s.host.dataset.info="closed";s.infoKey=null;s.infoLastMessage=null;}
   }
   function show(card,input){
     const s=active.get(card);if(!s||!card._hzNight)return false;
@@ -154,14 +219,34 @@
     const title=String(data.title||data.topic||"TAFA Antwort").slice(0,120);
     const message=String(data.message??data.reply??data.answer??"").slice(0,2500);
     const info=s.host.querySelector("[data-ambient-info]");if(!info)return false;
+    // Streaming updates for the same answer must not restart its reveal.
+    const infoKey=String(data.request_id||data.id||"")+"|"+String(data.topic||"")+"|"+title;
+    if(!info.hidden&&s.infoKey===infoKey&&message.startsWith(s.infoLastMessage||"")
+        &&!Array.isArray(data.results)&&!data.sources){
+      s.infoLastMessage=message;
+      const target=info.querySelector(".hz-ambient-info-message");
+      if(target)target.textContent=message;
+      clearTimeout(s.infoTimer);
+      const seconds=Math.max(8,Math.min(180,Number(data.seconds)||30));
+      s.infoTimer=setTimeout(()=>close(card),seconds*1000);
+      s.forcedPhase="speaking";s.forceUntil=Date.now()+7000;
+      update(card);return true;
+    }
+    s.infoKey=infoKey;s.infoLastMessage=message;
     info.replaceChildren();
+    const trace=document.createElement("div");trace.className="hz-ambient-info-trace";
+    for(const edge of ["top","right","bottom","left"]){
+      const line=document.createElement("i");line.className=edge;trace.append(line);
+    }
+    info.append(trace);
+    const content=document.createElement("div");content.className="hz-ambient-info-content";info.append(content);
     const head=document.createElement("div");head.className="hz-ambient-info-head";
     const left=document.createElement("div"),kick=document.createElement("div"),h=document.createElement("div");
     kick.className="hz-ambient-info-kicker";kick.textContent="TAFA / "+(data.topic==="search"?"INTERNETSUCHE":"ASSIST");
     h.className="hz-ambient-info-title";h.textContent=title;left.append(kick,h);
     const x=document.createElement("button");x.type="button";x.className="hz-ambient-info-x";x.textContent="✕";x.setAttribute("aria-label","Infobox schließen");x.onclick=()=>close(card);
-    head.append(left,x);info.append(head);
-    if(message){const p=document.createElement("div");p.className="hz-ambient-info-message";p.textContent=message;info.append(p);}
+    head.append(left,x);content.append(head);
+    if(message){const p=document.createElement("div");p.className="hz-ambient-info-message";p.textContent=message;content.append(p);}
     const list=[];
     if(Array.isArray(data.results))for(const result of data.results.slice(0,5)){
       const text=typeof result==="string"?result:result?.title||result?.name||result?.snippet;
@@ -171,7 +256,21 @@
       if(typeof id==="string"&&card.h?.states?.[id])list.push(key+": "+fmt(card.h.states[id]));
     }
     if(data.camera&&typeof data.camera==="string")list.push("Kamera: "+data.camera.replace(/^camera\./,"").replace(/_/g," "));
-    if(list.length){const items=document.createElement("div");items.className="hz-ambient-items";for(const value of list){const el=document.createElement("div");el.className="hz-ambient-item";el.textContent=value;items.append(el);}info.append(items);}
+    if(list.length){const items=document.createElement("div");items.className="hz-ambient-items";for(const value of list){const el=document.createElement("div");el.className="hz-ambient-item";el.textContent=value;items.append(el);}content.append(items);}
+    // A neutral context icon, never an unverified success indicator.
+    const topic=String(data.topic||"").toLowerCase(),hint=(title+" "+message).toLowerCase();
+    let icon=null;
+    if(typeof data.icon==="string"&&/^mdi:[a-z0-9-]{1,65}$/.test(data.icon))icon=data.icon;
+    else if(topic==="search")icon="mdi:magnify";
+    else if(data.camera||topic==="camera")icon="mdi:cctv";
+    else if(/wetter|weather/.test(topic+" "+hint))icon="mdi:weather-partly-cloudy";
+    else if(/licht|lampe|light|lamp/.test(topic+" "+hint))icon="mdi:lightbulb-outline";
+    else if(/musik|music/.test(topic+" "+hint))icon="mdi:music-note";
+    if(icon){
+      const badge=document.createElement("span");badge.className="hz-ambient-info-symbol";
+      const glyph=document.createElement("ha-icon");glyph.setAttribute("icon",icon);badge.append(glyph);
+      content.classList.add("has-symbol");content.append(badge);
+    }
     info.hidden=false;s.host.dataset.info="open";info.style.animation="none";void info.offsetWidth;info.style.animation="";
     clearTimeout(s.infoTimer);
     const seconds=Math.max(8,Math.min(180,Number(data.seconds)||30));
@@ -222,21 +321,91 @@
 }
   const mesh=makeMesh();
 
-  function spawnComet(t,initial=false){
+  function drawSignals(ctx,s,t,projected,dpr,visual){
+    // Short luminous packets travel along existing projected 3D edges. They
+    // are not detached 2D streaks and therefore stay attached during drag.
+    const dt=Math.max(0,Math.min(90,t-(s.lastFlowFrame??t)));
+    s.lastFlowFrame=t;
+    s.flowClock=(s.flowClock||0)+dt*(.00012+visual.listening*.00068
+      +visual.processing*.00120+visual.speaking*.00086);
+    const listen=visual.listening,think=visual.processing,speak=visual.speaking;
+    const activity=Math.min(1,listen+think+speak);
+    if(activity<.012)return;
+    const packets=listen*13+think*26+speak*19;
+    const tone=(184*listen+255*think+285*speak)/Math.max(.01,listen+think+speak);
+    const sat=(96*listen+16*think+36*speak)/Math.max(.01,listen+think+speak);
+    const light=(80*listen+94*think+90*speak)/Math.max(.01,listen+think+speak);
+    const oldCap=ctx.lineCap;
+    ctx.lineCap="round";
+    const pathCount=/Android/i.test(navigator.userAgent)?18:27;
+    for(let i=0;i<pathCount;i++){
+      // Fade individual paths in rather than making all 27 appear at once.
+      const enabled=Math.max(0,Math.min(1,(packets-i+1)/2.8));
+      if(enabled<.025)continue;
+      const edge=mesh.edges[(i*37+17)%mesh.edges.length];
+      if(!edge)continue;
+      const a=projected[edge[0]],b=projected[edge[1]];
+      if(!a||!b)continue;
+      const depth=Math.max(.22,Math.min(1,(a[2]+b[2]+2)/4));
+      const u=(s.flowClock*(.84+(i%4)*.13)+i*.381966)%1;
+      const gate=Math.min(1,u*8,(1-u)*8);
+      const alpha=activity*enabled*gate*depth;
+      if(alpha<.018)continue;
+      const from=Math.max(0,u-.26);
+      const ax=a[0]+(b[0]-a[0])*from,ay=a[1]+(b[1]-a[1])*from;
+      const hx=a[0]+(b[0]-a[0])*u,hy=a[1]+(b[1]-a[1])*u;
+      ctx.strokeStyle="hsla("+tone.toFixed(1)+","+sat.toFixed(0)+"%,"+light.toFixed(0)+"%,"+(alpha*.64).toFixed(3)+")";
+      ctx.lineWidth=(.78+1.2*alpha)*dpr;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(hx,hy);ctx.stroke();
+      ctx.fillStyle="hsla("+tone.toFixed(1)+","+Math.min(100,sat+8).toFixed(0)+"%,96%,"+Math.min(1,alpha*.88).toFixed(3)+")";
+      ctx.beginPath();ctx.arc(hx,hy,(1.20+1.7*alpha)*dpr,0,Math.PI*2);ctx.fill();
+      if((i%5)===0&&alpha>.22){
+        const halo=ctx.createRadialGradient(hx,hy,0,hx,hy,8*dpr);
+        halo.addColorStop(0,"rgba(238,249,255,"+(alpha*.38).toFixed(3)+")");
+        halo.addColorStop(1,"rgba(238,249,255,0)");
+        ctx.fillStyle=halo;
+        ctx.beginPath();ctx.arc(hx,hy,8*dpr,0,Math.PI*2);ctx.fill();
+      }
+    }
+    ctx.lineCap=oldCap;
+    // In processing mode dozens of independent, brief white node flares
+    // carry the rhythm. Unlike the listening state, the accents are white.
+    const whiteIntensity=Math.min(1,think*1.4+speak*.55);
+    if(whiteIntensity>.012){
+      for(let i=1;i<projected.length;i+=(/Android/i.test(navigator.userAgent)?4:3)){
+        const p=projected[i],wave=(Math.sin(t*.0065+i*2.391)+1)*.5;
+        const flash=Math.pow(wave,13)*whiteIntensity;
+        if(flash<.07)continue;
+        const depth=Math.max(.28,Math.min(1,(p[2]+1)*.6));
+        const alpha=flash*depth;
+        ctx.fillStyle="rgba(244,246,255,"+Math.min(.95,alpha*.9).toFixed(3)+")";
+        ctx.beginPath();ctx.arc(p[0],p[1],(1.7+3.1*flash)*dpr,0,Math.PI*2);ctx.fill();
+        if(flash>.55&&(i%4)===1){
+          const soft=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],10*dpr);
+          soft.addColorStop(0,"rgba(250,250,255,"+(alpha*.40).toFixed(3)+")");
+          soft.addColorStop(1,"rgba(240,240,255,0)");
+          ctx.fillStyle=soft;ctx.beginPath();ctx.arc(p[0],p[1],10*dpr,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }
+  }
+
+
+  function spawnComet(t,initial=false,mode="idle"){
   const r=(lo,hi)=>lo+Math.random()*(hi-lo);
   return {
     born:t-(initial?r(150,1100):0),
-    duration:r(2100,3700),
+    duration:mode==="processing"?r(1300,2350):mode==="listening"?r(1750,2800):r(2100,3700),
     start:r(-Math.PI,Math.PI),
-    speed:(Math.random()<.5?-1:1)*r(.00032,.00078),
-    orbit:r(1.03,1.32),
+    speed:(Math.random()<.5?-1:1)*(mode==="processing"?r(.00075,.00138):mode==="listening"?r(.00042,.00096):r(.00032,.00078)),
+    orbit:mode==="processing"?r(.86,1.30):mode==="listening"?r(.96,1.32):r(1.03,1.32),
     incline:r(-1.05,1.05),
     turn:r(-Math.PI,Math.PI),
     flatten:r(.68,1.06),
-    tailMs:r(330,670),
-    color:Math.random()<.76?182:205,
-    strength:r(.66,1),
-    size:r(1.55,2.5)
+    tailMs:mode==="processing"?r(220,460):mode==="listening"?r(340,640):r(330,670),
+    color:mode==="processing"?255:mode==="speaking"?290:Math.random()<.76?182:205,
+    strength:mode==="processing"?r(.8,1.17):r(.66,1),
+    size:mode==="processing"?r(1.55,2.95):r(1.55,2.5)
   };
 }
   function cometAt(c,time,cx,cy,radius){
@@ -253,15 +422,19 @@
     z
   };
 }
-  function drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue){
+  function drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue,visual){
   if(!s.comets){
-    s.comets=[spawnComet(t,true),spawnComet(t,true),spawnComet(t,true)];
+    s.comets=[spawnComet(t,true,"idle"),spawnComet(t,true,"idle"),spawnComet(t,true,"idle")];
     s.nextCometAt=t+600;
   }
   s.comets=s.comets.filter(c=>t-c.born<c.duration);
   if(t>=s.nextCometAt){
-    if(s.comets.length<Math.round(5+2*activity))s.comets.push(spawnComet(t));
-    s.nextCometAt=t+(600-230*activity)+Math.random()*(900-240*activity);
+    const mode=visual.processing>visual.listening&&visual.processing>visual.speaking?"processing":
+      visual.listening>visual.speaking&&visual.listening>.25?"listening":
+      visual.speaking>.25?"speaking":"idle";
+    const capacity=Math.round(3+3*visual.listening+6*visual.processing+4*visual.speaking);
+    if(s.comets.length<capacity)s.comets.push(spawnComet(t,false,mode));
+    s.nextCometAt=t+(650-370*activity)+Math.random()*(790-340*activity);
   }
   const oldLineCap=ctx.lineCap;
   ctx.lineCap="round";
@@ -283,7 +456,9 @@
       const fade=1-step/(tailSteps+1);
       const power=fade*fade;
       const stepHue=c.color+(hue-c.color)*activity;
-      ctx.strokeStyle="hsla("+stepHue.toFixed(1)+",90%,"+(78+5*activity).toFixed(1)+"%,"+(alpha*power*.76).toFixed(3)+")";
+      const saturation=83*visual.idle+92*visual.listening+18*visual.processing+33*visual.speaking;
+      const luminosity=78*visual.idle+81*visual.listening+94*visual.processing+91*visual.speaking;
+      ctx.strokeStyle="hsla("+stepHue.toFixed(1)+","+saturation.toFixed(0)+"%,"+luminosity.toFixed(1)+"%,"+(alpha*power*.76).toFixed(3)+")";
       ctx.lineWidth=(.45+power*1.45)*dpr;
       ctx.beginPath();
       ctx.moveTo(previous.x,previous.y);
@@ -295,12 +470,14 @@
     const cometHue=c.color+(hue-c.color)*activity;
     const glowRadius=(6+c.size*2)*dpr;
     const glow=ctx.createRadialGradient(head.x,head.y,0,head.x,head.y,glowRadius);
-    glow.addColorStop(0,"hsla("+cometHue+",98%,91%,"+(alpha*.38).toFixed(3)+")");
-    glow.addColorStop(.28,"hsla("+cometHue+",95%,75%,"+(alpha*.16).toFixed(3)+")");
-    glow.addColorStop(1,"hsla("+cometHue+",90%,65%,0)");
+    const whiteMix=Math.min(1,visual.processing+visual.speaking*.8);
+    const tipSat=98-68*whiteMix;
+    glow.addColorStop(0,"hsla("+cometHue+","+tipSat.toFixed(0)+"%,97%,"+(alpha*.38).toFixed(3)+")");
+    glow.addColorStop(.28,"hsla("+cometHue+","+tipSat.toFixed(0)+"%,87%,"+(alpha*.16).toFixed(3)+")");
+    glow.addColorStop(1,"hsla("+cometHue+","+tipSat.toFixed(0)+"%,70%,0)");
     ctx.fillStyle=glow;
     ctx.beginPath();ctx.arc(head.x,head.y,glowRadius,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="hsla("+cometHue+",94%,91%,"+(alpha*.94).toFixed(3)+")";
+    ctx.fillStyle="hsla("+cometHue+","+tipSat.toFixed(0)+"%,96%,"+(alpha*.94).toFixed(3)+")";
     ctx.beginPath();ctx.arc(head.x,head.y,c.size*dpr,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="rgba(255,255,255,"+(alpha*.84).toFixed(3)+")";
     ctx.beginPath();ctx.arc(head.x,head.y,.85*dpr,0,Math.PI*2);ctx.fill();
@@ -331,6 +508,8 @@
     visual[key]+=((phase===key?1:0)-visual[key])*fade;
   const activity=Math.max(0,Math.min(1,1-visual.idle));
   const energy=visual.listening*.58+visual.processing*1+visual.speaking*.83;
+  const phaseAge=Math.max(0,t-(s.phaseChangeAt??t));
+  const onset=s.phase==="idle"?0:Math.exp(-phaseAge/470);
   const hue=215*visual.idle+184*visual.listening+260*visual.processing+295*visual.speaking;
   const speed=.55*visual.idle+1.05*visual.listening+1.68*visual.processing+1.24*visual.speaking;
   const pulse=visual.listening*Math.sin(t*.0035)*.014
@@ -338,9 +517,13 @@
     +visual.speaking*(Math.sin(t*.0052)*.020+Math.sin(t*.0118)*.007);
   const radius=Math.min(w*.42,h*.41)*(1+pulse);
   const cx=w*.5,cy=h*.51;
+  // Cyan on activation; diffuse pearl-white while reasoning; silver
+  // on output. The core flashes softly when a phase begins.
+  const coreSat=38*visual.idle+92*visual.listening+16*visual.processing+32*visual.speaking;
+  const coreLight=72*visual.idle+65*visual.listening+94*visual.processing+88*visual.speaking;
   const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius*1.22);
-  glow.addColorStop(0,`hsla(${hue.toFixed(1)},${(39+43*activity).toFixed(0)}%,72%,${(.12+.12*energy).toFixed(3)})`);
-  glow.addColorStop(.56,`hsla(${hue.toFixed(1)},${(40+44*activity).toFixed(0)}%,56%,${(.052+.045*energy).toFixed(3)})`);
+  glow.addColorStop(0,`hsla(${hue.toFixed(1)},${coreSat.toFixed(1)}%,${coreLight.toFixed(1)}%,${(.12+.18*energy+.07*onset).toFixed(3)})`);
+  glow.addColorStop(.56,`hsla(${hue.toFixed(1)},${coreSat.toFixed(1)}%,${coreLight.toFixed(1)}%,${(.052+.09*energy+.02*onset).toFixed(3)})`);
   glow.addColorStop(1,"rgba(12,22,42,0)");
   ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
 
@@ -397,21 +580,24 @@
     const depth=(2+u[2]+v[2])/4;
     const shimmer=.84+.16*Math.sin(t*.0014+(a+b)*.37);
     const opacity=(.10+.47*depth)*weight*shimmer;
-    ctx.strokeStyle=`hsla(${hue.toFixed(1)},${(32+48*activity).toFixed(0)}%,${(89-7*activity).toFixed(1)}%,${opacity})`;
+    const meshSat=36*visual.idle+91*visual.listening+19*visual.processing+36*visual.speaking;
+    ctx.strokeStyle=`hsla(${hue.toFixed(1)},${meshSat.toFixed(0)}%,${(89+3*visual.processing).toFixed(1)}%,${opacity})`;
     ctx.beginPath();ctx.moveTo(u[0],u[1]);ctx.lineTo(v[0],v[1]);ctx.stroke();
   }
   for(let i=0;i<projected.length;i++){
     const p=projected[i],bright=i%11===0||mesh.anchorIndices.includes(i);
     const depth=(p[2]+1)/2,alpha=.21+.73*depth;
-    ctx.fillStyle=`hsla(${hue.toFixed(1)},${(42+52*activity).toFixed(0)}%,${(95-4*activity).toFixed(1)}%,${alpha})`;
+    const nodeSat=43*visual.idle+95*visual.listening+17*visual.processing+35*visual.speaking;
+    ctx.fillStyle=`hsla(${hue.toFixed(1)},${nodeSat.toFixed(0)}%,95%,${alpha})`;
     ctx.beginPath();ctx.arc(p[0],p[1],(bright?1.7:.88)*dpr,0,Math.PI*2);ctx.fill();
     if(bright){
-      ctx.fillStyle=`hsla(${hue.toFixed(1)},${(42+52*activity).toFixed(0)}%,84%,${(.07+.13*depth).toFixed(3)})`;
+      ctx.fillStyle=`hsla(${hue.toFixed(1)},${nodeSat.toFixed(0)}%,92%,${(.07+.13*depth+.10*onset).toFixed(3)})`;
       ctx.beginPath();ctx.arc(p[0],p[1],(4.5+depth*2)*dpr,0,Math.PI*2);ctx.fill();
     }
   }
   // Short-lived 3D shooting stars around the sphere (no persistent orbit lines).
-  drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue);
+  drawSignals(ctx,s,t,projected,dpr,visual);
+  drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue,visual);
     // Sensor labels are tied to actual 3D nodes, including perspective/depth.
   if(++s.labelFrame>=1){
     for(let i=0;i<mesh.anchorIndices.length;i++){
