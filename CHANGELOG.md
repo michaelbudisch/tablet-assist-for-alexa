@@ -1,3 +1,9 @@
+## TAFA App / HA integration 0.4.48 — Android WebView full-screen and diagnostics
+- Ambient mode on Android now uses viewport-fixed positioning instead of inheriting the Home Assistant dashboard card grid width.
+- Added a built-in exit button for returning to the day view and tablet-only frontend version, viewport, layout width and Canvas diagnostics.
+- A private standalone `/local/tafa/ambient-webview-test-v0.4.48.html` page distinguishes WebView issues from dashboard layout issues. The private resources use `?v=0.4.48` and unique filenames.
+- Globe, shooting stars, automations, and configured entities are unchanged.
+
 ## TAFA App / HA integration 0.4.47 — Organic shooting stars around Ambient globe
 - Replaced permanently rendered surrounding arcs with short-lived 3D orbiting comets, each with a glowing head and short fading trail.
 - Spawn times, orientations, distance, speed, brightness, and lifetime are varied. Existing sphere mesh, line strength, idle calm, and active-voice animations remain unchanged.
