@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.57 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.58 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -53,7 +53,9 @@
   /* Position of sensor 5: derived from 3D projected node. */
   /* Position of sensor 6: derived from 3D projected node. */
   .hz-ambient-foot{z-index:3;display:flex;align-items:center;justify-content:center;min-height:39px;gap:9px;margin-bottom:12px;color:#8197b0;font-size:12px;letter-spacing:.07em}
-  .hz-ambient-indicator{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7f9bb5;box-shadow:0 0 9px #7f9bb545}
+  .hz-ambient-indicator{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7f9bb5;box-shadow:0 0 9px #7f9bb545;transition:background-color .42s ease,box-shadow .52s ease}
+  .hz-ambient-foot [data-ambient-state]{display:inline-block;transition:color .3s ease}
+  @keyframes hz-ambient-status-enter{from{opacity:.38;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
   .hz-ambient-body[data-phase="listening"] .hz-ambient-indicator{background:#3ce4ed;box-shadow:0 0 12px #3ce4ed}
   .hz-ambient-body[data-phase="processing"] .hz-ambient-indicator{background:#b6a2ff;box-shadow:0 0 12px #b6a2ff}
   .hz-ambient-body[data-phase="speaking"] .hz-ambient-indicator{background:#f3d6ff;box-shadow:0 0 12px #f3d6ff}
@@ -71,7 +73,7 @@
   @keyframes hz-ambient-enter{from{opacity:0;transform:translate(-50%,28px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
   @media(max-width:800px){.hz-ambient-head{margin-top:72px}.hz-ambient-stage{width:100%;max-width:610px;height:clamp(270px,49dvh,570px);min-height:270px}.hz-ambient-time{font-size:clamp(60px,11vw,96px)}.hz-ambient-metric small{font-size:9px}.hz-ambient-metric b{font-size:12px}}
   @media(max-width:500px){.hz-ambient-body{padding:0 6px!important}.hz-ambient-head{margin-top:68px}.hz-ambient-stage{width:100%;min-height:280px;height:45dvh}.hz-ambient-time{font-size:clamp(56px,13vw,82px)}.hz-ambient-metric small{font-size:8px;letter-spacing:.06em}.hz-ambient-metric b{font-size:11px}}
-  @media(prefers-reduced-motion:reduce){.hz-ambient-info{animation:none}}
+  @media(prefers-reduced-motion:reduce){.hz-ambient-info,.hz-ambient-foot [data-ambient-state]{animation:none!important}}
   `;
   const safe=(s)=>String(s??"").replace(/[&<>"']/g,a=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[a]));
   const isValid=v=>v&&!["unknown","unavailable","none",""].includes(String(v.state).toLowerCase());
@@ -132,7 +134,12 @@
     stage.dataset.phase=s.phase;
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
-    if(label)label.textContent=labels[s.phase];
+    if(label&&label.textContent!==labels[s.phase]){
+      label.textContent=labels[s.phase];
+      label.style.animation="none";
+      void label.offsetWidth;
+      label.style.animation="hz-ambient-status-enter .36s cubic-bezier(.2,.8,.2,1) both";
+    }
     stage.querySelector(".hz-ambient-indicator")?.setAttribute("title",s.phase);
   }
   function close(card){
@@ -246,15 +253,15 @@
     z
   };
 }
-  function drawComets(ctx,s,t,cx,cy,radius,dpr,isIdle,hue){
+  function drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue){
   if(!s.comets){
     s.comets=[spawnComet(t,true),spawnComet(t,true),spawnComet(t,true)];
     s.nextCometAt=t+600;
   }
   s.comets=s.comets.filter(c=>t-c.born<c.duration);
   if(t>=s.nextCometAt){
-    if(s.comets.length<(isIdle?5:7))s.comets.push(spawnComet(t));
-    s.nextCometAt=t+(isIdle?600+Math.random()*900:370+Math.random()*660);
+    if(s.comets.length<Math.round(5+2*activity))s.comets.push(spawnComet(t));
+    s.nextCometAt=t+(600-230*activity)+Math.random()*(900-240*activity);
   }
   const oldLineCap=ctx.lineCap;
   ctx.lineCap="round";
@@ -275,8 +282,8 @@
       const earlier=cometAt(c,Math.max(c.born,t-lag),cx,cy,radius);
       const fade=1-step/(tailSteps+1);
       const power=fade*fade;
-      const stepHue=isIdle?c.color:hue;
-      ctx.strokeStyle="hsla("+stepHue+",90%,"+(isIdle?78:83)+"%,"+(alpha*power*.76).toFixed(3)+")";
+      const stepHue=c.color+(hue-c.color)*activity;
+      ctx.strokeStyle="hsla("+stepHue.toFixed(1)+",90%,"+(78+5*activity).toFixed(1)+"%,"+(alpha*power*.76).toFixed(3)+")";
       ctx.lineWidth=(.45+power*1.45)*dpr;
       ctx.beginPath();
       ctx.moveTo(previous.x,previous.y);
@@ -285,7 +292,7 @@
       previous=earlier;
     }
     // Brief, bright cyan/white tip with a very soft halo.
-    const cometHue=isIdle?c.color:hue;
+    const cometHue=c.color+(hue-c.color)*activity;
     const glowRadius=(6+c.size*2)*dpr;
     const glow=ctx.createRadialGradient(head.x,head.y,0,head.x,head.y,glowRadius);
     glow.addColorStop(0,"hsla("+cometHue+",98%,91%,"+(alpha*.38).toFixed(3)+")");
@@ -309,15 +316,31 @@
   const ctx=canvas.getContext("2d");if(!ctx)return;
   ctx.clearRect(0,0,w,h);
   const phase=s.phase;
-  const hue=phase==="listening"?184:phase==="processing"?260:phase==="speaking"?295:215;
-  const isIdle=phase==="idle";
-  const speed=isIdle?.55:1.32;
-  const pulse=isIdle?0:Math.sin(t*.004)*.023;
+  // One continuously blended palette drives the entire 3D scene. A new
+  // voice phase retargets the weights instead of restarting an animation.
+  // This is stable even when native Assist rapidly changes its phase.
+  const visualDelta=Math.max(0,Math.min(90,t-(s.lastVisualFrame??t)));
+  s.lastVisualFrame=t;
+  if(!s.visual){
+    s.visual={idle:0,listening:0,processing:0,speaking:0};
+    s.visual[phase in s.visual?phase:"idle"]=1;
+  }
+  const visual=s.visual;
+  const fade=1-Math.exp(-visualDelta/(phase==="idle"?490:170));
+  for(const key of ["idle","listening","processing","speaking"])
+    visual[key]+=((phase===key?1:0)-visual[key])*fade;
+  const activity=Math.max(0,Math.min(1,1-visual.idle));
+  const energy=visual.listening*.58+visual.processing*1+visual.speaking*.83;
+  const hue=215*visual.idle+184*visual.listening+260*visual.processing+295*visual.speaking;
+  const speed=.55*visual.idle+1.05*visual.listening+1.68*visual.processing+1.24*visual.speaking;
+  const pulse=visual.listening*Math.sin(t*.0035)*.014
+    +visual.processing*Math.sin(t*.0082)*.029
+    +visual.speaking*(Math.sin(t*.0052)*.020+Math.sin(t*.0118)*.007);
   const radius=Math.min(w*.42,h*.41)*(1+pulse);
   const cx=w*.5,cy=h*.51;
   const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius*1.22);
-  glow.addColorStop(0,isIdle?"rgba(211,210,240,.12)":`hsla(${hue},82%,70%,.24)`);
-  glow.addColorStop(.56,isIdle?"rgba(174,182,219,.052)":`hsla(${hue},84%,50%,.09)`);
+  glow.addColorStop(0,`hsla(${hue.toFixed(1)},${(39+43*activity).toFixed(0)}%,72%,${(.12+.12*energy).toFixed(3)})`);
+  glow.addColorStop(.56,`hsla(${hue.toFixed(1)},${(40+44*activity).toFixed(0)}%,56%,${(.052+.045*energy).toFixed(3)})`);
   glow.addColorStop(1,"rgba(12,22,42,0)");
   ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
 
@@ -342,16 +365,22 @@
     s.orbitTime+=frameDelta*s.autoBlend;
   }
   const orbit=s.orbitTime;
-  const ay=orbit*.00015*speed+(s.manualYaw||0);
-  const ax=-.23+Math.sin(orbit*(isIdle?.000045:.00013))*(isIdle?.022:.17)+(s.manualPitch||0);
-  const az=Math.sin(orbit*(isIdle?.000037:.000075))*(isIdle?.012:.12);
+  // Integrate angular velocity, not time * current velocity. Multiplying
+  // an absolute timestamp by a phase-dependent speed causes the sphere to
+  // teleport when listening changes to thinking or speaking.
+  if(s.autoYaw===undefined)s.autoYaw=orbit*.00015*.55;
+  else s.autoYaw+=Math.max(0,orbit-(s.lastHeadingOrbit??orbit))*.00015*speed;
+  s.lastHeadingOrbit=orbit;
+  const ay=s.autoYaw+(s.manualYaw||0);
+  const ax=-.23+Math.sin(orbit*.00006)*(.022+.096*energy)+(s.manualPitch||0);
+  const az=Math.sin(orbit*.000054)*(.012+.11*energy);
   const cosa=Math.cos(ay),sina=Math.sin(ay);
   const cosx=Math.cos(ax),sinx=Math.sin(ax);
   const cosz=Math.cos(az),sinz=Math.sin(az);
   const projected=mesh.points.map((p,i)=>{
-    const movement=isIdle?1:1+Math.sin(t*.00042+p[3])*.028+Math.cos(t*.00023+p[3]*1.7)*.017;
-    const px=p[0]*movement+(isIdle?0:.012*Math.sin(t*.00033+p[3]*2));
-    const py=p[1]*movement+(isIdle?0:.012*Math.cos(t*.00027+p[3]));
+    const movement=1+energy*(Math.sin(t*.00042+p[3])*.028+Math.cos(t*.00023+p[3]*1.7)*.017);
+    const px=p[0]*movement+energy*.012*Math.sin(t*.00033+p[3]*2);
+    const py=p[1]*movement+energy*.012*Math.cos(t*.00027+p[3]);
     const pz=p[2]*movement;
     const rx=px*cosa+pz*sina;
     const rz=pz*cosa-px*sina;
@@ -368,21 +397,21 @@
     const depth=(2+u[2]+v[2])/4;
     const shimmer=.84+.16*Math.sin(t*.0014+(a+b)*.37);
     const opacity=(.10+.47*depth)*weight*shimmer;
-    ctx.strokeStyle=isIdle?`rgba(211,223,246,${opacity})`:`hsla(${hue},80%,82%,${opacity})`;
+    ctx.strokeStyle=`hsla(${hue.toFixed(1)},${(32+48*activity).toFixed(0)}%,${(89-7*activity).toFixed(1)}%,${opacity})`;
     ctx.beginPath();ctx.moveTo(u[0],u[1]);ctx.lineTo(v[0],v[1]);ctx.stroke();
   }
   for(let i=0;i<projected.length;i++){
     const p=projected[i],bright=i%11===0||mesh.anchorIndices.includes(i);
     const depth=(p[2]+1)/2,alpha=.21+.73*depth;
-    ctx.fillStyle=isIdle?`rgba(239,242,255,${alpha})`:`hsla(${hue},94%,91%,${alpha})`;
+    ctx.fillStyle=`hsla(${hue.toFixed(1)},${(42+52*activity).toFixed(0)}%,${(95-4*activity).toFixed(1)}%,${alpha})`;
     ctx.beginPath();ctx.arc(p[0],p[1],(bright?1.7:.88)*dpr,0,Math.PI*2);ctx.fill();
     if(bright){
-      ctx.fillStyle=isIdle?`rgba(236,232,255,${.07+.13*depth})`:`hsla(${hue},94%,84%,.17)`;
+      ctx.fillStyle=`hsla(${hue.toFixed(1)},${(42+52*activity).toFixed(0)}%,84%,${(.07+.13*depth).toFixed(3)})`;
       ctx.beginPath();ctx.arc(p[0],p[1],(4.5+depth*2)*dpr,0,Math.PI*2);ctx.fill();
     }
   }
   // Short-lived 3D shooting stars around the sphere (no persistent orbit lines).
-  drawComets(ctx,s,t,cx,cy,radius,dpr,isIdle,hue);
+  drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue);
     // Sensor labels are tied to actual 3D nodes, including perspective/depth.
   if(++s.labelFrame>=1){
     for(let i=0;i<mesh.anchorIndices.length;i++){
@@ -392,7 +421,8 @@
       const mid=rect.width/2;
       const x=Math.max(43,Math.min(rect.width-43,mid+(px-mid)*1.08));
       const y=Math.max(25,Math.min(rect.height-23,rect.height*.51+(py-rect.height*.51)*1.07));
-      const scale=isIdle?.94:.79+.22*Math.max(0,Math.min(1,(z+1)/2));
+      const depthScale=.79+.22*Math.max(0,Math.min(1,(z+1)/2));
+      const scale=.94*(1-activity)+depthScale*activity;
       const alpha=z<-.34?.24:(.49+.43*Math.max(0,Math.min(1,(z+1)/2)));
       label.style.left=x.toFixed(1)+"px";
       label.style.top=y.toFixed(1)+"px";
@@ -406,7 +436,7 @@
     if(!card?._hzNight||!card.shadowRoot)return;
     const host=card.shadowRoot.querySelector(".hz-ambient-body"),canvas=host?.querySelector("canvas");
     if(!host||!canvas)return;
-    const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
+    const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     const exit=host.querySelector(".hz-ambient-exit");
     const revealControls=()=>{
@@ -534,7 +564,7 @@
       if(active.get(card)!==s||!card.isConnected||!card._hzNight||!host.isConnected)return;
       s.raf=requestAnimationFrame(loop);
       if(document.hidden)return;
-      if(time-s.lastFrame<(/Android/i.test(navigator.userAgent)?48:38))return;
+      if(time-s.lastFrame<(/Android/i.test(navigator.userAgent)?31:15))return;
       s.lastFrame=time;
       if(++frames%13===1)update(card);
       draw(card,s,time);
