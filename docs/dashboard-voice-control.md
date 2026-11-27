@@ -1,6 +1,6 @@
 # TAFA-Sprachsteuerung in eigenen Home-Assistant-Dashboards
 
-[English](en/dashboard-voice-control.md) · [Nativer Sprachweg](native-only.md) · [TAFA-App](app.md)
+[English](en/dashboard-voice-control.md) · [Nativer Sprachweg](native-only.md) · [TAFA-App](app.md) · [Entwickler: Antworten/Infoboxen](dashboard-integration.md)
 
 Mit TAFA Device Bridge kann ein Home-Assistant-Dashboard das Mikrofon eines registrierten Tablets steuern – unabhängig davon, ob die native Android-App oder das Dashboard im Vordergrund angezeigt wird. **Die Haupt-README ist keine technische API-Anleitung**; diese Seite beschreibt die dafür vorgesehenen Schnittstellen.
 
