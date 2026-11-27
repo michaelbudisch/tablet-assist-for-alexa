@@ -152,3 +152,36 @@ Viewport und den vorhandenen Elementabmessungen berechnet.
 Der Fix betrifft nur das optionale Ambient-Frontend;
 keine Änderung der Android-Anwendung, des Audio-Routings oder
 der Home-Assistant-Automatisierungen.
+
+
+## Annäherung je Tablet und frei einstellbares Schließen (0.4.75)
+
+TAFA Device Bridge liefert pro Tablet einen lokalen HA-Annäherungssensor
+(„Erkannt“ / „Frei“). Das Ambient-Kalendermodul wählt automatisch
+`binary_sensor.tafa_<raum>_annaherung` anhand der **lokalen**
+Dashboard-Bindung des jeweiligen Tablets, nicht anhand des Benutzers.
+Beispiel: Sprachstatus `sensor.tafa_jarvis_tablet_rufwortstatus`
+mit dem Anzeigenamen „TAFA · Büro Rufwortstatus“ wird korrekt
+`binary_sensor.tafa_buro_annaherung` zugeordnet.
+Ein PC ohne lokale Gerätebindung reagiert nicht auf das Büro-Tablet.
+Jeder Browser/WebView speichert seine Anzeigeeinstellungen separat.
+
+Die Kalender-Einstellungen (Zahnrad) bieten drei Schließmodi:
+- **Bei „Frei“:** Annäherung startet die Übersicht; bei `off`
+  schließt sie unmittelbar ohne feste Mindestanzeigedauer.
+  Wird die Ansicht manuell geöffnet, obwohl der Sensor auf „Frei“ steht,
+  greift ersatzweise der eingestellte Timer.
+- **Nach Zeit:** Schließen nach der frei gewählten Anzeigedauer,
+  unabhängig davon, ob der Sensor weiterhin „Erkannt“ meldet.
+- **Bei „Frei“ oder nach Zeit:** Das erste Ereignis schließt die Ansicht.
+
+Anzeigedauer: jede nichtnegative Sekundenzahl, auch 1 oder Bruchteile
+einer Sekunde. `0` deaktiviert den Timer vollständig, **nicht**
+das sofortige Schließen bei „Frei“. Die frühere fest kodierte
+Untergrenze von 15 Sekunden wurde entfernt. Bei Sensorzuständen
+`unknown` oder `unavailable` wird nicht fälschlich eine
+„Frei“-Meldung angenommen.
+
+Eine individuelle Sensor-Entität kann im selben Dialog explizit
+überschrieben werden. Keine zusätzlichen HA-Automatisierungen
+oder Änderungen an vorhandenen Sensoren nötig.

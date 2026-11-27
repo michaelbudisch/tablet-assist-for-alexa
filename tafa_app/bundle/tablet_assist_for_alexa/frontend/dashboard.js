@@ -2,7 +2,7 @@
 import {model} from './dashboard_model.js?v=0.4.64';
 import {installTafaResponseOverlay} from './response_overlay.js?v=0.4.64';
 // The ambient visualizer is optional: failure to load must never block the dashboard.
-void import('./ambient_night.js?v=0.4.74').catch(e=>console.warn('TAFA Ambient: optional module unavailable',e));
+void import('./ambient_night.js?v=0.4.75').catch(e=>console.warn('TAFA Ambient: optional module unavailable',e));
 function makeDashboard(model){
 const ambient=()=>globalThis[Symbol.for("tafa-ambient.integration.v1")]?.parts?.ambient;
 const {modules,roles,byId,byRole,normalize,escape:E,label,name,language,sum,value,area,candidates,eligible}=model;
