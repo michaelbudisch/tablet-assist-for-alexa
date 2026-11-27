@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.58 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.59 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
