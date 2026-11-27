@@ -1,4 +1,4 @@
-# TAFA GPU Worker 2.2.6
+# TAFA GPU Worker 2.2.7
 
 [Deutsch: Installationsanleitung](docs/README.de.md) · [English installation guide](docs/README.md) · [TAFA Projekt](../README.de.md)
 
