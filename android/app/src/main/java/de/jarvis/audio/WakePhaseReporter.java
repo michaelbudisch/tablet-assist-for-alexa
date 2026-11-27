@@ -17,6 +17,7 @@ final class WakePhaseReporter {
     private final Executor executor;
     private final Sender sender;
     private String pending;
+    private String pendingWake;
     private boolean active;
     private boolean closed;
 
@@ -28,7 +29,11 @@ final class WakePhaseReporter {
 
     synchronized void submit(String phase) {
         if (closed || phase == null || phase.isEmpty()) return;
-        pending = phase;
+        // Never lose the edge that marks actual wakeword detection.
+        // Native connecting/listening stages can change before the worker
+        // starts, but the wake marker must still reach HA first.
+        if (phase.startsWith("detected:")) pendingWake = phase;
+        else pending = phase;
         if (active) return;
         active = true;
         try {
@@ -36,6 +41,7 @@ final class WakePhaseReporter {
         } catch (RuntimeException rejected) {
             active = false;
             pending = null;
+            pendingWake = null;
         }
     }
 
@@ -43,12 +49,17 @@ final class WakePhaseReporter {
         while (true) {
             final String phase;
             synchronized (this) {
-                if (closed || pending == null) {
+                if (closed || (pending == null && pendingWake == null)) {
                     active = false;
                     return;
                 }
-                phase = pending;
-                pending = null;
+                if (pendingWake != null) {
+                    phase = pendingWake;
+                    pendingWake = null;
+                } else {
+                    phase = pending;
+                    pending = null;
+                }
             }
             try {
                 sender.send(phase);
@@ -61,5 +72,6 @@ final class WakePhaseReporter {
     synchronized void close() {
         closed = true;
         pending = null;
+        pendingWake = null;
     }
 }
