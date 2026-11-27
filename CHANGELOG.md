@@ -1,3 +1,11 @@
+## TAFA App / HA integration 0.4.60 — Reference-style sphere lighting and materialized replies
+- Idle: sparse turquoise curved orbital shooting stars over a quiet silver 3D node network.
+- Listening: bright cyan core and directional light packets running along real projected network edges, lighting selected nodes.
+- Processing: luminous pearl-white/violet core, more and faster white orbital streaks (including inner paths), staggered white node sparks. Speaking: softer silvery-lavender packets and trails.
+- Light and orbit modes blend continuously without resetting sphere rotation on rapid native phase changes.
+- Reply panels unfold from a thin connector light line below the sphere: traced border, expanding glass surface, staggered heading/message and an optional non-verifying contextual icon. Streaming text updates do not restart the panel; search result lists and camera notes remain supported.
+- Additional 3D lights are bounded on older Android devices. Native wake telemetry, unrestricted manual rotation and existing HA automations remain unchanged.
+
 ## TAFA App / HA integration 0.4.59 — Smooth Ambient speech transitions
 - Listening, processing, speaking and idle now blend continuously across color, glow, pulse, motion, shooting stars and status labels. Rapid transitions retarget rather than restart the visualizer.
 - Prevents rotation jumps by integrating angular velocity instead of multiplying absolute elapsed time by a changing phase speed. Manual 360° dragging and soft inertial handoff remain.
