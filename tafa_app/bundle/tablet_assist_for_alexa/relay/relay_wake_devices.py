@@ -234,7 +234,16 @@ class WakeDevices:
                         sanitized[key] = value
                     else:
                         raise ValueError("Invalid telemetry value")
-                self.telemetry[identifier] = {"seen": time.time(), **sanitized}
+                # Preserve the per-device wake timestamp and other prior
+                # readings across partial/rapid telemetry updates.
+                # Native Assist now reports "detected:" immediately instead
+                # of invoking the legacy routed wake-event action.
+                previous = self.telemetry.get(identifier, {})
+                now = time.time()
+                merged = {**previous, "seen": now, **sanitized}
+                if str(sanitized.get("wake_status", "")).startswith("detected:"):
+                    merged["last_wake"] = int(now)
+                self.telemetry[identifier] = merged
                 if "control_channel" in sanitized:
                     self.control_metrics.setdefault(identifier, {})["channel"] = sanitized["control_channel"]
                 self.changed(identifier)
