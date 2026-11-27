@@ -2,7 +2,7 @@
 
 [English](en/worker.md) · [TAFA installieren](setup-guide.md)
 
-Der **GPU Worker 2.2.6** erweitert TAFA um GPU-Wyoming-Whisper (Port **10300**), Qwen-Streaming-TTS (Port **10502**), optional Ollama (Port **11434**) und Vision (Port **10503**). Die **CPU-Sprachdienste** sind unabhängig davon: **TAFA lokal** oder ein **externer Sprachserver**. Nur im privaten, per Firewall beschränkten LAN betreiben.
+Der **GPU Worker 2.2.7** erweitert TAFA um GPU-Wyoming-Whisper (Port **10300**), Qwen-Streaming-TTS (Port **10502**), ein gemeinsames Ollama-Modell `qwen3-vl:4b-instruct` für Text und Vision (Port **11434**/**10503**) mit unbegrenzter Haltezeit. Die **CPU-Sprachdienste** sind unabhängig davon: **TAFA lokal** oder ein **externer Sprachserver**. Nur im privaten, per Firewall beschränkten LAN betreiben.
 
 **Windows:** Im Ordner `worker/` **01-Installieren.bat** starten, danach **04-Verbindungsdaten.bat** für `tafa-worker.json` und `GPU-Worker-Verbindungsdaten.txt`. Unter **TAFA → Verbindungen → Schnelleinrichtung per JSON** importieren, **prüfen und übernehmen**. Die CPU-Verbindungen werden separat eingerichtet.
 
