@@ -45,7 +45,7 @@ class VisionTests(unittest.TestCase):
         self.assertTrue(base64.b64decode(body["messages"][1]["images"][0]).startswith(b"\xff\xd8"))
     def test_alternative(self):
         self.assertEqual(self.post({"image":fixture(),"model":"gemma3:4b","mode":"objects"}).status_code,400)
-        self.assertEqual(self.calls, []))
+        self.assertEqual(self.calls, [])
     def test_capabilities_and_vision_queue(self):
         response = self.client.get("/capabilities", headers=HEADERS)
         self.assertEqual(response.status_code, 200)
