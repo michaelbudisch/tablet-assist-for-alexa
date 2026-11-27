@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.48 — Android-WebView Vollbildansicht und Diagnose
+- Der Ambient-Nachtmodus ist auf Android als vom Lovelace-Kartenraster unabhängige Vollbild-Ansicht aufgebaut; dadurch werden problematische Tablet-Grid-Breiten nicht mehr vererbt.
+- Eigener Tagesansicht-Button innerhalb des Vollbildes. Diagnosezeile zeigt laufende Frontend-Version, Browser-Viewport, tatsächliche Ansichtsbreite und Canvas-Status.
+- Private Testseite `/local/tafa/ambient-webview-test-v0.4.48.html` zur Abgrenzung zwischen WebView- und Dashboard-Layout-Problemen. Hauptkarte und Ambient-Ressource verwenden `*-v0.4.48.js?v=0.4.48`.
+- Kugelnetz und Sternschnuppen bleiben unverändert, ebenso Automationen und Sensorzuordnungen.
+
 ## TAFA-App / HA-Integration 0.4.47 — Natürliche Sternschnuppen im Ambient-Modus
 - Ersetzt die dauerhaft gezeichneten Bogenlinien um die Kugel durch zufällig auftauchende 3D-Lichtimpulse mit leuchtendem Kopf und kurzem auslaufendem Schweif.
 - Lichtimpulse besitzen unterschiedliche Bahnebene, Entfernung, Richtung, Geschwindigkeit, Helligkeit und Lebensdauer und verschwinden wieder. Das Kugelnetz, seine Linienbreite und der ruhige Standby-/KI-Puls-Modus bleiben unverändert.
