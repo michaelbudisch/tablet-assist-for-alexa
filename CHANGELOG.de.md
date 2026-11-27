@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.49 — Ambient-Modul sauber getrennt
+- Die eigenständige TAFA-Integration nutzt nun `tafa-ambient.integration.v1` statt des globalen Hauszentrale-Speichers. Dadurch kann sie den privaten Ambient-Modus nicht mehr überschreiben.
+- Testdiagnostik ist nicht mehr Bestandteil der regulären Nachtansicht; private Testseite bleibt separat über ihre URL erreichbar.
+- Die private Hauszentrale nutzt ab sofort `bag.parts.privateAmbient` und das eigene Ereignis `tafa-private-ambient-ready`.
+- Versionsparameter der gelieferten Frontend-Module auf `?v=0.4.49` angehoben. Kugel, Sternschnuppen und bestehende Automationen bleiben erhalten.
+
 ## TAFA-App / HA-Integration 0.4.48 — Android-WebView Vollbildansicht und Diagnose
 - Der Ambient-Nachtmodus ist auf Android als vom Lovelace-Kartenraster unabhängige Vollbild-Ansicht aufgebaut; dadurch werden problematische Tablet-Grid-Breiten nicht mehr vererbt.
 - Eigener Tagesansicht-Button innerhalb des Vollbildes. Diagnosezeile zeigt laufende Frontend-Version, Browser-Viewport, tatsächliche Ansichtsbreite und Canvas-Status.
