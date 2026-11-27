@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.44 — Calm idle state for Ambient mode
+- Idle globe now only rotates gently: no vertex warping or size pulsing; orbiting sparkles are subdued.
+- Enhanced motion and pulsing are restricted to detected wakewords and actual Assist listening, processing or playback, not the always-armed native wakeword monitor (`listening: hey_jarvis`).
+- Existing HA automations, dashboard layout and entity mappings are untouched.
+
 ## TAFA App / HA integration 0.4.43 — Organic 3D Ambient view and tablet layout
 - Replaced the uniform globe with a non-uniform 3D particle network, drifting lights and partial orbit arcs. Six sensor values follow depth-projected vertices as the globe rotates, including perspective scale and fading.
 - Full-width tablet portrait/landscape ambient layout, independent of the normal dashboard sidebar. Cache version updated for the Android WebView.
