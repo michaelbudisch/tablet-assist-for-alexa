@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.59 — Fließende Ambient-Sprachphasen
+- Hören, Verarbeiten, Sprechen und Ruhe werden ohne abrupte Farbsprünge ineinander überblendet: Kugelfarbe, Leuchten, Puls, Bewegung, Sternschnuppen und Statusbeschriftung verwenden eine fortlaufende Phasenmischung. Schnelle Sprachphasen setzen die Animation nicht zurück.
+- Rotation ohne Winkel-Sprung: Die Winkelgeschwindigkeit wird über die Zeit integriert statt mit der absoluten Laufzeit multipliziert. Die bestehende manuelle 360°-Drehung und der sanfte Nachlauf bleiben erhalten.
+- Flüssigere Darstellung mit Zielwert ca. 30 FPS auf Android und bis zu 60 FPS auf Desktop; die begrenzte Tablet-Grafikauflösung bleibt bestehen.
+- Keine Änderung an der sofortigen Statusübertragung aus der nativen App; keine Automationen oder Sensorzuordnungen verändert.
+
 ## TAFA-App / HA-Integration 0.4.57 — Direkte Sprachphasen und verlässlicher Rufwortstatus
 - Die native Android-App 1.2.5 meldet Rufworttreffer und Assist-Phasen ereignisgesteuert an die bestehende authentifizierte HA-Geräte-API; der bisherige 12-Sekunden-Abgleich bleibt als Rückfall bestehen.
 - Native Sprachzustände sind ohne Blockade der Android-Aufnahme oder UI in einer separaten Statuswarteschlange geordnet; das initiale `detected:`-Ereignis wird nicht verworfen, auch wenn unmittelbar weitere Phasen folgen.
