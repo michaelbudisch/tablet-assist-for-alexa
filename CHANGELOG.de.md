@@ -1,3 +1,8 @@
+## TAFA-App / HA-Integration 0.4.50 — Einheitliche Nachtmodus-Kopfzeile
+- Die normale TAFA-Dashboard-Kopfzeile wird im Ambient-Modus auf PC und Android komplett ausgeblendet. Stattdessen gibt es auf beiden Geräten ausschließlich den im Ambient-Modus enthaltenen Button `☀ Tagesansicht`.
+- Die ursprünglichen Dashboard-Bedienelemente erscheinen beim Verlassen des Ambient-Modus wieder. Das Kugelnetz, die Sternschnuppen, Sensoranzeigen und die Sprachphasen bleiben unverändert.
+- Separate private und öffentliche Ambient-Modulbereiche bleiben erhalten. Auslieferung über neue `?v=0.4.50`-URLs; keine Automationen verändert.
+
 ## TAFA-App / HA-Integration 0.4.49 — Ambient-Modul sauber getrennt
 - Die eigenständige TAFA-Integration nutzt nun `tafa-ambient.integration.v1` statt des globalen Hauszentrale-Speichers. Dadurch kann sie den privaten Ambient-Modus nicht mehr überschreiben.
 - Testdiagnostik ist nicht mehr Bestandteil der regulären Nachtansicht; private Testseite bleibt separat über ihre URL erreichbar.
