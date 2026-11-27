@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.51 — Minimaler Ambient-Modus mit Antippen zum Einblenden
+- Der einzige Tagesansicht-Button ist beim Betreten des Ambient-Modus unsichtbar (auf PC und Tablet).
+- Berührung/Klick auf die Ambient-Fläche blendet den Button ein. Nach sechs Sekunden ohne Eingabe wird er automatisch wieder ausgeblendet. Für Tastaturbenutzung kann er mit Enter/Leertaste eingeblendet werden.
+- Unabhängige private und öffentliche Ambient-Namensräume, Kugelnetz, Sternschnuppen, Sprachphasen und normale Tagesansicht bleiben unverändert. Auslieferung mit `?v=0.4.51`.
+- Bestehende Automationen und Gerätezuordnungen nicht verändert.
+
 ## TAFA-App / HA-Integration 0.4.50 — Einheitliche Nachtmodus-Kopfzeile
 - Die normale TAFA-Dashboard-Kopfzeile wird im Ambient-Modus auf PC und Android komplett ausgeblendet. Stattdessen gibt es auf beiden Geräten ausschließlich den im Ambient-Modus enthaltenen Button `☀ Tagesansicht`.
 - Die ursprünglichen Dashboard-Bedienelemente erscheinen beim Verlassen des Ambient-Modus wieder. Das Kugelnetz, die Sternschnuppen, Sensoranzeigen und die Sprachphasen bleiben unverändert.
