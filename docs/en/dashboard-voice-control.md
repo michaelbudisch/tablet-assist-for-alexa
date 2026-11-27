@@ -1,6 +1,6 @@
 # Control TAFA voice from your own Home Assistant dashboard
 
-[Deutsch](../dashboard-voice-control.md) · [Native voice path](native-only.md) · [TAFA App](app.md)
+[Deutsch](../dashboard-voice-control.md) · [Native voice path](native-only.md) · [TAFA App](app.md) · [Developer: response cards](dashboard-integration.md)
 
 A Home Assistant dashboard can manage an enrolled TAFA Device Bridge microphone even while the Android app or dashboard is in the background. This developer page documents the supported controls without cluttering the project's main README.
 
