@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.50 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.51 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -32,8 +32,9 @@
   .hz-ambient-body[data-tablet="1"] .hz-ambient-stage{width:100%!important;max-width:680px!important;min-width:0!important;min-height:180px!important;max-height:60vh!important;height:48vh!important;flex:1 1 auto!important}
   .hz-ambient-body[data-tablet="1"] .hz-ambient-head{margin-top:clamp(48px,9vh,80px)!important}
   .hz-ambient-body[data-tablet="1"] .hz-ambient-time{font-size:clamp(56px,10vw,90px)!important}
-  .hz-ambient-body .hz-ambient-exit{display:inline-flex!important}
-  .hz-ambient-exit{display:inline-flex;position:absolute;top:12px;right:12px;z-index:30;border:1px solid #89bbe066;background:#152a3cbf;color:#d1e9ff;padding:9px 11px;border-radius:12px;font:500 13px/1.25 inherit;cursor:pointer}
+  /* The day button is reveal-on-tap, not part of the permanent ambient display. */
+  .hz-ambient-exit{display:inline-flex;position:absolute;top:12px;right:12px;z-index:30;border:1px solid #89bbe066;background:#152a3cbf;color:#d1e9ff;padding:9px 11px;border-radius:12px;font:500 13px/1.25 inherit;cursor:pointer;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-6px);transition:opacity .24s ease,transform .24s ease,visibility 0s linear .24s}
+  .hz-ambient-body[data-controls="visible"] .hz-ambient-exit{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);transition:opacity .24s ease,transform .24s ease,visibility 0s}
   .hz-ambient-body:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.38;pointer-events:none;background:radial-gradient(circle at 22% 22%,#284d7644 0,transparent 28%),radial-gradient(circle at 76% 78%,#102a4d55 0,transparent 30%)}
   .hz-ambient-head{position:relative;z-index:2;margin-top:clamp(52px,8vh,96px);text-align:center}
   .hz-ambient-time{font-size:clamp(62px,10.4vw,116px);font-weight:300;letter-spacing:-.063em;font-variant-numeric:tabular-nums;line-height:1.04;text-shadow:0 0 26px #9dcaf723}
@@ -84,7 +85,7 @@
     return ids.find(id=>id.startsWith("sensor.")&&entry.pattern.test(id+" "+(states[id]?.attributes?.friendly_name||""))&&isValid(states[id]))||null;
   };
   function body(){
-    return `<style>${style}</style><section class="hz-ambient-body" data-tablet="${typeof navigator!=="undefined"&&(/Android/i.test(navigator.userAgent)||(typeof matchMedia==="function"&&matchMedia("(pointer:coarse)").matches&&window.innerWidth<=1300))?"1":"0"}" data-phase="idle" aria-label="TAFA Ambient Nachtansicht">
+    return `<style>${style}</style><section class="hz-ambient-body" data-tablet="${typeof navigator!=="undefined"&&(/Android/i.test(navigator.userAgent)||(typeof matchMedia==="function"&&matchMedia("(pointer:coarse)").matches&&window.innerWidth<=1300))?"1":"0"}" data-phase="idle" data-controls="hidden" tabindex="0" aria-label="TAFA Ambient Nachtansicht">
       <button type="button" class="hz-ambient-exit" data-hz-header="night" aria-label="Tagesansicht öffnen">☀ Tagesansicht</button><header class="hz-ambient-head"><div id="hz-night-clock" class="hz-ambient-time">--:--</div><div id="hz-night-date" class="hz-ambient-date"></div></header>
       <div class="hz-ambient-stage"><canvas class="hz-ambient-canvas" aria-label="Animierte, vernetzte Kugel"></canvas>
       ${metrics.map((m,i)=>`<div class="hz-ambient-metric" data-ambient-metric="${i}"><small>${safe(m.name)}</small><b>—</b></div>`).join("")}</div>
@@ -382,9 +383,30 @@
     if(!card?._hzNight||!card.shadowRoot)return;
     const host=card.shadowRoot.querySelector(".hz-ambient-body"),canvas=host?.querySelector("canvas");
     if(!host||!canvas)return;
-    const s={host,canvas,phase:"idle",lastFrame:0,forceUntil:0,forcedPhase:"idle",infoTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
+    const s={host,canvas,phase:"idle",lastFrame:0,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     const exit=host.querySelector(".hz-ambient-exit");
+    const revealControls=()=>{
+      if(active.get(card)!==s||!host.isConnected)return;
+      host.dataset.controls="visible";
+      exit?.removeAttribute("tabindex");
+      clearTimeout(s.controlsTimer);
+      s.controlsTimer=setTimeout(()=>{
+        if(active.get(card)!==s)return;
+        host.dataset.controls="hidden";
+        exit?.setAttribute("tabindex","-1");
+        if(document.activeElement===exit)exit.blur();
+      },6000);
+    };
+    exit?.setAttribute("tabindex","-1");
+    host.addEventListener("pointerdown",revealControls,{passive:true});
+    host.addEventListener("click",revealControls);
+    host.addEventListener("keydown",event=>{
+      if((event.key==="Enter"||event.key===" "||event.key==="Escape")&&host.dataset.controls!=="visible"){
+        if(event.key===" ")event.preventDefault();
+        revealControls();
+      }
+    });
     if(exit)exit.addEventListener("click",event=>{
       event.stopPropagation();
       if(typeof card.hzHeaderAction==="function")void card.hzHeaderAction("night");
@@ -417,6 +439,7 @@
     const s=active.get(card);if(!s)return;
     active.delete(card);cancelAnimationFrame(s.raf);
     clearTimeout(s.infoTimer);
+    clearTimeout(s.controlsTimer);
     try{s.unsubscribe?.();}catch{}
   }
   bag.parts.ambient={body,mount,update,show,close,dispose};
