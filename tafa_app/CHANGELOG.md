@@ -1,5 +1,12 @@
 # TAFA App changelog
 
+## 0.4.58 — Gemeinsames dauerhaft geladenes Vision-Modell
+
+- Wissensfragen und Bildprüfung verwenden ausschließlich `qwen3-vl:4b-instruct` in Ollama.
+- Modellverwaltung findet auch App-verwaltete Ollama-Agenten; `keep_alive=-1` ist für das gemeinsame Modell vorgesehen.
+- Neues Worker-JSON darf keine zweite Qwen3-Textmodell-Installation mehr vorschlagen; bestehende andere Modelle werden nicht gelöscht.
+- Die Android-App, Sprachsynthese und vorhandenen Home-Assistant-Automationen bleiben unverändert.
+
 ## 0.4.40 — Audioausgabe pro Tablet
 
 - Automatisch, nur Bluetooth oder nur Tablet im Control Center auswählbar.
