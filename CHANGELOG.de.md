@@ -1,3 +1,8 @@
+## TAFA-App / HA-Integration 0.4.54 — Greifbereich der Ambient-Kugel korrigiert
+- Der bisherige sichtbare Greifcursor wurde über dem gesamten Canvas angezeigt, die Drehung startete aber nur innerhalb eines engeren Kreises. Der Canvas-Bereich ist jetzt vollständig per Maus und Finger drehbar.
+- Sofortiger Start einer Ziehbewegung ab 6 px sowie optionales Gedrückthalten für 280 ms aus 0.4.53 bleiben erhalten. Die an der Kugel verankerten Sensorwerte bewegen sich mit.
+- Normaler Tipp blendet weiterhin `☀ Tagesansicht` ein. Keine Änderungen an Sensorverbindungen, Automationen oder anderen Dashboard-Kacheln.
+
 ## TAFA-App / HA-Integration 0.4.53 — Kugel-Drehsteuerung korrigiert
 - Fehler behoben: In 0.4.52 wurde ein Drag abgebrochen, sobald vor Ablauf der 280-ms-Haltezeit mehr als 11 px Bewegung stattfand. Jetzt aktiviert die erste Bewegung ab 6 px sofort die manuelle 3D-Drehung.
 - Alternativ kann weiterhin 280 ms lang gedrückt und anschließend gedreht werden. PC-Maus und Android-Touch nutzen denselben Pointer-Ablauf.
