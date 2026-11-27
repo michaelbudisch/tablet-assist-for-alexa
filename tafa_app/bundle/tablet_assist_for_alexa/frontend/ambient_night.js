@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.47 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.48 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("hauszentrale-kiosk.modules.v1")]??={parts:Object.create(null)};
@@ -25,6 +25,15 @@
   .wrap.hz-night-view .body{max-width:none!important;min-width:0!important;margin:0!important;width:100%!important}
   .wrap.hz-night-view .subnav,.wrap.hz-night-view .native,.wrap.hz-night-view .native-details{display:none!important}
   .hz-ambient-body {margin:0!important;padding:0 12px!important;width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;min-height:var(--hz-available-height,100dvh);overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#14213c 0%,#0a1425 43%,#070e1b 84%);color:#edf5ff;font:inherit}
+  /* Tablet WebViews: escape Home Assistant's responsive grid/card width entirely. */
+  .hz-ambient-body[data-tablet="1"]{position:fixed!important;inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;z-index:2147483000!important;width:100vw!important;height:100vh!important;min-height:100vh!important;max-width:none!important;margin:0!important;padding:0 8px!important;overflow:hidden!important;box-sizing:border-box!important;transform:none!important}
+  .hz-ambient-body[data-tablet="1"] .hz-ambient-stage{width:100%!important;max-width:680px!important;min-width:0!important;min-height:180px!important;max-height:60vh!important;height:48vh!important;flex:1 1 auto!important}
+  .hz-ambient-body[data-tablet="1"] .hz-ambient-head{margin-top:clamp(48px,9vh,80px)!important}
+  .hz-ambient-body[data-tablet="1"] .hz-ambient-time{font-size:clamp(56px,10vw,90px)!important}
+  .hz-ambient-body[data-tablet="1"] .hz-ambient-exit{display:inline-flex!important}
+  .hz-ambient-body[data-tablet="1"] .hz-ambient-debug{display:block!important}
+  .hz-ambient-exit{display:none;position:absolute;top:12px;right:12px;z-index:30;border:1px solid #89bbe066;background:#152a3cbf;color:#d1e9ff;padding:9px 11px;border-radius:12px;font:500 13px/1.25 inherit;cursor:pointer}
+  .hz-ambient-debug{display:none;color:#7590a9;font:10px/1.3 monospace;letter-spacing:0;margin:3px auto 9px;text-align:center;pointer-events:none}
   .hz-ambient-body:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.38;pointer-events:none;background:radial-gradient(circle at 22% 22%,#284d7644 0,transparent 28%),radial-gradient(circle at 76% 78%,#102a4d55 0,transparent 30%)}
   .hz-ambient-head{position:relative;z-index:2;margin-top:clamp(52px,8vh,96px);text-align:center}
   .hz-ambient-time{font-size:clamp(62px,10.4vw,116px);font-weight:300;letter-spacing:-.063em;font-variant-numeric:tabular-nums;line-height:1.04;text-shadow:0 0 26px #9dcaf723}
@@ -75,11 +84,11 @@
     return ids.find(id=>id.startsWith("sensor.")&&entry.pattern.test(id+" "+(states[id]?.attributes?.friendly_name||""))&&isValid(states[id]))||null;
   };
   function body(){
-    return `<style>${style}</style><section class="hz-ambient-body" data-phase="idle" aria-label="TAFA Ambient Nachtansicht">
-      <header class="hz-ambient-head"><div id="hz-night-clock" class="hz-ambient-time">--:--</div><div id="hz-night-date" class="hz-ambient-date"></div></header>
+    return `<style>${style}</style><section class="hz-ambient-body" data-tablet="${typeof navigator!=="undefined"&&(/Android/i.test(navigator.userAgent)||(typeof matchMedia==="function"&&matchMedia("(pointer:coarse)").matches&&window.innerWidth<=1300))?"1":"0"}" data-phase="idle" aria-label="TAFA Ambient Nachtansicht">
+      <button type="button" class="hz-ambient-exit" data-hz-header="night" aria-label="Tagesansicht öffnen">☀ Tagesansicht</button><header class="hz-ambient-head"><div id="hz-night-clock" class="hz-ambient-time">--:--</div><div id="hz-night-date" class="hz-ambient-date"></div></header>
       <div class="hz-ambient-stage"><canvas class="hz-ambient-canvas" aria-label="Animierte, vernetzte Kugel"></canvas>
       ${metrics.map((m,i)=>`<div class="hz-ambient-metric" data-ambient-metric="${i}"><small>${safe(m.name)}</small><b>—</b></div>`).join("")}</div>
-      <div class="hz-ambient-foot"><span class="hz-ambient-indicator"></span><span data-ambient-state>TAFA · Bereit</span></div>
+      <div class="hz-ambient-foot"><span class="hz-ambient-indicator"></span><span data-ambient-state>TAFA · Bereit</span></div><span class="hz-ambient-debug" data-ambient-debug>WebView-Diagnose wird geladen</span>
       <section class="hz-ambient-info" data-ambient-info hidden aria-live="polite"></section>
     </section>`;
   }
@@ -119,7 +128,7 @@
     stage.dataset.phase=s.phase;
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
-    if(label)label.textContent=labels[s.phase]+" · Frontend 0.4.47";
+    if(label)label.textContent=labels[s.phase]+" · Frontend 0.4.48";
     stage.querySelector(".hz-ambient-indicator")?.setAttribute("title",s.phase);
   }
   function close(card){
@@ -375,6 +384,20 @@
     if(!host||!canvas)return;
     const s={host,canvas,phase:"idle",lastFrame:0,forceUntil:0,forcedPhase:"idle",infoTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
+    const exit=host.querySelector(".hz-ambient-exit");
+    if(exit)exit.addEventListener("click",event=>{
+      event.stopPropagation();
+      if(typeof card.hzHeaderAction==="function")void card.hzHeaderAction("night");
+      else if(typeof card.quickAction==="function")card.quickAction("ambient");
+    });
+    try{
+      const diag=host.querySelector("[data-ambient-debug]");
+      if(diag){
+        const rect=host.getBoundingClientRect();
+        const context=canvas.getContext("2d");
+        diag.textContent="0.4.48 · "+Math.round(window.innerWidth)+"×"+Math.round(window.innerHeight)+" · Ans. "+Math.round(rect.width)+"px · Canvas "+(context?"OK":"FEHLT");
+      }
+    }catch(error){console.warn("TAFA Ambient tablet diagnosis",error);}
     let frames=0;
     const loop=(time)=>{
       if(active.get(card)!==s||!card.isConnected||!card._hzNight||!host.isConnected)return;
