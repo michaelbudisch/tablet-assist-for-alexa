@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.53 — Reliable press-and-drag globe rotation
+- Fixed a gesture cancellation bug: v0.4.52 aborted rotation when a pointer moved more than 11 px before the 280 ms hold timer elapsed. Movement of 6 px now immediately activates manual 3D rotation.
+- Holding still for 280 ms before dragging remains supported. Mouse and touch share pointer handling; the globe and projected 3D sensor anchors rotate together.
+- A short tap still reveals Day View, and automatic rotation pauses for 30 seconds after drag release before resuming smoothly. Existing modules, automations, and Lovelace configuration remain unchanged.
+
 ## TAFA App / HA integration 0.4.52 — Press-and-drag Ambient globe
 - Press and hold the globe for 280 ms, then drag horizontally or vertically to rotate its 3D mesh and the attached six sensor anchors together. Touch and mouse share pointer handling.
 - Auto-rotation stays paused for 30 seconds after release, then resumes smoothly from the chosen orientation without jumping. A short tap still reveals the day-view control, whereas dragging leaves it hidden.
