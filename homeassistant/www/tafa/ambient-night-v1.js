@@ -18,7 +18,12 @@
   .hz-night-view .top>div:first-child,.hz-night-view .hz-header-clock,.hz-night-view .hz-subnav{display:none!important}
   .hz-night-view .top .hz-header-right,.hz-night-view .top .hz-header-actions{pointer-events:auto}
   .hz-night-view .top .hz-header-button {background:#132a3d88!important;color:#a9c8e4!important;border:1px solid #9fd1fa32!important;backdrop-filter:blur(6px)}
-  .hz-ambient-body {position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;min-height:var(--hz-available-height,100dvh);overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#14213c 0%,#0a1425 43%,#070e1b 84%);color:#edf5ff;font:inherit}
+  .wrap.hz-night-view>main>header:not(.hz-ambient-head){position:absolute!important;right:12px;top:0;left:auto;z-index:16;min-height:0!important;width:auto;margin:0!important;padding:12px!important;max-width:none!important;background:transparent!important;border:0;box-shadow:none}
+  .wrap.hz-night-view>main>header>div:first-child,.wrap.hz-night-view>main>header .header-clock{display:none!important}
+  .wrap.hz-night-view>main>header .quick{background:#132a3dbb!important;color:#b9d8f2!important;border:1px solid #9fd1fa32!important;backdrop-filter:blur(6px)}
+  .wrap.hz-night-view .body{max-width:none!important;margin:0!important;width:100%}
+  .wrap.hz-night-view .subnav,.wrap.hz-night-view .native,.wrap.hz-night-view .native-details{display:none!important}
+  .hz-ambient-body {margin:0!important;position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;min-height:var(--hz-available-height,100dvh);overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#14213c 0%,#0a1425 43%,#070e1b 84%);color:#edf5ff;font:inherit}
   .hz-ambient-body:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.38;pointer-events:none;background:radial-gradient(circle at 22% 22%,#284d7644 0,transparent 28%),radial-gradient(circle at 76% 78%,#102a4d55 0,transparent 30%)}
   .hz-ambient-head{position:relative;z-index:2;margin-top:clamp(52px,8vh,96px);text-align:center}
   .hz-ambient-time{font-size:clamp(62px,10.4vw,116px);font-weight:300;letter-spacing:-.063em;font-variant-numeric:tabular-nums;line-height:1.04;text-shadow:0 0 26px #9dcaf723}
@@ -96,6 +101,9 @@
     const s=active.get(card);if(!s)return;
     const h=card.h?.states||{},stage=s.host;
     if(!stage?.isConnected)return;
+    const time=new Date(),clock=stage.querySelector("#hz-night-clock"),date=stage.querySelector("#hz-night-date");
+    if(clock)clock.textContent=time.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+    if(date)date.textContent=time.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
     for(let i=0;i<metrics.length;i++){
       const node=stage.querySelector(`[data-ambient-metric="${i}"] b`);
       if(!node)continue;
