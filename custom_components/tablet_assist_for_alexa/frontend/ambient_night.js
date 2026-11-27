@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.53 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.54 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -425,12 +425,6 @@
     // presses still enter drag mode after 280ms. Unlike 0.4.52, movement
     // during that interval must NEVER cancel the gesture.
     const HOLD_MS=280,PAUSE_MS=30000;
-    const withinGlobe=event=>{
-      const rect=canvas.getBoundingClientRect();
-      if(!rect.width||!rect.height)return false;
-      const radius=Math.min(rect.width*.42,rect.height*.41)*1.12;
-      return Math.hypot(event.clientX-(rect.left+rect.width*.5),event.clientY-(rect.top+rect.height*.51))<=radius;
-    };
     const activateDrag=pointer=>{
       if(pointer.active||s.dragPointer!==pointer||active.get(card)!==s||!host.isConnected)return;
       clearTimeout(pointer.timer);
@@ -459,7 +453,7 @@
       }
     };
     canvas.addEventListener("pointerdown",event=>{
-      if(event.button!==0||s.dragPointer||!withinGlobe(event))return;
+      if(event.button!==0||s.dragPointer)return;
       s.suppressClick=false;
       const pointer={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,active:false,timer:null};
       s.dragPointer=pointer;
