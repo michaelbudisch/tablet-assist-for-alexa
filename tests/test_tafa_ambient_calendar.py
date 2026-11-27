@@ -21,6 +21,13 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn("playBeam",js)
         self.assertIn("prefers-reduced-motion",js)
         self.assertIn("cancelAnimationFrame(beamFrame)",js)
+        self.assertIn("entityEvents=id=>",js)
+        self.assertIn('service:"get_events"',js)
+        self.assertIn('card.h.callApi("GET",uri)',js)
+        self.assertIn("mergeEvents(received||[],entityEvents(id))",js)
+        self.assertIn("hz-overview-particles",js)
+        self.assertIn("Shooting stars run FROM sphere nodes",js)
+        self.assertIn("Nodes appear only after",js)
         self.assertNotIn("subscribeEvents",js)
     def test_optional_resource_is_registered(self):
         src=(MAIN/"__init__.py").read_text()
