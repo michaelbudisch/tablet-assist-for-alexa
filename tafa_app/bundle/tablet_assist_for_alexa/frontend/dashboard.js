@@ -1,8 +1,8 @@
 // TAFA Home Dashboard — preview 0.2.0 (MIT)
-import {model} from './dashboard_model.js?v=0.4.56';
-import {installTafaResponseOverlay} from './response_overlay.js?v=0.4.56';
+import {model} from './dashboard_model.js?v=0.4.57';
+import {installTafaResponseOverlay} from './response_overlay.js?v=0.4.57';
 // The ambient visualizer is optional: failure to load must never block the dashboard.
-void import('./ambient_night.js?v=0.4.56').catch(e=>console.warn('TAFA Ambient: optional module unavailable',e));
+void import('./ambient_night.js?v=0.4.57').catch(e=>console.warn('TAFA Ambient: optional module unavailable',e));
 function makeDashboard(model){
 const ambient=()=>globalThis[Symbol.for("tafa-ambient.integration.v1")]?.parts?.ambient;
 const {modules,roles,byId,byRole,normalize,escape:E,label,name,language,sum,value,area,candidates,eligible}=model;
