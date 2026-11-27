@@ -111,3 +111,26 @@ vollständigen Kugel. Der PC nutzt eine geringfügig niedrigere Kugelhöhe
 und einen entsprechend tieferen Start der Übersicht; auf Android bleiben
 die angepassten Tablet-Proportionen erhalten. Die Uhr bleibt links oben,
 der Kalender-Rasteraufbau wird weiterhin wieder transparent.
+
+
+## Fließender Kugelübergang und transparenter Kalender (0.4.73)
+
+Beim Aufruf bleibt die Sphere im bisherigen DOM-Layout. Vor dem Wechsel
+wird aus den verfügbaren Abständen zwischen Uhr, Kugel und Kalender ein
+Ziel für `translate3d` und `scale` pro Display berechnet. So schrumpft
+die laufende Sphere kontinuierlich, statt durch eine Umschaltung von
+`position:relative` auf `position:absolute` zu springen. Beim
+Schließen läuft die Transformation zurück. Die native Assist-Pipeline
+und die animierte Netzgeometrie bleiben dieselben.
+
+Das Kalenderpanel hat nach der Einblendung keinen permanenten
+opak deckenden Hintergrund oder sichtbare Standardzellen mehr.
+Wetterleiste und Energiekennzahlen bleiben einzelne halbtransparente
+Container. Datumszahlen werden größer, der heutige Tag erhält einen
+türkisen Kreis, und Termine erscheinen als schmale türkisfarbene
+Streifen. Beim Monatswechsel wird die Monatsabkürzung gesondert
+dargestellt. Sternschnuppen und leuchtende Rasterlinien bleiben
+auf die kurzlebige Einblendphase beschränkt.
+
+Das Modul behandelt `prefers-reduced-motion` und ändert weder
+Mikrofon-Einstellungen noch Home-Assistant-Automatisierungen.

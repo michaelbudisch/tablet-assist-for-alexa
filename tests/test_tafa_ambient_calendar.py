@@ -38,6 +38,13 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn("data-next-event",js)
         self.assertIn("34vh,370px",js)
         self.assertIn("23vh,310px",js)
+        self.assertIn("const positionSphere=()=>",js)
+        self.assertIn("--hz-sphere-scale",js)
+        self.assertIn("position:relative!important",js)
+        self.assertIn("hz-overview-monthmark",js)
+        self.assertIn("day.getDate()===1",js)
+        self.assertIn("hz-overview-soft-in",js)
+        self.assertIn("background:transparent!important",js)
         self.assertNotIn("subscribeEvents",js)
     def test_optional_resource_is_registered(self):
         src=(MAIN/"__init__.py").read_text()
