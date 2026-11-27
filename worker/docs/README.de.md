@@ -2,13 +2,13 @@
 
 [English](README.md) · [Schnellstart](../README.md) · [TAFA-Ersteinrichtung](../../docs/setup-guide.md)
 
-Der GPU Worker ist **optional**. Er ergänzt eine funktionierende TAFA-CPU-Basis um GPU-Wyoming-Whisper (STT), Qwen-Streaming-Stimme (TTS), optional Ollama (Text-KI) und Vision. Voraussetzung ist eine kompatible **NVIDIA-GPU**. Unter Windows: NVIDIA-Treiber, Docker Desktop mit **WSL2/Linux-Containern**. Unter Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Für die erstmaligen Modell-Downloads wird Internetzugang und genügend SSD-Speicher benötigt.
+Der GPU Worker ist **optional**. Er ergänzt die TAFA-CPU-Basis um GPU-Wyoming-Whisper (STT), Qwen-Streaming-Stimme (TTS) und ein gemeinsames Qwen3-VL-Modell über Ollama für Text/KI und Vision. Voraussetzung ist eine kompatible **NVIDIA-GPU**. Unter Windows: NVIDIA-Treiber, Docker Desktop mit **WSL2/Linux-Containern**. Unter Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Für die erstmaligen Modell-Downloads wird Internetzugang und genügend SSD-Speicher benötigt.
 
 ## Schnellstart Windows
 
 Im Verzeichnis `worker/`:
 
-1. `01-Installieren.bat` starten (optional vorher `00-Konfiguration.bat` zur Erzeugung einer fehlenden `.env`). Die Installation startet **Whisper und Qwen**, fragt optional nach **Text-Ollama** und bietet danach **Vision (Vorgabe Ja)** für Kamera-Bildanalyse an. Ein Vision-Modell wird nur nach gesonderter Zustimmung heruntergeladen.
+1. `01-Installieren.bat` starten (optional vorher `00-Konfiguration.bat`). Es startet GPU-Whisper und Qwen-TTS und installiert automatisch **`qwen3-vl:4b-instruct` als einziges Ollama-Modell** für Text und Vision (mehrere GB). Anschließend lädt es das Modell in den Speicher und behält es, sofern GPU-/Systemspeicher reichen.
 2. `02-Starten.bat` startet konfigurierte Dienste; `03-Neustarten.bat` startet laufende Container neu.
 3. `04-Verbindungsdaten.bat` erzeugt **`tafa-worker.json`** und **`GPU-Worker-Verbindungsdaten.txt`**, öffnet die TXT und startet **keine** Dienste. Exportwerte stammen aus der `LAN_IP` der lokalen `.env` und dem aktuell erkannten Containerstatus. Nicht gestartete Dienste stehen als `enabled: false` im JSON.
 4. Im **TAFA Control Center → Verbindungen → Schnelleinrichtung per JSON** die Datei `tafa-worker.json` auswählen, **Konfiguration prüfen** und die GPU-Werte übernehmen. Danach die echten HA-Entitäten wie unten beschrieben zuordnen.
@@ -26,14 +26,20 @@ docker compose up -d --build whisper
 docker compose --profile stream up -d --build qwen-stream
 ```
 
-Optionales **Textmodell** über Ollama:
+Gemeinsames **Text-/Vision-Modell** über Ollama:
 
 ```bash
-docker compose --profile llm up -d ollama ollama-gateway
-docker compose exec ollama ollama pull qwen3:4b-instruct
+docker compose --profile vision up -d --build ollama ollama-gateway vision
+docker compose --profile vision exec ollama ollama pull qwen3-vl:4b-instruct
 ```
 
-Die automatisierte Windows-Erzeugung der JSON-/TXT-Dateien ist für Linux **nicht** enthalten. Die Adressen unter TAFA **Verbindungen** deshalb dort manuell eintragen. Alle Container teilen Ressourcen der GPU; bei knappen VRAM das Modell und optionale Dienste einzeln prüfen.
+Nach dem ersten Linux-Start einmal vorladen (GPU-IP ersetzen):
+
+```bash
+curl -sS -X POST http://GPU-IP:11434/api/generate -H 'Content-Type: application/json' -d '{"model":"qwen3-vl:4b-instruct","prompt":"","stream":false,"keep_alive":-1}'
+```
+
+Die automatisierte Windows-Erzeugung der JSON-/TXT-Dateien ist für Linux **nicht** enthalten. Die Adressen unter TAFA **Verbindungen** deshalb dort manuell eintragen. Alle Dienste teilen die GPU. Ein dauerhaft geladenes Qwen3-VL benötigt zusammen mit Whisper und Qwen-TTS genügend VRAM; bei Speichermangel kann Ollama auf langsameren RAM/CPU-Offload ausweichen.
 
 ## Welche Adresse wohin?
 
@@ -41,7 +47,7 @@ Die automatisierte Windows-Erzeugung der JSON-/TXT-Dateien ist für Linux **nich
 | --- | --- | --- | --- |
 | GPU Whisper/STT | `GPU-IP:10300` | **Wyoming Protocol** als neue Integration hinzufügen und deren `stt.*`-Entität ermitteln | **Verbindungen → GPU/KI:** GPU-Wyoming-STT und **GPU-PC-IP für Schnellprüfung** (nur IP) |
 | Qwen/TTS | `http://GPU-IP:10502` | In Assist die TAFA-TTS-Entität **Tablet Assist Stream** nutzen | **Verbindungen → GPU/KI:** Qwen-TTS-Adresse |
-| Ollama/Text-KI (optional) | `http://GPU-IP:11434` | **Ollama**-Integration hinzufügen, Textmodell und Konversationsagent einrichten | **Verbindungen → GPU/KI:** echte `conversation.*`-Entität |
+| Ollama/Text und Vision | `http://GPU-IP:11434` | **Ollama**-Integration hinzufügen, Textmodell und Konversationsagent einrichten | **Verbindungen → GPU/KI:** echte `conversation.*`-Entität |
 | CPU-Reserve | Extern: `CPU-IP:10300` und `http://CPU-IP:5000`; lokal: TAFA-App | Extern **zusätzliches Wyoming Protocol** für CPU-STT, andere `stt.*`-Entität als GPU | **Verbindungen → CPU-Fallback**; Sprachmodus unter **Einstellungen** |
 
 **Wichtig:** GPU-Qwen/TTS aktiviert **nicht** GPU-Wyoming/STT. Erst die HA-Wyoming-Integration stellt die GPU-`stt.*`-Entität bereit. Der JSON-Export kennt **nur den GPU-Rechner**; CPU/Proxmox-Adresse, Raumzuordnungen und HA-Entitäten werden weder geraten noch im JSON miterzeugt. Die `tafa-worker.json` muss deshalb mit **Wyoming und Ollama in HA** vervollständigt werden.
