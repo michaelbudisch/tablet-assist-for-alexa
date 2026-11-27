@@ -1,4 +1,5 @@
-/* TAFA dashboard asset version 0.4.62 - cache-busted file delivery; existing code preserved */
+import {subscribeTafaVisual} from './visual_client.js?v=0.4.63';
+/* TAFA dashboard asset version 0.4.63 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -886,15 +887,16 @@
     };
     s.raf=requestAnimationFrame(loop);
     update(card);
-    if(card.h?.connection?.subscribeEvents){
-      Promise.resolve(card.h.connection.subscribeEvents(event=>{
+    if(card.h?.connection?.subscribeMessage){
+      const binding=card._tafaLocalVoice?.status||null;
+      Promise.resolve(subscribeTafaVisual(card.h,data=>{
         if(active.get(card)!==s)return;
-        const data=event?.data||event;
-        if(data?.user_id&&card.h?.user?.id&&data.user_id!==card.h.user.id)return;
-        if(String(data?.reply||"").trim())show(card,{...data,title:data.title||data.topic||"TAFA Antwort",message:data.reply,seconds:data.topic==="search"?65:30});
-      },"tafa_assist_response")).then(unsub=>{
+        const configured=Number(card.cfg?.presentation?.infoSeconds);
+        const seconds=Number.isFinite(configured)&&configured>=5&&configured<=180?configured:30;
+        show(card,{...data,title:data.title||data.topic||"TAFA Antwort",message:data.reply,seconds});
+      },{binding})).then(unsub=>{
         if(active.get(card)!==s)unsub?.();else s.unsubscribe=unsub;
-      }).catch(()=>{});
+      }).catch(err=>console.debug("TAFA: Ambient Visualstream nicht verfügbar",err));
     }
   }
   function dispose(card){

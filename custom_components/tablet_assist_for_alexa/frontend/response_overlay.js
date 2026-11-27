@@ -1,3 +1,4 @@
+import {subscribeTafaVisual} from './visual_client.js?v=0.4.63';
 /* TAFA shared visual response layer. No browser microphone. */
 const HEAT=["vorlauf","ruecklauf","spreizung"], ENERGY=["netz","solar","preis","netzheute","solarheute"], HEATPUMP=["waermepumpe","wpheute","wpkosten"];
 const LABELS={vorlauf:"Vorlauf",ruecklauf:"Rücklauf",spreizung:"Spreizung",preis:"Strompreis",guenstig:"Günstigster Tarif",netz:"Netzleistung",solar:"PV-Leistung",prognose:"PV-Prognose",solarheute:"PV heute",netzheute:"Netzbezug heute",einspeisungheute:"Einspeisung heute",waermepumpe:"Wärmepumpe",wpheute:"Wärmepumpe heute",wpkosten:"Wärmepumpenkosten",heizoel:"Heizöl",oelverbrauch:"Heizölverbrauch",waschmaschine:"Waschmaschine",waschenergie:"Waschverbrauch",waschkosten:"Waschkosten",kuehlschrank:"Kühlschrank",kuehlschrankheute:"Kühlschrank heute",weather:"Wetter",shopping:"Einkaufsliste"};
@@ -14,18 +15,36 @@ function publicSubject(question){
 }
 export class TafaResponseOverlay extends HTMLElement {
   constructor(){
-    super();this.attachShadow({mode:"open"});this.settings={...DEFAULT};this._hass=null;this._unsubscribe=null;this._generation=0;this._timer=null;this._last=null;this._options={};this._searchBusy=false;
+    super();this.attachShadow({mode:"open"});this.settings={...DEFAULT};this._hass=null;this._unsubscribe=null;this._subscribePending=false;this._subscriptionConnection=null;this._generation=0;this._timer=null;this._last=null;this._options={};this._searchBusy=false;
   }
   connectedCallback(){this.subscribe();}
-  disconnectedCallback(){this._unsubscribe?.();this._unsubscribe=null;clearTimeout(this._timer);}
-  set hass(value){this._hass=value;this.subscribe();if(this._last)this.updateValues();}
+  disconnectedCallback(){this._unsubscribe?.();this._unsubscribe=null;this._subscriptionConnection=null;this._subscribePending=false;clearTimeout(this._timer);}
+  set hass(value){
+    if(this._hass?.connection!==value?.connection){
+      this._unsubscribe?.();this._unsubscribe=null;
+      this._subscriptionConnection=null;this._subscribePending=false;
+    }
+    this._hass=value;this.subscribe();if(this._last)this.updateValues();
+  }
   get hass(){return this._hass;}
   set options(value){this._options=value||{};this.settings={...DEFAULT,...(value?.presentation||value?.settings||{})};}
   subscribe(){
-    if(this._unsubscribe||!this.isConnected||!this._hass?.connection?.subscribeEvents)return;
-    this._hass.connection.subscribeEvents(ev=>this.receive(ev?.data||ev),"tafa_assist_response")
-      .then(unsubscribe=>{if(this.isConnected)this._unsubscribe=unsubscribe;else unsubscribe();})
-      .catch(()=>{this._unsubscribe=null;});
+    const conn=this._hass?.connection;
+    if(this._unsubscribe||this._subscribePending||!this.isConnected||!conn||!this._owner)return;
+    this._subscribePending=true;this._subscriptionConnection=conn;
+    const binding=this._owner?._tafaLocalVoice?.status||null;
+    Promise.resolve(subscribeTafaVisual(this._hass,data=>this.receive(data),{binding}))
+      .then(unsubscribe=>{
+        if(this._subscriptionConnection===conn)this._subscribePending=false;
+        if(this.isConnected&&this._subscriptionConnection===conn)this._unsubscribe=unsubscribe;
+        else unsubscribe?.();
+      })
+      .catch(err=>{
+        if(this._subscriptionConnection===conn){
+          this._subscribePending=false;this._unsubscribe=null;
+        }
+        console.debug("TAFA: gerätebezogener Visualstream nicht verfügbar",err);
+      });
   }
   receive(data){
     if(!data||typeof data!=="object")return;
@@ -45,7 +64,13 @@ export class TafaResponseOverlay extends HTMLElement {
     }
     if(this.settings.knowledgeMedia&&topic==="knowledge")void this.wiki(data.question);
   }
-  show(){this._generation++;this.render();clearTimeout(this._timer);const ms=this._last?.topic==="search"?720:Number(this.settings.infoSeconds)||30;this._timer=setTimeout(()=>this.close(),Math.max(15,Math.min(720,ms))*1000);}
+  show(){
+    this._generation++;this.render();clearTimeout(this._timer);
+    // Search sessions remain on the backend; only the visible card expires.
+    const configured=Number(this.settings.infoSeconds);
+    const seconds=Number.isFinite(configured)&&configured>=5&&configured<=180?configured:30;
+    this._timer=setTimeout(()=>this.close(),seconds*1000);
+  }
   close(){this._last=null;this._generation++;clearTimeout(this._timer);this.shadowRoot.replaceChildren();}
   setLive(hass){this._hass=hass;if(this._last)this.updateValues();}
   updateValues(){
@@ -191,6 +216,10 @@ export function installTafaResponseOverlay(host,hass,options={}){
   if(!document.body)return null;
   let overlay=document.querySelector("tafa-response-overlay");
   if(!overlay){overlay=document.createElement("tafa-response-overlay");document.body.append(overlay);}
+  if(overlay._owner!==host){
+    overlay._unsubscribe?.();overlay._unsubscribe=null;
+    overlay._subscriptionConnection=null;overlay._subscribePending=false;
+  }
   overlay._owner=host;overlay.options=options;overlay.hass=hass;
   return overlay;
 }
