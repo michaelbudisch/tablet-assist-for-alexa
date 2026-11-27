@@ -125,11 +125,11 @@
     if(info){info.hidden=true;info.replaceChildren();s.host.dataset.info="closed";}
   }
   function show(card,input){
-    const s=active.get(card);if(!s||!card._hzNight)return;
+    const s=active.get(card);if(!s||!card._hzNight)return false;
     const data=input&&typeof input==="object"?input:{message:String(input??"")};
     const title=String(data.title||data.topic||"TAFA Antwort").slice(0,120);
     const message=String(data.message??data.reply??data.answer??"").slice(0,2500);
-    const info=s.host.querySelector("[data-ambient-info]");if(!info)return;
+    const info=s.host.querySelector("[data-ambient-info]");if(!info)return false;
     info.replaceChildren();
     const head=document.createElement("div");head.className="hz-ambient-info-head";
     const left=document.createElement("div"),kick=document.createElement("div"),h=document.createElement("div");
@@ -154,6 +154,7 @@
     s.infoTimer=setTimeout(()=>close(card),seconds*1000);
     s.forcedPhase="speaking";s.forceUntil=Date.now()+7000;
     update(card);
+    return true;
   }
   function makeMesh(){
     const points=[];
@@ -269,5 +270,6 @@
     try{s.unsubscribe?.();}catch{}
   }
   bag.parts.ambient={body,mount,update,show,close,dispose};
-  bag.tryStart?.();
+  // Optional enhancement: never take part in the required dashboard boot gate.
+  try{document.dispatchEvent(new Event("tafa-ambient-ready"));}catch(e){console.debug("TAFA Ambient ready",e);}
 })();
