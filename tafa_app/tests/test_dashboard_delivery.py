@@ -217,10 +217,18 @@ class DashboardDelivery(unittest.TestCase):
         self.assertIn('family_name_child: str',(APP/"config.yaml").read_text())
 
     def test_version_and_docs_consistent(self):
-        self.assertIn('version: "0.4.40"',(APP/"config.yaml").read_text())
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.40")
-        self.assertIn('"version": "0.4.40"',(HA/"manifest.json").read_text())
-        self.assertIn("0.3.52",(APP/"CHANGELOG.md").read_text())
+        config=(APP/"config.yaml").read_text()
+        release=re.search(r'^version: "([^"]+)"
+
+
+if __name__=="__main__":
+    unittest.main()
+,config,re.MULTILINE)
+        self.assertIsNotNone(release)
+        self.assertIn('APP_VERSION="'+release.group(1)+'"',(APP/"server.py").read_text())
+        self.assertIn("## "+release.group(1),(APP/"CHANGELOG.md").read_text())
+        self.assertEqual(json.loads((HA/"manifest.json").read_text()),
+                         json.loads((BUNDLE/"manifest.json").read_text()))
 
 
 if __name__=="__main__":
