@@ -1,5 +1,11 @@
 # GPU worker changelog
 
+## 2.2.7
+
+- One Ollama `qwen3-vl:4b-instruct` model shared for conversations and vision; Windows installs/preloads it directly.
+- Indefinite keep-alive (`-1`) for all text/vision requests; installer no longer pulls separate Qwen3 text model.
+- Previously installed other models are not automatically deleted; GPU VRAM remains shared with Whisper/Qwen TTS.
+
 ## 2.2.6
 
 - Windows installer offers Vision camera analysis by default, while multi-GB model downloads still require a separate opt-in.
