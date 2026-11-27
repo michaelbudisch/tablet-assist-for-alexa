@@ -14,11 +14,11 @@ from detection import SCHEMA as DETECTION_SCHEMA, SYSTEM as DETECTION_SYSTEM, va
 from priority_gate import VisionGate
 from sequence_benchmark import register_benchmark, register_sequence, MAX_BENCH_BODY
 
-MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct",
-          "qwen3-vl:8b-instruct", "gemma3:4b")
+MODELS = ("qwen3-vl:4b-instruct",)
 DEFAULT_MODEL = "qwen3-vl:4b-instruct"
-TEXT_MODELS = ("qwen3:4b-instruct",) + MODELS
-KEEP_ALIVE = (0, 60, 120, 300, 600)
+TEXT_MODELS = MODELS
+# Accept legacy option values, but every inference forces indefinite residency.
+KEEP_ALIVE = (-1, 0, 60, 120, 300, 600)
 CONTEXTS = (2048, 4096, 8192)
 OLLAMA = "http://ollama:11434"
 MAX_BYTES = 2 * 1024 * 1024
@@ -95,8 +95,8 @@ def normalize_image(encoded):
     except (binascii.Error, OSError, UnidentifiedImageError, Image.DecompressionBombError):
         raise ValueError("invalid image") from None
 
-def payload(model, mode, image, keep_alive=0, num_ctx=4096):
-    return {"model": model, "stream": False, "keep_alive": keep_alive, "think": False,
+def payload(model, mode, image, keep_alive=-1, num_ctx=4096):
+    return {"model": model, "stream": False, "keep_alive": -1, "think": False,
             "options": {"num_ctx": num_ctx, "num_predict": 160, "temperature": 0.1},
             "messages": [{"role": "system", "content": SYSTEM},
                          {"role": "user", "content": PROMPTS[mode], "images": [image]}]}
@@ -221,7 +221,7 @@ def create_app(default_model=DEFAULT_MODEL, call=ollama_json):
             except ValueError:
                 return jsonify(error="invalid image"), 400
             try:
-                body = {"model": model, "stream": False, "think": False, "keep_alive": keep,
+                body = {"model": model, "stream": False, "think": False, "keep_alive": -1,
                     "format": DETECTION_SCHEMA, "options": {"num_ctx": context, "num_predict": 180, "temperature": 0},
                     "messages": [{"role": "system", "content": DETECTION_SYSTEM},
                         {"role": "user", "content": "Count visible people and dogs. Return person_count, dog_count, age_groups (adult/child/unknown), genders (apparent presentation man/woman/unknown), uncertain. Use unknown for unclear age groups or genders. Return the fixed JSON schema only.", "images": [image]}]}
