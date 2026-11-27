@@ -11,9 +11,9 @@
     {name:"HEIZÖL",ids:[],pattern:/heiz.l.*(bestand|rest|liter|tank)/i}
   ];
   const style=`
-  .wrap.hz-night-view {--ambient:#9fcef4;background:#07111d!important;color:#eff5ff!important}
+  .wrap.hz-night-view {--ambient:#9fcef4;background:#07111d!important;color:#eff5ff!important;grid-template-columns:minmax(0,1fr)!important}
   .hz-night-view>aside {display:none!important}
-  .hz-night-view>main {width:100%;max-width:none!important;min-height:100%;background:#07111d!important;padding:0!important;overflow-x:hidden}
+  .hz-night-view>main {grid-column:1/-1;min-width:0;width:100%;max-width:none!important;min-height:100%;background:#07111d!important;padding:0!important;overflow-x:hidden}
   .hz-night-view .top {position:absolute!important;z-index:12;top:0;right:0;left:0;margin:0!important;padding:14px 20px!important;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none}
   .hz-night-view .top>div:first-child,.hz-night-view .hz-header-clock,.hz-night-view .hz-subnav{display:none!important}
   .hz-night-view .top .hz-header-right,.hz-night-view .top .hz-header-actions{pointer-events:auto}
