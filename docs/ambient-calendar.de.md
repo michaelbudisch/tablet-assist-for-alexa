@@ -36,3 +36,24 @@ Präsenzsensor und Rückkehrdauer (15–180 s, Standard 55 s).
 Bei aktiver Sprache bleibt die Übersicht sichtbar. Kalenderdaten
 werden erst beim Öffnen und anschließend höchstens alle fünf Minuten
 abgerufen. Es werden keine HA-Automatisierungen verändert.
+
+
+## Animierter Übergang (0.4.68)
+
+Der Wechsel folgt der Referenzanimation: türkisfarbenes Aufleuchten
+der Kugel, kurzlebiger Lichtpfad zum Kalender, kaskadiertes Nachzeichnen
+der vier Panelkanten, Scan-Licht, Wetterkarten und Datumskacheln mit
+gestaffelter Einblendung und erst danach die Terminchips. Beim Schließen
+klappt die Fläche in umgekehrter Reihenfolge zurück.
+
+Die Animation startet ausschließlich bei einer tatsächlichen Öffnung.
+Der Lichtpfad zeichnet nur für ca. 0,8 Sekunden und beendet seine
+`requestAnimationFrame`-Schleife selbst; bei Schließen und Unmount
+werden alle Timer und Frames gelöscht. Die Gerätezustellung, der
+Audio-Stream und die native Assist-Pipeline bleiben unberührt.
+`prefers-reduced-motion` zeigt die Übersicht ohne Effekt.
+
+Für ältere Tablets werden die animierten Kacheln über
+Compositor-Transformationen eingeblendet, keine dauerhaft aktive
+Canvas- oder WebGL-Szene hinzugefügt. Beim Nachladen von Terminen
+bleibt der Kalender bedienbar; beim Wiederöffnen läuft die Sequenz neu.

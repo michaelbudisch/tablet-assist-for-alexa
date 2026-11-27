@@ -13,6 +13,12 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn('service:"get_events"',js)
         self.assertIn("calendar.familie",js)
         self.assertNotIn("getUserMedia",js)
+        self.assertIn("hz-overview-construct",js)
+        self.assertIn("hz-overview-cell-in",js)
+        self.assertIn("hz-overview-edge",js)
+        self.assertIn("playBeam",js)
+        self.assertIn("prefers-reduced-motion",js)
+        self.assertIn("cancelAnimationFrame(beamFrame)",js)
         self.assertNotIn("subscribeEvents",js)
     def test_optional_resource_is_registered(self):
         src=(MAIN/"__init__.py").read_text()
