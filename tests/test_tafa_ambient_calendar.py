@@ -44,6 +44,10 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn("hz-overview-monthmark",js)
         self.assertIn("day.getDate()===1",js)
         self.assertIn("hz-overview-soft-in",js)
+        self.assertIn("Math.max(.50,Math.min(.68,fit))",js)
+        self.assertIn("position:relative!important;top:auto!important;left:auto!important",js)
+        self.assertIn("const targetY=panelTop-14-radius",js)
+        self.assertIn("margin-top:clamp(52px,8vh,96px)!important",js)
         self.assertIn("background:transparent!important",js)
         self.assertNotIn("subscribeEvents",js)
     def test_optional_resource_is_registered(self):

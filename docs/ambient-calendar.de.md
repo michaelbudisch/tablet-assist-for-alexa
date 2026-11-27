@@ -134,3 +134,21 @@ auf die kurzlebige Einblendphase beschränkt.
 
 Das Modul behandelt `prefers-reduced-motion` und ändert weder
 Mikrofon-Einstellungen noch Home-Assistant-Automatisierungen.
+
+## Geometrie-Fix für Sphere im Kalender (0.4.74)
+
+Beim Umschalten bleibt die Uhr als reguläres Element im Layout;
+sie wird nicht mehr plötzlich absolut positioniert. Dadurch
+verliert die Sphere keine Layout-Höhe und springt nicht nach oben.
+Die Zielgröße beträgt je nach verfügbarer Höhe 50–68 % der
+normalen Kugel. Die Position richtet sich nach dem sichtbaren
+Kugelradius und hält 14 px Abstand zur Wetterleiste.
+
+Die Uhr behält außerdem ihre normalen Schriftmaße, damit
+sich die Höhe ihres Bereichs beim Umschalten nicht verändert.
+Die Zielwerte werden vor dem Öffnen aus dem aktuellen
+Viewport und den vorhandenen Elementabmessungen berechnet.
+
+Der Fix betrifft nur das optionale Ambient-Frontend;
+keine Änderung der Android-Anwendung, des Audio-Routings oder
+der Home-Assistant-Automatisierungen.
