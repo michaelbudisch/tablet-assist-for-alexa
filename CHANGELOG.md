@@ -1,3 +1,9 @@
+## TAFA App / HA integration 0.4.61 — Multi-hop node signals and subtle radial pulses
+- Closer match to the reference HD video (around 39–40 s and 68–70 s): one restrained expanding circular pulse on listening→processing and a second on processing→speaking, each with a faint echo. Repeated updates in the same phase never spawn duplicate rings.
+- Signal packets now traverse **connected 6–8-node routes along the actual 3D globe graph** instead of isolated edges. Each reached vertex flashes briefly and the packet continues through the next connection. Packets reverse along their route at the end rather than jumping between disconnected paths.
+- Luminous node arrivals and short multi-edge trails are more legible. Listening uses cyan, thinking brighter white-violet, and output a soft silver-lavender palette.
+- Caps active 3D paths at 14 on Android and 23 on desktop. Preserves instant native voice state reporting, manual globe drag, comets, response panels, automations and entity mappings.
+
 ## TAFA App / HA integration 0.4.60 — Reference-style sphere lighting and materialized replies
 - Idle: sparse turquoise curved orbital shooting stars over a quiet silver 3D node network.
 - Listening: bright cyan core and directional light packets running along real projected network edges, lighting selected nodes.
