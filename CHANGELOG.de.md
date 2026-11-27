@@ -1,3 +1,11 @@
+## TAFA-App / HA-Integration 0.4.57 — Direkte Sprachphasen und verlässlicher Rufwortstatus
+- Die native Android-App 1.2.5 meldet Rufworttreffer und Assist-Phasen ereignisgesteuert an die bestehende authentifizierte HA-Geräte-API; der bisherige 12-Sekunden-Abgleich bleibt als Rückfall bestehen.
+- Native Sprachzustände sind ohne Blockade der Android-Aufnahme oder UI in einer separaten Statuswarteschlange geordnet; das initiale `detected:`-Ereignis wird nicht verworfen, auch wenn unmittelbar weitere Phasen folgen.
+- Ambient bewertet `native_authenticating`/`native_connected` als Aufnahmevorbereitung (Hören), `native_transcribing`/`native_thinking` als Verarbeitung und `native_buffering`/`native_playing` als Sprachausgabe.
+- Integration bewahrt den zuletzt erkannten Rufwort-Zeitstempel beim Empfang weiterer Telemetrieberichte und aktualisiert ihn bei `detected:`, ohne alte Wakeword-Automationen auszulösen.
+- Die neue Android-App 1.2.5 ist bislang nur als Quellversion vorhanden. Zum Überschreiben der signierten App 1.2.4 wird eine 1.2.5-APK mit dem ursprünglichen Signaturschlüssel benötigt.
+- Bestehende HA-Automationen und Geräteeinstellungen bleiben unverändert.
+
 ## TAFA-App / HA-Integration 0.4.56 — Vertikale Kugeldrehung ohne Begrenzung
 - Die bisherige Begrenzung der vertikalen Drehung auf ±1,2 Radiant wurde sowohl für das manuelle Ziehen als auch für den Auslauf nach dem Loslassen entfernt.
 - Die Ambient-Kugel kann jetzt nach oben und unten vollständig und beliebig oft um 360° rotieren. Sensorbeschriftungen bleiben an ihren 3D-Punkten befestigt.
