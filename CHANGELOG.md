@@ -1,3 +1,7 @@
+## TAFA App / HA integration 0.4.42 — Safe, optional Ambient mode
+- The ambient night visualizer is now loaded optionally, with a fallback that never blocks the dashboard when unavailable.
+- Protected module loading and clean animation lifecycle. Existing TAFA/Jarvis event responses can appear in a bottom animated panel, without altering automations.
+
 ## TAFA App / HA integration 0.4.41 — Ambient night dashboard
 - Optional animated night view featuring a rotating connected-particle sphere, large clock, dynamic HA sensor metrics and voice-aware color changes.
 - Header action toggles the ambient view without replacing normal daytime layout, voice settings or automations.
