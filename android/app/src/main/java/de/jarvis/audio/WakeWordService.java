@@ -409,6 +409,8 @@ public final class WakeWordService extends Service implements RecognitionListene
             main.postDelayed(rearm,350);
             return;
         }
+        final int capturePauseMs=Math.max(900,Math.min(3200,
+            getSharedPreferences(MainActivity.PREF,0).getInt("native_pause_ms",1700)));
         final long generation=++continuousGeneration;
         continuousRunning=true;
         updateStatus("listening: continuous");
@@ -432,7 +434,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 continuousRecorder=recorder;
                 recorder.startRecording();
                 ContinuousSpeechTrigger gate=new ContinuousSpeechTrigger();
-                NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(1700,8000);
+                NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(capturePauseMs,8000);
                 ArrayDeque<byte[]> preroll=new ArrayDeque<>(30);
                 ByteArrayOutputStream pending=new ByteArrayOutputStream(32000);
                 boolean started=false;
@@ -458,7 +460,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                             measurement=VoiceDiagnostics.begin(this,VoiceTrace.Kind.CONTINUOUS);
                             measurement.mark(VoiceTrace.Point.SPEECH_START);
                             measurement.fact(VoiceTrace.Fact.MIC_PREOPENED,1);
-                            measurement.fact(VoiceTrace.Fact.PAUSE_MS,1700);
+                            measurement.fact(VoiceTrace.Fact.PAUSE_MS,capturePauseMs);
                             measurement.fact(VoiceTrace.Fact.MIC_GAIN,100);
                             for(byte[] saved:preroll)pending.write(saved,0,saved.length);
                             preroll.clear();
@@ -467,7 +469,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                     if(measurement!=null&&endpoint.voicedFrame())measurement.mark(VoiceTrace.Point.SPEECH_END);
                     if(decision==NativeSpeechEndpoint.Decision.EMPTY){
                         gate=new ContinuousSpeechTrigger();
-                        endpoint=new NativeSpeechEndpoint(1700,8000);
+                        endpoint=new NativeSpeechEndpoint(capturePauseMs,8000);
                         preroll.clear();pending.reset();started=false;
                     }else if(decision==NativeSpeechEndpoint.Decision.END||
                             decision==NativeSpeechEndpoint.Decision.LIMIT){

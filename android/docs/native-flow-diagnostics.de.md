@@ -1,4 +1,4 @@
-# Native Ablaufdiagnose · TAFA Device Bridge 1.2.6
+# Native Ablaufdiagnose · TAFA Device Bridge 1.2.7
 
 Die Diagnose wird ausschließlich auf dem Tablet erfasst und in der nativen App angezeigt. Die vorhandene HA-Assist-Pipeline und der GPU Worker liefern weiterhin Sprache und Antworten; für die Messung werden keine zusätzliche Automation, kein Dashboard und keine neuen Serverabfragen eingerichtet.
 
@@ -55,3 +55,10 @@ Messpunkte verwenden die monotone Tablet-Uhr. Es gibt keine zusätzlichen Audio-
 - [Android AudioTrack Playback-Head](https://developer.android.com/reference/android/media/AudioTrack#getPlaybackHeadPosition())
 
 Die Emulatoransichten in den lokalen Diagnoseberichten verwenden ausdrücklich synthetische Testdaten, keine Messungen deines Tablets.
+
+## Vergleich ab 1.2.7
+Nach JOB_ACCEPTED sendet die native Sitzung ein einmaliges Wecksignal an den bereits laufenden Player (PLAYER_WAKEUP). Er prüft die HA-Warteschlange sofort auf seinem vorhandenen Netzwerk-Executor. Bei laufender Ausgabe erfolgt die nächste Prüfung direkt nach deren Ende. Das Signal bestätigt keine Wiedergabe und startet keinen gestoppten Player. Die 900-ms-Abfrage bleibt zur Absicherung und für externe HA-Aufträge bestehen.
+
+BUILD_CODE kennzeichnet den Build jedes neuen Laufs. Statistiken trennen neue Builds von früheren Läufen ohne Buildangabe. Vergleiche dieselbe Mikrofonart, Ausgabe, Playerart und Pause. Für einen Pausentest kann die Einstellung pro Tablet beispielsweise von 1700 auf 1100 ms geändert werden; bei abgeschnittenen Fragen wieder erhöhen. „Immer an“ verwendet ebenfalls diese Einstellung. Der allgemeine Standard und gespeicherte Werte werden durch das Update nicht pauschal geändert.
+
+Der konfigurierte Startpuffer beschreibt Audiodauer, keine feste Wartezeit: 600 ms Audio können deutlich schneller gepuffert werden. Weder aus der Puffereinstellung noch aus einer einzelnen Messung eine garantierte Zeitersparnis ableiten.

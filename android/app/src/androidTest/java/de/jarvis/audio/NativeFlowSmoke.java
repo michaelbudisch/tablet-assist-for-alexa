@@ -48,6 +48,10 @@ final class NativeFlowSmoke {
     }
     static String run(Instrumentation i,String layout)throws Exception{
         Context ctx=i.getTargetContext();
+        check(!AudioService.running,"Player stopped before synthetic diagnostics");
+        check(!AudioService.notifyNativeJobReady(ctx),"Wakeup cannot start a stopped player");
+        check(ctx.getResources().getStringArray(R.array.flow_point_labels).length==VoiceTrace.Point.values().length,
+            "Every timeline point has a localized label");
         JSONObject timing=new JSONObject().put("TRIGGER",0).put("ASSIST_START",10).put("MIC_READY",100)
             .put("SPEECH_START",200).put("SPEECH_END",1200).put("CAPTURE_END",2900)
             .put("STT_END",3500).put("INTENT_START",3510).put("INTENT_END",4500)
@@ -97,6 +101,10 @@ final class NativeFlowSmoke {
                 .contains("4800.0 ms"),"EN metadata survives recreation"));
             screenshot(i,en,"native-flow-en-"+layout);
             VoiceTrace active=VoiceDiagnostics.begin(ctx,VoiceTrace.Kind.MANUAL);
+            check(Integer.toString(BuildConfig.VERSION_CODE).equals(
+                active.snapshot().facts.get(VoiceTrace.Fact.BUILD_CODE)),"New traces identify their app build");
+            active.mark(VoiceTrace.Point.PLAYER_WAKEUP);
+            check(active.snapshot().points.containsKey(VoiceTrace.Point.PLAYER_WAKEUP),"Wakeup point is exportable");
             main(i,()->en.findViewById(R.id.flow_clear).performClick());
             active.mark(VoiceTrace.Point.OUTPUT_PROGRESS);
             VoiceDiagnostics.finish(active,VoiceTrace.Status.SUCCESS,"");

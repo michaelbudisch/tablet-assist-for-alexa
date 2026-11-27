@@ -89,7 +89,9 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
             capturedPcm!=null?VoiceTrace.Kind.CONTINUOUS:
             followup?VoiceTrace.Kind.FOLLOWUP:
             wakeWord!=null&&!wakeWord.isEmpty()?VoiceTrace.Kind.WAKEWORD:VoiceTrace.Kind.MANUAL);
-        trace.fact(VoiceTrace.Fact.PAUSE_MS,capturedPcm!=null?1700:Math.max(900,Math.min(3200,pauseMs)));
+        // Continuous capture already recorded the pause actually used by its detector.
+        if(capturedPcm==null||measurement==null)
+            trace.fact(VoiceTrace.Fact.PAUSE_MS,Math.max(900,Math.min(3200,pauseMs)));
         this.wakeWord=wakeWord==null?"":wakeWord;
         this.lastConversation=lastConversation==null?"":lastConversation;
         this.pauseMs=Math.max(900,Math.min(3200,pauseMs));
@@ -419,6 +421,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 throw new IOException("audio_submit_rejected");
             trace.mark(VoiceTrace.Point.JOB_ACCEPTED);
             VoiceDiagnostics.bind(trace,jobId);
+            if(AudioService.notifyNativeJobReady(context))trace.mark(VoiceTrace.Point.PLAYER_WAKEUP);
             state("waiting_for_playback");
             long deadline=SystemClock.elapsedRealtime()+90000;
             while(!ended.get()&&SystemClock.elapsedRealtime()<deadline){

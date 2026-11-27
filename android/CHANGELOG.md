@@ -1,4 +1,11 @@
 
+## 1.2.7 · Faster native audio handoff
+- Accepted native audio jobs immediately wake the connected player. Duplicate signals coalesce; the 900-ms poll remains a fallback for external jobs.
+- Playback completion immediately checks for waiting jobs. A wakeup cannot reconnect a stopped player.
+- Always on uses the same configurable end-of-speech pause as wakeword capture; saved settings are preserved.
+- Diagnostics: PLAYER_WAKEUP and BUILD_CODE, build-specific P50/P95 cohorts, backward-compatible history.
+- Version code 28, unchanged application ID and original signing certificate. Actual latency improvement requires a new tablet export.
+
 ## 1.2.6 · Native device-side latency diagnostics
 - Base source updated to GitHub 1.2.5; preserve its live phase telemetry.
 - One bounded monotonic timeline per native request, including local capture, Assist events, transfer/decode/buffer/route and actual Android playback progress.

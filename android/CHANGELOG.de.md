@@ -1,4 +1,11 @@
 
+## 1.2.7 · Schnellere native Audioübergabe
+- Angenommene native Audioaufträge wecken den verbundenen Player sofort. Doppelte Signale werden zusammengefasst; die 900-ms-Abfrage bleibt Rückfallebene für externe Aufträge.
+- Nach einer laufenden Wiedergabe werden wartende Aufträge sofort geprüft. Ein gestoppter Player wird durch das Signal nicht verbunden.
+- „Immer an“ verwendet dieselbe einstellbare Sprechpause wie der Rufwortmodus. Gespeicherte Einstellungen bleiben erhalten.
+- Diagnose: PLAYER_WAKEUP und BUILD_CODE; P50/P95 getrennt nach App-Build. Alte Messungen bleiben lesbar.
+- Versionscode 28, unveränderte App-ID und bisheriges Signaturzertifikat. Die reale Verbesserung wird mit einem neuen Tablet-Export geprüft.
+
 ## 1.2.6 · Native Zeitdiagnose
 - Aktueller GitHub-Quellstand 1.2.5 als Basis, dessen Live-Phasenmeldungen bleiben erhalten.
 - Gemeinsame Tablet-Uhr für Aufnahme, Assist-Ereignisse, Transfer/Decoder/Puffer/Route und Android-Wiedergabefortschritt.

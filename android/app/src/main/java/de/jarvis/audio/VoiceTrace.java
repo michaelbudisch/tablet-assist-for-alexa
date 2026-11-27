@@ -14,10 +14,10 @@ final class VoiceTrace {
         INTENT_START, INTENT_FIRST, INTENT_END, TTS_START, TTS_END, RUN_END,
         JOB_SUBMIT, JOB_ACCEPTED, JOB_RECEIVED, AUDIO_FOCUS, FETCH_START, HTTP_READY,
         FIRST_BYTE, FIRST_PCM, BUFFER_READY, ROUTE_READY, OUTPUT_SUBMITTED,
-        OUTPUT_PROGRESS, PLAYBACK_END, SESSION_END
+        OUTPUT_PROGRESS, PLAYBACK_END, SESSION_END, PLAYER_WAKEUP
     }
     enum Fact { OUTPUT, ENGINE, OUTPUT_QUALITY, PAUSE_MS, MIC_GAIN, INPUT_BYTES,
-        CAPTURED_MS, START_BUFFER_MS, REBUFFERS, UNDERRUNS, WS_QUEUED_BYTES, MIC_PREOPENED }
+        CAPTURED_MS, START_BUFFER_MS, REBUFFERS, UNDERRUNS, WS_QUEUED_BYTES, MIC_PREOPENED, BUILD_CODE }
     static final class Snapshot {
         final String id, error;
         final Kind kind;
@@ -38,7 +38,8 @@ final class VoiceTrace {
         }
         String cohort() {
             return kind+"/"+facts.getOrDefault(Fact.OUTPUT,"unknown")+"/"+
-                facts.getOrDefault(Fact.ENGINE,"unknown")+"/pause="+facts.getOrDefault(Fact.PAUSE_MS,"unknown");
+                facts.getOrDefault(Fact.ENGINE,"unknown")+"/pause="+facts.getOrDefault(Fact.PAUSE_MS,"unknown")+
+                "/build="+facts.getOrDefault(Fact.BUILD_CODE,"legacy");
         }
     }
     private final String id;

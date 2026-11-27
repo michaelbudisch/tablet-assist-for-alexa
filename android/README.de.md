@@ -1,8 +1,8 @@
-# TAFA Device Bridge · Android 1.2.6
+# TAFA Device Bridge · Android 1.2.7
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-**1.2.6:** Die native Zeitdiagnose läuft vollständig auf dem Tablet und basiert auf dem aktuellen GitHub-Code 1.2.5. Sofortige Live-Phasenmeldungen bleiben erhalten. Das gleich signierte Update über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+**1.2.7:** Nach einem angenommenen nativen Audioauftrag wird der laufende Player sofort benachrichtigt. „Immer an“ nutzt die eingestellte Sprechpause. Die Diagnose trennt Statistiken nach Build; das gleich signierte Update erhält Zugangsdaten und Gerätekennung.
 
 Native Anbindung des Tablets an Home Assistant: Rufwort und Assist, Bluetooth-Ausgabe, Kamera und Bewegungserkennung – mit einer übersichtlichen Oberfläche. Android 9+.
 
@@ -60,7 +60,7 @@ Die separate lokale Testvorschau wurde entfernt. Kameraaufnahmen erfolgen nur w�
 
 ## Veröffentlichung und Installation
 
-[Signierte APK 1.2.6 herunterladen](downloads/TAFA-Device-Bridge-1.2.6.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.6) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **27**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+[Signierte APK 1.2.7 herunterladen](downloads/TAFA-Device-Bridge-1.2.7.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.7) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **28**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
 
 Zum eigenen Bauen JDK 17, Android SDK Platform 35 und `build.ps1` verwenden; zum Signieren `sign-release.ps1` mit dem ursprünglichen Keystore. Private Schlüssel sind nicht im Repository enthalten. Die automatisierten Tests ersetzen keinen echten Bluetooth-/Mikrofontest.
 

@@ -52,7 +52,9 @@ final class VoiceDiagnostics {
         STORE.enabled(prefs.getBoolean(ENABLED,true));
     }
     static VoiceTrace begin(Context ctx,VoiceTrace.Kind kind){
-        init(ctx);VoiceTrace t=STORE.begin(kind,System.currentTimeMillis());if(STORE.enabled())checkpoint();return t;
+        init(ctx);VoiceTrace t=STORE.begin(kind,System.currentTimeMillis());
+        t.fact(VoiceTrace.Fact.BUILD_CODE,BuildConfig.VERSION_CODE);
+        if(STORE.enabled())checkpoint();return t;
     }
     static VoiceTrace.Playback playback(Context ctx,String job){init(ctx);return STORE.playback(job);}
     static void bind(VoiceTrace trace,String job){STORE.bind(trace,job);}

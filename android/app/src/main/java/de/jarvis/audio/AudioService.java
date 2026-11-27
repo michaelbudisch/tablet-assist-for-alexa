@@ -17,6 +17,15 @@ public class AudioService extends Service {
     private boolean fileProgressObserved;
     static volatile String ui="stopped", keepaliveStatus="off", streamDiagnostics="";
     static volatile boolean running=false, haConnected=false;
+    private static final String NATIVE_JOB_READY="native_job_ready";
+    /** Wake an explicitly running player; never reconnect a stopped player. */
+    static boolean notifyNativeJobReady(Context context){
+        if(!running)return false;
+        try{
+            context.startService(new Intent(context,AudioService.class).setAction(NATIVE_JOB_READY));
+            return true;
+        }catch(RuntimeException stopped){return false;}
+    }
     private BluetoothKeepalive keepalive;
     private volatile BluetoothPcmOutput pcmOutput;
     private String playbackMode=AudioOutputMode.AUTO;
@@ -45,6 +54,7 @@ public class AudioService extends Service {
     private StreamingSession streaming;
     private Runnable streamWatchdog;
     volatile boolean active=false,busy=false; volatile String id="", cachedStatus="";
+    private final RoomPollWakeup pollWakeup=new RoomPollWakeup(io,()->active&&!busy,this::poll);
     String base,token,httpConsent; long heartbeat=0;
     private String roomSession="";
     private volatile String roomTerminal="";
@@ -78,6 +88,11 @@ public class AudioService extends Service {
         String action=intent==null?"":intent.getAction();
         if("stop".equals(action)){stopSelf();return START_NOT_STICKY;}
         if("refresh_ui".equals(action)){updateNotification();return START_NOT_STICKY;}
+        if(NATIVE_JOB_READY.equals(action)){
+            if(active)pollWakeup.request();
+            else stopSelf(startId);
+            return START_NOT_STICKY;
+        }
         if(active){
             if("update_keepalive".equals(action))updateKeepalive();
             return START_NOT_STICKY;
@@ -333,6 +348,6 @@ public class AudioService extends Service {
     }};
     private void finish(String result){if(!busy)return;
         if(activeProbe!=null&&"done".equals(result))activeProbe.mark(VoiceTrace.Point.PLAYBACK_END);
-        activeProbe=null;fileUnmutePosition=-1;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;pcmOutput=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);}
+        activeProbe=null;fileUnmutePosition=-1;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;pcmOutput=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);if(active)pollWakeup.request();}
     @Override public void onDestroy(){AudioOutputMode.prefs(this).unregisterOnSharedPreferenceChangeListener(outputPreferenceListener);active=false;running=false;haConnected=false;enrollmentIo.shutdownNow();if(keepalive!=null)keepalive.close();finish("cancelled");try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }

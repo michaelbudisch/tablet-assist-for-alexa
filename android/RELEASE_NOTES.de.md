@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.7
+
+Signiertes Update mit der bisherigen Signatur, App-ID de.jarvis.audio und Versionscode 28. Über die vorhandene App installieren.
+
+- Sofortige Auftragsabholung nach nativen Antworten; keine zusätzliche Dauerabfrage. Wartende Aufträge werden auch nach dem Ausgabeende sofort geprüft.
+- Die gewählte Sprechendepause gilt jetzt auch für „Immer an“. Vorhandene Einstellungen werden nicht pauschal verkürzt; 1100–1200 ms lassen sich bei Bedarf pro Tablet einstellen.
+- Die Ablaufdiagnose zeigt das Wecksignal und trennt Statistiken nach App-Build. Gespeicherte ältere Messungen bleiben verfügbar.
+- Die normale Audioabfrage, HA-Auftragswarteschlange und Prüfung des gewählten Audioausgangs bleiben erhalten. Reale Zeitersparnis bitte mit dem nächsten Tablet-Export prüfen.
+
 # TAFA Device Bridge 1.2.6
 
 - Native Zeitdiagnose für Rufwort, manuelle Frage, Folgefrage und Immer an auf Basis des aktuellen GitHub-Stands 1.2.5.

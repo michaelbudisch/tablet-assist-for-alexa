@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.7
+
+Signed update using the original certificate, de.jarvis.audio application ID and version code 28. Install over the existing app.
+
+- Immediate player pickup after accepted native replies, without additional permanent polling. Playback completion also checks waiting jobs immediately.
+- Always on now honors the configured end-of-speech pause. Saved preferences are preserved; users can choose 1100–1200 ms per tablet if appropriate.
+- The native timeline records player wakeup requests and separates statistics by app build, retaining older history.
+- The regular fallback poll, HA job queue and verified output routing remain in place. Actual latency gains require a fresh export from the tablet.
+
 # TAFA Device Bridge 1.2.6
 
 - Native-only timing diagnostics for wakeword, manual, follow-up and Always on requests. Current GitHub 1.2.5 source is the base.

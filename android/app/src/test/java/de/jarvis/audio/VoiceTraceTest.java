@@ -10,6 +10,15 @@ public class VoiceTraceTest {
     final AtomicLong clock=new AtomicLong(1_000_000_000L);
     void time(long millis){clock.set(1_000_000_000L+millis*1_000_000L);}
     VoiceTrace trace(){return new VoiceTrace("sample",VoiceTrace.Kind.WAKEWORD,clock::get,123);}
+    @Test public void differentBuildsNeverShareLatencyStatistics(){
+        VoiceTrace old=trace(),current=trace(),same=trace();
+        current.fact(VoiceTrace.Fact.BUILD_CODE,28);
+        same.fact(VoiceTrace.Fact.BUILD_CODE,28);
+        assertNotEquals(old.snapshot().cohort(),current.snapshot().cohort());
+        assertEquals(current.snapshot().cohort(),same.snapshot().cohort());
+        old.fact(VoiceTrace.Fact.BUILD_CODE,27);
+        assertNotEquals(old.snapshot().cohort(),current.snapshot().cohort());
+    }
     @Test public void missingMeasurementsAreNotZeroOrEstimated(){
         VoiceTrace t=trace();time(100);t.mark(OUTPUT_SUBMITTED);
         assertNull(t.snapshot().between(SPEECH_END,OUTPUT_PROGRESS));

@@ -87,7 +87,8 @@ final class VoiceDiagnosticsPanel {
             cohortLabels.put(s.cohort(),kinds[s.kind.ordinal()]+" · "+
                 s.facts.getOrDefault(VoiceTrace.Fact.OUTPUT,"—")+" · "+
                 s.facts.getOrDefault(VoiceTrace.Fact.ENGINE,"—")+" · "+
-                s.facts.getOrDefault(VoiceTrace.Fact.PAUSE_MS,"—")+" ms");
+                s.facts.getOrDefault(VoiceTrace.Fact.PAUSE_MS,"—")+" ms · build "+
+                s.facts.getOrDefault(VoiceTrace.Fact.BUILD_CODE,"—"));
         }
         StringBuilder text=new StringBuilder(activity.getString(R.string.flow_statistics));
         for(var entry:groups.entrySet()){

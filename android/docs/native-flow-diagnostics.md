@@ -1,4 +1,4 @@
-# Native flow diagnostics · TAFA Device Bridge 1.2.6
+# Native flow diagnostics · TAFA Device Bridge 1.2.7
 
 Timing is collected and displayed entirely in the native tablet app. No dashboard, extra automation or diagnostic server requests are required.
 
@@ -27,3 +27,10 @@ All times use the tablet monotonic clock. No new diagnostic network requests, au
 [Assist events](https://contributors.home-assistant.io/core/internals/assist-pipelines/) · [AudioTrack playback head](https://developer.android.com/reference/android/media/AudioTrack#getPlaybackHeadPosition())
 
 Emulator screenshots use synthetic test metadata, not measurements from your tablet.
+
+## Comparing 1.2.7 and later
+After JOB_ACCEPTED the native session sends one wakeup request (PLAYER_WAKEUP) to the running player. Its existing network executor immediately checks the HA queue. While output is busy, completion triggers the next check. A wakeup is not confirmation of playback and cannot reconnect a stopped player. The 900-ms fallback poll remains for external HA jobs and recovery.
+
+BUILD_CODE identifies each newly recorded run. Statistics keep builds separate from legacy history without build metadata. Compare the same trigger, output, player and pause. To test shorter endpointing, a tablet can be set from 1700 to 1100 ms; increase this if questions get cut off. Always on honors the same setting. The app update does not globally shorten defaults or saved preferences.
+
+The startup buffer setting is audio duration, not a fixed delay: 600 ms of audio may fill much faster. Neither that setting nor a single sample establishes a guaranteed latency gain.
