@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.54 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.55 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -320,12 +320,24 @@
   ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
 
   // All particles and metric anchors pass through the same rotating camera.
-  // Freeze the base orbit while a person holds the globe or reads an anchor;
-  // continuing an independent rotation clock prevents a snap on resumption.
+  // An independent orbit clock prevents a jump after dragging.
+  // On release, auto-rotation starts in the very next frame and smoothly
+  // fades up while the last manual angular velocity gradually fades out.
   const frameDelta=Math.max(0,Math.min(120,t-(s.lastOrbitFrame??t)));
   s.lastOrbitFrame=t;
   if(s.orbitTime===undefined)s.orbitTime=t;
-  if(!s.manualDragging&&Date.now()>=(s.orbitPauseUntil||0))s.orbitTime+=frameDelta;
+  if(!s.manualDragging){
+    const spinFade=Math.exp(-frameDelta/560);
+    const oldYaw=s.inertiaYaw||0,oldPitch=s.inertiaPitch||0;
+    const step=frameDelta>0?(1-spinFade)*560:0;
+    s.manualYaw+=oldYaw*step;
+    s.manualPitch=Math.max(-1.2,Math.min(1.2,s.manualPitch+oldPitch*step));
+    s.inertiaYaw=oldYaw*spinFade;
+    s.inertiaPitch=oldPitch*spinFade;
+    const from=s.autoBlend??1;
+    s.autoBlend=1-(1-from)*Math.exp(-frameDelta/780);
+    s.orbitTime+=frameDelta*s.autoBlend;
+  }
   const orbit=s.orbitTime;
   const ay=orbit*.00015*speed+(s.manualYaw||0);
   const ax=-.23+Math.sin(orbit*(isIdle?.000045:.00013))*(isIdle?.022:.17)+(s.manualPitch||0);
@@ -391,7 +403,7 @@
     if(!card?._hzNight||!card.shadowRoot)return;
     const host=card.shadowRoot.querySelector(".hz-ambient-body"),canvas=host?.querySelector("canvas");
     if(!host||!canvas)return;
-    const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,orbitPauseUntil:0,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
+    const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     const exit=host.querySelector(".hz-ambient-exit");
     const revealControls=()=>{
@@ -424,13 +436,14 @@
     // Press-and-drag works immediately on real pointer motion. Stationary
     // presses still enter drag mode after 280ms. Unlike 0.4.52, movement
     // during that interval must NEVER cancel the gesture.
-    const HOLD_MS=280,PAUSE_MS=30000;
+    const HOLD_MS=280;
     const activateDrag=pointer=>{
       if(pointer.active||s.dragPointer!==pointer||active.get(card)!==s||!host.isConnected)return;
       clearTimeout(pointer.timer);
       pointer.active=true;
       s.manualDragging=true;
-      s.orbitPauseUntil=Date.now()+PAUSE_MS;
+      s.inertiaYaw=0;
+      s.inertiaPitch=0;
       clearTimeout(s.controlsTimer);
       host.dataset.controls="hidden";
       exit?.setAttribute("tabindex","-1");
@@ -442,7 +455,13 @@
       clearTimeout(pointer.timer);
       if(pointer.active){
         s.manualDragging=false;
-        s.orbitPauseUntil=Date.now()+PAUSE_MS;
+        // Never pause after release. Use the last measured motion for a
+        // gentle inertial glide; ramp the usual automatic speed back in.
+        s.inertiaYaw=cancelled?0:(pointer.velocityYaw||0);
+        s.inertiaPitch=cancelled?0:(pointer.velocityPitch||0);
+        // Begin auto-rotation immediately at a gentle fraction of its normal
+        // speed, then ease toward full speed while the manual spin fades.
+        s.autoBlend=.18;
         s.suppressClick=true;
         canvas.classList.remove("hz-manual-dragging");
         if(event&&!cancelled)event.preventDefault();
@@ -455,7 +474,7 @@
     canvas.addEventListener("pointerdown",event=>{
       if(event.button!==0||s.dragPointer)return;
       s.suppressClick=false;
-      const pointer={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,active:false,timer:null};
+      const pointer={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,lastMoveAt:performance.now(),velocityYaw:0,velocityPitch:0,active:false,timer:null};
       s.dragPointer=pointer;
       try{canvas.setPointerCapture?.(event.pointerId);}catch{}
       pointer.timer=setTimeout(()=>activateDrag(pointer),HOLD_MS);
@@ -471,11 +490,18 @@
       event.preventDefault();
       const rect=canvas.getBoundingClientRect();
       const sensitivity=Math.PI/Math.max(180,Math.min(rect.width,rect.height)*.65);
-      s.manualYaw+=(event.clientX-pointer.lastX)*sensitivity;
-      s.manualPitch=Math.max(-1.2,Math.min(1.2,s.manualPitch-(event.clientY-pointer.lastY)*sensitivity));
+      const yawDelta=(event.clientX-pointer.lastX)*sensitivity;
+      const pitchDelta=-(event.clientY-pointer.lastY)*sensitivity;
+      s.manualYaw+=yawDelta;
+      s.manualPitch=Math.max(-1.2,Math.min(1.2,s.manualPitch+pitchDelta));
+      const now=performance.now();
+      const dt=Math.max(12,Math.min(100,now-pointer.lastMoveAt));
+      const weight=pointer.velocityYaw===0&&pointer.velocityPitch===0?.65:.32;
+      pointer.velocityYaw=Math.max(-.0028,Math.min(.0028,pointer.velocityYaw*(1-weight)+yawDelta/dt*weight));
+      pointer.velocityPitch=Math.max(-.0018,Math.min(.0018,pointer.velocityPitch*(1-weight)+pitchDelta/dt*weight));
+      pointer.lastMoveAt=now;
       pointer.lastX=event.clientX;
       pointer.lastY=event.clientY;
-      s.orbitPauseUntil=Date.now()+PAUSE_MS;
     });
     canvas.addEventListener("pointerup",event=>stopDrag(event));
     canvas.addEventListener("pointercancel",event=>stopDrag(event,true));
