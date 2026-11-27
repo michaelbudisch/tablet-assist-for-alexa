@@ -22,7 +22,8 @@ class Marketplace(unittest.TestCase):
         self.assertEqual(m["version"], (ROOT/"VERSION").read_text().strip())
         self.assertTrue(m["config_flow"])
         for name in ["__init__.py", "config_flow.py", "stt.py", "tts.py", "conversation.py",
-                     "translations/de.json", "translations/en.json", "frontend/assist.js", "frontend/keepalive.js"]:
+                     "translations/de.json", "translations/en.json", "frontend/assist.js", "frontend/keepalive.js",
+                     "frontend/visual_client.js", "visual_ws.py"]:
             self.assertTrue((DIR/name).is_file(), name)
         for f in DIR.rglob("*.py"):
             self.assertNotIn("__JARVIS_", f.read_text(), str(f))

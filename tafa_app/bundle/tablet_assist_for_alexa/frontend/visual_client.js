@@ -1,4 +1,4 @@
-/* TAFA v0.4.63: authenticated, per-device visual response stream.
+/* TAFA v0.4.64: authenticated, per-device visual response stream.
  * This module never requests microphone access and never subscribes to
  * administrator-only Home Assistant bus events. */
 export const VISUAL_BINDING_KEY="tafa.dashboard.local_voice_sensor.v1";

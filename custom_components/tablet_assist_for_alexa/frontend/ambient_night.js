@@ -1,5 +1,5 @@
-import {subscribeTafaVisual} from './visual_client.js?v=0.4.63';
-/* TAFA dashboard asset version 0.4.63 - cache-busted file delivery; existing code preserved */
+import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
+/* TAFA dashboard asset version 0.4.64 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};

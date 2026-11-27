@@ -1,6 +1,6 @@
 # TAFA Visualstream – Gerätezustellung
 
-Ab TAFA 0.4.63 empfangen normale Dashboard-Ansichten und der Ambientmodus Sprachantworten über den authentifizierten WebSocket-Befehl `tablet_assist_for_alexa/visual_subscribe`. Die Gerätezuordnung kommt ausschließlich über `tablet_assist_for_alexa/visual_identity`. Direkte Frontend-Abos auf `tafa_assist_response` sind nicht mehr erforderlich.
+Ab TAFA 0.4.64 empfangen normale Dashboard-Ansichten und der Ambientmodus Sprachantworten über den authentifizierten WebSocket-Befehl `tablet_assist_for_alexa/visual_subscribe`. Die Gerätezuordnung kommt ausschließlich über `tablet_assist_for_alexa/visual_identity`. Direkte Frontend-Abos auf `tafa_assist_response` sind nicht mehr erforderlich.
 
 - Ein Raum-Benutzer mit genau einem zugeordneten Tablet erhält ausschließlich dessen Antworten.
 - Bei mehreren Geräten sowie bei Administrator-Logins erfolgt **keine automatische Zuordnung**. Der lokale Bildschirm muss explizit über den Gerätestatus-Sensor (Browser-Einstellung `tafa.dashboard.local_voice_sensor.v1`) gebunden sein. Die Identität wird gegen die vom Backend autorisierten Geräte geprüft.
@@ -15,4 +15,4 @@ Ab TAFA 0.4.63 empfangen normale Dashboard-Ansichten und der Ambientmodus Sprach
 
 Proaktive Infobox-Ereignisse wie `jarvis_infobox_show` sind **nicht** mit dem Sprachantwort-Stream gleichzusetzen. Sie dürfen ohne eigene berechtigungsgeprüfte Zustellung nicht pauschal auf `tafa_assist_response` umgestellt werden.
 
-Nach einem Update die Browser-WebView neu laden, damit die neue ESM-Version (0.4.63) verwendet wird. Eine tatsächliche Sprachprobe bleibt für den Ende-zu-Ende-Test erforderlich.
+Nach einem Update die Browser-WebView neu laden, damit die neue ESM-Version (0.4.64) verwendet wird. Eine tatsächliche Sprachprobe bleibt für den Ende-zu-Ende-Test erforderlich.
