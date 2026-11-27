@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.55 — Smooth inertial handoff after manual rotation
+- Removed the 30-second delay following globe drag release.
+- The globe and its anchored 3D sensor labels continue rotating in the next animation frame. Drag momentum fades out smoothly while automatic orbit speed ramps back up.
+- Releasing a stationary long press also resumes auto rotation immediately. Touch/mouse interaction, shooting stars, hidden Day View button, module isolation, and automations are unchanged.
+
 ## TAFA App / HA integration 0.4.54 — Corrected globe drag hit area
 - The grab cursor was visible over the whole Ambient canvas, but dragging previously started only inside a smaller circular hit test. The entire canvas is now draggable, matching the displayed cursor on desktop and tablet.
 - The early-movement drag fix (6 px), stationary long-press activation (280 ms), attached 3D sensor anchors, and tap-to-reveal Day View remain in place.
