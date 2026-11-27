@@ -1,5 +1,11 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.7
+
+- Ein einziges Ollama-Modell `qwen3-vl:4b-instruct` für Wissensfragen und Vision. Windows richtet es unmittelbar ein und lädt es vor.
+- Unbegrenzte Modellhaltezeit (`keep_alive=-1`) für Text und Vision; kein separates Qwen3-Textmodell mehr über den Installer.
+- Bestehende weitere Modelle werden nicht automatisch gelöscht; GPU-Speicher mit Whisper/Qwen-TTS geteilt.
+
 ## 2.2.6
 
 - Windows-Installer bietet Vision-Bildanalyse standardmäßig aktiv an; der mehrgigabytegroße Modell-Download erfordert eine gesonderte Bestätigung. Keine automatische Modellinstallation ohne Einwilligung.
