@@ -32,11 +32,11 @@ Local mode uses TAFA's bundled CPU engines without Proxmox. The CPU fallback cov
 
 On Windows use Docker Desktop with WSL2 and suitable NVIDIA drivers; on Linux use Docker Engine/Compose and NVIDIA Container Toolkit. Follow the [GPU worker guide](worker.md). From `worker/` on Windows:
 
-1. Run `01-Installieren.bat` (or `00-Konfiguration.bat` beforehand). It starts Whisper and Qwen; Ollama is optional and needs an installed text model.
+1. Run `01-Installieren.bat` (or `00-Konfiguration.bat` beforehand). In addition to GPU Whisper and Qwen voice, this installs **only the `qwen3-vl:4b-instruct` Ollama model for both text and vision** and preloads it with `keep_alive=-1`.
 2. Run `04-Verbindungsdaten.bat`. It creates **`tafa-worker.json`** plus **`GPU-Worker-Verbindungsdaten.txt`**.
 3. In **TAFA → Connections → Quick setup via JSON**, select the JSON, **check the configuration**, and confirm GPU URLs. The text report lists ports; the GPU export cannot know your separate CPU server address.
 4. Add **Wyoming Protocol** in HA for **GPU-IP:10300**, then select the new GPU `stt.*` entity in **TAFA → Connections → GPU/AI**. The fast GPU availability check accepts a bare IP without scheme or port. A Qwen TTS URL alone **does not enable GPU Whisper**.
-5. For open AI questions, optionally add the HA **Ollama** integration pointing at `http://GPU-IP:11434`, configure its conversation agent, and select the actual `conversation.*` entity in TAFA **Connections**. Ollama text generation is separate from Qwen speech synthesis.
+5. Add the HA **Ollama** integration at `http://GPU-IP:11434`; choose **`qwen3-vl:4b-instruct`** for the conversation agent, turn thinking off, set keep-alive to **-1 (indefinite)**, and select the resulting `conversation.*` entity in TAFA **Connections**. Qwen speech synthesis remains separate.
 
 **Tablet Assist Stream** prefers Qwen via `http://GPU-IP:10502`, falling back to Piper if unavailable **before playback begins**. The **Tablet Assist Sprachrouter** can fall back from GPU Wyoming to configured CPU STT. Open-ended LLM responses may remain unavailable when the GPU PC is offline unless a separate CPU conversation agent has been configured.
 
