@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.43 — Organic 3D Ambient view and tablet layout
+- Replaced the uniform globe with a non-uniform 3D particle network, drifting lights and partial orbit arcs. Six sensor values follow depth-projected vertices as the globe rotates, including perspective scale and fading.
+- Full-width tablet portrait/landscape ambient layout, independent of the normal dashboard sidebar. Cache version updated for the Android WebView.
+- Existing automations and entity mappings are preserved.
+
 ## TAFA App / HA integration 0.4.42 — Safe, optional Ambient mode
 - The ambient night visualizer is now loaded optionally, with a fallback that never blocks the dashboard when unavailable.
 - Protected module loading and clean animation lifecycle. Existing TAFA/Jarvis event responses can appear in a bottom animated panel, without altering automations.
