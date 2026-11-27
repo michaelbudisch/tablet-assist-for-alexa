@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.51 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.52 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -40,7 +40,8 @@
   .hz-ambient-time{font-size:clamp(62px,10.4vw,116px);font-weight:300;letter-spacing:-.063em;font-variant-numeric:tabular-nums;line-height:1.04;text-shadow:0 0 26px #9dcaf723}
   .hz-ambient-date{margin-top:8px;color:#9db1c6;font-size:clamp(13px,1.55vw,17px);font-weight:400;letter-spacing:.025em}
   .hz-ambient-stage{width:min(100%,750px);height:clamp(280px,50dvh,590px);position:relative;flex:1 0 auto;max-height:62dvh;min-height:280px;margin:clamp(0px,2vh,20px) auto 14px;box-sizing:border-box}
-  .hz-ambient-canvas{display:block;width:100%;height:100%;max-width:100%;pointer-events:none}
+  .hz-ambient-canvas{display:block;width:100%;height:100%;max-width:100%;pointer-events:auto;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;cursor:grab}
+  .hz-ambient-canvas.hz-manual-dragging{cursor:grabbing}
   .hz-ambient-metric{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:150px;min-width:0;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;text-shadow:0 1px 5px #051220;opacity:0;will-change:left,top,opacity,transform}
   .hz-ambient-metric small{display:block;color:#8ca8c3;letter-spacing:.12em;font-size:clamp(8px,.85vw,10px);margin-bottom:4px}
   .hz-ambient-metric b{display:block;font-weight:500;font-size:clamp(11px,1.15vw,15px);color:#e4f1ff}
@@ -319,9 +320,16 @@
   ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
 
   // All particles and metric anchors pass through the same rotating camera.
-  const ay=t*.00015*speed;
-  const ax=-.23+Math.sin(t*(isIdle?.000045:.00013))*(isIdle?.022:.17);
-  const az=Math.sin(t*(isIdle?.000037:.000075))*(isIdle?.012:.12);
+  // Freeze the base orbit while a person holds the globe or reads an anchor;
+  // continuing an independent rotation clock prevents a snap on resumption.
+  const frameDelta=Math.max(0,Math.min(120,t-(s.lastOrbitFrame??t)));
+  s.lastOrbitFrame=t;
+  if(s.orbitTime===undefined)s.orbitTime=t;
+  if(!s.manualDragging&&Date.now()>=(s.orbitPauseUntil||0))s.orbitTime+=frameDelta;
+  const orbit=s.orbitTime;
+  const ay=orbit*.00015*speed+(s.manualYaw||0);
+  const ax=-.23+Math.sin(orbit*(isIdle?.000045:.00013))*(isIdle?.022:.17)+(s.manualPitch||0);
+  const az=Math.sin(orbit*(isIdle?.000037:.000075))*(isIdle?.012:.12);
   const cosa=Math.cos(ay),sina=Math.sin(ay);
   const cosx=Math.cos(ax),sinx=Math.sin(ax);
   const cosz=Math.cos(az),sinz=Math.sin(az);
@@ -383,7 +391,7 @@
     if(!card?._hzNight||!card.shadowRoot)return;
     const host=card.shadowRoot.querySelector(".hz-ambient-body"),canvas=host?.querySelector("canvas");
     if(!host||!canvas)return;
-    const s={host,canvas,phase:"idle",lastFrame:0,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
+    const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,orbitPauseUntil:0,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     const exit=host.querySelector(".hz-ambient-exit");
     const revealControls=()=>{
@@ -399,8 +407,77 @@
       },6000);
     };
     exit?.setAttribute("tabindex","-1");
-    host.addEventListener("pointerdown",revealControls,{passive:true});
+    // Ordinary taps reveal the day control; holding a globe point is a drag.
+    host.addEventListener("pointerdown",event=>{
+      if(!event.target.closest?.(".hz-ambient-stage"))revealControls();
+    },{passive:true});
     host.addEventListener("click",revealControls);
+
+    // Hold for 280ms, then drag: the 3D mesh and attached sensor anchors
+    // share exactly the same yaw/pitch, with no scrolling or context menu.
+    const HOLD_MS=280,PAUSE_MS=30000;
+    const withinGlobe=event=>{
+      const rect=canvas.getBoundingClientRect();
+      if(!rect.width||!rect.height)return false;
+      const radius=Math.min(rect.width*.42,rect.height*.41)*1.12;
+      return Math.hypot(event.clientX-(rect.left+rect.width*.5),event.clientY-(rect.top+rect.height*.51))<=radius;
+    };
+    const stopDrag=(event,cancelled=false)=>{
+      const pointer=s.dragPointer;
+      if(!pointer||(event&&pointer.id!==event.pointerId))return;
+      clearTimeout(pointer.timer);
+      if(pointer.active){
+        s.manualDragging=false;
+        s.orbitPauseUntil=Date.now()+PAUSE_MS;
+        s.suppressClick=true;
+        canvas.classList.remove("hz-manual-dragging");
+        if(event&&!cancelled)event.preventDefault();
+      }
+      s.dragPointer=null;
+      if(event&&canvas.hasPointerCapture?.(event.pointerId)){
+        try{canvas.releasePointerCapture(event.pointerId);}catch{}
+      }
+    };
+    canvas.addEventListener("pointerdown",event=>{
+      if(event.button!==0||s.dragPointer||!withinGlobe(event))return;
+      s.suppressClick=false;
+      const pointer={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,active:false,timer:null};
+      s.dragPointer=pointer;
+      try{canvas.setPointerCapture?.(event.pointerId);}catch{}
+      pointer.timer=setTimeout(()=>{
+        if(active.get(card)!==s||s.dragPointer!==pointer||!host.isConnected)return;
+        pointer.active=true;
+        s.manualDragging=true;
+        s.orbitPauseUntil=Date.now()+PAUSE_MS;
+        clearTimeout(s.controlsTimer);
+        host.dataset.controls="hidden";
+        exit?.setAttribute("tabindex","-1");
+        canvas.classList.add("hz-manual-dragging");
+      },HOLD_MS);
+    });
+    canvas.addEventListener("pointermove",event=>{
+      const pointer=s.dragPointer;
+      if(!pointer||pointer.id!==event.pointerId)return;
+      if(!pointer.active){
+        if(Math.hypot(event.clientX-pointer.x,event.clientY-pointer.y)>11)stopDrag(event,true);
+        return;
+      }
+      event.preventDefault();
+      const rect=canvas.getBoundingClientRect();
+      const sensitivity=Math.PI/Math.max(180,Math.min(rect.width,rect.height)*.65);
+      s.manualYaw+=(event.clientX-pointer.lastX)*sensitivity;
+      s.manualPitch=Math.max(-1.2,Math.min(1.2,s.manualPitch-(event.clientY-pointer.lastY)*sensitivity));
+      pointer.lastX=event.clientX;
+      pointer.lastY=event.clientY;
+      s.orbitPauseUntil=Date.now()+PAUSE_MS;
+    });
+    canvas.addEventListener("pointerup",event=>stopDrag(event));
+    canvas.addEventListener("pointercancel",event=>stopDrag(event,true));
+    canvas.addEventListener("lostpointercapture",event=>stopDrag(event,true));
+    canvas.addEventListener("contextmenu",event=>event.preventDefault());
+    canvas.addEventListener("click",event=>{
+      if(s.suppressClick){event.preventDefault();event.stopPropagation();s.suppressClick=false;}
+    });
     host.addEventListener("keydown",event=>{
       if((event.key==="Enter"||event.key===" "||event.key==="Escape")&&host.dataset.controls!=="visible"){
         if(event.key===" ")event.preventDefault();
@@ -440,6 +517,9 @@
     active.delete(card);cancelAnimationFrame(s.raf);
     clearTimeout(s.infoTimer);
     clearTimeout(s.controlsTimer);
+    clearTimeout(s.dragPointer?.timer);
+    s.dragPointer=null;
+    s.manualDragging=false;
     try{s.unsubscribe?.();}catch{}
   }
   bag.parts.ambient={body,mount,update,show,close,dispose};
