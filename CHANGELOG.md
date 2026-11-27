@@ -1,3 +1,9 @@
+## TAFA App / HA integration 0.4.41 — Ambient night dashboard
+- Optional animated night view featuring a rotating connected-particle sphere, large clock, dynamic HA sensor metrics and voice-aware color changes.
+- Header action toggles the ambient view without replacing normal daytime layout, voice settings or automations.
+- TAFA Assist events display a contextual animated answer/search panel beneath the sphere. Native device mic/wake sensor values drive listening states when available.
+- Lightweight canvas animation shuts down when switching views. Existing private kiosk dashboard can use the same shared visual module.
+
 ## TAFA App 0.3.35 / HA integration 0.4.20 — no duplicate camera entities during migration
 - Register TAFA camera/motion entities only if the TAFA camera relay is active, preventing null relay exceptions while preserving the separately running legacy camera integration. Audio/microphone services remain TAFA-owned.
 
