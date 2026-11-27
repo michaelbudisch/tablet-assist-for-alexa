@@ -2,13 +2,13 @@
 
 [Deutsch](README.de.md) · [Quick start](../README.md) · [TAFA setup](../../docs/en/setup-guide.md)
 
-The GPU worker is **optional**, adding GPU Wyoming Whisper (STT), Qwen streaming voice (TTS), optional Ollama text AI and Vision to an existing CPU-capable TAFA setup. A supported **NVIDIA GPU** is required. Windows needs NVIDIA drivers, Docker Desktop with **WSL2/Linux containers**; Linux needs Docker Engine/Compose and NVIDIA Container Toolkit. First model builds/downloads need Internet access and sufficient SSD space.
+The GPU worker is **optional**, adding GPU Wyoming Whisper (STT), Qwen streaming voice (TTS), and one shared Qwen3-VL Ollama model for text AI and Vision to an existing CPU-capable TAFA setup. A supported **NVIDIA GPU** is required. Windows needs NVIDIA drivers, Docker Desktop with **WSL2/Linux containers**; Linux needs Docker Engine/Compose and NVIDIA Container Toolkit. First model builds/downloads need Internet access and sufficient SSD space.
 
 ## Windows quick start
 
 From the `worker/` directory:
 
-1. Run `01-Installieren.bat` (or optionally `00-Konfiguration.bat` to create a missing `.env`). This sets up **Whisper and Qwen**, optionally offers **text Ollama**, then offers **Vision for tablet camera analysis (default Yes)**. Downloads of text and vision models each require separate consent.
+1. Run `01-Installieren.bat` (or `00-Konfiguration.bat` first). This sets up GPU Whisper and Qwen TTS and automatically installs **one Ollama model, `qwen3-vl:4b-instruct`, for both text and vision** (several GB). It is then preloaded and retained as long as GPU/system memory permits.
 2. `02-Starten.bat` starts configured services; `03-Neustarten.bat` restarts active containers.
 3. `04-Verbindungsdaten.bat` generates **`tafa-worker.json`** and **`GPU-Worker-Verbindungsdaten.txt`**, opens the text report, and **does not start services**. It uses the `LAN_IP` in the local `.env` and current service state; stopped services appear as `enabled: false`.
 4. In **TAFA Control Center → Connections → Quick setup via JSON**, select `tafa-worker.json`, **check configuration**, and confirm GPU endpoints. Finish selecting real HA entities as explained below.
@@ -26,14 +26,20 @@ docker compose up -d --build whisper
 docker compose --profile stream up -d --build qwen-stream
 ```
 
-Optional **text AI**:
+Shared **text-and-vision Ollama model**:
 
 ```bash
-docker compose --profile llm up -d ollama ollama-gateway
-docker compose exec ollama ollama pull qwen3:4b-instruct
+docker compose --profile vision up -d --build ollama ollama-gateway vision
+docker compose --profile vision exec ollama ollama pull qwen3-vl:4b-instruct
 ```
 
-The Windows JSON/TXT exporter is **not included** in the Linux bootstrap: enter endpoint URLs manually in TAFA **Connections**. Services share GPU memory; check VRAM and start optional models individually if needed.
+After a Linux install, preload once (replace GPU-IP):
+
+```bash
+curl -sS -X POST http://GPU-IP:11434/api/generate -H 'Content-Type: application/json' -d '{"model":"qwen3-vl:4b-instruct","prompt":"","stream":false,"keep_alive":-1}'
+```
+
+The Windows JSON/TXT exporter is **not included** in the Linux bootstrap: enter endpoint URLs manually in TAFA **Connections**. All services share GPU memory. Keeping Qwen3-VL resident alongside Whisper and Qwen TTS needs enough VRAM; Ollama may otherwise use slower CPU/RAM offloading.
 
 ## Where do the addresses belong?
 
@@ -41,7 +47,7 @@ The Windows JSON/TXT exporter is **not included** in the Linux bootstrap: enter 
 | --- | --- | --- | --- |
 | GPU Whisper/STT | `GPU-IP:10300` | Add **Wyoming Protocol**, find its `stt.*` entity | **Connections → GPU/AI:** GPU Wyoming STT and **fast GPU check** (bare IP) |
 | Qwen/TTS | `http://GPU-IP:10502` | Select **Tablet Assist Stream** as Assist TTS | **Connections → GPU/AI:** Qwen URL |
-| Ollama/text AI (optional) | `http://GPU-IP:11434` | Add **Ollama**, install a model and create a conversation agent | **Connections → GPU/AI:** actual `conversation.*` entity |
+| Ollama/text and vision | `http://GPU-IP:11434` | Add **Ollama**, install a model and create a conversation agent | **Connections → GPU/AI:** actual `conversation.*` entity |
 | CPU fallback | External: `CPU-IP:10300`, `http://CPU-IP:5000`; local: TAFA App | For external CPU, add a **separate Wyoming Protocol** with a distinct `stt.*` entity | **Connections → CPU fallback**; select speech mode under **Settings** |
 
 **Important:** Qwen TTS does **not** automatically enable GPU Whisper. HA's Wyoming integration must create the GPU `stt.*` entity. The JSON report includes **GPU endpoints only**; it cannot guess a CPU host or create HA Wyoming/Ollama entities. Finish this configuration manually.
