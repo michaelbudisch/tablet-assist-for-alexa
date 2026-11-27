@@ -1,3 +1,10 @@
+## TAFA App / HA integration 0.4.57 — Immediate native voice phases
+- Android Device Bridge 1.2.5 source pushes wakeword and Assist states to the existing authenticated HA device telemetry API when each state changes, not only at the periodic 12-second full sync. An independent coalescing worker preserves the initial `detected:` event and keeps audio/UI threads unblocked.
+- Ambient now maps WebSocket authentication and connection to the listening phase, transcription/thinking to processing, and buffering/playback to speaking.
+- Integration preserves the last wakeword timestamp across telemetry reports and updates it on native detection, without firing duplicate legacy wake events.
+- Signed Android 1.2.5 APK is not published yet; the original signing key is required to install the updated app over 1.2.4.
+- No changes to automations or configured sensor bindings.
+
 ## TAFA App / HA integration 0.4.56 — Unrestricted vertical globe rotation
 - Removed the former ±1.2 radian vertical pitch clamp from both pointer dragging and inertial spin.
 - The Ambient sphere can now complete unlimited 360° upward or downward revolutions with 3D-anchored sensor labels rotating along with it.
