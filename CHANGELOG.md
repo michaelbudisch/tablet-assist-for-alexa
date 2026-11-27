@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.54 — Corrected globe drag hit area
+- The grab cursor was visible over the whole Ambient canvas, but dragging previously started only inside a smaller circular hit test. The entire canvas is now draggable, matching the displayed cursor on desktop and tablet.
+- The early-movement drag fix (6 px), stationary long-press activation (280 ms), attached 3D sensor anchors, and tap-to-reveal Day View remain in place.
+- No entity mappings, automations, or other Lovelace dashboard tiles changed.
+
 ## TAFA App / HA integration 0.4.53 — Reliable press-and-drag globe rotation
 - Fixed a gesture cancellation bug: v0.4.52 aborted rotation when a pointer moved more than 11 px before the 280 ms hold timer elapsed. Movement of 6 px now immediately activates manual 3D rotation.
 - Holding still for 280 ms before dragging remains supported. Mouse and touch share pointer handling; the globe and projected 3D sensor anchors rotate together.
