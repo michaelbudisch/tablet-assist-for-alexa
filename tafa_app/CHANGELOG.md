@@ -1,5 +1,10 @@
 # TAFA App changelog
 
+## 0.4.59 — Release-Metadaten und Modell-Diagnose
+
+- Laufende App und Versionsanzeige verwenden dieselbe Versionsnummer; Modellverwaltung und Ollama-Ein-Modell-Betrieb aus 0.4.58 bleiben bestehen.
+- Keine Änderungen an bestehenden Automationen, Tablet-Einstellungen oder Sprachrouten.
+
 ## 0.4.58 — Gemeinsames dauerhaft geladenes Vision-Modell
 
 - Wissensfragen und Bildprüfung verwenden ausschließlich `qwen3-vl:4b-instruct` in Ollama.
