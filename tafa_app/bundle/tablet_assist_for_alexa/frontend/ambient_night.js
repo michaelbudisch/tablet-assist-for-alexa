@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.56 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.57 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -104,9 +104,11 @@
     if(voice?.info)return "listening";
     // A permanently armed native wakeword detector reports "listening: hey_jarvis".
     // That is standby, NOT active Assist capture: keep the sphere quiet.
-    if(/^native_(?:waiting_for_playback|playing|speaking)/.test(wake)||/^(?:speaking|playing|tts)$/.test(mic))return "speaking";
-    if(/^native_(?:processing|thinking|generating_voice|transcribing|sending_audio|waiting_for_stt|authenticating|connected)/.test(wake)||/^(?:processing|thinking|busy)$/.test(mic))return "processing";
-    if(/^(?:detected(?::|$)|native_(?:connecting|followup|starting_microphone|listening))/.test(wake)||mic==="assist")return "listening";
+    // Match the app's native Assist lifecycle exactly. A WebSocket
+    // handshake is still listening/setup, not an AI inference result.
+    if(/^native_(?:waiting_for_playback|buffering|playing|speaking)/.test(wake)||/^(?:speaking|playing|tts)$/.test(mic))return "speaking";
+    if(/^native_(?:processing|thinking|generating_voice|transcribing|sending_audio|waiting_for_stt)/.test(wake)||/^(?:processing|thinking|busy)$/.test(mic))return "processing";
+    if(/^(?:detected(?::|$)|native_(?:connecting|authenticating|connected|followup|starting_microphone|listening))/.test(wake)||mic==="assist")return "listening";
     const last=h["sensor.tafa_jarvis_tablet_letztes_rufwort"]?.state;
     const ms=Date.now()-Date.parse(last||"");
     if(Number.isFinite(ms)&&ms>=0&&ms<2000)return "listening";
