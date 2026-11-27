@@ -1,6 +1,6 @@
 ## 0.4.63
 
-- Bundle HA integration 0.4.66 with the per-tablet local proximity entity and authenticated approach reporting used by Android 1.2.9.
+- Bundle HA integration 0.4.67 with the per-tablet local proximity entity and authenticated approach reporting used by Android 1.2.9.
 - Existing wakeword, greeting motion and camera upload settings remain separate.
 
 # TAFA App changelog
