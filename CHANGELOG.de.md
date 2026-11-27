@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.56 — Vertikale Kugeldrehung ohne Begrenzung
+- Die bisherige Begrenzung der vertikalen Drehung auf ±1,2 Radiant wurde sowohl für das manuelle Ziehen als auch für den Auslauf nach dem Loslassen entfernt.
+- Die Ambient-Kugel kann jetzt nach oben und unten vollständig und beliebig oft um 360° rotieren. Sensorbeschriftungen bleiben an ihren 3D-Punkten befestigt.
+- Die direkte automatische Weiterdrehung mit sanft auslaufender Trägheit, Sternschnuppen, Touch-/Maussteuerung und der nur auf Antippen sichtbare Tagesansicht-Button bleiben unverändert.
+- Keine Änderungen an Automationen oder Sensorzuordnungen.
+
 ## TAFA-App / HA-Integration 0.4.55 — Weicher Übergang nach manuellem Drehen
 - Die bisherige 30-Sekunden-Pause nach dem Loslassen der Ambient-Kugel wurde vollständig entfernt.
 - Kugel und 3D-Sensorbeschriftungen drehen sich direkt weiter. Die beim Ziehen gemessene Drehgeschwindigkeit läuft mit einem kurzen Trägheits-Nachlauf sanft aus, während die automatische Rotation weich auf Normalgeschwindigkeit überblendet.
