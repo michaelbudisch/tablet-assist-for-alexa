@@ -18,7 +18,7 @@ FRAME_COUNTS = (4, 8, 12)
 # The real 768px Qwen3-VL four-frame prompt exceeded 4096 tokens.
 # Apply bounded floors only within this opt-in endpoint, never to normal vision.
 JOINT_CONTEXT_FLOORS = {4: 8192, 8: 16384, 12: 16384}
-BENCH_MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct", "qwen3-vl:8b-instruct")
+BENCH_MODELS = ("qwen3-vl:4b-instruct",)
 SYSTEM = (
     "Du analysierst eine ausdrücklich bereitgestellte, zeitlich geordnete "
     "Bildfolge einer Außenkamera. Beschreibe nur klar sichtbare Personen, "
@@ -150,7 +150,7 @@ def register_benchmark(app, *, lock, call, normalize_image, default_model,
                 try:
                     body = {
                         "model": model, "stream": False, "think": False,
-                        "keep_alive": keep,
+                        "keep_alive": -1,
                         "options": {
                             "num_ctx": effective_context,
                             "num_predict": 130 if mode == "independent" else 230,
@@ -288,7 +288,7 @@ def register_sequence(app, *, lock, call, normalize_image, default_model,
                 "Bei widersprüchlichen Bildern oder nicht sichtbaren Handlungen uncertain wählen."
             )
             result = call("/api/chat", {
-                "model": model, "stream": False, "think": False, "keep_alive": keep,
+                "model": model, "stream": False, "think": False, "keep_alive": -1,
                 "format": SEQUENCE_SCHEMA,
                 "options": {"num_ctx": effective, "num_predict": 480, "temperature": 0},
                 "messages": messages,
