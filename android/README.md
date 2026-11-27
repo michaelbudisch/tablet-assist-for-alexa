@@ -1,6 +1,8 @@
-# TAFA Device Bridge · Android 1.2.4
+# TAFA Device Bridge · Android 1.2.5 (source)
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
+
+**1.2.5 source status:** Native voice phase changes are pushed to Home Assistant immediately instead of waiting for the 12-second sync. Updating the existing signed 1.2.4 app requires a new APK signed with the original release key. The 1.2.4 signed download remains the current public build.
 
 Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback, camera and image-motion detection in one compact app. Android 9+.
 
