@@ -6,12 +6,12 @@ Der GPU Worker ist eine **optionale** Ergänzung für GPU-Whisper, Qwen-TTS, Oll
 
 ## Windows-Schnellstart
 
-1. **01-Installieren.bat** – fehlende `.env` erzeugen und Whisper/Qwen starten; Text-Ollama optional, **Vision für Tablet-Kamera wird ausdrücklich angeboten (Vorgabe: Ja)**. Modell-Downloads nur nach Nachfrage.
+1. **01-Installieren.bat** – fehlende `.env` erzeugen, GPU-Whisper und Qwen-TTS starten und **`qwen3-vl:4b-instruct` als einziges Ollama-Modell für Text und Vision installieren und vorladen**. Mehrere GB Download gehören zur Installation.
 2. **02-Starten.bat** – konfigurierte Dienste starten.
 3. **03-Neustarten.bat** – laufende Container neu starten.
 4. **04-Verbindungsdaten.bat** – `tafa-worker.json` und `GPU-Worker-Verbindungsdaten.txt` erstellen; die TXT wird geöffnet.
 
-Optional: **00-Konfiguration.bat** nur für die fehlende `.env`, **05-Vision-Einrichten.bat** zum Nachrüsten auf bestehenden GPU-Rechnern, **scripts/windows/05-Ollama-Einrichten.bat** für Text-Ollama. Linux: **scripts/linux/setup-linux.sh**; dort werden HA-Verbindungsdaten derzeit manuell eingetragen.
+Optional: **00-Konfiguration.bat** nur für die fehlende `.env`, **05-Vision-Einrichten.bat** zum Nachrüsten auf bestehenden GPU-Rechnern, **scripts/windows/05-Ollama-Einrichten.bat** als Kompatibilitätsalias für das gemeinsame Text-/Vision-Modell. Linux: **scripts/linux/setup-linux.sh**; dort werden HA-Verbindungsdaten derzeit manuell eingetragen.
 
 **TAFA → Verbindungen → Schnelleinrichtung per JSON**: Import prüfen und bestätigen. Anschließend in Home Assistant die **Wyoming Protocol**-Integration für die GPU (Port **10300**) hinzufügen und die neu erzeugte GPU-`stt.*`-Entität in **Verbindungen** auswählen. Ollama benötigt separat die HA-Ollama-Integration und einen `conversation.*`-Agenten.
 
