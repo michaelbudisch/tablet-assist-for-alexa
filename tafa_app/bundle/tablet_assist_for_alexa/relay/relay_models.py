@@ -6,9 +6,9 @@ import json
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 
-VISION_MODELS = ("qwen3-vl:2b-instruct", "qwen3-vl:4b-instruct", "qwen3-vl:8b-instruct", "gemma3:4b")
-TEXT_MODELS = ("qwen3:4b-instruct",) + VISION_MODELS
-KEEP_ALIVE = (0, 60, 120, 300, 600)
+VISION_MODELS = ("qwen3-vl:4b-instruct",)
+TEXT_MODELS = VISION_MODELS
+KEEP_ALIVE = (-1,)
 CONTEXTS = (2048, 4096, 8192)
 MODEL_OPTIONS = frozenset(("vision_model", "model_keep_alive", "model_num_ctx"))
 
@@ -16,7 +16,7 @@ MODEL_OPTIONS = frozenset(("vision_model", "model_keep_alive", "model_num_ctx"))
 def find_agent(hass):
     from .const import DOMAIN
     relay = hass.data.get(DOMAIN, {}).get("relay_camera")
-    agent = relay.entry.data.get("llm_agent", "") if relay else ""
+    agent = (relay.entry.options.get("llm_agent") or relay.entry.data.get("llm_agent", "")) if relay else ""
     row = er.async_get(hass).async_get(agent) if agent else None
     entry = hass.config_entries.async_get_entry(row.config_entry_id) if row else None
     subentry = entry.subentries.get(row.config_subentry_id) if entry and row.config_subentry_id else None
@@ -30,7 +30,7 @@ def settings(relay, subentry):
         "vision_model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
         "keep_alive": subentry.data.get("keep_alive", 120),
         "num_ctx": subentry.data.get("num_ctx", 4096),
-        "vision_keep_alive": relay.entry.options.get("model_keep_alive", 0),
+        "vision_keep_alive": relay.entry.options.get("model_keep_alive", -1),
         "vision_num_ctx": relay.entry.options.get("model_num_ctx", 4096)}
 
 
@@ -74,7 +74,8 @@ async def model_settings(relay, call):
             relay.hass.config_entries.async_update_entry(relay.entry, options=options)
             # Native HA persistence and its normal update listener reload the Ollama entry.
             relay.hass.config_entries.async_update_subentry(entry, subentry, data=data)
-            current = settings(relay, subentry)
+            _, refreshed = find_agent(relay.hass)
+            current = settings(relay, refreshed)
         return {**current, "revision": revision(current),
             "shared": current["text_model"] == current["vision_model"],
             "text_models": [m for m in runtime.get("text_models", []) if m in TEXT_MODELS],
