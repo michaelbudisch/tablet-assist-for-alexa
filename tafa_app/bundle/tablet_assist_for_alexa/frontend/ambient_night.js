@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.52 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.53 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -411,16 +411,36 @@
     host.addEventListener("pointerdown",event=>{
       if(!event.target.closest?.(".hz-ambient-stage"))revealControls();
     },{passive:true});
-    host.addEventListener("click",revealControls);
+    host.addEventListener("click",event=>{
+      if(s.suppressClick){
+        s.suppressClick=false;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      revealControls();
+    });
 
-    // Hold for 280ms, then drag: the 3D mesh and attached sensor anchors
-    // share exactly the same yaw/pitch, with no scrolling or context menu.
+    // Press-and-drag works immediately on real pointer motion. Stationary
+    // presses still enter drag mode after 280ms. Unlike 0.4.52, movement
+    // during that interval must NEVER cancel the gesture.
     const HOLD_MS=280,PAUSE_MS=30000;
     const withinGlobe=event=>{
       const rect=canvas.getBoundingClientRect();
       if(!rect.width||!rect.height)return false;
       const radius=Math.min(rect.width*.42,rect.height*.41)*1.12;
       return Math.hypot(event.clientX-(rect.left+rect.width*.5),event.clientY-(rect.top+rect.height*.51))<=radius;
+    };
+    const activateDrag=pointer=>{
+      if(pointer.active||s.dragPointer!==pointer||active.get(card)!==s||!host.isConnected)return;
+      clearTimeout(pointer.timer);
+      pointer.active=true;
+      s.manualDragging=true;
+      s.orbitPauseUntil=Date.now()+PAUSE_MS;
+      clearTimeout(s.controlsTimer);
+      host.dataset.controls="hidden";
+      exit?.setAttribute("tabindex","-1");
+      canvas.classList.add("hz-manual-dragging");
     };
     const stopDrag=(event,cancelled=false)=>{
       const pointer=s.dragPointer;
@@ -444,24 +464,16 @@
       const pointer={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,active:false,timer:null};
       s.dragPointer=pointer;
       try{canvas.setPointerCapture?.(event.pointerId);}catch{}
-      pointer.timer=setTimeout(()=>{
-        if(active.get(card)!==s||s.dragPointer!==pointer||!host.isConnected)return;
-        pointer.active=true;
-        s.manualDragging=true;
-        s.orbitPauseUntil=Date.now()+PAUSE_MS;
-        clearTimeout(s.controlsTimer);
-        host.dataset.controls="hidden";
-        exit?.setAttribute("tabindex","-1");
-        canvas.classList.add("hz-manual-dragging");
-      },HOLD_MS);
+      pointer.timer=setTimeout(()=>activateDrag(pointer),HOLD_MS);
     });
     canvas.addEventListener("pointermove",event=>{
       const pointer=s.dragPointer;
       if(!pointer||pointer.id!==event.pointerId)return;
       if(!pointer.active){
-        if(Math.hypot(event.clientX-pointer.x,event.clientY-pointer.y)>11)stopDrag(event,true);
-        return;
+        if(Math.hypot(event.clientX-pointer.x,event.clientY-pointer.y)<6)return;
+        activateDrag(pointer);
       }
+      if(!pointer.active)return;
       event.preventDefault();
       const rect=canvas.getBoundingClientRect();
       const sensitivity=Math.PI/Math.max(180,Math.min(rect.width,rect.height)*.65);
@@ -476,7 +488,11 @@
     canvas.addEventListener("lostpointercapture",event=>stopDrag(event,true));
     canvas.addEventListener("contextmenu",event=>event.preventDefault());
     canvas.addEventListener("click",event=>{
-      if(s.suppressClick){event.preventDefault();event.stopPropagation();s.suppressClick=false;}
+      if(s.suppressClick){
+        event.preventDefault();
+        event.stopPropagation();
+        s.suppressClick=false;
+      }
     });
     host.addEventListener("keydown",event=>{
       if((event.key==="Enter"||event.key===" "||event.key==="Escape")&&host.dataset.controls!=="visible"){
