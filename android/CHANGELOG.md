@@ -1,5 +1,12 @@
 # Android changelog
 
+## 1.2.4 · Compact settings and verified audio output
+- Automatic audio prefers Bluetooth media output, otherwise the internal tablet speaker. Bluetooth-only and tablet-only modes are available in Android and TAFA Control Center.
+- Both streaming and buffered playback verify the selected output before speech; route changes stop the current response.
+- Collapsible settings groups and stateful connect/disconnect and start/stop controls.
+- Refresh stale UI and component-version test expectations; exercise selections in an expanded settings group.
+- Version code 25; original update signing certificate. Validation: 49 JVM tests, Android lint without errors, DE/EN UI smoke on phone and tablet emulators, and 25 Python contract/documentation checks. Physical audio testing remains outstanding.
+
 ## 1.2.3 · Device acknowledgement and WebSocket diagnostics
 - Acknowledge applied HA control revisions so Control Center can measure per-tablet round-trip time.
 - Report WebSocket, REST fallback or inactive service, plus the local follow-up ceiling.

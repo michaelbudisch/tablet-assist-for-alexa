@@ -1,9 +1,11 @@
-# TAFA Device Bridge 1.2.4 — source update
+# TAFA Device Bridge 1.2.4
+
+**Signed build:** TAFA-Device-Bridge-1.2.4.apk uses the existing signing certificate, application ID de.jarvis.audio and version code 25. Install over the current app. Validation: 49 JVM tests, Android lint without errors, DE/EN UI smoke tests on phone and tablet emulators, and 25 Python contract/documentation checks. Physical Bluetooth/tablet audio testing remains outstanding.
 
 - Automatic audio output prefers a connected Bluetooth media device, otherwise uses the internal tablet speaker. Strict Bluetooth-only and tablet-only modes remain available.
 - Both the streaming PCM path and buffered file playback verify the selected output before making speech audible. If routing changes during playback, that response stops; the next one chooses the current output.
 - Compact collapsible settings, explicit Connect/Disconnect and start/stop actions. Per-device audio mode can be changed in the updated TAFA Control Center.
-- Same package ID, version code 25. A compatible release APK must be signed with the original signing key; the existing signed 1.2.3 remains available until then. Physical audio tests are still required.
+- Same package ID, version code 25 and original update-signing certificate. Physical audio tests are still required.
 
 # TAFA Device Bridge 1.2.3
 

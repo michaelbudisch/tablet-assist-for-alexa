@@ -80,9 +80,13 @@ public class UiSmokeInstrumentation extends Instrumentation {
                 check(german.findViewById(R.id.display_permission).getVisibility()==View.VISIBLE,
                         "Display permission is included in Settings");
                 Spinner followups=german.findViewById(R.id.native_followup_limit);
-                check(followups.getAdapter().getCount()==11,"Wakeword only plus 1–10 follow-ups");
+                check(followups.getAdapter().getCount()==15,"Wakeword only, finite limits through 100 and unlimited");
+                check(followups.getAdapter().getItem(13).toString().equals(
+                        german.getResources().getQuantityString(R.plurals.followup_count,100,100)),
+                        "100 follow-ups available");
+                check(followups.getAdapter().getItem(14).toString().equals(german.getString(R.string.followup_unlimited)),
+                        "Unlimited follow-ups require an explicit choice");
                 check(followups.getSelectedItemPosition()==0,"Every question requires wakeword by default");
-                followups.setSelection(3);
                 german.findViewById(R.id.nav_status).performClick();
                 check(german.findViewById(R.id.status_connect).isShown(),"Status offers Connect");
                 check(german.findViewById(R.id.status_speak).isShown(),"Status offers Speak now");
@@ -103,6 +107,17 @@ public class UiSmokeInstrumentation extends Instrumentation {
                 german.findViewById(R.id.nav_settings).performClick();
                 check(((EditText)german.findViewById(R.id.token)).getText().toString().equals("header.payload.test-signature"), "Tab switches retain unsaved token in memory");
             });
+            runOnMainSync(() -> german.findViewById(R.id.section_settings)
+                    .findViewWithTag("settings_group_1").performClick());
+            waitForIdleSync();
+            runOnMainSync(() -> {
+                Spinner followups=german.findViewById(R.id.native_followup_limit);
+                check(followups.isShown(),"Follow-up selector is visible in the voice group");
+                followups.setSelection(3);
+            });
+            waitForIdleSync();
+            runOnMainSync(() -> check(german.getSharedPreferences(MainActivity.PREF,0)
+                    .getInt(FollowupPolicy.LOCAL_LIMIT,0)==3,"Visible follow-up selection persists"));
             screenshot(german, "de-" + layout);
             runOnMainSync(() -> german.findViewById(R.id.nav_status).performClick());
             screenshot(german, "de-" + layout + "-status");

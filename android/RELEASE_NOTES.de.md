@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.4
+
+**Signierter Build:** TAFA-Device-Bridge-1.2.4.apk verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode 25. Über die vorhandene App installieren. Prüfung: 49 Unit-Tests, Android Lint ohne Fehler, DE/EN-Oberflächentests im Handy- und Tablet-Emulator sowie 25 Python-Vertrags-/Dokumentationsprüfungen. Echte Bluetooth-/Tablet-Audiotests stehen noch aus.
+
+- **Audioausgabe:** Automatik bevorzugt verbundenes Bluetooth-Medienaudio und verwendet ansonsten den internen Tablet-Lautsprecher. Nur Bluetooth und Nur Tablet bleiben ausdrücklich wählbar.
+- **Geprüfte Route:** Streaming und gepufferte Wiedergabe bestätigen den gewählten Ausgang vor der Ausgabe. Bei einem Routenwechsel stoppt die laufende Antwort; die nächste Antwort wählt den aktuellen Ausgang.
+- **Kompakte Einstellungen:** Aufklappbare Gruppen, zustandsabhängige Verbinden/Trennen- und Start/Stopp-Schalter. Der Audiomodus kann pro Tablet im aktuellen TAFA Control Center mit Integration 0.4.40 geändert werden.
+- **Prüfungen:** Veraltete UI- und Release-Versionsannahmen aktualisiert. Reale Umschaltzeiten und Audiogeräte müssen auf dem Tablet geprüft werden.
+
 # TAFA Device Bridge 1.2.3
 
 **Signierter Build:** TAFA-Device-Bridge-1.2.3.apk verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode 24. Über die vorhandene App installieren. Prüfung: 46 Unit-Tests erfolgreich, Android Lint ohne Fehler, UI-Tests kompiliert und drei Dokumentationsprüfungen bestanden. Ein Praxistest auf Tablet/Echo steht noch aus.
