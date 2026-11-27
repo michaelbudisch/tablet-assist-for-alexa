@@ -189,10 +189,11 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const time=new Date(),clock=stage.querySelector("#hz-night-clock"),date=stage.querySelector("#hz-night-date");
     if(clock)clock.textContent=time.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
     if(date)date.textContent=time.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+    if(!s.metricIds)s.metricIds=[];
     for(let i=0;i<metrics.length;i++){
       const node=stage.querySelector(`[data-ambient-metric="${i}"] b`);
       if(!node)continue;
-      const id=choose(h,metrics[i]);const str=fmt(id?h[id]:null);
+      const id=choose(h,metrics[i]);s.metricIds[i]=id;const str=fmt(id?h[id]:null);
       if(node.textContent!==str)node.textContent=str;
     }
     const nextPhase=resolvePhase(card,s);
@@ -210,6 +211,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
       s.phase=nextPhase;s.phaseChangeAt=when;
     }
     stage.dataset.phase=s.phase;
+    s.overview?.update?.();
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
     if(label&&label.textContent!==labels[s.phase]){
@@ -754,6 +756,10 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     if(!host||!canvas)return;
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
+    // Load the optional calendar only for an active ambient display.
+    void import("./ambient_overview.js?v=0.4.67")
+      .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
+      .catch(err=>console.debug("TAFA ambient calendar unavailable",err));
     const exit=host.querySelector(".hz-ambient-exit");
     const revealControls=()=>{
       if(active.get(card)!==s||!host.isConnected)return;
@@ -901,6 +907,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
   }
   function dispose(card){
     const s=active.get(card);if(!s)return;
+    s.overview?.dispose?.();
     active.delete(card);cancelAnimationFrame(s.raf);
     clearTimeout(s.infoTimer);
     clearTimeout(s.controlsTimer);
