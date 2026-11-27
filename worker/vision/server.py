@@ -242,7 +242,34 @@ def create_app(default_model=DEFAULT_MODEL, call=ollama_json):
         context_options=CONTEXTS, model_unavailable=ModelUnavailable)
     return app
 
+def preload_shared_model():
+    """After container restart, warm the one shared Ollama model without installing anything."""
+    for attempt in range(24):
+        try:
+            tags = ollama_json("/api/tags", timeout=5)
+            installed = {
+                row.get("name") or row.get("model")
+                for row in tags.get("models", []) if isinstance(row, dict)
+            }
+            if DEFAULT_MODEL not in installed:
+                print("Qwen3-VL preload skipped: model is not installed yet", flush=True)
+                return
+            ollama_json("/api/generate", {
+                "model": DEFAULT_MODEL, "prompt": "",
+                "stream": False, "keep_alive": -1,
+            }, timeout=120)
+            print("Qwen3-VL preloaded with indefinite keep-alive", flush=True)
+            return
+        except (RuntimeError, ValueError, ModelUnavailable) as error:
+            if attempt == 23:
+                print(f"Qwen3-VL preload unavailable: {type(error).__name__}", flush=True)
+                return
+            time.sleep(3)
+
+
 if __name__ == "__main__":
+    # Do not block the Vision HTTP service while Ollama loads its model.
+    threading.Thread(target=preload_shared_model, name="vl-preload", daemon=True).start()
     from waitress import serve
     app = create_app(
                      os.environ.get("VISION_MODEL", DEFAULT_MODEL))
