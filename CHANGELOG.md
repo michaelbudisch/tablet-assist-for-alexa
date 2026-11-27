@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.62 — Contain internal light pulses within sphere
+- Both gentle transition rings expand out from the center but fade before reaching the globe's edge; removed the former overshoot to 133% of the sphere's radius.
+- Multi-hop network light packets, their trails and flashed-node halos are clipped to the sphere silhouette; they no longer extend into the surrounding scene.
+- Separately rendered shooting stars still orbit outside the sphere, unaffected by the inner clip. Manual 3D rotation, momentum, staged reply panels, instant voice state reporting and automations remain unchanged.
+
 ## TAFA App / HA integration 0.4.61 — Multi-hop node signals and subtle radial pulses
 - Closer match to the reference HD video (around 39–40 s and 68–70 s): one restrained expanding circular pulse on listening→processing and a second on processing→speaking, each with a faint echo. Repeated updates in the same phase never spawn duplicate rings.
 - Signal packets now traverse **connected 6–8-node routes along the actual 3D globe graph** instead of isolated edges. Each reached vertex flashes briefly and the packet continues through the next connection. Packets reverse along their route at the end rather than jumping between disconnected paths.
