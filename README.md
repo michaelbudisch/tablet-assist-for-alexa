@@ -67,6 +67,7 @@ The **[step-by-step setup guide](docs/en/setup-guide.md)** covers installation c
 - [Home Assistant App installation](docs/en/app.md) · [Native Android app and compatible APKs](android/README.md)
 - [CPU speech server on Proxmox](docs/en/proxmox.md) · [Optional GPU worker](docs/en/worker.md)
 - [Multiroom setup](homeassistant/examples/MULTIROOM.md) · [Optional HA automations](docs/ha-automations.md)
+- [Control Center guide — voice AI without a dashboard](docs/en/control-center.md) · [Custom dashboard/infobox developer guide](docs/en/dashboard-integration.md)
 - [Marketplace-only integration](docs/en/marketplace.md) — an alternative to the App-managed integration, **not an additional copy**
 - [Security](docs/en/security.md) · [Release notes](CHANGELOG.md)
 
