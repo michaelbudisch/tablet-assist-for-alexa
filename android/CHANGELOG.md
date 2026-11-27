@@ -1,3 +1,8 @@
+## 1.2.5 · Immediate wakeword and Assist phase telemetry
+- Native wakeword recognition and each Assist stage now publish HA telemetry on change, rather than waiting up to 12 seconds for the next refresh.
+- Dedicated non-blocking worker coalesces obsolete statuses on a slow connection and preserves periodic reconciliation as a fallback.
+- Version code 26; signing with the original key remains required for upgrading the installed app. No changes to app ID, audio routing, or HA automations.
+
 # Android changelog
 
 ## 1.2.4 · Compact settings and verified audio output
