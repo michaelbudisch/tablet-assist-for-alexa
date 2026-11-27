@@ -343,4 +343,5 @@
     <string name="approach_error">Nearby presence: detection unavailable</string>
     <string name="approach_size">Face size %1$d %%</string>
     <string name="approach_delivery_error">HA delivery pending</string>
+    <plurals name="approach_hold_interval"><item quantity="one">After %d second</item><item quantity="other">After %d seconds</item></plurals>
 </resources>

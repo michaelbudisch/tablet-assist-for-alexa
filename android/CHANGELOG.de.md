@@ -1,3 +1,6 @@
+## 1.2.10 · Klarer Text für die Ausschaltverzögerung
+- Die Annäherungs-Einstellung bezeichnet die Wartezeit jetzt korrekt als „Nach … Sekunden“. Sensorfunktion und Standardwerte entsprechen 1.2.9. Versionscode 31.
+
 ## 1.2.9 · Lokale Annäherungserkennung
 
 - Auf aktuellem Git-Stand 1.2.8 einschließlich lokaler Beendigung stiller Folgefragen aufgebaut.

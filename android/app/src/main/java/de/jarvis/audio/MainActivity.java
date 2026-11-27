@@ -932,7 +932,7 @@ public class MainActivity extends Activity {
         var prefs=getSharedPreferences(PREF,0);
         Spinner spinner=findViewById(view);ArrayList<String> labels=new ArrayList<>();int chosen=0;
         for(int i=0;i<values.length;i++){
-            labels.add(percent?values[i]+" %":getResources().getQuantityString(R.plurals.camera_refresh_interval,values[i],values[i]));
+            labels.add(percent?values[i]+" %":getResources().getQuantityString(R.plurals.approach_hold_interval,values[i],values[i]));
             if(values[i]==prefs.getInt(key,fallback))chosen=i;
         }
         spinner.setAdapter(BridgeChoices.create(this,labels));spinner.setSelection(chosen);

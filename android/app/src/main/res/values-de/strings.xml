@@ -341,4 +341,5 @@
     <string name="approach_error">Annäherung: Erkennung nicht verfügbar</string>
     <string name="approach_size">Gesichtsgröße %1$d %%</string>
     <string name="approach_delivery_error">HA-Übertragung ausstehend</string>
+    <plurals name="approach_hold_interval"><item quantity="one">Nach %d Sekunde</item><item quantity="other">Nach %d Sekunden</item></plurals>
 </resources>

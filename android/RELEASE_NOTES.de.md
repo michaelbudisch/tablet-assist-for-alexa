@@ -1,3 +1,7 @@
+# TAFA Device Bridge 1.2.10
+
+Signierter finaler Annäherungs-Build, Versionscode 31. Enthält die lokale Erkennung aus 1.2.9 mit klar beschrifteter Ausschaltverzögerung. Über die vorhandene App installieren.
+
 # TAFA Device Bridge 1.2.9
 
 - Auf aktuellem Git-Stand 1.2.8 einschließlich lokaler Beendigung stiller Folgefragen aufgebaut.

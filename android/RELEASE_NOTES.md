@@ -1,3 +1,7 @@
+# TAFA Device Bridge 1.2.10
+
+Signed final proximity build, version code 31. Includes local detection from 1.2.9 with correctly labelled exit-delay choices. Install over the existing app.
+
 # TAFA Device Bridge 1.2.9
 
 - Based on current Git 1.2.8, retaining local termination of silent follow-up captures.

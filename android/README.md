@@ -1,8 +1,8 @@
-# TAFA Device Bridge · Android 1.2.9
+# TAFA Device Bridge · Android 1.2.10
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-**1.2.9:** Optional independent HA proximity entity using on-device front-camera detection, with adjustable face-size threshold and exit delay. Includes current Git 1.2.8 changes for locally ending silent follow-ups. Install the signed update over the existing app.
+**1.2.10:** Optional independent HA proximity entity using on-device front-camera detection, with adjustable face-size threshold and exit delay. Includes current Git 1.2.8 changes for locally ending silent follow-ups. Install the signed update over the existing app.
 
 Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback, camera and image-motion detection in one compact app. Android 9+.
 
@@ -60,7 +60,7 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-[Download signed APK 1.2.9](downloads/TAFA-Device-Bridge-1.2.9.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.9) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **30**. Install over the existing app to retain credentials and device identity.
+[Download signed APK 1.2.10](downloads/TAFA-Device-Bridge-1.2.10.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.10) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **31**. Install over the existing app to retain credentials and device identity.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 

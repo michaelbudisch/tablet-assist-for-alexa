@@ -1,3 +1,6 @@
+## 1.2.10 · Clearer proximity exit-delay wording
+- The proximity setting now labels the timeout as “After … seconds”. Detection behavior and defaults match 1.2.9. Version code 31.
+
 ## 1.2.9 · Local near-tablet presence
 
 - Based on current Git 1.2.8, retaining local termination of silent follow-up captures.
