@@ -21,6 +21,7 @@ import java.util.ArrayDeque;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,8 @@ public final class WakeWordService extends Service implements RecognitionListene
     private static final String CHANNEL="jarvis-wake",TAG="JarvisWake";
     private static final long SYNC_INTERVAL_MS=500;
     private final Handler main=new Handler(Looper.getMainLooper());
-    private boolean enabled=false,loading=false;
+    private volatile boolean enabled=false;
+    private boolean loading=false;
     static volatile boolean muted=true;
     private String wordChoice="hey_jarvis";
     private String voiceMode="wake";
@@ -50,6 +52,8 @@ public final class WakeWordService extends Service implements RecognitionListene
     private int strictness=1,cooldownSeconds=12,holdSeconds=50;
     private final WakeTriggerGate triggerGate=new WakeTriggerGate();
     private ScheduledExecutorService settingsExecutor;
+    private ExecutorService phaseExecutor;
+    private WakePhaseReporter phaseReporter;
     private NativeSettingsSocket settingsSocket;
     private volatile long lastFullSync=0;
     private volatile int lastAckRevision=-1;
@@ -79,6 +83,34 @@ public final class WakeWordService extends Service implements RecognitionListene
         NotificationManager manager=getSystemService(NotificationManager.class);
         manager.createNotificationChannel(new NotificationChannel(CHANNEL,
             getString(R.string.wake_title),NotificationManager.IMPORTANCE_LOW));
+    }
+
+    // Voice phase changes are sent immediately without blocking any audio callback.
+    // This is independent of the 12-second configuration reconciliation.
+    private void updateStatus(String next){
+        if(next==null||next.equals(status))return;
+        status=next;
+        publishCurrentStatus();
+    }
+
+    private void publishCurrentStatus(){
+        WakePhaseReporter reporter=phaseReporter;
+        if(enabled&&reporter!=null)reporter.submit(status);
+    }
+
+    private void publishPhase(String phase){
+        if(!enabled)return;
+        String microphone;
+        if(muted)microphone="muted";
+        else if(phase.startsWith("detected:")||
+            (phase.startsWith("native_")&&!phase.equals("native_answer_completed")
+            &&!phase.equals("native_no_reply")&&!phase.startsWith("native_error:")))
+            microphone="assist";
+        else if("listening: continuous".equals(phase))microphone="continuous";
+        else if(phase.startsWith("listening:"))microphone="wakeword";
+        else microphone="idle";
+        try{WakePilotSettings.report(this,phase,microphone,controlChannel());}
+        catch(Exception e){Log.w(TAG,"Live voice phase report unavailable",e);}
     }
 
     private Notification notification(){
@@ -121,12 +153,12 @@ public final class WakeWordService extends Service implements RecognitionListene
         }
         if(enabled)return START_NOT_STICKY;
         if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
-            status="permission_required";stopSelf();return START_NOT_STICKY;
+            updateStatus("permission_required");stopSelf();return START_NOT_STICKY;
         }
         if(!WakeModelInstaller.installed(this)&&
                 !"continuous".equals(getSharedPreferences(MainActivity.PREF,0)
                     .getString("native_voice_mode","wake"))){
-            status="model_missing";stopSelf();return START_NOT_STICKY;
+            updateStatus("model_missing");stopSelf();return START_NOT_STICKY;
         }
         voiceMode=WakePilotSettings.modeFor(getSharedPreferences(MainActivity.PREF,0)
             .getString("native_voice_mode","wake"));
@@ -136,10 +168,16 @@ public final class WakeWordService extends Service implements RecognitionListene
                 startForeground(43,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
             else startForeground(43,notification());
         }catch(Exception e){
-            status="foreground_error: "+e.getClass().getSimpleName();
+            updateStatus("foreground_error: "+e.getClass().getSimpleName());
             stopSelf();return START_NOT_STICKY;
         }
-        enabled=true;running=true;muted=true;status="loading";
+        enabled=true;running=true;muted=true;
+        phaseExecutor=Executors.newSingleThreadExecutor(r->{
+            Thread thread=new Thread(r,"TAFA-LiveVoicePhase");
+            thread.setDaemon(true);return thread;
+        });
+        phaseReporter=new WakePhaseReporter(phaseExecutor,this::publishPhase);
+        updateStatus("loading");
         loading=false;
         startSettingsSync();
         startRecognition();
@@ -191,14 +229,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                     }
                     // Acknowledge applied changes promptly in HA telemetry so
                     // the Control Center doesn't display a stale microphone state.
-                    ScheduledExecutorService worker=settingsExecutor;
-                    if(worker!=null&&!worker.isShutdown())worker.execute(()->{
-                        try{WakePilotSettings.report(WakeWordService.this,status,
-                            muted?"muted":nativeSession!=null?"assist":
-                            continuousRunning?"continuous":speech!=null?"wakeword":"idle",
-                            controlChannel());}
-                        catch(Exception problem){Log.w(TAG,"Settings ack unavailable");}
-                    });
+                    publishCurrentStatus();
                 });
             }
         });
@@ -218,10 +249,9 @@ public final class WakeWordService extends Service implements RecognitionListene
                 if(full){
                     WakePilotSettings.Snapshot settings=WakePilotSettings.readFull(this);
                     lastFullSync=SystemClock.elapsedRealtime();
-                    try{WakePilotSettings.report(this,status,muted?"muted":
-                        nativeSession!=null?"assist":continuousRunning?"continuous":speech!=null?"wakeword":"idle",
-                        controlChannel());}
-                    catch(Exception e){Log.w(TAG,"Noncritical telemetry failed",e);}
+                    // Periodic recovery uses the same ordered queue: no stale
+                    // heartbeat may overwrite a newer live phase.
+                    publishCurrentStatus();
                     main.post(()->{
                         if(!enabled)return;
                         wordChoice=settings.word;
@@ -245,7 +275,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 main.post(()->{
                     if(!enabled)return;
                     setMuted(true);
-                    status="ha_settings_error: "+e.getClass().getSimpleName();
+                    updateStatus("ha_settings_error: "+e.getClass().getSimpleName());
                 });
             }
         },0,SYNC_INTERVAL_MS,TimeUnit.MILLISECONDS);
@@ -298,7 +328,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 resetConversation();
                 triggerGate.reset();
             }
-            status="muted";
+            updateStatus("muted");
         }else{
             boolean wasMuted=muted;
             muted=false;
@@ -308,7 +338,7 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     private void loadWakeModel(){
         if(model!=null||loading)return;
-        if(!WakeModelInstaller.installed(this)){status="model_missing";return;}
+        if(!WakeModelInstaller.installed(this)){updateStatus("model_missing");return;}
         loading=true;
         new Thread(()->{
             try{
@@ -322,7 +352,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             }catch(Exception error){
                 main.post(()->{
                     loading=false;
-                    status="model_error: "+error.getClass().getSimpleName();
+                    updateStatus("model_error: "+error.getClass().getSimpleName());
                 });
             }
         },"TAFA-WakeModel").start();
@@ -355,12 +385,12 @@ public final class WakeWordService extends Service implements RecognitionListene
             recognizer=new Recognizer(model,16000f,grammar);
             speech=new SpeechService(recognizer,16000f);
             if(!speech.startListening(this))throw new IllegalStateException("Recorder not started");
-            status="listening: "+wordChoice;
+            updateStatus("listening: "+wordChoice);
             NotificationManager manager=getSystemService(NotificationManager.class);
             if(manager!=null)manager.notify(43,notification());
         }catch(Exception e){
             Log.w(TAG,"Wakeword microphone unavailable",e);
-            status="microphone_error: "+e.getClass().getSimpleName();
+            updateStatus("microphone_error: "+e.getClass().getSimpleName());
             releaseRecognizer();
             main.postDelayed(rearm,5000);
         }
@@ -380,7 +410,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         }
         final long generation=++continuousGeneration;
         continuousRunning=true;
-        status="listening: continuous";
+        updateStatus("listening: continuous");
         NotificationManager notifications=getSystemService(NotificationManager.class);
         if(notifications!=null)notifications.notify(43,notification());
         continuousThread=new Thread(()->{
@@ -443,7 +473,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                     Log.w(TAG,"Continuous native microphone unavailable",e);
                     main.post(()->{
                         if(enabled&&!muted&&"continuous".equals(voiceMode)){
-                            status="microphone_error: "+e.getClass().getSimpleName();
+                            updateStatus("microphone_error: "+e.getClass().getSimpleName());
                             main.postDelayed(rearm,5000);
                         }
                     });
@@ -503,7 +533,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         lastHit=now;
         // Release the Vosk recorder before opening a separate native recorder.
         releaseRecognizer();
-        status="detected: "+hit;
+        updateStatus("detected: "+hit);
         resetConversation();
         // The native capture owns the complete request. Do not launch
         // a competing browser or old wake-event microphone path.
@@ -529,7 +559,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         var prefs=getSharedPreferences(MainActivity.PREF,0);
         // TAFA supports one speech mode: native microphone → HA Assist
         // and authenticated multiroom Bluetooth playback.
-        status=nextQuestion?"native_followup":"native_connecting";
+        updateStatus(nextQuestion?"native_followup":"native_connecting");
         final NativeAssistSession[] holder=new NativeAssistSession[1];
         NativeAssistSession session=new NativeAssistSession(this,hit,
             nextQuestion?nativeConversationId:"",
@@ -538,7 +568,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 @Override public void state(String stage){
                     main.post(()->{
                         if(enabled&&nativeSession==holder[0]){
-                            status="native_"+stage;
+                            updateStatus("native_"+stage);
                             NotificationManager manager=getSystemService(NotificationManager.class);
                             if(manager!=null)manager.notify(43,notification());
                         }
@@ -551,10 +581,10 @@ public final class WakeWordService extends Service implements RecognitionListene
                         if(!enabled||muted)return;
                         if(answered){
                             nativeConversationId=conversationId;
-                            status="native_answer_completed";
+                            updateStatus("native_answer_completed");
                         }else {
                             nativeConversationId="";
-                            if(!status.startsWith("native_error:"))status="native_no_reply";
+                            if(!status.startsWith("native_error:"))updateStatus("native_no_reply");
                         }
                         if(FollowupPolicy.shouldContinue(answered,completedFollowups,followupLimit())){
                             main.removeCallbacks(followup);
@@ -598,7 +628,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         if(nativeSession!=null||followupPending||speech==null)return;
         Log.w(TAG,"Wakeword recognition error",e);
         if(enabled){
-            status="recognition_error: "+e.getClass().getSimpleName();
+            updateStatus("recognition_error: "+e.getClass().getSimpleName());
             releaseRecognizer();
             main.postDelayed(rearm,5000);
         }
@@ -617,6 +647,8 @@ public final class WakeWordService extends Service implements RecognitionListene
         if(nativeSession!=null){nativeSession.close();nativeSession=null;}
         if(settingsSocket!=null){settingsSocket.close();settingsSocket=null;}
         if(settingsExecutor!=null){settingsExecutor.shutdownNow();settingsExecutor=null;}
+        if(phaseReporter!=null){phaseReporter.close();phaseReporter=null;}
+        if(phaseExecutor!=null){phaseExecutor.shutdownNow();phaseExecutor=null;}
         releaseRecognizer();
         stopContinuousMonitor();
         if(model!=null){try{model.close();}catch(Exception ignored){}model=null;}
