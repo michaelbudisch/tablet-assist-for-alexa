@@ -50,7 +50,8 @@ function Ensure-Env {
     'STREAM_FIXED_MODEL_SIZE=1.7B',
     'STREAM_VOICE_VARIANT=1',
     'STREAM_TEXT_CLEANUP=1',
-    'STREAM_SPEECH_SPLIT=0'
+    'STREAM_SPEECH_SPLIT=0',
+    'VISION_MODEL=qwen3-vl:4b-instruct'
   )
   [IO.File]::WriteAllLines($EnvFile,[string[]]$settings,(New-Object Text.UTF8Encoding($false)))
   Write-Host 'Neue .env OHNE Token erstellt.' -ForegroundColor Green
@@ -72,21 +73,39 @@ function Ask-YesNo([string]$Question,[bool]$DefaultYes=$false) {
   if(-not $reply){return $DefaultYes}
   return ($reply.ToLowerInvariant() -in @('j','ja','y','yes'))
 }
+function Warm-Vision {
+  # An empty prompt loads Qwen3-VL without producing a text answer.
+  $settings=Get-Settings
+  $ip=[string]$settings['LAN_IP']
+  if(-not (Private-IP $ip)){throw 'Ungueltige LAN_IP fuer Ollama-Vorladung.'}
+  $body='{"model":"qwen3-vl:4b-instruct","prompt":"","stream":false,"keep_alive":-1}'
+  for($attempt=1;$attempt -le 8;$attempt++){
+    try {
+      Invoke-RestMethod -Uri ('http://'+$ip+':11434/api/generate') -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 120 | Out-Null
+      Write-Host 'Qwen3-VL ist geladen (keep_alive=-1).' -ForegroundColor Green
+      return
+    }catch{
+      if($attempt -eq 8){
+        Write-Warning 'Ollama-Vorladung nicht bestaetigt; GPU-Speicherbelegung pruefen.'
+        return
+      }
+      Start-Sleep -Seconds 2
+    }
+  }
+}
 function Setup-Vision {
   Check-Docker
-  Write-Host 'Vision wird zusammen mit dem lokalen Ollama-Backend eingerichtet.'
-  Compose -Arguments @('--profile','vision','up','-d','--build','ollama','vision')
-  $settings=Get-Settings
-  $model=[string]$settings['VISION_MODEL']
-  if(-not $model){$model='qwen3-vl:4b-instruct'}
-  if($model -notin @('qwen3-vl:2b-instruct','qwen3-vl:4b-instruct','qwen3-vl:8b-instruct','gemma3:4b')){
-    throw 'VISION_MODEL in .env wird von TAFA nicht unterstuetzt.'
-  }
-  Write-Host 'Der Vision-Container startet, benoetigt aber ein installiertes Vision-Modell.'
-  if(Ask-YesNo ("Vision-Modell "+$model+" herunterladen? (mehrere GB, nur nach Zustimmung)")) {
+  Write-Host 'Richte ein gemeinsames Ollama-Modell fuer Text und Vision ein: qwen3-vl:4b-instruct.'
+  Compose -Arguments @('--profile','vision','up','-d','--build','ollama','ollama-gateway','vision')
+  $model='qwen3-vl:4b-instruct'
+  $installed=@(& docker compose --profile vision exec -T ollama ollama list)
+  if($LASTEXITCODE -ne 0){throw 'Ollama-Modellliste nicht lesbar.'}
+  if(($installed -join [Environment]::NewLine) -notmatch '(?m)^\s*qwen3-vl:4b-instruct\s+'){
+    Write-Host 'Lade das gemeinsame Text-/Vision-Modell (mehrere GB) herunter.'
     & docker compose --profile vision exec -T ollama ollama pull $model
-    if($LASTEXITCODE -ne 0){throw 'Vision-Modelldownload fehlgeschlagen. Bitte Docker/Ollama pruefen.'}
+    if($LASTEXITCODE -ne 0){throw 'Ollama-Modelldownload fehlgeschlagen.'}
   }
+  Warm-Vision
 }
 function Start-Configured {
   Check-Docker
@@ -94,21 +113,14 @@ function Start-Configured {
   $known=@(& docker compose --profile '*' ps --all --services 2>$null)
   if($LASTEXITCODE -ne 0){throw 'Dockerstatus nicht lesbar.'}
   $known=@($known | ForEach-Object {$_.Trim()} | Where-Object {$_})
-  if($known -contains 'vision'){
-    Compose -Arguments @('--profile','vision','up','-d','ollama','vision')
-  }
-  if($known -contains 'ollama-gateway' -or ($known -contains 'ollama' -and $known -notcontains 'vision')){
-    Compose -Arguments @('--profile','llm','up','-d','ollama','ollama-gateway')
+  if($known -contains 'vision' -or $known -contains 'ollama' -or $known -contains 'ollama-gateway'){
+    Compose -Arguments @('--profile','vision','up','-d','ollama','ollama-gateway','vision')
+    Warm-Vision
   }
 }
 function Setup-Ollama {
-  Check-Docker
-  Compose -Arguments @('--profile','llm','up','-d','ollama','ollama-gateway')
-  Write-Host 'Ollama ist gestartet. Ein Textmodell wird nur nach Zustimmung heruntergeladen.'
-  if(Ask-YesNo 'Textmodell qwen3:4b-instruct herunterladen? (groesserer Download)') {
-    & docker compose --profile llm exec -T ollama ollama pull qwen3:4b-instruct
-    if($LASTEXITCODE -ne 0){throw 'Ollama-Modelldownload fehlgeschlagen.'}
-  }
+  # Compatibility alias for older launchers; never pull a separate text model.
+  Setup-Vision
 }
 function Write-Report {
   $settings=Get-Settings
@@ -146,16 +158,14 @@ function Write-Report {
     }catch{$visionReady=$false}
   }
   if(-not $visionModel){
-    $visionModel=[string]$settings['VISION_MODEL']
-    if(-not $visionModel){$visionModel='qwen3-vl:4b-instruct'}
+    $visionModel='qwen3-vl:4b-instruct'
   }
   $selectedModel=''
   if($hasOllama){
     try {
       $models=@((Invoke-RestMethod -Uri ('http://'+$ip+':11434/api/tags') -TimeoutSec 2).models |
         ForEach-Object {if($_.name){[string]$_.name}})
-      if($models -contains 'qwen3:4b-instruct'){$selectedModel='qwen3:4b-instruct'}
-      elseif($models.Count -eq 1){$selectedModel=[string]$models[0]}
+      if($models -contains 'qwen3-vl:4b-instruct'){$selectedModel='qwen3-vl:4b-instruct'}
     }catch{ $selectedModel='' }
   }
   $manifest=[ordered]@{
@@ -196,7 +206,7 @@ function Write-Report {
     ('   Status: '+$qwenState)
     '   TAFA > Verbindungen: Qwen-TTS-Adresse.'
     ''
-    '3. Ollama (Text-KI, optional)'
+    '3. Ollama (ein Modell fuer Text und Vision)'
     ('   Adresse: '+$manifest['services']['ollama']['url'])
     ('   Status: '+$ollamaState)
     ('   Modell: '+$modelText)
@@ -209,11 +219,11 @@ function Write-Report {
     ('   Modell: '+$visionModel)
     '   Test: im Browser http://GPU-IP:10503/health (ready muss true sein).'
     '   Home Assistant: TAFA leitet die Vision-Adresse automatisch aus GPU-IP ab.'
-    '   Fehlt Vision: 05-Vision-Einrichten.bat starten und Vision-Modell auswaehlen.'
+    '   Fehlt Vision: 05-Vision-Einrichten.bat installiert das gemeinsame Modell.'
     ''
     '5. Automatische Einrichtung'
     '   TAFA > Verbindungen > Schnelleinrichtung per JSON.'
-    '   Datei: tafa-worker.json (GPU STT, Qwen TTS, optional Text-Ollama)'
+    '   Datei: tafa-worker.json (GPU STT, Qwen TTS, Ollama mit Qwen3-VL)'
     '   Vision ist separat oben dokumentiert, weil JSON v1 keine Vision-Felder hat.'
     ''
     '6. CPU-Fallback separat einrichten (nicht Teil des GPU-Exports)'
@@ -241,12 +251,7 @@ try {
       Check-Docker
       Compose -Arguments @('--profile','stream','config','--quiet')
       Compose -Arguments @('--profile','stream','up','-d','--build','whisper','qwen-stream')
-      if(Ask-YesNo 'Optional Ollama als Text-KI mit einrichten?') { Setup-Ollama }
-      if(Ask-YesNo -Question 'Kamera-Bildanalyse (Vision) mit einrichten?' -DefaultYes $true){
-        Setup-Vision
-      }else{
-        Write-Host 'Vision nicht aktiviert. Spaeter: 05-Vision-Einrichten.bat.'
-      }
+      Setup-Vision
     }
     'Start' {
       Start-Configured
@@ -258,6 +263,7 @@ try {
       $services=@($running | ForEach-Object {$_.Trim()} | Where-Object {$_})
       if($services.Count -gt 0){
         Compose (@('--profile','*','restart') + $services)
+        if($services -contains 'ollama'){ Warm-Vision }
       }else{
         Start-Configured
       }
