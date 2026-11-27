@@ -1,3 +1,11 @@
+## TAFA-App / HA-Integration 0.4.60 — Sphäre und Antwortdarstellung nach Referenzvideo
+- Bereitschaft: dezente türkisfarbene Sternschnuppen auf äußeren, gebogenen Bahnen; ruhiges, silbriges 3D-Netz.
+- Rufwort / Zuhören: türkisblauer Kern, gerichtete Leuchtimpulse entlang tatsächlich projizierter 3D-Netzkanten und wechselnde Aktivierungen einzelner Knoten.
+- Verarbeitung: hellsilberner/violettweißer Kern, mehr und schnellere weiße Sternschnuppen (teilweise durch die Kugel), verteilte kurzlebige weiße Knotenfunken. Sprechphase: weichere weiße/lavendelfarbene Lichtbewegungen.
+- Lichtfarben, Sternschnuppen-Modi und Signalstärke werden fortlaufend überblendet; kein Zurücksetzen der Kugelrotation bei schnellen Phasenwechseln.
+- Neue Antwortbox entfaltet sich aus einem Lichtstrich unter der Sphäre: Verbindungslinie, zeichnender Rahmen, Glasfläche, danach Titel, Text und optionales thematisches Symbol. Antwort-Streaming aktualisiert bestehende Texte ohne erneutes Aufklappen. Suchergebnisse und Kamerahinweise bleiben erhalten.
+- Zusätzliche Lichtpfade sind für ältere Android-Tablets begrenzt. Die native Rufwortstatusübertragung, manuelle 360°-Drehung, Day-View-Button und bestehende HA-Automationen bleiben unverändert.
+
 ## TAFA-App / HA-Integration 0.4.59 — Fließende Ambient-Sprachphasen
 - Hören, Verarbeiten, Sprechen und Ruhe werden ohne abrupte Farbsprünge ineinander überblendet: Kugelfarbe, Leuchten, Puls, Bewegung, Sternschnuppen und Statusbeschriftung verwenden eine fortlaufende Phasenmischung. Schnelle Sprachphasen setzen die Animation nicht zurück.
 - Rotation ohne Winkel-Sprung: Die Winkelgeschwindigkeit wird über die Zeit integriert statt mit der absoluten Laufzeit multipliziert. Die bestehende manuelle 360°-Drehung und der sanfte Nachlauf bleiben erhalten.
