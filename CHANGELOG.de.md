@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.52 — Ambient-Kugel per Finger oder Maus drehen
+- Die Kugel kann im Ambient-Modus nach 280 ms Gedrückthalten durch Ziehen in horizontaler und vertikaler Richtung manuell gedreht werden. Maus auf PC und Finger auf Android verwenden dieselbe Pointer-Logik.
+- Alle sechs Sensorbeschriftungen sind an echte 3D-Knoten gebunden und drehen mit dem Kugelnetz mit. Vertikales Drehen ist auf einen gut bedienbaren Bereich begrenzt.
+- Nach dem Loslassen hält die automatische Rotation 30 Sekunden an und läuft anschließend an derselben Orientierung ohne Sprung weiter. Eine kurze Berührung öffnet wie zuvor das Menü `☀ Tagesansicht`, langes Drehen öffnet es nicht.
+- Kugelnetz, zufällige Sternschnuppen, Sprachphasen und bestehende Automationen bleiben unverändert. Frontend-Assets haben neue `?v=0.4.52`-URLs.
+
 ## TAFA-App / HA-Integration 0.4.51 — Minimaler Ambient-Modus mit Antippen zum Einblenden
 - Der einzige Tagesansicht-Button ist beim Betreten des Ambient-Modus unsichtbar (auf PC und Tablet).
 - Berührung/Klick auf die Ambient-Fläche blendet den Button ein. Nach sechs Sekunden ohne Eingabe wird er automatisch wieder ausgeblendet. Für Tastaturbenutzung kann er mit Enter/Leertaste eingeblendet werden.
