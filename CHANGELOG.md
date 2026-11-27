@@ -1,3 +1,9 @@
+## TAFA App / HA integration 0.4.47 — Organic shooting stars around Ambient globe
+- Replaced permanently rendered surrounding arcs with short-lived 3D orbiting comets, each with a glowing head and short fading trail.
+- Spawn times, orientations, distance, speed, brightness, and lifetime are varied. Existing sphere mesh, line strength, idle calm, and active-voice animations remain unchanged.
+- Cache-busted frontend imports (`?v=0.4.47`) and updated private dashboard version manifest.
+- Existing automations and sensor associations remain unchanged.
+
 ## TAFA App / HA integration 0.4.46 — Frontend cache diagnostics
 - Bumped version query parameters for the distributed dashboard and frontend module imports to `?v=0.4.46`.
 - The private Hauszentrale dashboard now loads separate versioned `0.4.46` files and has an optional runtime update guard. It detects when a previously registered CustomElement is still running stale code, offering an explicit CacheStorage clear and full-document navigation. Private code is not shipped here.
