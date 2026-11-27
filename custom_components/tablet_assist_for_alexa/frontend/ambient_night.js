@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.61 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.62 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -368,6 +368,10 @@
     if(!s.phaseRings?.length)return;
     s.phaseRings=s.phaseRings.filter(r=>t-r.born<1000&&t-r.born>=-120);
     const savedCap=ctx.lineCap;
+    // The transition pulse belongs *inside* the sphere. External orbiting
+    // comets are an entirely separate rendering layer.
+    ctx.save();
+    ctx.beginPath();ctx.arc(cx,cy,radius*.97,0,Math.PI*2);ctx.clip();
     ctx.lineCap="round";
     for(const ring of s.phaseRings){
       const age=Math.max(0,t-ring.born);
@@ -375,8 +379,10 @@
         const u=Math.max(0,(age-echo*105)/780);
         if(u>=1||age<echo*105)continue;
         const ease=1-Math.pow(1-u,2.3);
-        const size=radius*(.16+1.17*ease);
-        const envelope=Math.sin(Math.PI*u);
+        const size=radius*(.14+.77*ease);
+        // Fade away approaching the globe's edge, rather than leaving it.
+        const rimFade=Math.max(0,Math.min(1,(.92-size/radius)/.16));
+        const envelope=Math.sin(Math.PI*u)*rimFade;
         const strength=ring.kind==="processing"?.21:.27;
         const alpha=Math.max(0,strength*envelope*(echo===0?1:.48));
         const hue=ring.kind==="processing"?197:264;
@@ -393,6 +399,7 @@
       }
     }
     ctx.lineCap=savedCap;
+    ctx.restore();
   }
 
 
@@ -411,6 +418,10 @@
     if(!s.nodeFlashAt)s.nodeFlashAt=new Array(mesh.points.length).fill(-Infinity);
     if(!s.nodeFlashHue)s.nodeFlashHue=new Array(mesh.points.length).fill(185);
     const oldCap=ctx.lineCap;
+    // Constrain all network pulses, trails and impact flares to the sphere.
+    // This clip is restored before drawing the outer orbital shooting stars.
+    ctx.save();
+    ctx.beginPath();ctx.arc(s.signalCx,s.signalCy,s.signalRadius,0,Math.PI*2);ctx.clip();
     ctx.lineCap="round";
     for(let i=0;i<total;i++){
       const enabled=Math.max(0,Math.min(1,(packets-i+1)/2.8));
@@ -502,6 +513,7 @@
         }
       }
     }
+    ctx.restore();
   }
 
 
@@ -711,7 +723,9 @@
     }
   }
   // Short-lived 3D shooting stars around the sphere (no persistent orbit lines).
+  s.signalCx=cx;s.signalCy=cy;s.signalRadius=radius*.98;
   drawSignals(ctx,s,t,projected,dpr,visual);
+  // Outer comets deliberately remain free to orbit beyond the sphere.
   drawComets(ctx,s,t,cx,cy,radius,dpr,activity,hue,visual);
     // Sensor labels are tied to actual 3D nodes, including perspective/depth.
   if(++s.labelFrame>=1){
