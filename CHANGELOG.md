@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.56 — Unrestricted vertical globe rotation
+- Removed the former ±1.2 radian vertical pitch clamp from both pointer dragging and inertial spin.
+- The Ambient sphere can now complete unlimited 360° upward or downward revolutions with 3D-anchored sensor labels rotating along with it.
+- Immediate smooth auto-spin handoff, comets, touch/mouse gestures, and tap-to-reveal Day View remain unchanged. No automations or sensor bindings modified.
+
 ## TAFA App / HA integration 0.4.55 — Smooth inertial handoff after manual rotation
 - Removed the 30-second delay following globe drag release.
 - The globe and its anchored 3D sensor labels continue rotating in the next animation frame. Drag momentum fades out smoothly while automatic orbit speed ramps back up.
