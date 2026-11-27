@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.47 — Natürliche Sternschnuppen im Ambient-Modus
+- Ersetzt die dauerhaft gezeichneten Bogenlinien um die Kugel durch zufällig auftauchende 3D-Lichtimpulse mit leuchtendem Kopf und kurzem auslaufendem Schweif.
+- Lichtimpulse besitzen unterschiedliche Bahnebene, Entfernung, Richtung, Geschwindigkeit, Helligkeit und Lebensdauer und verschwinden wieder. Das Kugelnetz, seine Linienbreite und der ruhige Standby-/KI-Puls-Modus bleiben unverändert.
+- Die private TAFA-Hauptkarte und Ambient-Datei verwenden die neue Ressource `*-v0.4.47.js?v=0.4.47`; der Versionsmanifest wurde aktualisiert.
+- Keine Automationen und Sensorzuordnungen verändert.
+
 ## TAFA-App / HA-Integration 0.4.46 — Frontend-Version prüfen und vollständige Aktualisierung
 - Die Import-URLs für das ausgelieferte Dashboard und seine Begleitmodule sind auf `?v=0.4.46` erhöht.
 - Das private Hauszentrale-Dashboard verwendet neue Dateien `/local/tafa/*-v0.4.46.js`; zusätzlich läuft ein optionaler Versionswächter. Er prüft die zur Laufzeit registrierte Dashboard-Klasse und bietet bei einem Versionskonflikt einen ausdrücklich bestätigten CacheStorage-Reset mit vollständigem Seitenwechsel an.
