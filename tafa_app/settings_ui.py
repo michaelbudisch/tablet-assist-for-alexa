@@ -118,7 +118,7 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
 {select("conversation_mode",t("Gesprächsverhalten", "Conversation behavior"),
  [("intelligent",t("Intelligent (empfohlen)", "Intelligent (recommended)")),
   ("automatic",t("Automatisch", "Automatic")),("manual",t("Manuell", "Manual"))])}
-<p class="muted">{t("Den Ollama-/Text-KI-Gesprächsassistenten wählst du unter Verbindungen.", "Choose the Ollama/text AI conversation agent under Connections.")}</p>
+<p class="muted">{t("Intelligent: Nur nach einer echten Rückfrage weitersprechen. Automatisch: Nach jeder Antwort ein begrenztes Anschlussfenster. Manuell: Nach gewöhnlichen Antworten wieder Rufwort erwarten; explizite Dialoge (z. B. Suchtreffer wählen) bleiben möglich. Anzahl und Wartezeit stellst du zusätzlich lokal in der TAFA Device Bridge ein. Den KI-Gesprächsassistenten wählst du unter Verbindungen.", "Intelligent: Follow up only when TAFA explicitly requests an answer. Automatic: Allow a bounded listening window after every answer. Manual: Wake word again after ordinary replies; explicit dialogs (such as choosing search results) remain available. The tablet also controls its own maximum and listening time. Configure the LLM conversation agent under Connections.")}</p>
 </details>
 <details><summary>3 · {t("Stimme und Klang", "Voice and sound")}</summary>
 {select("voice_variant",t("Qwen-Stimmvariante", "Qwen voice variant"),
