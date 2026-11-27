@@ -2,7 +2,7 @@ plugins { id 'com.android.application' }
 android {
     namespace 'de.jarvis.audio'
     compileSdk 35
-    defaultConfig { applicationId 'de.jarvis.audio'; minSdk 28; targetSdk 34; versionCode 29; versionName '1.2.8' }
+    defaultConfig { applicationId 'de.jarvis.audio'; minSdk 28; targetSdk 34; versionCode 30; versionName '1.2.9' }
     buildFeatures { buildConfig true }
     testOptions {
         unitTests.all {
@@ -28,5 +28,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'net.java.dev.jna:jna:5.18.1@aar'
     implementation 'com.alphacephei:vosk-android:0.3.75@aar'
+    // Bundled offline detector: face boxes only, no model download or identity recognition.
+    implementation 'com.google.mlkit:face-detection:16.1.7'
     testImplementation 'junit:junit:4.13.2'
 }

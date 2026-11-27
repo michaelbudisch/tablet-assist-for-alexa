@@ -1,8 +1,8 @@
-# TAFA Device Bridge · Android 1.2.7
+# TAFA Device Bridge · Android 1.2.9
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-**1.2.7:** Accepted native audio jobs immediately notify the running player. Always on uses the configured speech pause. Diagnostic statistics are separated by build; the signed update preserves credentials and device identity.
+**1.2.9:** Optional independent HA proximity entity using on-device front-camera detection, with adjustable face-size threshold and exit delay. Includes current Git 1.2.8 changes for locally ending silent follow-ups. Install the signed update over the existing app.
 
 Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback, camera and image-motion detection in one compact app. Android 9+.
 
@@ -60,8 +60,14 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-[Download signed APK 1.2.7](downloads/TAFA-Device-Bridge-1.2.7.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.7) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **28**. Install over the existing app to retain credentials and device identity.
+[Download signed APK 1.2.9](downloads/TAFA-Device-Bridge-1.2.9.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.9) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **30**. Install over the existing app to retain credentials and device identity.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 
 [Release notes](RELEASE_NOTES.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+## Near-tablet presence (experimental)
+
+Enable **Settings → Display & camera → Near-tablet presence**, select the **front camera**, then **Start camera**. Start with 25% and four seconds at your normal viewing position. Increase the minimum size if detection reaches too far. Live face-size feedback helps calibration. This estimates proximity from face size rather than measuring metres. Greeting motion remains independent.
+
+The new HA **Annäherung** binary sensor belongs to the enrolled TAFA tablet. Update the included integration and restart HA before testing. Stopped capture or expired reports make it unavailable. Image uploads retain their own interval; no GPU Worker is required.

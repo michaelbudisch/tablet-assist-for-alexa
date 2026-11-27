@@ -1,3 +1,7 @@
+## HA integration 0.4.66 · Near-tablet presence
+- Independent authenticated device channel and occupancy entity per enrolled tablet. Eight-second expiry; no coupling to image motion, wakeword or greetings.
+- Android 1.2.9 supplies local front-camera results with adjustable threshold and exit delay. Public integration and App installer ship the same sensor implementation.
+
 ## TAFA App / HA integration 0.4.62 — Contain internal light pulses within sphere
 - Both gentle transition rings expand out from the center but fade before reaching the globe's edge; removed the former overshoot to 133% of the sphere's radius.
 - Multi-hop network light packets, their trails and flashed-node halos are clipped to the sphere silhouette; they no longer extend into the surrounding scene.

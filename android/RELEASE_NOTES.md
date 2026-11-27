@@ -1,3 +1,11 @@
+# TAFA Device Bridge 1.2.9
+
+- Based on current Git 1.2.8, retaining local termination of silent follow-up captures.
+- Optional independent per-tablet proximity entity. On-device front-camera face boxes use the existing YUV preview, independent of JPEG delivery and greeting motion.
+- Face threshold 15–60%, 800-ms confirmation, 20% hysteresis and 2–10-second exit delay; live face-size feedback for calibration.
+- Bundled offline model; no identity recognition. Camera starts explicitly. Wrong lens, errors or stopped capture make the entity unavailable; HA expires reports after eight seconds.
+- Android 1.2.9 / version code 30; accompanying HA 0.4.66 adds the authenticated device action and occupancy entity. Python changes require an HA restart.
+
 # TAFA Device Bridge 1.2.8 — Folgefragen nur bei Rückfrage (Quellstand)
 
 Der neue Quellstand behält die bisherige Paketkennung `de.jarvis.audio` und

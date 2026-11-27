@@ -75,9 +75,20 @@ class WakeDevices:
         self.lock = asyncio.Lock()
         self.last_wake = 0.0
         self.telemetry = {}  # Volatile diagnostics, never persisted.
+        self.approach = {}  # Local camera proximity; independent of wake/motion, never persisted.
         self.revisions = {}  # Per-runtime monotonic config revisions.
         self.pending_controls = {}  # Revision and HA monotonic dispatch timestamp.
         self.control_metrics = {}  # Only non-sensitive, volatile ACK diagnostics.
+
+    def fresh_approach(self, identifier):
+        value = self.approach.get(identifier)
+        return value if value and 0 <= time.monotonic() - value["seen"] < 8 else None
+
+    def expire_approach(self, _now=None):
+        for identifier in tuple(self.approach):
+            if self.fresh_approach(identifier) is None:
+                del self.approach[identifier]
+                self.changed(identifier)
 
     def allowed(self, user, device):
         return user.is_admin or device["user_id"] == user.id
@@ -178,6 +189,22 @@ class WakeDevices:
                 raise KeyError(identifier)
             if not self.allowed(user, device):
                 raise PermissionError()
+            if action == "approach":
+                reading = payload.get("reading")
+                if not isinstance(reading, dict) or set(reading) != {"near", "face_percent", "threshold_percent"}:
+                    raise ValueError("Invalid approach reading")
+                near, percent, threshold = (reading[k] for k in ("near", "face_percent", "threshold_percent"))
+                if near is not None and type(near) is not bool:
+                    raise ValueError("Invalid approach state")
+                if percent is not None and (type(percent) is not int or not 0 <= percent <= 100):
+                    raise ValueError("Invalid face size")
+                if type(threshold) is not int or not 15 <= threshold <= 60:
+                    raise ValueError("Invalid approach threshold")
+                if near is not None and percent is None:
+                    raise ValueError("Missing face size")
+                self.approach[identifier] = dict(reading, seen=time.monotonic())
+                self.changed(identifier)
+                return {"accepted": True}
             if action == "get":
                 return {"device": self.public(device)}
             if action == "configure":
@@ -193,6 +220,7 @@ class WakeDevices:
                     raise PermissionError()
                 del self.devices[identifier]
                 self.telemetry.pop(identifier, None)
+                self.approach.pop(identifier, None)
                 self.control_metrics.pop(identifier, None)
                 self.revisions.pop(identifier, None)
                 self.pending_controls.pop(identifier, None)

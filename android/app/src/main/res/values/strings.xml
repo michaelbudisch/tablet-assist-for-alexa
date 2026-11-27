@@ -330,4 +330,17 @@
     <string-array name="flow_kinds"><item>Wakeword</item><item>Manual</item><item>Follow-up</item><item>Always on</item></string-array>
     <string-array name="flow_statuses"><item>Running</item><item>Successful</item><item>No reply</item><item>Error</item><item>Cancelled</item><item>Interrupted</item></string-array>
     <string name="flow_primary">Speech end → output: %1$s</string><string name="flow_primary_empty">Speech end → output: —</string>
+    <string name="approach_title">Near-tablet presence</string>
+    <string name="approach_enable">Detect nearby presence locally (experimental)</string>
+    <string name="approach_help">Select the front camera and start the camera. A large face in the central image area activates the separate HA presence sensor, including while standing still. Higher percentages require closer proximity. This estimates proximity, not distance; calibrate at your normal viewing position. Greeting motion remains separate. Runs without the main PC; low light or side views may affect detection.</string>
+    <string name="approach_threshold">Minimum face size for proximity</string>
+    <string name="approach_hold">Turn off after proximity is lost</string>
+    <string name="approach_off">Nearby presence: inactive</string>
+    <string name="approach_near">Nearby presence: near</string>
+    <string name="approach_far">Nearby presence: no one nearby</string>
+    <string name="approach_checking">Nearby presence: checking</string>
+    <string name="approach_front">Nearby presence: front camera required</string>
+    <string name="approach_error">Nearby presence: detection unavailable</string>
+    <string name="approach_size">Face size %1$d %%</string>
+    <string name="approach_delivery_error">HA delivery pending</string>
 </resources>

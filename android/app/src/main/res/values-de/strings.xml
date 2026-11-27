@@ -328,4 +328,17 @@
     <string-array name="flow_kinds"><item>Rufwort</item><item>Manuell</item><item>Folgefrage</item><item>Immer an</item></string-array>
     <string-array name="flow_statuses"><item>Läuft</item><item>Erfolgreich</item><item>Keine Antwort</item><item>Fehler</item><item>Abgebrochen</item><item>Unterbrochen</item></string-array>
     <string name="flow_primary">Sprachende → Ausgabe: %1$s</string><string name="flow_primary_empty">Sprachende → Ausgabe: —</string>
+    <string name="approach_title">Annäherung</string>
+    <string name="approach_enable">Annäherung lokal erkennen (Versuch)</string>
+    <string name="approach_help">Frontkamera wählen und Kamera starten. Große Gesichter im mittleren Bildbereich schalten den eigenen HA-Sensor Annäherung ein, auch im Stillstand. Größere Prozentwerte verlangen mehr Nähe. Keine Entfernungsmessung: am Bedienabstand einstellen. Die Bildbewegung für Begrüßungen bleibt getrennt. Funktioniert ohne Hauptrechner; schlechte Beleuchtung oder seitliche Gesichter können die Erkennung erschweren.</string>
+    <string name="approach_threshold">Mindestgesichtsgröße für Nähe</string>
+    <string name="approach_hold">Ausschalten nach fehlender Nähe</string>
+    <string name="approach_off">Annäherung: inaktiv</string>
+    <string name="approach_near">Annäherung: nah</string>
+    <string name="approach_far">Annäherung: niemand nah</string>
+    <string name="approach_checking">Annäherung: prüft</string>
+    <string name="approach_front">Annäherung: Frontkamera erforderlich</string>
+    <string name="approach_error">Annäherung: Erkennung nicht verfügbar</string>
+    <string name="approach_size">Gesichtsgröße %1$d %%</string>
+    <string name="approach_delivery_error">HA-Übertragung ausstehend</string>
 </resources>

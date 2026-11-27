@@ -17,3 +17,5 @@ Der eigene Android-App-Code und die Vektorgrafiken stehen unter der MIT-Lizenz d
 Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
 
 Copyright- und Lizenzhinweise der Komponenten bleiben in den jeweiligen Originalquellen erhalten. Die enthaltene einsekündige WAV-Datei besteht aus PCM-Nullwerten und enthält keine fremde Aufnahme.
+
+Google ML Kit Face Detection 16.1.7, its bundled on-device model and transitive Google libraries are used under the applicable [ML Kit terms](https://developers.google.com/ml-kit/terms). Face detection runs on-device. Upstream copyright and licence notices apply; the ML Kit components are not relicensed under the app MIT licence.

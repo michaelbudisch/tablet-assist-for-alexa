@@ -89,6 +89,10 @@ final class WakePilotSettings {
             .put("device_id",WakeDeviceIdentity.get(ctx));
     }
 
+    static void reportApproach(Context ctx,JSONObject reading)throws Exception{
+        request(ctx,body(ctx,"approach").put("reading",reading));
+    }
+
     static synchronized void syncAudioOutput(Context ctx)throws Exception{
         SharedPreferences p=AudioOutputMode.prefs(ctx);
         String pending=p.getString(AudioOutputMode.PENDING,"");

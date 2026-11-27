@@ -863,6 +863,7 @@ public class MainActivity extends Activity {
     private void initializeCameraSettings() {
         var prefs=getSharedPreferences(PREF,0);
         cameraLens=findViewById(R.id.camera_lens);
+        initApproachSettings();
         cameraRefresh=findViewById(R.id.camera_refresh_rate);
         Spinner refreshSpinner=cameraRefresh;
         int[] seconds=CameraRefresh.options();
@@ -919,6 +920,27 @@ public class MainActivity extends Activity {
                 stopService(new Intent(this,CameraRelayService.class)));
     }
 
+    private void initApproachSettings(){
+        var prefs=getSharedPreferences(PREF,0);
+        CheckBox enabled=findViewById(R.id.approach_enabled);
+        enabled.setChecked(prefs.getBoolean(CameraApproach.ENABLED,false));
+        enabled.setOnCheckedChangeListener((v,on)->prefs.edit().putBoolean(CameraApproach.ENABLED,on).apply());
+        bindApproachChoice(R.id.approach_threshold,CameraApproach.THRESHOLD,new int[]{15,20,25,30,35,40,50,60},25,true);
+        bindApproachChoice(R.id.approach_hold,CameraApproach.HOLD,new int[]{2,3,4,5,8,10},4,false);
+    }
+    private void bindApproachChoice(int view,String key,int[] values,int fallback,boolean percent){
+        var prefs=getSharedPreferences(PREF,0);
+        Spinner spinner=findViewById(view);ArrayList<String> labels=new ArrayList<>();int chosen=0;
+        for(int i=0;i<values.length;i++){
+            labels.add(percent?values[i]+" %":getResources().getQuantityString(R.plurals.camera_refresh_interval,values[i],values[i]));
+            if(values[i]==prefs.getInt(key,fallback))chosen=i;
+        }
+        spinner.setAdapter(BridgeChoices.create(this,labels));spinner.setSelection(chosen);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> parent){}
+            public void onItemSelected(AdapterView<?> parent,View view,int pos,long id){prefs.edit().putInt(key,values[pos]).apply();}
+        });
+    }
     private void requestCameraRelay() {
         if(CameraRelayService.running||availableCameras.isEmpty())return;
         if(!getSharedPreferences(PREF,0).contains("secret")){
@@ -962,6 +984,14 @@ public class MainActivity extends Activity {
         findViewById(R.id.status_end_conversation).setEnabled(WakeWordService.running);
         cameraLens.setEnabled(!cameraRunning);
         ((TextView)findViewById(R.id.camera_relay_status)).setText(CameraActivity.relayMessage(this));
+        int approachMessage=switch(CameraApproach.status){
+            case "near"->R.string.approach_near;case "far"->R.string.approach_far;
+            case "checking"->R.string.approach_checking;case "front_required"->R.string.approach_front;
+            case "error"->R.string.approach_error;default->R.string.approach_off;
+        };
+        ((TextView)findViewById(R.id.approach_status)).setText(getString(approachMessage)+" · "+
+            getString(R.string.approach_size,CameraApproach.facePercent)+
+            ("error".equals(CameraApproach.delivery)?" · "+getString(R.string.approach_delivery_error):""));
         ((TextView)findViewById(R.id.status_room)).setText(
                 getSharedPreferences(PREF,0).getString("wake_room_name","").isEmpty()?
                 getString(R.string.not_checked):

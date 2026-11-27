@@ -1,8 +1,8 @@
-# TAFA Device Bridge · Android 1.2.7
+# TAFA Device Bridge · Android 1.2.9
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
-**1.2.7:** Nach einem angenommenen nativen Audioauftrag wird der laufende Player sofort benachrichtigt. „Immer an“ nutzt die eingestellte Sprechpause. Die Diagnose trennt Statistiken nach Build; das gleich signierte Update erhält Zugangsdaten und Gerätekennung.
+**1.2.9:** Optionaler eigener HA-Sensor für Annäherung über die lokale Frontkamera. Mindestgesichtsgröße und Ausschaltverzögerung sind einstellbar. Enthält den aktuellen Git-Stand 1.2.8 mit lokal beendeten stillen Folgefragen. Mit bisheriger Signatur über die vorhandene App installieren.
 
 Native Anbindung des Tablets an Home Assistant: Rufwort und Assist, Bluetooth-Ausgabe, Kamera und Bewegungserkennung – mit einer übersichtlichen Oberfläche. Android 9+.
 
@@ -60,8 +60,14 @@ Die separate lokale Testvorschau wurde entfernt. Kameraaufnahmen erfolgen nur w�
 
 ## Veröffentlichung und Installation
 
-[Signierte APK 1.2.7 herunterladen](downloads/TAFA-Device-Bridge-1.2.7.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.7) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **28**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+[Signierte APK 1.2.9 herunterladen](downloads/TAFA-Device-Bridge-1.2.9.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.9) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **30**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
 
 Zum eigenen Bauen JDK 17, Android SDK Platform 35 und `build.ps1` verwenden; zum Signieren `sign-release.ps1` mit dem ursprünglichen Keystore. Private Schlüssel sind nicht im Repository enthalten. Die automatisierten Tests ersetzen keinen echten Bluetooth-/Mikrofontest.
 
 [Versionshinweise](RELEASE_NOTES.de.md) · [Drittanbieterhinweise](THIRD_PARTY_NOTICES.de.md)
+
+## Annäherung am Tablet (Versuch)
+
+Unter **Einstellungen → Display & Kamera → Annäherung** aktivieren, **Frontkamera** wählen und **Kamera starten**. Am üblichen Bedienabstand mit 25 % und 4 Sekunden beginnen; wird zu weit entfernte Anwesenheit erkannt, die Mindestgröße erhöhen. Die Live-Anzeige hilft beim Einstellen. Das ist eine Näherung aus der Gesichtsgröße, keine Meterangabe. Bildbewegung und Begrüßungen sind unabhängig. Kamera- und Mikrofonberechtigungen bleiben getrennt.
+
+Der neue HA-Binärsensor **Annäherung** erscheint am registrierten TAFA-Tablet. Die neue Geräteschnittstelle wird mit der Integration ausgeliefert; vor dem App-Test HA aktualisieren und neu starten. Bei deaktivierter Kamera oder fehlenden Meldungen wird er nicht verfügbar. Bereits laufende Bildübertragung verwendet weiter ihr eigenes Intervall. Das Kameramodell ist Teil der APK; kein GPU Worker erforderlich.

@@ -19,6 +19,7 @@ public class CameraRelayService extends Service {
     private final ExecutorService io=Executors.newSingleThreadExecutor();
     private final FrameMotion motion=new FrameMotion();
     private CameraPreviewController camera;
+    private CameraApproach approach;
     private CameraUploadClient upload;
     private PowerManager.WakeLock wake;
     private volatile boolean active;
@@ -36,7 +37,7 @@ public class CameraRelayService extends Service {
         if(active){if(wake.isHeld())wake.release();wake.acquire(10*60*1000L);main.postDelayed(this,5*60*1000L);}
     }};
     @Override public IBinder onBind(Intent intent){return null;}
-    @Override public void onCreate(){super.onCreate();notification();}
+    @Override public void onCreate(){super.onCreate();approach=new CameraApproach(this);notification();}
     private void notification(){
         Context localized=AppLanguage.wrap(this);
         NotificationManager notifications=getSystemService(NotificationManager.class);
@@ -71,6 +72,10 @@ public class CameraRelayService extends Service {
         if(!active)return;
         camera=new CameraPreviewController(this,new CameraPreviewController.Listener(){
             public void onReady(Size size,int sensor,boolean front){main.post(capture);}
+            public boolean onAnalysis(android.media.Image image,int sensor,boolean front){
+                if(!active)return false;
+                return approach.accept(image,sensor,front);
+            }
             public void onSnapshot(CameraPreviewController.Snapshot snapshot){
                 if(!active)return;
                 io.execute(()->{
@@ -114,6 +119,7 @@ public class CameraRelayService extends Service {
     @Override public void onDestroy(){
         active=false;running=false;main.removeCallbacksAndMessages(null);
         if(camera!=null){camera.close();camera=null;}
+        if(approach!=null)approach.close();
         if(upload!=null)upload.close();io.shutdownNow();motion.clear();
         if(wake!=null&&wake.isHeld())wake.release();
         if(!status.equals("camera_error")&&!status.equals("camera_setup_required")&&!status.equals("camera_auth_error")&&!status.equals("camera_pairing_error"))status="camera_relay_off";

@@ -1,3 +1,11 @@
+# TAFA Device Bridge 1.2.9
+
+- Auf aktuellem Git-Stand 1.2.8 einschließlich lokaler Beendigung stiller Folgefragen aufgebaut.
+- Optionaler eigener HA-Sensor Annäherung pro Tablet. Lokale Frontkamera-Gesichtserkennung läuft auf dem bestehenden YUV-Vorschaustrom, unabhängig von Bild-Uploads und Bildbewegung.
+- Mindestgesichtsgröße 15–60 %, 800 ms Bestätigung, 20 % Hysterese und 2–10 Sekunden Ausschaltverzögerung; Live-Größenanzeige zum Einstellen.
+- Gebündeltes Modell, keine Identifizierung. Kamera muss ausdrücklich gestartet werden. Ohne Frontkamera oder bei Fehler/Stillstand wird der neue Sensor nicht verfügbar; HA lässt Meldungen nach 8 Sekunden ablaufen.
+- Android-App 1.2.9 / Versionscode 30. Der mitgelieferte HA-Code 0.4.66 ergänzt die authentifizierte Geräteschnittstelle und den neuen Sensor. Python-Änderungen benötigen einen HA-Neustart.
+
 # TAFA Device Bridge 1.2.7
 
 Signiertes Update mit der bisherigen Signatur, App-ID de.jarvis.audio und Versionscode 28. Über die vorhandene App installieren.

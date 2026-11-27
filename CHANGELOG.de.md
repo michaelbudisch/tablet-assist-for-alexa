@@ -1,3 +1,7 @@
+## HA-Integration 0.4.66 · Annäherung am Tablet
+- Eigener authentifizierter Gerätekanal und Binärsensor Annäherung pro registriertem Tablet. Acht Sekunden Ablaufzeit; unabhängig von Bildbewegung, Rufwort und Begrüßung.
+- Android 1.2.9 liefert lokale Frontkamera-Ergebnisse mit einstellbarer Schwelle und Ausschaltverzögerung. Öffentliche Integration und App-Installer enthalten dieselbe Sensorimplementierung.
+
 ## TAFA-App / HA-Integration 0.4.62 — Lichtimpulse bleiben in der Sphäre
 - Die beiden sanften Ringimpulse beim Übergang vom Zuhören zur Verarbeitung und von der Verarbeitung zur Sprachausgabe breiten sich weiterhin vom Kugelinneren aus, enden aber innerhalb des Kugelnetzes und verblassen vor dessen Rand. Die vorherige Ausdehnung auf 133 % des Kugelradius wurde entfernt.
 - Die zusammenhängenden Netzpfad-Signale und beim Erreichen aktivierten Knoten werden auf den Kugelbereich begrenzt, sodass keine Lichtspur oder Knoten-Halo nach außen reicht.

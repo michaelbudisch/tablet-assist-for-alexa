@@ -7,6 +7,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     from .relay_room_camera import hub
     if current := hub(hass):
         current.attach("motion", async_add_entities, RoomRelayMotion)
+    from ..tablet_approach import setup_approach
+    setup_approach(hass, entry, async_add_entities)
 
 class RelayMotion(BinarySensorEntity):
     _attr_name = "Echo Relay Bildbewegung"

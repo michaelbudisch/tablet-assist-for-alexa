@@ -34,6 +34,8 @@ final class CameraPreviewController implements AutoCloseable {
         void onReady(Size preview, int sensorOrientation, boolean front);
         void onSnapshot(Snapshot snapshot);
         void onError();
+        /** Optional background YUV analysis; true means the listener closes the image. */
+        default boolean onAnalysis(Image image,int sensorOrientation,boolean front){return false;}
     }
     private final Context context;
     private final Listener listener;
@@ -94,10 +96,17 @@ final class CameraPreviewController implements AutoCloseable {
                     texture.setDefaultBufferSize(preview.getWidth(),preview.getHeight());
                     previewSurface=new Surface(texture);
                 }else{
-                    Size drainSize=choose(config.getOutputSizes(ImageFormat.YUV_420_888),4.0/3);
+                    Size[] analysisSizes=Arrays.stream(config.getOutputSizes(ImageFormat.YUV_420_888))
+                        .filter(s->s.getWidth()<=640&&s.getHeight()<=480).toArray(Size[]::new);
+                    Size drainSize=choose(analysisSizes.length>0?analysisSizes:config.getOutputSizes(ImageFormat.YUV_420_888),4.0/3);
                     backgroundPreview=ImageReader.newInstance(drainSize.getWidth(),drainSize.getHeight(),ImageFormat.YUV_420_888,2);
                     backgroundPreview.setOnImageAvailableListener(source->{
-                        try(Image image=source.acquireLatestImage()){}catch(IllegalStateException ignored){}
+                        Image image=null;boolean owned=false;
+                        try{
+                            image=source.acquireLatestImage();
+                            if(image!=null&&!closed)owned=listener.onAnalysis(image,sensor,front);
+                        }catch(RuntimeException ignored){}
+                        finally{if(image!=null&&!owned)try{image.close();}catch(RuntimeException ignored){}}
                     },worker);
                     previewSurface=backgroundPreview.getSurface();
                 }

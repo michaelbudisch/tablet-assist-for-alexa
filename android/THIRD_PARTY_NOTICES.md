@@ -17,3 +17,5 @@ The original Android app code and vector artwork are distributed under the repos
 Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
 
 Component copyright and license notices remain in upstream source distributions. The bundled one-second WAV was generated from zero-valued PCM samples; it contains no third-party recording.
+
+Google ML Kit Face Detection 16.1.7, its bundled on-device model and transitive Google libraries are used under the applicable [ML Kit terms](https://developers.google.com/ml-kit/terms). Face detection runs on-device. Upstream copyright and licence notices apply; the ML Kit components are not relicensed under the app MIT licence.

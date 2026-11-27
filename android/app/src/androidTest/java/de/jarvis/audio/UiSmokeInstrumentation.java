@@ -20,7 +20,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
     private boolean streamOnly;
     private boolean cameraOnly;
     private boolean relayOnly;
-    private boolean flowOnly,outputOnly;
+    private boolean flowOnly,outputOnly,approachOnly;
     @Override public void onCreate(Bundle args) {
         super.onCreate(args);
         if (args != null) layout = args.getString("layout", "phone");
@@ -29,6 +29,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
         relayOnly = args != null && args.getString("relay_only", "false").equals("true");
         flowOnly=args!=null&&args.getString("flow_only","false").equals("true");
         outputOnly=args!=null&&args.getString("output_only","false").equals("true");
+        approachOnly=args!=null&&args.getString("approach_only","false").equals("true");
         start();
     }
     private void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -36,6 +37,7 @@ public class UiSmokeInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         Activity screen = null;
         try {
+            if(approachOnly){result.putString("stream",ApproachSmoke.run(this));finish(Activity.RESULT_OK,result);return;}
             if(outputOnly){result.putString("stream",NativePlaybackSmoke.run(this));finish(Activity.RESULT_OK,result);return;}
             if(flowOnly){result.putString("stream",NativeFlowSmoke.run(this,layout));finish(Activity.RESULT_OK,result);return;}
             if(relayOnly){result.putString("stream", CameraRelaySmoke.run(this));finish(Activity.RESULT_OK,result);return;}
@@ -68,6 +70,9 @@ public class UiSmokeInstrumentation extends Instrumentation {
                 german.findViewById(R.id.nav_settings).performClick();
                 check(german.findViewById(R.id.section_settings).getVisibility() == View.VISIBLE, "Settings navigation opens");
                 check(german.findViewById(R.id.section_connection).getVisibility() == View.GONE, "Only selected section is shown");
+                check(!((CheckBox)german.findViewById(R.id.approach_enabled)).isChecked(),"Approach starts explicitly disabled");
+                check(((Spinner)german.findViewById(R.id.approach_threshold)).getAdapter().getCount()==8,"Eight distance-calibration choices");
+                check(((Spinner)german.findViewById(R.id.approach_hold)).getAdapter().getCount()==6,"Six independent exit delays");
                 check(!german.findViewById(R.id.wake_advanced).isShown(),"Advanced settings start collapsed");
                 View advanced=german.findViewById(R.id.section_settings).findViewWithTag("settings_group_3");
                 check(advanced!=null,"Advanced settings group exists");
