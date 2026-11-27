@@ -1,3 +1,10 @@
+## TAFA-App / HA-Integration 0.4.61 — Mehrteilige 3D-Lichtpfade und sanfte Kreisimpulse
+- HD-Referenzvideo (ca. 39–40 s und 68–70 s) genauer nachgebildet: Beim Übergang **Zuhören → Verarbeiten** und **Verarbeiten → Sprachausgabe** entsteht jeweils ein sehr dezenter, kreisförmig vom Kugelkern nach außen laufender Lichtimpuls mit kurzem Nachhall. Wiederholte Statusmeldungen lösen keinen zusätzlichen Ring aus.
+- Die Lichtpunkte laufen jetzt über vorberechnete, **zusammenhängende Routen durch 6–8 reale 3D-Netzknoten** statt über voneinander isolierte Einzelkanten. Die Pfade verwenden dieselbe Projektion wie Kugel und Sensorwerte; bei Erreichen eines Knotens blitzt genau dieser kurz auf und der Lichtpunkt läuft weiter. Am Routenende kehrt der Lichtpunkt ohne Sprung entlang der Verbindungskette zurück.
+- Die Lichtpunkte werden deutlicher sichtbar und erhalten kurze, auslaufende Lichtschweife. Hören verwendet türkisfarbene, Verarbeiten vorwiegend weiß-violette, Sprechen silbrig-lavendelfarbene Signale.
+- Maximal 14 gleichzeitige Signalrouten auf älteren Android-Tablets und 23 auf Desktop; keine Auswirkungen auf native Sprachstatusmeldungen, manuelle 360°-Drehung, Sternschnuppen und Info-Panel-Animation.
+- Im privaten Home Assistant wurden ausschließlich versionierte Frontend-Ressourcen aktualisiert. Automationen und Sensorzuordnungen bleiben unberührt.
+
 ## TAFA-App / HA-Integration 0.4.60 — Sphäre und Antwortdarstellung nach Referenzvideo
 - Bereitschaft: dezente türkisfarbene Sternschnuppen auf äußeren, gebogenen Bahnen; ruhiges, silbriges 3D-Netz.
 - Rufwort / Zuhören: türkisblauer Kern, gerichtete Leuchtimpulse entlang tatsächlich projizierter 3D-Netzkanten und wechselnde Aktivierungen einzelner Knoten.
