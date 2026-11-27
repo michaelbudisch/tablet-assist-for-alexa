@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.46 — Frontend cache diagnostics
+- Bumped version query parameters for the distributed dashboard and frontend module imports to `?v=0.4.46`.
+- The private Hauszentrale dashboard now loads separate versioned `0.4.46` files and has an optional runtime update guard. It detects when a previously registered CustomElement is still running stale code, offering an explicit CacheStorage clear and full-document navigation. Private code is not shipped here.
+- No automation or settings changes.
+
 ## TAFA App / HA integration 0.4.45 — Versioned frontend modules
 - Dashboard, ambient visualizer, and supporting modules use `?v=0.4.45` import URLs; increment them for each frontend release to invalidate stale browser and Android WebView caches.
 - Private HA dashboard main and ambient scripts are now served as versioned `/local/tafa/` files (versioned filename and `?v=`). Private dashboard code is intentionally not published to this repository.
