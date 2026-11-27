@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.44 — Ruhiger Ambient-Modus im Rufwort-Bereitschaftszustand
+- Die vernetzte Kugel dreht sich im normalen Bereitschaftszustand ruhig und verformt/pulsiert nicht. Lichtpunkte und Orbitalbewegungen wurden entsprechend verlangsamt.
+- Pulsieren, stärkere Verformung und lebhaftere Bewegung nur bei erkanntem Rufwort, aktiver Assist-Aufnahme, Verarbeitung oder Sprachausgabe.
+- Status `listening: hey_jarvis` ist die dauerhafte Rufwortüberwachung und wird nicht länger irrtümlich als laufendes Gespräch behandelt.
+- Die bereits eingebundene responsive Nachtansicht, 3D-Sensorwerte, bestehende Automationen und reguläre Tagesansicht bleiben unverändert.
+
 ## TAFA-App / HA-Integration 0.4.43 — 3D-Ambient und Tablet-Layout
 - Die Kugel besteht jetzt aus einem unregelmäßigen 3D-Partikelnetz mit 96 Knoten, 220 unterschiedlich langen Verbindungen, Partikeln und kurzen orbitalen Bögen. Sensoranzeigen sind mit sechs 3D-Ankerpunkten verbunden, drehen sich perspektivisch mit und blenden abhängig von der Tiefe ab.
 - Der Ambient-Modus setzt im Hoch- und Querformat die Navigationsspalte vollständig zurück und verwendet die verfügbare Breite. Die normale Dashboard-Navigation wird nicht verändert.
