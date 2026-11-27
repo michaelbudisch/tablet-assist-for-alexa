@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.52 — Press-and-drag Ambient globe
+- Press and hold the globe for 280 ms, then drag horizontally or vertically to rotate its 3D mesh and the attached six sensor anchors together. Touch and mouse share pointer handling.
+- Auto-rotation stays paused for 30 seconds after release, then resumes smoothly from the chosen orientation without jumping. A short tap still reveals the day-view control, whereas dragging leaves it hidden.
+- Ambient shooting stars, sphere line weight, speech phases, and HA automations remain unchanged. Frontend imports use `?v=0.4.52`.
+
 ## TAFA App / HA integration 0.4.51 — Tap to reveal Ambient exit control
 - The Ambient day-view button is hidden initially on desktop and Android. A tap or click on the Ambient stage reveals it; it automatically hides after six seconds of inactivity. Keyboard Enter/Space also reveals the control.
 - Visual effects, speech interactions, integration/private module isolation, and normal day mode remain unchanged. Cache-busted import URLs use `?v=0.4.51`.
