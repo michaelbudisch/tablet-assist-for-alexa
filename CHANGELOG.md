@@ -1,3 +1,9 @@
+## TAFA App / HA integration 0.4.59 — Smooth Ambient speech transitions
+- Listening, processing, speaking and idle now blend continuously across color, glow, pulse, motion, shooting stars and status labels. Rapid transitions retarget rather than restart the visualizer.
+- Prevents rotation jumps by integrating angular velocity instead of multiplying absolute elapsed time by a changing phase speed. Manual 360° dragging and soft inertial handoff remain.
+- Targets about 30 FPS on Android and up to 60 FPS on desktop, maintaining conservative tablet canvas resolution.
+- Native instant phase reporting, existing automations and entity assignments remain unchanged.
+
 ## TAFA App / HA integration 0.4.57 — Immediate native voice phases
 - Android Device Bridge 1.2.5 source pushes wakeword and Assist states to the existing authenticated HA device telemetry API when each state changes, not only at the periodic 12-second full sync. An independent coalescing worker preserves the initial `detected:` event and keeps audio/UI threads unblocked.
 - Ambient now maps WebSocket authentication and connection to the listening phase, transcription/thinking to processing, and buffering/playback to speaking.
