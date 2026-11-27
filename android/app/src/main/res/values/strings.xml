@@ -291,7 +291,9 @@
     <string name="quick_microphone_muted">The microphone is muted in Home Assistant. Unmute this device there first.</string>
     <string name="followup_limit_label">Questions without another wakeword</string>
     <string name="followup_wakeword_only">Require wakeword for every question (default)</string>
-    <string name="followup_limit_help">By default, each new question requires the wake word. Optionally allow 1–100 or unlimited follow-ups. Silence, an error or muting ends the conversation. Home Assistant can reduce the limit at any time. The app setting applies even with the dashboard closed. Background conversation can trigger follow-ups.</string>
+    <string name="followup_limit_help">A follow-up opens only if Home Assistant explicitly asks for another answer. The per-tablet limit is an additional safeguard; 0 requires the wake word for every question. Choose Intelligent in the TAFA Control Center to avoid listening after ordinary answers. Muting, errors and silence end the conversation.</string>
+    <string name="followup_timeout_label">Wait for follow-up: %1$d seconds</string>
+    <string name="followup_timeout_help">After TAFA asks you a question, wait briefly for speech. Without speech the app returns to wakeword detection. This is separate from the end-of-speech pause below.</string>
     <string name="followup_unlimited">Unlimited (until silence)</string>
     <plurals name="followup_count"><item quantity="one">1 additional question</item><item quantity="other">%d additional questions</item></plurals>
     <string name="output_label">Audio output</string>

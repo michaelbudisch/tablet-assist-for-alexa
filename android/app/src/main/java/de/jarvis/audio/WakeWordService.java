@@ -71,7 +71,7 @@ public final class WakeWordService extends Service implements RecognitionListene
     private final Runnable followup=()->{
         followupPending=false;
         // Settings can change between playback completion and this callback.
-        if(FollowupPolicy.shouldContinue(true,completedFollowups,followupLimit()))
+        if(FollowupPolicy.shouldContinue(true,true,completedFollowups,followupLimit()))
             beginNativeAssist("",true);
         else endConversation();
     };
@@ -579,7 +579,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             return;
         }
         if(nextQuestion){
-            if(!FollowupPolicy.shouldContinue(true,completedFollowups,followupLimit())){
+            if(!FollowupPolicy.shouldContinue(true,true,completedFollowups,followupLimit())){
                 endConversation();return;
             }
             completedFollowups++;
@@ -605,7 +605,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                         }
                     });
                 }
-                @Override public void finished(boolean answered,String conversationId){
+                @Override public void finished(boolean answered,String conversationId,boolean invited){
                     main.post(()->{
                         if(nativeSession!=holder[0])return;
                         nativeSession=null;
@@ -617,7 +617,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                             nativeConversationId="";
                             if(!status.startsWith("native_error:"))updateStatus("native_no_reply");
                         }
-                        if(FollowupPolicy.shouldContinue(answered,completedFollowups,followupLimit())){
+                        if(FollowupPolicy.shouldContinue(answered,invited,completedFollowups,followupLimit())){
                             main.removeCallbacks(followup);
                             followupPending=true;
                             main.postDelayed(followup,850);

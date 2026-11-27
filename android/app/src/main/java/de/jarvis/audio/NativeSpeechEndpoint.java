@@ -10,13 +10,20 @@ final class NativeSpeechEndpoint {
 
     private final int pauseFrames;
     private final int emptyFrames;
+    private final int maxFrames;
+    private final boolean followup;
     private int frames, voiced, silent, recent, recentCount;
     private boolean started,lastSound;
     private double noise=0.003;
 
     NativeSpeechEndpoint(int pauseMs, int emptyMs) {
+        this(pauseMs,emptyMs,false);
+    }
+    NativeSpeechEndpoint(int pauseMs,int emptyMs,boolean followup) {
+        this.followup=followup;
         pauseFrames=Math.max(45,Math.min(160,pauseMs/20));
-        emptyFrames=Math.max(150,Math.min(550,emptyMs/20));
+        emptyFrames=Math.max(75,Math.min(550,emptyMs/20));
+        maxFrames=followup?500:1250; // 10 seconds vs. 25 seconds.
     }
 
     Decision feed(short[] samples, int length) {
@@ -28,14 +35,16 @@ final class NativeSpeechEndpoint {
         }
         double rms=Math.sqrt(energy/length);
         frames++;
-        double threshold=Math.max(0.006,Math.min(0.04,noise*2.5));
+        // An unlocked follow-up uses a stricter noise gate than a wakeword request.
+        double threshold=Math.max(followup?0.011:0.006,
+                                  Math.min(0.04,noise*(followup?3.0:2.5)));
         boolean sound=rms>=threshold;
         lastSound=sound;
         if(!started&&!sound)noise=noise*0.97+rms*0.03;
         recent=((recent<<1)|(sound?1:0))&255;
         recentCount=Math.min(8,recentCount+1);
         if(!started){
-            if(recentCount>=8 && Integer.bitCount(recent)>=5){
+            if(recentCount>=8 && Integer.bitCount(recent)>=(followup?6:5)){
                 started=true;voiced=5;silent=0;
             }else if(frames>=emptyFrames)return Decision.EMPTY;
         }else {
@@ -43,7 +52,7 @@ final class NativeSpeechEndpoint {
             else silent++;
             if(voiced>=12&&silent>=pauseFrames)return Decision.END;
         }
-        if(frames>=1250)return Decision.LIMIT; // 25 s hard maximum
+        if(frames>=maxFrames)return Decision.LIMIT;
         return Decision.CONTINUE;
     }
 

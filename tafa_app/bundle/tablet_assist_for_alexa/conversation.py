@@ -10,12 +10,12 @@ from homeassistant.helpers import intent
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN, settings
 from .local_intents import classify, SEARCH_PATTERN, FOLLOW_PATTERN
+from .followup_decision import wants_followup
 SEARCH_CONTINUATION = re.compile(r"^(?:zurück|zurueck|zeige|zeig|lies|lese|erzähl|erzaehl|erkläre|erklaere|fass|fasse)\b", re.I)
 START = {"gespräch starten", "gespraech starten", "gesprächsmodus starten", "lass uns reden", "gespräch beginnen"}
 STOP = {"gespräch beenden", "gespraech beenden", "gesprächsmodus beenden", "stop", "stopp", "auf wiedersehen", "danke das war alles", "danke das reicht"}
 TIMEOUT = 90
 MAX_SESSIONS = 50
-QUESTION = re.compile(r"^(wer|was|wie|warum|weshalb|wieso|wann|wo|woher|wohin|welch\w*|woraus|wofür|woran|womit|kannst du (?:mir )?(?:erklären|sagen|erzählen)|erklär\w*|erzähl\w*|beschreib\w*)\b")
 AUTO_TIMEOUT = 90
 CLOSED_TIMEOUT = 600
 
@@ -195,7 +195,8 @@ class JarvisConversation(conversation.ConversationEntity):
         if active is not None:
             # Changing the setting to manual also stops automatically opened sessions.
             expiry, remaining, explicit = active
-            if (remaining > 1 and now < expiry and (explicit or mode != "Manuell")):
+            if (remaining > 1 and now < expiry
+                    and (explicit or (mode != "Manuell" and eligible))):
                 self._store_session(key, (expiry, remaining - 1, explicit))
                 return True
             self._remember_closed(key, now)
@@ -360,8 +361,9 @@ class JarvisConversation(conversation.ConversationEntity):
                 result = await self._local_data.handle(key, user_input.text, user_input.context)
             if result is not None:
                 message, keep = result
-                eligible = (mode != "Manuell" or active is not None) and key in self._local_data.followups.context
-                keep = keep or (eligible and self._continue(key, active, mode, True))
+                eligible = wants_followup(mode, message)
+                if not keep:
+                    keep = self._continue(key, active, mode, eligible)
                 if not keep:self._local_data.followups.clear(key)
                 return self._reply(user_input, chat_log, message, keep)
         except Exception:
@@ -403,12 +405,15 @@ class JarvisConversation(conversation.ConversationEntity):
             _LOGGER.debug("Jarvis AI unavailable")
             return self._reply(user_input, chat_log, "Meine lokale KI ist gerade nicht erreichbar. Hausdaten und bekannte Befehle funktionieren weiterhin.")
 
-        eligible = mode == "Automatisch" or (mode == "Intelligent" and bool(QUESTION.match(phrase)))
-        keep = self._continue(key, active, mode, eligible)
-        # Native clients may reopen a short, visible listening window.
-        # No microphone capture is initiated from this server integration.
+        # Intelligent mode must follow the assistant's invitation, not
+        # whether the user's original sentence happened to be a question.
         try:
             speech = result.response.as_dict().get("speech", {}).get("plain", {}).get("speech", "")
+        except Exception:
+            speech = ""
+        eligible = wants_followup(mode, speech, getattr(result, "continue_conversation", False))
+        keep = self._continue(key, active, mode, eligible)
+        try:
             if isinstance(speech, str):
                 self._announce_response(user_input, speech, chat_log)
         except Exception:

@@ -40,7 +40,7 @@ import okio.ByteString;
 final class NativeAssistSession extends WebSocketListener implements AutoCloseable {
     interface Listener {
         void state(String description);
-        void finished(boolean answered, String conversationId);
+        void finished(boolean answered, String conversationId, boolean invited);
     }
 
     static final int SAMPLE_RATE=16000,FRAME_SAMPLES=320;
@@ -70,6 +70,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
     private volatile boolean pipelineFailed=false;
     private volatile boolean authenticated=false;
     private volatile boolean gotSpeech=false;
+    private volatile boolean followupInvited=false;
     private volatile boolean didRunEnd=false;
     private volatile int pauseMs;
 
@@ -246,7 +247,11 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
             state("thinking");
         }else if("intent-end".equals(type)){
             JSONObject intent=data.optJSONObject("intent_output");
-            if(intent!=null)conversationId=intent.optString("conversation_id",lastConversation);
+            if(intent!=null){
+                conversationId=intent.optString("conversation_id",lastConversation);
+                // An answer being spoken does NOT imply a new question.
+                followupInvited=intent.optBoolean("continue_conversation",false);
+            }
         }else if("tts-start".equals(type)){
             state("generating_voice");
         }else if("tts-end".equals(type)){
@@ -338,7 +343,11 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 // Vosk has already closed its own recorder before this point.
                 audio.startRecording();
                 trace.mark(VoiceTrace.Point.MIC_READY);
-                NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(pauseMs,followup?6500:8000);
+                int waitMs=FollowupPolicy.timeoutMs(
+                    context.getSharedPreferences(MainActivity.PREF,0).getInt(
+                        FollowupPolicy.LOCAL_TIMEOUT_MS,FollowupPolicy.DEFAULT_TIMEOUT_MS));
+                NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(
+                    pauseMs,followup?waitMs:8000,followup);
                 int gain=context.getSharedPreferences(MainActivity.PREF,0).getInt("mic_gain",100);
                 gain=Math.max(50,Math.min(200,gain));
                 trace.fact(VoiceTrace.Fact.MIC_GAIN,gain);
@@ -453,7 +462,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         WebSocket ws=socket;
         if(ws!=null)ws.close(1000,"finished");
         work.shutdownNow();
-        listener.finished(answered,answered?conversationId:"");
+        listener.finished(answered,answered?conversationId:"",answered&&followupInvited);
     }
 
     @Override public void onFailure(WebSocket ws,Throwable reason,Response response){

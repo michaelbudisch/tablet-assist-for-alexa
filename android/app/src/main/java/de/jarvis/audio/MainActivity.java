@@ -523,6 +523,8 @@ public class MainActivity extends Activity {
         CheckBox followups=findViewById(R.id.native_followup_enabled);
         SeekBar pause=findViewById(R.id.native_pause_slider);
         TextView pauseLabel=findViewById(R.id.native_pause_label);
+        SeekBar followupWindow=findViewById(R.id.native_followup_timeout_slider);
+        TextView followupWindowLabel=findViewById(R.id.native_followup_timeout_label);
         Button test=findViewById(R.id.native_assist_test);
         // Native HA Assist + tablet Bluetooth is the only audio route.
         // Opt-in follow-up ceiling; HA may reduce it without opening the Android UI.
@@ -554,6 +556,20 @@ public class MainActivity extends Activity {
                 if(WakeWordService.running)
                     startService(new Intent(MainActivity.this,WakeWordService.class)
                         .setAction(WakeWordService.NATIVE_SETTINGS));
+            }
+        });
+        int waitMs=FollowupPolicy.timeoutMs(preferences.getInt(
+            FollowupPolicy.LOCAL_TIMEOUT_MS,FollowupPolicy.DEFAULT_TIMEOUT_MS));
+        followupWindow.setProgress((waitMs-2000)/1000);
+        followupWindowLabel.setText(getString(R.string.followup_timeout_label,waitMs/1000));
+        followupWindow.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            @Override public void onProgressChanged(SeekBar bar,int progress,boolean fromUser){
+                followupWindowLabel.setText(getString(R.string.followup_timeout_label,2+progress));
+            }
+            @Override public void onStartTrackingTouch(SeekBar bar){}
+            @Override public void onStopTrackingTouch(SeekBar bar){
+                int ms=FollowupPolicy.timeoutMs(2000+1000*bar.getProgress());
+                preferences.edit().putInt(FollowupPolicy.LOCAL_TIMEOUT_MS,ms).apply();
             }
         });
         int value=Math.max(900,Math.min(3200,preferences.getInt("native_pause_ms",1700)));

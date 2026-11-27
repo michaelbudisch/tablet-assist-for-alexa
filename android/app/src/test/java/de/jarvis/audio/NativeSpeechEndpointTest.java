@@ -24,6 +24,22 @@ public class NativeSpeechEndpointTest {
         assertEquals(NativeSpeechEndpoint.Decision.END,vad.feed(frame(0),320));
         assertTrue(vad.hasSpeech());
     }
+    @Test public void followupStopsAfterThreeSecondsOfSilence(){
+        NativeSpeechEndpoint vad=new NativeSpeechEndpoint(1700,3000,true);
+        for(int i=0;i<149;i++)assertEquals(NativeSpeechEndpoint.Decision.CONTINUE,vad.feed(frame(0),320));
+        assertEquals(NativeSpeechEndpoint.Decision.EMPTY,vad.feed(frame(0),320));
+        assertFalse(vad.hasSpeech());
+    }
+    @Test public void quietBackgroundNoiseDoesNotBecomeSpeechInFollowup(){
+        NativeSpeechEndpoint vad=new NativeSpeechEndpoint(1700,3000,true);
+        for(int i=0;i<149;i++)assertEquals(NativeSpeechEndpoint.Decision.CONTINUE,vad.feed(frame(250),320));
+        assertEquals(NativeSpeechEndpoint.Decision.EMPTY,vad.feed(frame(250),320));
+    }
+    @Test public void veryLongFollowupIsCappedAtTenSeconds(){
+        NativeSpeechEndpoint vad=new NativeSpeechEndpoint(1700,3000,true);
+        for(int i=0;i<499;i++)vad.feed(frame(1800),320);
+        assertEquals(NativeSpeechEndpoint.Decision.LIMIT,vad.feed(frame(1800),320));
+    }
     @Test public void maxDurationTerminatesContinuousInput(){
         NativeSpeechEndpoint vad=new NativeSpeechEndpoint(1700,8000);
         for(int i=0;i<1249;i++)vad.feed(frame(2000),320);

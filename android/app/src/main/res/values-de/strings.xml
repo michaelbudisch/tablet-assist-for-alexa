@@ -289,7 +289,9 @@
     <string name="quick_microphone_muted">Das Mikrofon ist in Home Assistant stummgeschaltet. Hebe die Stummschaltung für dieses Gerät dort zuerst auf.</string>
     <string name="followup_limit_label">Fragen ohne erneutes Rufwort</string>
     <string name="followup_wakeword_only">Rufwort für jede Frage (Standard)</string>
-    <string name="followup_limit_help">Standardmäßig ist für jede Frage das Rufwort nötig. Optional 1–100 oder unbegrenzte Anschlussfragen ohne Rufwort. Stille, Fehler oder Stummschaltung beenden die Unterhaltung. Home Assistant kann die maximale Anzahl jederzeit reduzieren. Die App-Einstellung gilt auch bei geschlossenem Dashboard. Hintergrundgespräche können Folgefragen auslösen.</string>
+    <string name="followup_limit_help">Anschlussfragen öffnen sich nur, wenn der Gesprächsassistent in Home Assistant wirklich eine Antwort erwartet. Diese Einstellung begrenzt die Anzahl zusätzlich pro Tablet; 0 erfordert jedes Mal das Rufwort. Im TAFA Control Center verhindert „Intelligent“ erneutes Zuhören nach gewöhnlichen Antworten. Stille, Fehler und Stummschaltung beenden die Unterhaltung.</string>
+    <string name="followup_timeout_label">Wartezeit auf Anschlussfrage: %1$d Sekunden</string>
+    <string name="followup_timeout_help">Nur wenn TAFA eine Rückfrage stellt, wartet die App kurz auf Sprache. Ohne Sprache geht sie zurück zur Rufwort-Erkennung. Die normale Sprechendepause darunter ist davon unabhängig.</string>
     <string name="followup_unlimited">Unbegrenzt (bis Gesprächspause)</string>
     <plurals name="followup_count"><item quantity="one">1 zusätzliche Frage</item><item quantity="other">%d zusätzliche Fragen</item></plurals>
     <string name="output_label">Audioausgabe</string>

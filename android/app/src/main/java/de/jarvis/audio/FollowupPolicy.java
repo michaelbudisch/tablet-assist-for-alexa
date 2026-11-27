@@ -1,6 +1,6 @@
 package de.jarvis.audio;
 
-/** Explicit per-tablet follow-ups; -1 is unlimited until silence/error/mute. */
+/** Follow-ups require HA's invitation and a local per-tablet opt-in. */
 final class FollowupPolicy {
     static final String LOCAL_LIMIT = "local_followup_limit";
     private FollowupPolicy() {}
@@ -15,8 +15,13 @@ final class FollowupPolicy {
         int ha=Math.max(0,Math.min(100,remote));
         return ceiling==-1?ha:Math.min(ceiling,ha);
     }
-    static boolean shouldContinue(boolean answered,int completedFollowups,int limit) {
-        return answered&&completedFollowups>=0&&
+    static final String LOCAL_TIMEOUT_MS="local_followup_timeout_ms";
+    static final int DEFAULT_TIMEOUT_MS=3000;
+    static int timeoutMs(int configured){
+        return Math.max(2000,Math.min(6000,configured));
+    }
+    static boolean shouldContinue(boolean answered,boolean invited,int completedFollowups,int limit){
+        return answered&&invited&&completedFollowups>=0&&
             (limit==-1||completedFollowups<localLimit(limit));
     }
 }

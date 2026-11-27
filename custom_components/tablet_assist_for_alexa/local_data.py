@@ -132,8 +132,8 @@ class LocalData:
                 item = matches[index-1]
                 return ("Treffer " + str(index) + ": " + item["title"]
                         + ". Ich öffne den Lesemodus im Dashboard. "
-                        "Du kannst auch sagen: Lies das Rezept vor, oder: Zurück zu den Treffern."), True
-            return "Diese Treffer-Nummer gibt es in der letzten Suche nicht.", True
+                        "Soll ich dir den Inhalt vorlesen?"), True
+            return "Diese Treffer-Nummer gibt es nicht. Welche Nummer möchtest du öffnen?", True
         if context_results and re.match(r"^(?:zurück|zurueck|zeige|zeig)(?:\s+(?:zu|zur|zu den|die|mir|wieder))*\s+(?:suche|suchergebnisse|ergebnisse|treffer)\s*[.!?]?$", text.strip(), re.I):
             context_results["selected"] = -1
             context_results["article"] = None
@@ -145,13 +145,13 @@ class LocalData:
             try:
                 article = await read_public_article(item["url"])
             except (ValueError, TypeError, OSError, TimeoutError):
-                return "Diese Webseite lässt sich nicht sicher auslesen. Der Suchauszug bleibt im Dashboard sichtbar.", True
+                return "Diese Webseite lässt sich nicht sicher auslesen. Der Suchauszug bleibt im Dashboard sichtbar.", False
             context_results["article"] = article
             recipe = article.get("recipe")
             if recipe:
                 return (article["voice_summary"] +
-                        " Die Zutaten und die einzelnen Schritte findest du im geöffneten Rezept."), True
-            return article["voice_summary"] or "Der Artikel ist in der Infobox geöffnet.", True
+                        " Die Zutaten und die einzelnen Schritte findest du im geöffneten Rezept."), False
+            return article["voice_summary"] or "Der Artikel ist in der Infobox geöffnet.", False
         request=parse_shopping(text)
         kind=None
         if request is None:
