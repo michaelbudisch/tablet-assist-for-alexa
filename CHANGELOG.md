@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.45 — Versioned frontend modules
+- Dashboard, ambient visualizer, and supporting modules use `?v=0.4.45` import URLs; increment them for each frontend release to invalidate stale browser and Android WebView caches.
+- Private HA dashboard main and ambient scripts are now served as versioned `/local/tafa/` files (versioned filename and `?v=`). Private dashboard code is intentionally not published to this repository.
+- Existing Home Assistant automations and entity mappings remain unchanged.
+
 ## TAFA App / HA integration 0.4.44 — Calm idle state for Ambient mode
 - Idle globe now only rotates gently: no vertex warping or size pulsing; orbiting sparkles are subdued.
 - Enhanced motion and pulsing are restricted to detected wakewords and actual Assist listening, processing or playback, not the always-armed native wakeword monitor (`listening: hey_jarvis`).
