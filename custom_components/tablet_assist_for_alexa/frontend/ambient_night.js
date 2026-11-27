@@ -1,7 +1,7 @@
-/* TAFA dashboard asset version 0.4.48 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.49 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
-  const bag=globalThis[Symbol.for("hauszentrale-kiosk.modules.v1")]??={parts:Object.create(null)};
+  const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
   const active=new WeakMap();
   const metrics=[
     {name:"NETZ",ids:["sensor.tibber_pulse_0100100700ff"],pattern:/tibber.*pulse|netz.*leistung|grid.*power|wirkleistung aktuell/i},
@@ -31,9 +31,7 @@
   .hz-ambient-body[data-tablet="1"] .hz-ambient-head{margin-top:clamp(48px,9vh,80px)!important}
   .hz-ambient-body[data-tablet="1"] .hz-ambient-time{font-size:clamp(56px,10vw,90px)!important}
   .hz-ambient-body[data-tablet="1"] .hz-ambient-exit{display:inline-flex!important}
-  .hz-ambient-body[data-tablet="1"] .hz-ambient-debug{display:block!important}
   .hz-ambient-exit{display:none;position:absolute;top:12px;right:12px;z-index:30;border:1px solid #89bbe066;background:#152a3cbf;color:#d1e9ff;padding:9px 11px;border-radius:12px;font:500 13px/1.25 inherit;cursor:pointer}
-  .hz-ambient-debug{display:none;color:#7590a9;font:10px/1.3 monospace;letter-spacing:0;margin:3px auto 9px;text-align:center;pointer-events:none}
   .hz-ambient-body:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.38;pointer-events:none;background:radial-gradient(circle at 22% 22%,#284d7644 0,transparent 28%),radial-gradient(circle at 76% 78%,#102a4d55 0,transparent 30%)}
   .hz-ambient-head{position:relative;z-index:2;margin-top:clamp(52px,8vh,96px);text-align:center}
   .hz-ambient-time{font-size:clamp(62px,10.4vw,116px);font-weight:300;letter-spacing:-.063em;font-variant-numeric:tabular-nums;line-height:1.04;text-shadow:0 0 26px #9dcaf723}
@@ -88,7 +86,7 @@
       <button type="button" class="hz-ambient-exit" data-hz-header="night" aria-label="Tagesansicht öffnen">☀ Tagesansicht</button><header class="hz-ambient-head"><div id="hz-night-clock" class="hz-ambient-time">--:--</div><div id="hz-night-date" class="hz-ambient-date"></div></header>
       <div class="hz-ambient-stage"><canvas class="hz-ambient-canvas" aria-label="Animierte, vernetzte Kugel"></canvas>
       ${metrics.map((m,i)=>`<div class="hz-ambient-metric" data-ambient-metric="${i}"><small>${safe(m.name)}</small><b>—</b></div>`).join("")}</div>
-      <div class="hz-ambient-foot"><span class="hz-ambient-indicator"></span><span data-ambient-state>TAFA · Bereit</span></div><span class="hz-ambient-debug" data-ambient-debug>WebView-Diagnose wird geladen</span>
+      <div class="hz-ambient-foot"><span class="hz-ambient-indicator"></span><span data-ambient-state>TAFA · Bereit</span></div>
       <section class="hz-ambient-info" data-ambient-info hidden aria-live="polite"></section>
     </section>`;
   }
@@ -128,7 +126,7 @@
     stage.dataset.phase=s.phase;
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
-    if(label)label.textContent=labels[s.phase]+" · Frontend 0.4.48";
+    if(label)label.textContent=labels[s.phase];
     stage.querySelector(".hz-ambient-indicator")?.setAttribute("title",s.phase);
   }
   function close(card){
@@ -390,14 +388,6 @@
       if(typeof card.hzHeaderAction==="function")void card.hzHeaderAction("night");
       else if(typeof card.quickAction==="function")card.quickAction("ambient");
     });
-    try{
-      const diag=host.querySelector("[data-ambient-debug]");
-      if(diag){
-        const rect=host.getBoundingClientRect();
-        const context=canvas.getContext("2d");
-        diag.textContent="0.4.48 · "+Math.round(window.innerWidth)+"×"+Math.round(window.innerHeight)+" · Ans. "+Math.round(rect.width)+"px · Canvas "+(context?"OK":"FEHLT");
-      }
-    }catch(error){console.warn("TAFA Ambient tablet diagnosis",error);}
     let frames=0;
     const loop=(time)=>{
       if(active.get(card)!==s||!card.isConnected||!card._hzNight||!host.isConnected)return;
@@ -429,5 +419,5 @@
   }
   bag.parts.ambient={body,mount,update,show,close,dispose};
   // Optional enhancement: never take part in the required dashboard boot gate.
-  try{document.dispatchEvent(new Event("tafa-ambient-ready"));}catch(e){console.debug("TAFA Ambient ready",e);}
+  try{document.dispatchEvent(new Event("tafa-integration-ambient-ready"));}catch(e){console.debug("TAFA Ambient ready",e);}
 })();
