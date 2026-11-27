@@ -61,7 +61,7 @@ class SequenceBenchmarkTests(unittest.TestCase):
         self.assertEqual(path, "/api/chat")
         self.assertEqual(len(body["messages"][1]["images"]), 4)
         self.assertEqual(body["model"], DEFAULT_MODEL)
-        self.assertEqual(body["keep_alive"], 300)
+        self.assertEqual(body["keep_alive"], -1)
         self.assertEqual(body["options"]["num_ctx"], 8192)
         self.assertEqual(result.json["metrics"]["requested_num_ctx"], 4096)
         self.assertEqual(result.json["metrics"]["effective_num_ctx"], 8192)
