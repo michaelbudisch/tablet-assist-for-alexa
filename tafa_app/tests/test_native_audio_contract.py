@@ -144,7 +144,7 @@ class NativeAudioContract(unittest.TestCase):
 
     def test_version_contract(self):
         self.assertIn('version: "0.4.40"',read("tafa_app/config.yaml"))
-        self.assertEqual(read("VERSION").strip(),"0.4.39")
+        self.assertEqual(read("VERSION").strip(),"0.4.40")
         self.assertEqual(read("android/VERSION").strip(),"1.2.4")
 
 if __name__=="__main__":

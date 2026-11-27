@@ -218,7 +218,7 @@ class DashboardDelivery(unittest.TestCase):
 
     def test_version_and_docs_consistent(self):
         self.assertIn('version: "0.4.40"',(APP/"config.yaml").read_text())
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.39")
+        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.4.40")
         self.assertIn('"version": "0.4.40"',(HA/"manifest.json").read_text())
         self.assertIn("0.3.52",(APP/"CHANGELOG.md").read_text())
 
