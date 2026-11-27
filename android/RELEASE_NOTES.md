@@ -1,3 +1,23 @@
+# TAFA Device Bridge 1.2.8 — Folgefragen nur bei Rückfrage (Quellstand)
+
+Der neue Quellstand behält die bisherige Paketkennung `de.jarvis.audio` und
+verwendet Version Code **29**. Ein signiertes APK mit dem ursprünglichen
+Zertifikat ist erst nach erneutem Build und Signieren verfügbar; bis dahin
+bleibt 1.2.7 das installierbare signierte Update.
+
+- Home Assistants `continue_conversation` aus dem Assist-Ereignis
+  `intent-end` entscheidet, ob nach der Wiedergabe noch eine Frage erwartet wird.
+- Die Tablet-Einstellung für maximale Anschlussfragen bleibt eine zusätzliche
+  Grenze, aber löst kein Mikrofonfenster mehr selbst aus.
+- Anschlussfrage-Wartezeit jetzt lokal **2–6 s**, Standard **3 s**;
+  unabhängig von der Sprechendepause.
+- Konservativerer Geräuschfilter bei Anschlussfragen, dazu maximal
+  10 Sekunden Gesamtaufnahme bei fälschlich erkannter Aktivität.
+- Stumm, Gesprächsende, Zeitüberschreitung und Fehler kehren zur
+  eingestellten Rufwort-Erkennung zurück.
+- Dazu gehört TAFA-Integration ab **0.4.65** für die intelligenten Antworten.
+- Vorherige App-Daten und die vorhandene Installationskennung bleiben erhalten.
+
 # TAFA Device Bridge 1.2.7
 
 Signed update using the original certificate, de.jarvis.audio application ID and version code 28. Install over the existing app.

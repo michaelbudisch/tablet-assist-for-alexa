@@ -1,5 +1,11 @@
 # TAFA App changelog
 
+## 0.4.62 — Release-Metadatenabgleich
+
+- Die Anzeige des TAFA App Control Centers nennt wieder die in
+  `tafa_app/config.yaml` enthaltene Version 0.4.62.
+- Keine Änderung an bestehenden Daten, Gerätezuordnungen oder Automatisierungen.
+
 ## 0.4.59 — Release-Metadaten und Modell-Diagnose
 
 - Laufende App und Versionsanzeige verwenden dieselbe Versionsnummer; Modellverwaltung und Ollama-Ein-Modell-Betrieb aus 0.4.58 bleiben bestehen.

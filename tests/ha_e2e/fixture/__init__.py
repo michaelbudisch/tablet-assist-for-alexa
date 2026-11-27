@@ -147,7 +147,7 @@ async def phase_one(hass):
         data=hass.data[DOMAIN][entry.entry_id]  # options reload replaced the per-entry runtime object
         agent=entity(hass,entry,"conversation")
         speech,cid,keep=await converse(hass,agent,"Wie hoch ist die Vorlauftemperatur?")
-        check("40" in speech and keep,"flow temperature and follow-up requested")
+        check("40" in speech and not keep,"ordinary house-data answer must not start an automatic follow-up")
         speech,_,_=await converse(hass,agent,"Und der Rücklauf?",cid)
         check("36" in speech,"contextual return temperature")
         speech,_,_=await converse(hass,agent,"Wie ist das Wetter aktuell?")
