@@ -1,3 +1,8 @@
+## 1.2.5 · Sofortige Rufwort- und Sprachstatus-Meldungen
+- Statt erst alle 12 Sekunden meldet die native App den Rufworttreffer und jede Assist-Phase umgehend an Home Assistant.
+- Separater, nicht blockierender Netzwerk-Worker, der Zwischenzustände bei verzögerten Anfragen zusammenfasst. Die periodische Bestandsmeldung bleibt als Sicherheitsnetz.
+- VersionCode 26; signiertes APK erfordert weiterhin den bisherigen Signaturschlüssel. Keine Änderung an App-ID, Audioaufnahme, Bluetooth-Ausgabe oder HA-Automationen.
+
 # Android-Änderungsverlauf
 
 ## 1.1.0 · Übersichtliche App mit drei Tabs
