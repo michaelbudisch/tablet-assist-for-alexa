@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.50 — Consistent minimal Ambient header
+- Night mode now hides the normal dashboard header and action buttons on desktop as well as Android. A single `☀ Day view` control inside Ambient mode allows returning to the normal dashboard.
+- Existing day-mode navigation, shooting stars, globe, sensor projections and voice phases remain intact. Private/public Ambient namespaces stay isolated. New cache-busted `?v=0.4.50` URLs.
+- No automations changed.
+
 ## TAFA App / HA integration 0.4.49 — Isolated Ambient module
 - The public TAFA integration now uses its own `tafa-ambient.integration.v1` symbol namespace so its renderer cannot overwrite private Hauszentrale Ambient mode.
 - Removed tablet diagnostic overlays from the normal night view; standalone WebView test remains separately accessible.
