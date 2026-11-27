@@ -1,4 +1,4 @@
-/* TAFA dashboard asset version 0.4.49 - cache-busted file delivery; existing code preserved */
+/* TAFA dashboard asset version 0.4.50 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
@@ -19,7 +19,9 @@
   .hz-night-view .top>div:first-child,.hz-night-view .hz-header-clock,.hz-night-view .hz-subnav{display:none!important}
   .hz-night-view .top .hz-header-right,.hz-night-view .top .hz-header-actions{pointer-events:auto}
   .hz-night-view .top .hz-header-button {background:#132a3d88!important;color:#a9c8e4!important;border:1px solid #9fd1fa32!important;backdrop-filter:blur(6px)}
-  .wrap.hz-night-view>main>header:not(.hz-ambient-head){position:absolute!important;right:12px;top:0;left:auto;z-index:16;min-height:0!important;width:auto;margin:0!important;padding:12px!important;max-width:none!important;background:transparent!important;border:0;box-shadow:none}
+  /* Night mode is intentionally minimal on desktop and Android alike. */
+  .wrap.hz-night-view>main>header:not(.hz-ambient-head){display:none!important}
+  .wrap.hz-night-view .top,.wrap.hz-night-view .hz-header-actions{display:none!important}
   .wrap.hz-night-view>main>header>div:first-child,.wrap.hz-night-view>main>header .header-clock{display:none!important}
   .wrap.hz-night-view>main>header .quick{background:#132a3dbb!important;color:#b9d8f2!important;border:1px solid #9fd1fa32!important;backdrop-filter:blur(6px)}
   .wrap.hz-night-view .body{max-width:none!important;min-width:0!important;margin:0!important;width:100%!important}
@@ -30,8 +32,8 @@
   .hz-ambient-body[data-tablet="1"] .hz-ambient-stage{width:100%!important;max-width:680px!important;min-width:0!important;min-height:180px!important;max-height:60vh!important;height:48vh!important;flex:1 1 auto!important}
   .hz-ambient-body[data-tablet="1"] .hz-ambient-head{margin-top:clamp(48px,9vh,80px)!important}
   .hz-ambient-body[data-tablet="1"] .hz-ambient-time{font-size:clamp(56px,10vw,90px)!important}
-  .hz-ambient-body[data-tablet="1"] .hz-ambient-exit{display:inline-flex!important}
-  .hz-ambient-exit{display:none;position:absolute;top:12px;right:12px;z-index:30;border:1px solid #89bbe066;background:#152a3cbf;color:#d1e9ff;padding:9px 11px;border-radius:12px;font:500 13px/1.25 inherit;cursor:pointer}
+  .hz-ambient-body .hz-ambient-exit{display:inline-flex!important}
+  .hz-ambient-exit{display:inline-flex;position:absolute;top:12px;right:12px;z-index:30;border:1px solid #89bbe066;background:#152a3cbf;color:#d1e9ff;padding:9px 11px;border-radius:12px;font:500 13px/1.25 inherit;cursor:pointer}
   .hz-ambient-body:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.38;pointer-events:none;background:radial-gradient(circle at 22% 22%,#284d7644 0,transparent 28%),radial-gradient(circle at 76% 78%,#102a4d55 0,transparent 30%)}
   .hz-ambient-head{position:relative;z-index:2;margin-top:clamp(52px,8vh,96px);text-align:center}
   .hz-ambient-time{font-size:clamp(62px,10.4vw,116px);font-weight:300;letter-spacing:-.063em;font-variant-numeric:tabular-nums;line-height:1.04;text-shadow:0 0 26px #9dcaf723}
