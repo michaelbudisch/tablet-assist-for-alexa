@@ -1,7 +1,7 @@
 // TAFA Home Dashboard — preview 0.2.0 (MIT)
 import {model} from './dashboard_model.js?v=0.4.32';
 import {installTafaResponseOverlay} from './response_overlay.js?v=0.4.38';
-import './ambient_night.js?v=0.4.39';
+import './ambient_night.js?v=0.4.41';
 function makeDashboard(model){
 const AMBIENT=globalThis[Symbol.for("hauszentrale-kiosk.modules.v1")]?.parts?.ambient;
 const {modules,roles,byId,byRole,normalize,escape:E,label,name,language,sum,value,area,candidates,eligible}=model;
