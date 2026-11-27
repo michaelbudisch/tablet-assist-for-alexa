@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.5 — Immediate voice phases (source release)
+
+**Build status:** New Android source version, version code **26**, unchanged app ID `de.jarvis.audio`. No signed 1.2.5 APK has been published yet. Updating the existing signed 1.2.4 installation requires the original release signing key; 1.2.4 remains the latest signed public download.
+
+- Native wake detection and Assist pipeline transitions now push phase telemetry to the authenticated Home Assistant device API immediately instead of waiting for the 12-second reconciliation.
+- Dedicated non-blocking worker coalesces obsolete phases under slow network conditions, without blocking audio recording or native UI.
+- Periodic status sync remains as a fallback but shares the same ordered queue, preventing stale heartbeat writes from overwriting newer phases.
+- Versioned source and unit tests cover coalescing, late transitions, exceptions, and close behavior. Build a release and sign with the original key before installing over 1.2.4; physical tablet latency must still be verified.
+
 # TAFA Device Bridge 1.2.4
 
 **Signed build:** TAFA-Device-Bridge-1.2.4.apk uses the existing signing certificate, application ID de.jarvis.audio and version code 25. Install over the current app. Validation: 49 JVM tests, Android lint without errors, DE/EN UI smoke tests on phone and tablet emulators, and 25 Python contract/documentation checks. Physical Bluetooth/tablet audio testing remains outstanding.
