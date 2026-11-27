@@ -215,6 +215,18 @@
             <LinearLayout style="@style/Card">
                 <TextView style="@style/Heading" android:text="@string/diagnostics" android:layout_marginTop="0dp" />
                 <TextView style="@style/Body" android:text="@string/diagnostics_help" />
+                <TextView style="@style/Heading" android:text="@string/flow_title" />
+                <TextView style="@style/Body" android:text="@string/flow_help" />
+                <CheckBox android:id="@+id/flow_recording" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/flow_recording" />
+                <TextView style="@style/Body" android:text="@string/flow_select" android:labelFor="@id/flow_runs" />
+                <Spinner android:id="@+id/flow_runs" style="@style/Choice" />
+                <TextView android:id="@+id/flow_primary" style="@style/Heading" android:text="@string/flow_primary_empty" android:textSize="22sp" />
+                <TextView android:id="@+id/flow_summary" style="@style/Body" android:textSize="12sp" android:textIsSelectable="true" />
+                <TextView android:id="@+id/flow_details" style="@style/Body" android:textSize="12sp" android:textIsSelectable="true" />
+                <TextView style="@style/Body" android:text="@string/flow_limits" android:textSize="12sp" />
+                <Button android:id="@+id/flow_copy" style="@style/Action" android:text="@string/flow_copy" />
+                <Button android:id="@+id/flow_share" style="@style/Action" android:text="@string/flow_share" />
+                <Button android:id="@+id/flow_clear" style="@style/Quiet" android:text="@string/flow_clear" />
                 <Button android:id="@+id/diagnostics_toggle" style="@style/Action" android:text="@string/diagnostics" />
                 <TextView android:id="@+id/diagnostics_text" style="@style/Body" android:textSize="12sp" android:fontFamily="monospace" android:visibility="gone" android:textIsSelectable="true" />
             </LinearLayout>        </LinearLayout>

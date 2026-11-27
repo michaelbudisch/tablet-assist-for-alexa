@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.6
+
+- Native-only timing diagnostics for wakeword, manual, follow-up and Always on requests. Current GitHub 1.2.5 source is the base.
+- Monotonic tablet timestamps from capture through Assist events, upload, audio job handoff, first byte/PCM, buffering, verified route and Android playback progress.
+- Primary speech-end-to-output latency, per-run timeline, comparable P50/P95 cohorts, bounded local history and metadata-only JSON copy/share.
+- No extra HA automation, diagnostic network traffic, audio recording files or transcript exports. Server intervals include transport/scheduling; extra acoustic Echo/Bluetooth latency is not measured.
+- 68 JVM tests, Android lint, silent AudioTrack presentation checks and synthetic DE/EN diagnostic/UI checks on phone and tablet emulators. Real tablet/Echo timing must still be collected after installing.
+- Signed update: TAFA-Device-Bridge-1.2.6.apk, original certificate, application ID de.jarvis.audio, version code 27. Install over the existing app.
+
 # TAFA Device Bridge 1.2.5 — Immediate voice phases (source release)
 
 **Build status:** New Android source version, version code **26**, unchanged app ID `de.jarvis.audio`. No signed 1.2.5 APK has been published yet. Updating the existing signed 1.2.4 installation requires the original release signing key; 1.2.4 remains the latest signed public download.

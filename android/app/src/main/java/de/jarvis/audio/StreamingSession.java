@@ -25,6 +25,8 @@ final class StreamingSession {
     }
     interface OutputFactory { Output create(BooleanSupplier stopped); }
     interface Listener {
+        default void timing(VoiceTrace.Point point){}
+        default void metric(VoiceTrace.Fact fact,long value){}
         void onPlaying(String diagnostics);
         void onBuffering(String diagnostics);
         void onDone(String diagnostics);
@@ -90,8 +92,10 @@ final class StreamingSession {
         boolean transfer=false, complete=false;
         Exception failure=null;
         try {
+            listener.timing(VoiceTrace.Point.FETCH_START);
             check();connection=connections.open();check();
             int status=connection.getResponseCode();
+            listener.timing(VoiceTrace.Point.HTTP_READY);
             if(status!=200)throw new IOException(status==401||status==403?"error_stream_auth":"error_stream_http");
             if(connection.getContentLengthLong()>MAX_BYTES)throw new IOException("error_stream_size");
             spool=File.createTempFile("jarvis-",".audio",cacheDir);
@@ -102,7 +106,7 @@ final class StreamingSession {
                 private int saved(byte[] bytes,int offset,int count)throws IOException {
                     check();if(count>0){
                         if(received+count>MAX_BYTES)throw new IOException("error_stream_size");
-                        if(firstByteMs<0)firstByteMs=elapsed();received+=count;destination.write(bytes,offset,count);
+                        if(firstByteMs<0){firstByteMs=elapsed();listener.timing(VoiceTrace.Point.FIRST_BYTE);}received+=count;destination.write(bytes,offset,count);
                     }return count;
                 }
                 @Override public int read(byte[] bytes,int offset,int length)throws IOException {check();return saved(bytes,offset,in.read(bytes,offset,length));}
@@ -112,7 +116,7 @@ final class StreamingSession {
             final long[] decoded={0};
             AudioStreamReader.PcmConsumer pcm=(format,bytes,offset,length)->{
                 check();if(stopSound)throw new InterruptedIOException("cancelled");
-                if(firstPcmMs<0)firstPcmMs=elapsed();
+                if(firstPcmMs<0){firstPcmMs=elapsed();listener.timing(VoiceTrace.Point.FIRST_PCM);}
                 if(mode.equals("preparing"))mode="wav_pcm";
                 decoded[0]+=length;
                 if(decoded[0]>(long)format.bytesForMs(1000)*120)throw new IOException("error_stream_duration");
@@ -156,22 +160,24 @@ final class StreamingSession {
             queue.awaitInitial(threshold);check();
             if(queue.size()==0)throw new IOException("error_stream_empty");
             if(soundStopped())return;
+            listener.timing(VoiceTrace.Point.BUFFER_READY);
             sink=outputs.create(this::soundStopped);output=sink;
             sink.open(format);
+            listener.timing(VoiceTrace.Point.ROUTE_READY);
             byte[] block=new byte[Math.max(format.frameBytes,format.bytesForMs(20))];
             boolean announce=true;
             while(!soundStopped()){
                 check();int count=queue.poll(block);
-                if(count<0){sink.drain();if(!cancelled&&terminal.compareAndSet(false,true))listener.onDone(diagnostics());return;}
+                if(count<0){sink.drain();listener.timing(VoiceTrace.Point.PLAYBACK_END);if(!cancelled&&terminal.compareAndSet(false,true))listener.onDone(diagnostics());return;}
                 if(count>0){
                     synchronized(soundLock){
                         if(soundStopped())return;
-                        sink.write(block,0,count);heard=true;if(firstPlayMs<0)firstPlayMs=elapsed();
+                        sink.write(block,0,count);heard=true;if(firstPlayMs<0){firstPlayMs=elapsed();listener.timing(VoiceTrace.Point.OUTPUT_SUBMITTED);}
                     }
                     if(announce){listener.onPlaying(diagnostics());announce=false;}
                 }else if(sink.queuedMillis()>40){queue.awaitChange(15);}
                 else{
-                    rebuffers++;announce=true;listener.onBuffering(diagnostics());
+                    rebuffers++;listener.metric(VoiceTrace.Fact.REBUFFERS,rebuffers);announce=true;listener.onBuffering(diagnostics());
                     while(!soundStopped()&&!queue.ended()&&queue.size()<threshold){
                         check();sink.silence(20);queue.awaitChange(10);
                     }

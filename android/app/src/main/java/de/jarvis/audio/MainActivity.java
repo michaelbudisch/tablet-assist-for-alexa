@@ -31,6 +31,7 @@ import com.google.zxing.client.android.Intents;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 public class MainActivity extends Activity {
+    private VoiceDiagnosticsPanel flowDiagnostics;
     static final String PREF = "jarvis_audio", KEY = "jarvis_audio_credentials", HTTP_CONSENT = "http_consent_base";
     private static final int SCAN_TOKEN = 100;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -168,6 +169,7 @@ public class MainActivity extends Activity {
         languageButton(R.id.language_en, "en");
         didAutoSearch = state != null && state.getBoolean("did_auto_search", false);
         initializeNavigation(state);
+        flowDiagnostics=new VoiceDiagnosticsPanel(this);
     }
 
 
@@ -923,6 +925,7 @@ public class MainActivity extends Activity {
     }
 
     private void refreshStatus() {
+        if(flowDiagnostics!=null)flowDiagnostics.refresh();
         refreshWakeConfigUi();
         refreshAudioOutputChoice();
         refreshBridgeOverview();
@@ -1035,6 +1038,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onStop() {
+        VoiceDiagnostics.checkpoint();
         handler.removeCallbacks(refresh);
         if (discovery != null) { stopDiscovery(); searchMessage.setText(R.string.search_stopped); }
         super.onStop();

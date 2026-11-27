@@ -11,7 +11,7 @@ final class NativeSpeechEndpoint {
     private final int pauseFrames;
     private final int emptyFrames;
     private int frames, voiced, silent, recent, recentCount;
-    private boolean started;
+    private boolean started,lastSound;
     private double noise=0.003;
 
     NativeSpeechEndpoint(int pauseMs, int emptyMs) {
@@ -30,6 +30,7 @@ final class NativeSpeechEndpoint {
         frames++;
         double threshold=Math.max(0.006,Math.min(0.04,noise*2.5));
         boolean sound=rms>=threshold;
+        lastSound=sound;
         if(!started&&!sound)noise=noise*0.97+rms*0.03;
         recent=((recent<<1)|(sound?1:0))&255;
         recentCount=Math.min(8,recentCount+1);
@@ -46,5 +47,7 @@ final class NativeSpeechEndpoint {
         return Decision.CONTINUE;
     }
 
+    boolean started(){return started;}
+    boolean voicedFrame(){return started&&lastSound;}
     boolean hasSpeech(){return started&&voiced>=12;}
 }

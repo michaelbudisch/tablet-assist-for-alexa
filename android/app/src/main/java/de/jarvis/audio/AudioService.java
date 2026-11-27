@@ -12,6 +12,9 @@ import java.util.concurrent.*;
 import java.util.regex.Pattern;
 
 public class AudioService extends Service {
+    private VoiceTrace.Playback activeProbe;
+    private int fileUnmutePosition=-1;
+    private boolean fileProgressObserved;
     static volatile String ui="stopped", keepaliveStatus="off", streamDiagnostics="";
     static volatile boolean running=false, haConnected=false;
     private BluetoothKeepalive keepalive;
@@ -168,6 +171,7 @@ public class AudioService extends Service {
                     if(next.equals(id)&&busy)main.post(()->finish("cancelled"));
                     else roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",next).put("stage","cancelled"));
                 }else if(ready&&PATH.matcher(path).matches()){
+                    VoiceDiagnostics.playback(this,next).mark(VoiceTrace.Point.JOB_RECEIVED);
                     busy=true;id=next;state(id+"|buffering");main.post(()->startStreaming(next,path));
                 }else if(!busy){
                     roomApi(new JSONObject().put("action","report").put("session",roomSession).put("id",next).put("stage","error"));
@@ -205,14 +209,18 @@ public class AudioService extends Service {
 
     private void startStreaming(String request,String path) {
         if(!active||!busy||!request.equals(id))return;
+        activeProbe=VoiceDiagnostics.playback(this,request);
+        activeProbe.fact(VoiceTrace.Fact.ENGINE,"pcm");
+        activeProbe.fact(VoiceTrace.Fact.START_BUFFER_MS,StreamingSession.START_BUFFER_MS);
         playbackMode=AudioOutputMode.get(this);
         if(AudioOutputMode.find(am,AudioOutputMode.select(am,playbackMode))==null){finish("error_route_unavailable");return;}
         if(!takeSpeechFocus()){finish("error_focus");return;}
+        activeProbe.mark(VoiceTrace.Point.AUDIO_FOCUS);
         streamDiagnostics="mode=preparing; startup_buffer_ms="+StreamingSession.START_BUFFER_MS;
         StreamCallbacks callbacks=new StreamCallbacks(request);
         streaming=new StreamingSession(getCacheDir(),()->connection(path,"GET"),
                 first->new AndroidMp3Decoder(first,()->!active||!busy||!request.equals(id)),
-                stopped->{BluetoothPcmOutput output=new BluetoothPcmOutput(am,stopped,playbackMode);pcmOutput=output;return output;},callbacks);
+                stopped->{BluetoothPcmOutput output=new BluetoothPcmOutput(am,stopped,playbackMode,VoiceDiagnostics.enabled()?callbacks.probe:null);pcmOutput=output;return output;},callbacks);
         callbacks.owner=streaming;
         StreamingSession session=streaming;
         streamWatchdog=()->{if(streaming==session&&busy)finish("error_stream_timeout");};
@@ -223,7 +231,10 @@ public class AudioService extends Service {
     private final class StreamCallbacks implements StreamingSession.Listener {
         final String request;
         StreamingSession owner;
-        StreamCallbacks(String request){this.request=request;}
+        final VoiceTrace.Playback probe;
+        StreamCallbacks(String request){this.request=request;this.probe=VoiceDiagnostics.playback(AudioService.this,request);}
+        @Override public void timing(VoiceTrace.Point point){probe.mark(point);}
+        @Override public void metric(VoiceTrace.Fact fact,long value){probe.fact(fact,value);}
         boolean current(){return active&&busy&&request.equals(id)&&streaming==owner;}
         public void onPlaying(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|playing|"+(pcmOutput==null?AudioOutputMode.label(AudioOutputMode.select(am,playbackMode)):pcmOutput.routeLabel()));}});}
         public void onBuffering(String diagnostic){main.post(()->{if(current()){streamDiagnostics=diagnostic;state(id+"|buffering");}});}
@@ -241,6 +252,8 @@ public class AudioService extends Service {
     }
     private void startPlayer(File f) {
         file = f;
+        fileUnmutePosition=-1;fileProgressObserved=false;
+        if(activeProbe!=null)activeProbe.fact(VoiceTrace.Fact.ENGINE,"file");
         try {
             fileOutputType=AudioOutputMode.select(am,playbackMode);
             if (AudioOutputMode.find(am,fileOutputType)==null) { finish("error_route_unavailable"); return; }
@@ -291,14 +304,26 @@ public class AudioService extends Service {
         try{
             AudioDeviceInfo d=player.getRoutedDevice();boolean routed=d!=null&&d.getType()==fileOutputType&&(!audible||d.getId()==preferredId);
             long now=SystemClock.elapsedRealtime();if(now>playUntil){finish("error_play_timeout");return;}
-            if(audible){if(!routed){player.setVolume(0,0);finish("error_route_lost");return;}main.postDelayed(this,100);return;}
+            if(audible){if(!routed){player.setVolume(0,0);finish("error_route_lost");return;}
+                if(activeProbe!=null&&!fileProgressObserved&&player.isPlaying()&&player.getCurrentPosition()>fileUnmutePosition){
+                    fileProgressObserved=true;
+                    activeProbe.fact(VoiceTrace.Fact.OUTPUT_QUALITY,"mediaplayer_position_100ms");
+                    activeProbe.mark(VoiceTrace.Point.OUTPUT_PROGRESS);
+                }
+                main.postDelayed(this,100);return;}
             if(!routed){
                 if(AudioOutputMode.AUTO.equals(playbackMode)&&fileOutputType==AudioDeviceInfo.TYPE_BLUETOOTH_A2DP&&
                         (AudioOutputMode.find(am,fileOutputType)==null||now>=checkUntil)){
                     fileOutputType=AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;routeAttempts=0;checkUntil=now+4000;requestOutputRoute(player);
                 }
                 if(now>=checkUntil){finish("error_route_"+(d==null?"unknown":"type_"+d.getType())+(preferredAccepted?"_preferred_ok":"_preferred_rejected"));return;}if(routeAttempts<3&&now>=routeRetryAt)requestOutputRoute(player);main.postDelayed(this,60);return;}
-            if(seeked){preferredId=d.getId();player.setVolume(1,1);audible=true;state(id+"|playing|"+AudioOutputMode.label(fileOutputType));main.postDelayed(this,100);return;}
+            if(seeked){preferredId=d.getId();fileUnmutePosition=player.getCurrentPosition();player.setVolume(1,1);audible=true;
+                if(activeProbe!=null){
+                    activeProbe.fact(VoiceTrace.Fact.OUTPUT,AudioOutputMode.label(fileOutputType));
+                    activeProbe.mark(VoiceTrace.Point.ROUTE_READY);
+                    activeProbe.mark(VoiceTrace.Point.OUTPUT_SUBMITTED);
+                }
+                state(id+"|playing|"+AudioOutputMode.label(fileOutputType));main.postDelayed(this,100);return;}
             // Establish routing silently, then restart at the beginning of the buffered file.
             player.pause();
             player.setOnSeekCompleteListener(p->{if(p!=player||!busy||audible)return;try{seeked=true;checkUntil=SystemClock.elapsedRealtime()+2000;p.start();main.post(this);}catch(RuntimeException e){finish("error_player_restart");}});
@@ -306,6 +331,8 @@ public class AudioService extends Service {
             MediaPlayer waiting=player;main.postDelayed(()->{if(busy&&player==waiting&&!seeked)finish("error_seek");},2000);
         }catch(Exception e){finish("error_route");}
     }};
-    private void finish(String result){if(!busy)return;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;pcmOutput=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);}
+    private void finish(String result){if(!busy)return;
+        if(activeProbe!=null&&"done".equals(result))activeProbe.mark(VoiceTrace.Point.PLAYBACK_END);
+        activeProbe=null;fileUnmutePosition=-1;main.removeCallbacks(routeCheck);if(streamWatchdog!=null)main.removeCallbacks(streamWatchdog);streamWatchdog=null;StreamingSession current=streaming;streaming=null;pcmOutput=null;if(current!=null)current.cancel();if(player!=null){try{player.setVolume(0,0);player.release();}catch(Exception ignored){}player=null;}if(focus!=null){am.abandonAudioFocusRequest(focus);focus=null;}if(file!=null){file.delete();file=null;}audible=false;seeked=false;preferredAccepted=false;preferredId=-1;routeAttempts=0;routeRetryAt=0;checkUntil=0;playUntil=0;String ended=id;busy=false;heartbeat=System.currentTimeMillis();roomTerminal=ended+"|"+result;state(ended+"|"+result);}
     @Override public void onDestroy(){AudioOutputMode.prefs(this).unregisterOnSharedPreferenceChangeListener(outputPreferenceListener);active=false;running=false;haConnected=false;enrollmentIo.shutdownNow();if(keepalive!=null)keepalive.close();finish("cancelled");try{io.execute(()->{try{if(!roomSession.isEmpty())roomApi(new JSONObject().put("action","disconnect").put("session",roomSession));}catch(Exception ignored){}});}catch(RejectedExecutionException ignored){}io.shutdown();main.removeCallbacksAndMessages(null);ui="stopped";stopForeground(true);super.onDestroy();}
 }

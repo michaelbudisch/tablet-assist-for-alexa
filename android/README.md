@@ -1,12 +1,16 @@
-# TAFA Device Bridge · Android 1.2.5 (source)
+# TAFA Device Bridge · Android 1.2.6
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
-**1.2.5 source status:** Native voice phase changes are pushed to Home Assistant immediately instead of waiting for the 12-second sync. Updating the existing signed 1.2.4 app requires a new APK signed with the original release key. The 1.2.4 signed download remains the current public build.
+**1.2.6:** Native timing diagnostics run entirely on the tablet, based on the current GitHub 1.2.5 code. Immediate live phase telemetry remains available. Install the signed update over the existing app to preserve credentials and device identity.
 
 Native tablet bridge for Home Assistant: wakeword and Assist, Bluetooth playback, camera and image-motion detection in one compact app. Android 9+.
 
 **First-time setup:** First [configure TAFA in Home Assistant](../docs/en/setup-guide.md), then create a dedicated non-admin HA user for each tablet. Enter the HA base URL and credentials under Device Bridge **Connect**. The signed Android APK is installed separately from the Home Assistant App.
+
+## Native voice diagnostics
+
+Open **Settings → Help & diagnostics → Native voice timeline** for the last 20 native requests. Speech-end latency, a stage timeline, separate P50/P95 cohorts and a local metadata-only JSON export are available. [Native timing guide](docs/native-flow-diagnostics.md).
 
 ## Three simple tabs
 
@@ -56,7 +60,7 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-[Download signed APK 1.2.4](downloads/TAFA-Device-Bridge-1.2.4.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.4) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **25**. Install over the existing app to retain credentials and device identity.
+[Download signed APK 1.2.6](downloads/TAFA-Device-Bridge-1.2.6.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.6) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **27**. Install over the existing app to retain credentials and device identity.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 

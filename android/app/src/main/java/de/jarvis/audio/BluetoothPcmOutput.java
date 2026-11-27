@@ -20,9 +20,15 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
     private volatile int confirmed=-1;
     private PcmFormat format;
     private long writtenFrames;
+    private final VoiceTrace.PresentationGate presentation=new VoiceTrace.PresentationGate();
+    private final VoiceTrace.Playback probe;
     private ByteBuffer transfer;
     BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped){this(manager,stopped,AudioOutputMode.BLUETOOTH);}
-    BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped,String mode){this.manager=manager;this.stopped=stopped;this.mode=mode;outputType=AudioOutputMode.select(manager,mode);}
+    BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped,String mode){this(manager,stopped,mode,null);}
+    BluetoothPcmOutput(AudioManager manager,BooleanSupplier stopped,String mode,VoiceTrace.Playback probe){
+        this.manager=manager;this.stopped=stopped;this.mode=mode;this.probe=probe;
+        outputType=AudioOutputMode.select(manager,mode);
+    }
 
     private AudioDeviceInfo outputDevice(){return AudioOutputMode.find(manager,outputType);}
     private boolean routed(){
@@ -84,11 +90,14 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
             transfer.clear();transfer.put(zeros,0,Math.min(zeros.length,format.bytesForMs(20)));transfer.flip();
             int count=track.write(transfer,transfer.remaining(),AudioTrack.WRITE_NON_BLOCKING);
             if(count<0)throw new IOException("error_stream_output_write");
-            writtenFrames+=count/format.frameBytes;Thread.sleep(20);
+            writtenFrames+=count/format.frameBytes;
+            Thread.sleep(20);
         }
         AudioDeviceInfo verified=track.getRoutedDevice();
         if(verified==null)throw new IOException("error_route_unconfirmed");
         confirmed=verified.getId();verify();track.setVolume(1);
+        presentation.routeVerified();
+        if(probe!=null){probe.fact(VoiceTrace.Fact.OUTPUT,routeLabel());probe.mark(VoiceTrace.Point.ROUTE_READY);}
     }
 
     @Override public void write(byte[] bytes,int offset,int length)throws Exception {
@@ -98,7 +107,10 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
             verify();int count;
             synchronized(trackLock){check();count=track.write(transfer,transfer.remaining(),AudioTrack.WRITE_NON_BLOCKING);}
             if(count<0)throw new IOException("error_stream_output_write");
+            if(count>0&&presentation.submitted(writtenFrames)&&probe!=null)
+                probe.mark(VoiceTrace.Point.OUTPUT_SUBMITTED);
             writtenFrames+=count/format.frameBytes;
+            observeProgress();
             if(count==0){if(System.nanoTime()>deadline)throw new IOException("error_stream_output_stalled");Thread.sleep(5);}
         }
     }
@@ -106,7 +118,20 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
         byte[] zeros=new byte[format.bytesForMs(Math.min(20,millis))];
         for(int left=millis;left>0;left-=20)write(zeros,0,Math.min(zeros.length,format.bytesForMs(left)));
     }
+    /** Observe played frames, never equate a write() return with presentation. */
+    private void observeProgress(){
+        AudioTrack current=track;
+        if(probe==null||!presentation.waiting()||current==null||aborted||routeLost)return;
+        try{
+            if(current.getPlayState()==AudioTrack.PLAYSTATE_PLAYING&&
+                    presentation.observe(current.getPlaybackHeadPosition()&0xffffffffL)){
+                probe.fact(VoiceTrace.Fact.OUTPUT_QUALITY,"audiotrack_head");
+                probe.mark(VoiceTrace.Point.OUTPUT_PROGRESS);
+            }
+        }catch(RuntimeException ignored){/* Diagnostics must not alter playback. */}
+    }
     @Override public long queuedMillis(){
+        observeProgress();
         AudioTrack current=track;if(current==null||format==null)return 0;
         try{return Math.max(0,writtenFrames-(current.getPlaybackHeadPosition()&0xffffffffL))*1000/format.sampleRate;}
         catch(RuntimeException error){return 0;}
@@ -115,8 +140,10 @@ final class BluetoothPcmOutput implements StreamingSession.Output {
         silence(100);
         long deadline=System.nanoTime()+5_000_000_000L;
         while((track.getPlaybackHeadPosition()&0xffffffffL)<writtenFrames){
-            verify();if(System.nanoTime()>deadline)throw new IOException("error_stream_output_stalled");Thread.sleep(10);
+            verify();observeProgress();if(System.nanoTime()>deadline)throw new IOException("error_stream_output_stalled");Thread.sleep(10);
         }
+        observeProgress();
+        if(probe!=null)probe.fact(VoiceTrace.Fact.UNDERRUNS,track.getUnderrunCount());
     }
     @Override public void abort(){
         aborted=true;

@@ -51,6 +51,8 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
     private final Context context;
     private final Listener listener;
     private byte[] capturedPcm;
+    private final VoiceTrace trace;
+    private final java.util.concurrent.atomic.AtomicReference<String> diagnosticError=new java.util.concurrent.atomic.AtomicReference<>("");
     private final String lastConversation, wakeWord;
     private final boolean followup;
     private final ExecutorService work=Executors.newSingleThreadExecutor(r->{
@@ -78,7 +80,16 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
 
     NativeAssistSession(Context context,String wakeWord,String lastConversation,
                         int pauseMs,boolean followup,Listener listener,byte[] capturedPcm){
+        this(context,wakeWord,lastConversation,pauseMs,followup,listener,capturedPcm,null);
+    }
+    NativeAssistSession(Context context,String wakeWord,String lastConversation,
+                        int pauseMs,boolean followup,Listener listener,byte[] capturedPcm,VoiceTrace measurement){
         this.context=context.getApplicationContext();
+        this.trace=measurement!=null?measurement:VoiceDiagnostics.begin(context,
+            capturedPcm!=null?VoiceTrace.Kind.CONTINUOUS:
+            followup?VoiceTrace.Kind.FOLLOWUP:
+            wakeWord!=null&&!wakeWord.isEmpty()?VoiceTrace.Kind.WAKEWORD:VoiceTrace.Kind.MANUAL);
+        trace.fact(VoiceTrace.Fact.PAUSE_MS,capturedPcm!=null?1700:Math.max(900,Math.min(3200,pauseMs)));
         this.wakeWord=wakeWord==null?"":wakeWord;
         this.lastConversation=lastConversation==null?"":lastConversation;
         this.pauseMs=Math.max(900,Math.min(3200,pauseMs));
@@ -88,6 +99,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
     }
 
     void start(){
+        trace.mark(VoiceTrace.Point.ASSIST_START);
         work.execute(()->{
             try{
                 if(context.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
@@ -102,6 +114,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 JSONObject room=roomApi(new JSONObject().put("action","status"));
                 if(!room.optBoolean("ready",false))
                     throw new IOException("room_player_not_ready");
+                trace.mark(VoiceTrace.Point.CONNECT_START);
                 state("authenticating");
                 String wsBase=(haBase.startsWith("https://")?"wss://":"ws://")
                     +haBase.substring(haBase.indexOf("://")+3);
@@ -143,15 +156,17 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         if(ended.get()||ws==null||!ws.send(obj.toString()))throw new IOException("websocket_closed");
     }
 
-    @Override public void onOpen(WebSocket ws,Response response){state("connected");}
+    @Override public void onOpen(WebSocket ws,Response response){trace.mark(VoiceTrace.Point.CONNECTED);state("connected");}
     @Override public void onMessage(WebSocket ws,String message){
         if(ended.get())return;
         try{
+            queueDrained();
             JSONObject packet=new JSONObject(message);
             String type=packet.optString("type","");
             if("auth_required".equals(type)){
                 send(new JSONObject().put("type","auth").put("access_token",bearer));
             }else if("auth_ok".equals(type)){
+                trace.mark(VoiceTrace.Point.AUTHENTICATED);
                 authenticated=true;
                 send(new JSONObject().put("id",WS_PIPELINES)
                     .put("type","assist_pipeline/pipeline/list"));
@@ -190,12 +205,26 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
             .put("pipeline",chosen.getString("id")).put("start_stage","stt")
             .put("end_stage","tts").put("timeout",120).put("input",input);
         if(!lastConversation.isEmpty())cmd.put("conversation_id",lastConversation);
+        trace.mark(VoiceTrace.Point.PIPELINE_REQUEST);
         send(cmd);
         state("waiting_for_stt");
     }
 
     private void handleEvent(JSONObject event) throws Exception {
         String type=event.optString("type");
+        VoiceTrace.Point point=switch(type){
+            case "run-start" -> VoiceTrace.Point.RUN_START;
+            case "stt-start" -> VoiceTrace.Point.STT_START;
+            case "stt-end" -> VoiceTrace.Point.STT_END;
+            case "intent-start" -> VoiceTrace.Point.INTENT_START;
+            case "intent-progress" -> VoiceTrace.Point.INTENT_FIRST;
+            case "intent-end" -> VoiceTrace.Point.INTENT_END;
+            case "tts-start" -> VoiceTrace.Point.TTS_START;
+            case "tts-end" -> VoiceTrace.Point.TTS_END;
+            case "run-end" -> VoiceTrace.Point.RUN_END;
+            default -> null;
+        };
+        if(point!=null)trace.mark(point);
         JSONObject data=event.optJSONObject("data");
         if(data==null)data=new JSONObject();
         if("run-start".equals(type)){
@@ -271,9 +300,14 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                         System.arraycopy(utterance,pos,packet,1,len);
                         if(!ws.send(ByteString.of(packet)))
                             throw new IOException("audio_socket_closed");
+                        trace.mark(VoiceTrace.Point.INPUT_FIRST_SENT);
+                        trace.add(VoiceTrace.Fact.INPUT_BYTES,len);
                     }
-                    if(!ended.get()&&!ws.send(ByteString.of(new byte[]{(byte)(handler&0xff)})))
-                        throw new IOException("audio_socket_closed");
+                    if(!ended.get()){
+                        if(!ws.send(ByteString.of(new byte[]{(byte)(handler&0xff)})))
+                            throw new IOException("audio_socket_closed");
+                        inputEnded(ws);
+                    }
                 }catch(Exception error){
                     if(!ended.get())fail("audio_"+error.getClass().getSimpleName());
                 }finally{capture=false;}
@@ -301,9 +335,11 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                 recorder=audio;
                 // Vosk has already closed its own recorder before this point.
                 audio.startRecording();
+                trace.mark(VoiceTrace.Point.MIC_READY);
                 NativeSpeechEndpoint endpoint=new NativeSpeechEndpoint(pauseMs,followup?6500:8000);
                 int gain=context.getSharedPreferences(MainActivity.PREF,0).getInt("mic_gain",100);
                 gain=Math.max(50,Math.min(200,gain));
+                trace.fact(VoiceTrace.Fact.MIC_GAIN,gain);
                 short[] pcm=new short[FRAME_SAMPLES];
                 while(capture&&!ended.get()){
                     int n=audio.read(pcm,0,pcm.length,AudioRecord.READ_BLOCKING);
@@ -322,11 +358,17 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                     }
                     WebSocket ws=socket;
                     if(ws==null||!ws.send(ByteString.of(data)))throw new IOException("audio_socket_closed");
+                    trace.mark(VoiceTrace.Point.INPUT_FIRST_SENT);
+                    trace.add(VoiceTrace.Fact.INPUT_BYTES,n*2L);
                     NativeSpeechEndpoint.Decision choice=endpoint.feed(pcm,n);
+                    if(endpoint.started())trace.mark(VoiceTrace.Point.SPEECH_START);
+                    if(endpoint.voicedFrame())trace.mark(VoiceTrace.Point.SPEECH_END);
                     if(choice!=NativeSpeechEndpoint.Decision.CONTINUE){
                         capture=false;
                         ws.send(ByteString.of(new byte[]{(byte)(handler&0xff)}));
                         sentEnd=true;
+                        trace.mark(VoiceTrace.Point.CAPTURE_END);
+                        inputEnded(ws);
                         state(choice==NativeSpeechEndpoint.Decision.EMPTY?
                             "no_speech":"transcribing");
                         break;
@@ -345,6 +387,16 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         });
     }
 
+    private void inputEnded(WebSocket ws){
+        trace.mark(VoiceTrace.Point.INPUT_END_SENT);
+        trace.fact(VoiceTrace.Fact.WS_QUEUED_BYTES,ws.queueSize());
+        queueDrained();
+    }
+    private void queueDrained(){
+        WebSocket ws=socket;
+        if(ws!=null&&trace.has(VoiceTrace.Point.INPUT_END_SENT)&&ws.queueSize()==0)
+            trace.mark(VoiceTrace.Point.INPUT_QUEUE_DRAINED);
+    }
     private void stopCapture(boolean signalEnd){
         if(!capture)return;
         capture=false;
@@ -359,11 +411,14 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         try{
             if(ended.get())return;
             if(!AudioService.running)throw new IOException("tablet_player_stopped");
+            trace.mark(VoiceTrace.Point.JOB_SUBMIT);
             state("sending_audio");
             JSONObject job=roomApi(new JSONObject().put("action","submit").put("path",ttsPath));
             jobId=job.optString("id","");
             if(!job.optBoolean("accepted")||!jobId.matches("[a-f0-9]{32}"))
                 throw new IOException("audio_submit_rejected");
+            trace.mark(VoiceTrace.Point.JOB_ACCEPTED);
+            VoiceDiagnostics.bind(trace,jobId);
             state("waiting_for_playback");
             long deadline=SystemClock.elapsedRealtime()+90000;
             while(!ended.get()&&SystemClock.elapsedRealtime()<deadline){
@@ -385,9 +440,11 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         }
     }
 
-    private void fail(String reason){state("error:"+reason);finish(false);}
+    private void fail(String reason){diagnosticError.compareAndSet("",reason);state("error:"+reason);finish(false);}
     private void finish(boolean answered){
         if(!finished.compareAndSet(false,true))return;
+        VoiceDiagnostics.finish(trace,answered?VoiceTrace.Status.SUCCESS:
+            diagnosticError.get().isEmpty()?VoiceTrace.Status.NO_REPLY:VoiceTrace.Status.ERROR,diagnosticError.get());
         ended.set(true);
         stopCapture(false);
         WebSocket ws=socket;
@@ -406,6 +463,7 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
         if(!ended.get()&&!didRunEnd)fail("websocket_closed");
     }
     @Override public void close(){
+        VoiceDiagnostics.finish(trace,VoiceTrace.Status.CANCELLED,"");
         ended.set(true);
         stopCapture(false);
         WebSocket ws=socket;if(ws!=null)ws.close(1000,"stopped");

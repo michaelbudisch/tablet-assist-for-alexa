@@ -1,3 +1,4 @@
+import json
 """Public onboarding/documentation guardrails; keep legacy docs archived separately."""
 from pathlib import Path
 import re
@@ -69,8 +70,16 @@ class PublicDocumentationTests(unittest.TestCase):
         self.assertRegex(app, r"(?m)^  speech_mode: setup$")
         integration_version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         self.assertRegex(integration_version, r"^[0-9]+[.][0-9]+[.][0-9]+$")
-        self.assertIn(f'version: "{integration_version}"', app)
-        self.assertEqual((ROOT / "worker/VERSION").read_text().strip(), "2.2.6")
+        # HA integration and Supervisor App are released independently.
+        app_version = re.search(r'^version: "([^"]+)"$', app, re.MULTILINE)
+        self.assertIsNotNone(app_version)
+        self.assertIn(f'APP_VERSION="{app_version.group(1)}"',
+                      (ROOT / "tafa_app/server.py").read_text(encoding="utf-8"))
+        integration = json.loads((ROOT / "custom_components/tablet_assist_for_alexa/manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(integration["version"], integration_version)
+        worker_version = (ROOT / "worker/VERSION").read_text().strip()
+        self.assertRegex(worker_version, r"^[0-9]+[.][0-9]+[.][0-9]+$")
+        self.assertIn(f'VERSION = "{worker_version}"', (ROOT / "worker/ops/server.py").read_text(encoding="utf-8"))
         android_version = (ROOT / "android/VERSION").read_text(encoding="utf-8").strip()
         gradle = (ROOT / "android/app/build.gradle").read_text(encoding="utf-8")
         self.assertRegex(android_version, r"^[0-9]+[.][0-9]+[.][0-9]+$")

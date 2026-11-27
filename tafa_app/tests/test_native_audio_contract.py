@@ -73,7 +73,7 @@ class NativeAudioContract(unittest.TestCase):
         client=read("tafa_app/voice-test.js")
         self.assertIn('startContinuousMonitor()',wake)
         self.assertIn('pending.toByteArray()',wake)
-        self.assertIn('beginNativeAssist("",false,captured)',wake)
+        self.assertIn('beginNativeAssist("",false,captured,measured)',wake)
         self.assertIn('if(capturedPcm!=null)',session)
         self.assertIn('new byte[]{(byte)(handler&0xff)}',session)
         self.assertIn('class ContinuousSpeechTrigger',read("android/app/src/main/java/de/jarvis/audio/ContinuousSpeechTrigger.java"))

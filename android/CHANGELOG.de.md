@@ -1,3 +1,11 @@
+
+## 1.2.6 · Native Zeitdiagnose
+- Aktueller GitHub-Quellstand 1.2.5 als Basis, dessen Live-Phasenmeldungen bleiben erhalten.
+- Gemeinsame Tablet-Uhr für Aufnahme, Assist-Ereignisse, Transfer/Decoder/Puffer/Route und Android-Wiedergabefortschritt.
+- Zuordnung per Auftrags-ID, auch bei früher Wiedergabe vor der HTTP-Submit-Antwort.
+- DE/EN-Ansicht, getrennte Quantile und lokaler JSON-Export ohne Audio, Gesprächstexte oder Zugangsdaten.
+- Versionscode 27; bisherige Signatur. 68 Unit-Tests und synthetische DE/EN-Oberflächentests auf Handy-/Tablet-Emulator; reale Messung am Tablet steht aus.
+
 ## 1.2.5 · Sofortige Rufwort- und Sprachstatus-Meldungen
 - Statt erst alle 12 Sekunden meldet die native App den Rufworttreffer und jede Assist-Phase umgehend an Home Assistant.
 - Separater, nicht blockierender Netzwerk-Worker, der Zwischenzustände bei verzögerten Anfragen zusammenfasst. Die periodische Bestandsmeldung bleibt als Sicherheitsnetz.

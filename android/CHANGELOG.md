@@ -1,3 +1,11 @@
+
+## 1.2.6 · Native device-side latency diagnostics
+- Base source updated to GitHub 1.2.5; preserve its live phase telemetry.
+- One bounded monotonic timeline per native request, including local capture, Assist events, transfer/decode/buffer/route and actual Android playback progress.
+- Match playback by exact job ID, including playback that starts before submit acknowledgement.
+- DE/EN viewer, separate successful-run percentiles and metadata-only JSON copy/share; no new server requests or stored audio/text.
+- Version code 27, original update certificate. 68 JVM tests, silent AudioTrack presentation checks and dedicated synthetic DE/EN UI checks on phone/tablet; real hardware timing remains to be measured.
+
 ## 1.2.5 · Immediate wakeword and Assist phase telemetry
 - Native wakeword recognition and each Assist stage now publish HA telemetry on change, rather than waiting up to 12 seconds for the next refresh.
 - Dedicated non-blocking worker coalesces obsolete statuses on a slow connection and preserves periodic reconciliation as a fallback.

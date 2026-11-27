@@ -1,3 +1,12 @@
+# TAFA Device Bridge 1.2.6
+
+- Native Zeitdiagnose für Rufwort, manuelle Frage, Folgefrage und Immer an auf Basis des aktuellen GitHub-Stands 1.2.5.
+- Eine gemeinsame Tablet-Uhr erfasst Aufnahme, Assist-Ereignisse, Upload, Audioauftrag, Transfer, Decoder, Puffer, Route und Android-Wiedergabefortschritt.
+- Sprachende-Latenz, Zeitachse, getrennte P50/P95 und begrenzter lokaler JSON-Export ausschließlich mit Zeitmetadaten.
+- Keine zusätzliche HA-Automation oder Diagnoseabfragen; keine Audio-/Gesprächstext-Exporte. Serverphasen enthalten Transport/Wartezeiten, zusätzliche akustische Echo-Verzögerung wird nicht gemessen.
+- 68 Unit-Tests, Android Lint, stumme AudioTrack-Fortschrittstests und synthetische DE/EN-Diagnose-/Oberflächentests auf Handy- und Tablet-Emulator. Echte Zeiten müssen nach Installation auf dem Tablet gemessen werden.
+- Signiertes Update: TAFA-Device-Bridge-1.2.6.apk, bisheriges Zertifikat, App-ID de.jarvis.audio, Versionscode 27. Über die bestehende App installieren.
+
 # TAFA Device Bridge 1.2.5 — Sofortige Sprachphasen (Quellversion)
 
 **Buildstatus:** Neue Android-Quellversion mit Versionscode **26** und unveränderter App-ID `de.jarvis.audio`. Noch **keine signierte 1.2.5-APK veröffentlicht**. Ein direktes Update der vorhandenen signierten 1.2.4 benötigt das ursprüngliche Signaturzertifikat. Die letzte veröffentlichte signierte APK bleibt 1.2.4.

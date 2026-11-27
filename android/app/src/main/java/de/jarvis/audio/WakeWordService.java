@@ -80,6 +80,7 @@ public final class WakeWordService extends Service implements RecognitionListene
 
     @Override public void onCreate(){
         super.onCreate();
+        VoiceDiagnostics.init(this);
         NotificationManager manager=getSystemService(NotificationManager.class);
         manager.createNotificationChannel(new NotificationChannel(CHANNEL,
             getString(R.string.wake_title),NotificationManager.IMPORTANCE_LOW));
@@ -416,6 +417,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         continuousThread=new Thread(()->{
             AudioRecord recorder=null;
             byte[] question=null;
+            VoiceTrace measurement=null;
             try{
                 int min=AudioRecord.getMinBufferSize(16000,
                     AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
@@ -453,16 +455,26 @@ public final class WakeWordService extends Service implements RecognitionListene
                         if(preroll.size()>30)preroll.removeFirst();
                         if(gate.feed(pcm,count)){
                             started=true;
+                            measurement=VoiceDiagnostics.begin(this,VoiceTrace.Kind.CONTINUOUS);
+                            measurement.mark(VoiceTrace.Point.SPEECH_START);
+                            measurement.fact(VoiceTrace.Fact.MIC_PREOPENED,1);
+                            measurement.fact(VoiceTrace.Fact.PAUSE_MS,1700);
+                            measurement.fact(VoiceTrace.Fact.MIC_GAIN,100);
                             for(byte[] saved:preroll)pending.write(saved,0,saved.length);
                             preroll.clear();
                         }
                     }
+                    if(measurement!=null&&endpoint.voicedFrame())measurement.mark(VoiceTrace.Point.SPEECH_END);
                     if(decision==NativeSpeechEndpoint.Decision.EMPTY){
                         gate=new ContinuousSpeechTrigger();
                         endpoint=new NativeSpeechEndpoint(1700,8000);
                         preroll.clear();pending.reset();started=false;
                     }else if(decision==NativeSpeechEndpoint.Decision.END||
                             decision==NativeSpeechEndpoint.Decision.LIMIT){
+                        if(measurement!=null){
+                            measurement.mark(VoiceTrace.Point.CAPTURE_END);
+                            measurement.fact(VoiceTrace.Fact.CAPTURED_MS,pending.size()/32L);
+                        }
                         if(started&&endpoint.hasSpeech()&&pending.size()>=16000)
                             question=pending.toByteArray();
                         break;
@@ -470,6 +482,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                 }
             }catch(Exception e){
                 if(continuousGeneration==generation&&enabled&&!muted){
+                    if(measurement!=null)VoiceDiagnostics.finish(measurement,VoiceTrace.Status.ERROR,"microphone_capture_failed");
                     Log.w(TAG,"Continuous native microphone unavailable",e);
                     main.post(()->{
                         if(enabled&&!muted&&"continuous".equals(voiceMode)){
@@ -483,17 +496,26 @@ public final class WakeWordService extends Service implements RecognitionListene
                     try{recorder.stop();}catch(Exception ignored){}
                     recorder.release();
                 }
+                if(continuousGeneration!=generation&&measurement!=null)
+                    VoiceDiagnostics.finish(measurement,VoiceTrace.Status.CANCELLED,"");
                 if(continuousGeneration==generation){
                     continuousRunning=false;
                     continuousRecorder=null;
                     final byte[] captured=question;
+                    final VoiceTrace measured=measurement;
                     main.post(()->{
                         if(!enabled||muted||!"continuous".equals(voiceMode)||
-                                nativeSession!=null||followupPending)return;
+                                nativeSession!=null||followupPending){
+                            if(measured!=null)VoiceDiagnostics.finish(measured,VoiceTrace.Status.CANCELLED,"");
+                            return;
+                        }
                         if(captured!=null){
                             resetConversation();
-                            beginNativeAssist("",false,captured);
-                        }else main.postDelayed(rearm,300);
+                            beginNativeAssist("",false,captured,measured);
+                        }else {
+                            if(measured!=null)VoiceDiagnostics.finish(measured,VoiceTrace.Status.NO_REPLY,"");
+                            main.postDelayed(rearm,300);
+                        }
                     });
                 }
             }
@@ -531,13 +553,14 @@ public final class WakeWordService extends Service implements RecognitionListene
         if(now-lastHit<cooldownSeconds*1000L)return;
         triggerGate.reset();
         lastHit=now;
+        VoiceTrace measurement=VoiceDiagnostics.begin(this,VoiceTrace.Kind.WAKEWORD);
         // Release the Vosk recorder before opening a separate native recorder.
         releaseRecognizer();
         updateStatus("detected: "+hit);
         resetConversation();
         // The native capture owns the complete request. Do not launch
         // a competing browser or old wake-event microphone path.
-        beginNativeAssist(hit,false);
+        beginNativeAssist(hit,false,null,measurement);
     }
 
     /** Launch only while the explicitly started foreground wake service runs. */
@@ -546,7 +569,13 @@ public final class WakeWordService extends Service implements RecognitionListene
     }
 
     private void beginNativeAssist(String hit,boolean nextQuestion,byte[] capturedPcm){
-        if(!enabled||muted||nativeSession!=null)return;
+        beginNativeAssist(hit,nextQuestion,capturedPcm,null);
+    }
+    private void beginNativeAssist(String hit,boolean nextQuestion,byte[] capturedPcm,VoiceTrace measurement){
+        if(!enabled||muted||nativeSession!=null){
+            if(measurement!=null)VoiceDiagnostics.finish(measurement,VoiceTrace.Status.CANCELLED,"");
+            return;
+        }
         if(nextQuestion){
             if(!FollowupPolicy.shouldContinue(true,completedFollowups,followupLimit())){
                 endConversation();return;
@@ -593,7 +622,7 @@ public final class WakeWordService extends Service implements RecognitionListene
                         }else endConversation();
                     });
                 }
-            },capturedPcm);
+            },capturedPcm,measurement);
         holder[0]=session;
         nativeSession=session;
         session.start();
