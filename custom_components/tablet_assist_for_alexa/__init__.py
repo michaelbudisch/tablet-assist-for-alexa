@@ -16,7 +16,7 @@ from .const import DOMAIN, ROOMS, settings
 from .app_settings import async_sync_from_app
 from .device_admin_ws import device_admin_command
 from .device_settings_ws import device_settings_subscribe
-from .visual_ws import visual_subscribe
+from .visual_ws import visual_subscribe, visual_identity
 from .ha_provision import provision_manifest, resolve_manifest_entities
 from .dashboard_config import async_get_dashboard, async_set_dashboard
 from .announcement import audio_url, allowed_targets
@@ -46,6 +46,7 @@ async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, device_admin_command)
     websocket_api.async_register_command(hass, device_settings_subscribe)
     websocket_api.async_register_command(hass, visual_subscribe)
+    websocket_api.async_register_command(hass, visual_identity)
     websocket_api.async_register_command(hass, provision_manifest)
     websocket_api.async_register_command(hass, resolve_manifest_entities)
     websocket_api.async_register_command(hass, async_get_dashboard)
