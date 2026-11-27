@@ -1,3 +1,8 @@
+## TAFA App / HA integration 0.4.51 — Tap to reveal Ambient exit control
+- The Ambient day-view button is hidden initially on desktop and Android. A tap or click on the Ambient stage reveals it; it automatically hides after six seconds of inactivity. Keyboard Enter/Space also reveals the control.
+- Visual effects, speech interactions, integration/private module isolation, and normal day mode remain unchanged. Cache-busted import URLs use `?v=0.4.51`.
+- No automations or entity associations changed.
+
 ## TAFA App / HA integration 0.4.50 — Consistent minimal Ambient header
 - Night mode now hides the normal dashboard header and action buttons on desktop as well as Android. A single `☀ Day view` control inside Ambient mode allows returning to the normal dashboard.
 - Existing day-mode navigation, shooting stars, globe, sensor projections and voice phases remain intact. Private/public Ambient namespaces stay isolated. New cache-busted `?v=0.4.50` URLs.
