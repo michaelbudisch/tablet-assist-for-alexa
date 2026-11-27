@@ -67,6 +67,7 @@ Der **[Schritt-für-Schritt-Einrichtungsleitfaden](docs/setup-guide.md)** beschr
 - [Home-Assistant-App installieren](docs/app.md) · [Native Android-App und kompatible APKs](android/README.de.md)
 - [CPU-Sprachserver auf Proxmox](docs/proxmox.md) · [Optionaler GPU-Worker](docs/worker.md)
 - [Multiroom einrichten](homeassistant/examples/MULTIROOM.de.md) · [Optionale HA-Automationen](docs/ha-automations.md)
+- [Control Center – zentrale Einrichtung und Zuständigkeiten](docs/control-center.md) · [Entwickler: eigenes Dashboard und Infoboxen](docs/dashboard-integration.md)
 - [Marketplace-Integration](docs/marketplace.md) – **Alternative** zur App-verwalteten Integration, keine zusätzliche zweite Installation
 - [Sicherheit](docs/security.md) · [Versionshistorie](CHANGELOG.de.md)
 
