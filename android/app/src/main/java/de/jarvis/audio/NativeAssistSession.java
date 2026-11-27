@@ -376,12 +376,18 @@ final class NativeAssistSession extends WebSocketListener implements AutoCloseab
                     if(endpoint.voicedFrame())trace.mark(VoiceTrace.Point.SPEECH_END);
                     if(choice!=NativeSpeechEndpoint.Decision.CONTINUE){
                         capture=false;
+                        trace.mark(VoiceTrace.Point.CAPTURE_END);
+                        if(endpoint.shouldAbort(choice)){
+                            // No credible utterance. Do not send an empty request
+                            // through Whisper/LLM/TTS just to time out later.
+                            state("no_speech");
+                            finish(false);
+                            break;
+                        }
                         ws.send(ByteString.of(new byte[]{(byte)(handler&0xff)}));
                         sentEnd=true;
-                        trace.mark(VoiceTrace.Point.CAPTURE_END);
                         inputEnded(ws);
-                        state(choice==NativeSpeechEndpoint.Decision.EMPTY?
-                            "no_speech":"transcribing");
+                        state("transcribing");
                         break;
                     }
                 }

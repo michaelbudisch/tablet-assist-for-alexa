@@ -59,4 +59,8 @@ final class NativeSpeechEndpoint {
     boolean started(){return started;}
     boolean voicedFrame(){return started&&lastSound;}
     boolean hasSpeech(){return started&&voiced>=12;}
+    boolean shouldAbort(Decision decision){
+        return decision==Decision.EMPTY||
+            (decision==Decision.LIMIT&&!hasSpeech());
+    }
 }

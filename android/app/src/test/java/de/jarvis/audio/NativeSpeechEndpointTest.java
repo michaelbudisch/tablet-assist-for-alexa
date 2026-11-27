@@ -40,6 +40,13 @@ public class NativeSpeechEndpointTest {
         for(int i=0;i<499;i++)vad.feed(frame(1800),320);
         assertEquals(NativeSpeechEndpoint.Decision.LIMIT,vad.feed(frame(1800),320));
     }
+    @Test public void noSpeechShouldAbortPipelineBeforeWhisper(){
+        NativeSpeechEndpoint vad=new NativeSpeechEndpoint(1700,3000,true);
+        assertTrue(vad.shouldAbort(NativeSpeechEndpoint.Decision.EMPTY));
+        assertTrue(vad.shouldAbort(NativeSpeechEndpoint.Decision.LIMIT));
+        for(int i=0;i<15;i++)vad.feed(frame(1700),320);
+        assertFalse(vad.shouldAbort(NativeSpeechEndpoint.Decision.LIMIT));
+    }
     @Test public void maxDurationTerminatesContinuousInput(){
         NativeSpeechEndpoint vad=new NativeSpeechEndpoint(1700,8000);
         for(int i=0;i<1249;i++)vad.feed(frame(2000),320);
