@@ -36,6 +36,8 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn("<span>SO</span><span>MO</span>",js)
         self.assertIn("background:transparent!important",js)
         self.assertIn("data-next-event",js)
+        self.assertIn("34vh,370px",js)
+        self.assertIn("23vh,310px",js)
         self.assertNotIn("subscribeEvents",js)
     def test_optional_resource_is_registered(self):
         src=(MAIN/"__init__.py").read_text()

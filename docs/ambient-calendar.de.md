@@ -102,3 +102,12 @@ Sekunden. Kein permanentes Rendering, keine Änderungen am Android-Audio.
   Nachrichtenquelle eingerichtet ist.
 - Pro Gerät bleibt das lokale Zeitfenster und die Präsenzsteuerung
   unverändert; keine HA-Automatisierungen sind Teil dieser Änderung.
+
+
+## PC-/Tablet-Geometrie (0.4.72)
+
+Der Kalender beginnt auf beiden Bildschirmtypen **erst unterhalb** der
+vollständigen Kugel. Der PC nutzt eine geringfügig niedrigere Kugelhöhe
+und einen entsprechend tieferen Start der Übersicht; auf Android bleiben
+die angepassten Tablet-Proportionen erhalten. Die Uhr bleibt links oben,
+der Kalender-Rasteraufbau wird weiterhin wieder transparent.
