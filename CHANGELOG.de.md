@@ -1,3 +1,9 @@
+## TAFA-App / HA-Integration 0.4.55 — Weicher Übergang nach manuellem Drehen
+- Die bisherige 30-Sekunden-Pause nach dem Loslassen der Ambient-Kugel wurde vollständig entfernt.
+- Kugel und 3D-Sensorbeschriftungen drehen sich direkt weiter. Die beim Ziehen gemessene Drehgeschwindigkeit läuft mit einem kurzen Trägheits-Nachlauf sanft aus, während die automatische Rotation weich auf Normalgeschwindigkeit überblendet.
+- Auch nach einem langen Gedrückthalten ohne Ziehen setzt die Rotation sofort wieder ein. Finger- und Maussteuerung, Sternschnuppen, Kugelnetz und der versteckte Tagesansicht-Button bleiben erhalten.
+- Private und öffentliche Ambient-Module bleiben getrennt; keine Änderungen an Automationen oder Sensorzuordnungen.
+
 ## TAFA-App / HA-Integration 0.4.54 — Greifbereich der Ambient-Kugel korrigiert
 - Der bisherige sichtbare Greifcursor wurde über dem gesamten Canvas angezeigt, die Drehung startete aber nur innerhalb eines engeren Kreises. Der Canvas-Bereich ist jetzt vollständig per Maus und Finger drehbar.
 - Sofortiger Start einer Ziehbewegung ab 6 px sowie optionales Gedrückthalten für 280 ms aus 0.4.53 bleiben erhalten. Die an der Kugel verankerten Sensorwerte bewegen sich mit.
