@@ -1,3 +1,8 @@
+## TAFA-App / HA-Integration 0.4.42 — Stabiler optionaler Ambient-Modus
+- Der Ambient-Nachtmodus ist nun keine Voraussetzung mehr für das Starten des TAFA Dashboards. Wenn das Animationsmodul fehlt oder nicht geladen werden kann, bleiben Tagesdashboard und bestehende Nachtansicht verwendbar.
+- Nachladen, Fehlerbehandlung, Abschalten beim Ansichtswechsel und laufende Sensoraktualisierung wurden abgesichert.
+- Sprachantworten aus dem vorhandenen TAFA-/Jarvis-Ereignisweg können unten als animierte Infobox erscheinen. Keine Automationen verändert.
+
 ## TAFA-App / HA-Integration 0.4.41 — Ambient-Nachtmodus
 - Zusätzlicher Animationsmodus im TAFA Dashboard: bewegte, vernetzte Lichtkugel, große Uhr, dynamische HA-Sensormesswerte und Spracherkennungs-Farbzustände.
 - Header-Schalter für Ambient-Ansicht; Tagesdashboard, Sprachdienste und bestehende Automationen bleiben erhalten.
