@@ -1,3 +1,4 @@
+/* TAFA dashboard asset version 0.4.47 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("hauszentrale-kiosk.modules.v1")]??={parts:Object.create(null)};
@@ -118,7 +119,7 @@
     stage.dataset.phase=s.phase;
     const label=stage.querySelector("[data-ambient-state]");
     const labels={idle:"TAFA · Bereit",listening:"TAFA · Ich höre zu",processing:"TAFA · Verarbeite Anfrage",speaking:"TAFA · Antwort"};
-    if(label)label.textContent=labels[s.phase];
+    if(label)label.textContent=labels[s.phase]+" · Frontend 0.4.47";
     stage.querySelector(".hz-ambient-indicator")?.setAttribute("title",s.phase);
   }
   function close(card){
@@ -200,6 +201,92 @@
   return {points,edges,anchorIndices};
 }
   const mesh=makeMesh();
+
+  function spawnComet(t,initial=false){
+  const r=(lo,hi)=>lo+Math.random()*(hi-lo);
+  return {
+    born:t-(initial?r(150,1100):0),
+    duration:r(2100,3700),
+    start:r(-Math.PI,Math.PI),
+    speed:(Math.random()<.5?-1:1)*r(.00032,.00078),
+    orbit:r(1.03,1.32),
+    incline:r(-1.05,1.05),
+    turn:r(-Math.PI,Math.PI),
+    flatten:r(.68,1.06),
+    tailMs:r(330,670),
+    color:Math.random()<.76?182:205,
+    strength:r(.66,1),
+    size:r(1.55,2.5)
+  };
+}
+  function cometAt(c,time,cx,cy,radius){
+  const angle=c.start+(time-c.born)*c.speed;
+  // Project tilted, elongated orbital paths into the same depth space as the globe.
+  const x=Math.cos(angle);
+  const y=Math.sin(angle)*Math.cos(c.incline)*c.flatten;
+  const z=Math.sin(angle)*Math.sin(c.incline);
+  const sin=Math.sin(c.turn),cos=Math.cos(c.turn);
+  const depth=2.6/(2.6-z*.34);
+  return {
+    x:cx+radius*c.orbit*(x*cos-y*sin)*depth,
+    y:cy+radius*c.orbit*(x*sin+y*cos)*depth,
+    z
+  };
+}
+  function drawComets(ctx,s,t,cx,cy,radius,dpr,isIdle,hue){
+  if(!s.comets){
+    s.comets=[spawnComet(t,true),spawnComet(t,true),spawnComet(t,true)];
+    s.nextCometAt=t+600;
+  }
+  s.comets=s.comets.filter(c=>t-c.born<c.duration);
+  if(t>=s.nextCometAt){
+    if(s.comets.length<(isIdle?5:7))s.comets.push(spawnComet(t));
+    s.nextCometAt=t+(isIdle?600+Math.random()*900:370+Math.random()*660);
+  }
+  const oldLineCap=ctx.lineCap;
+  ctx.lineCap="round";
+  for(const c of s.comets){
+    const age=t-c.born;
+    if(age<0||age>=c.duration)continue;
+    const gate=Math.min(1,age/340,(c.duration-age)/610);
+    if(gate<=0)continue;
+    const head=cometAt(c,t,cx,cy,radius);
+    const dep=Math.max(.28,Math.min(1,(head.z+1)*.52));
+    const alpha=gate*dep*c.strength;
+    // Each trail segment occupies a different point on the current 3D orbit;
+    // there are no permanently drawn rings or stationary decorative arcs.
+    const tailSteps=12;
+    let previous=head;
+    for(let step=1;step<=tailSteps;step++){
+      const lag=c.tailMs*step/tailSteps;
+      const earlier=cometAt(c,Math.max(c.born,t-lag),cx,cy,radius);
+      const fade=1-step/(tailSteps+1);
+      const power=fade*fade;
+      const stepHue=isIdle?c.color:hue;
+      ctx.strokeStyle="hsla("+stepHue+",90%,"+(isIdle?78:83)+"%,"+(alpha*power*.76).toFixed(3)+")";
+      ctx.lineWidth=(.45+power*1.45)*dpr;
+      ctx.beginPath();
+      ctx.moveTo(previous.x,previous.y);
+      ctx.lineTo(earlier.x,earlier.y);
+      ctx.stroke();
+      previous=earlier;
+    }
+    // Brief, bright cyan/white tip with a very soft halo.
+    const cometHue=isIdle?c.color:hue;
+    const glowRadius=(6+c.size*2)*dpr;
+    const glow=ctx.createRadialGradient(head.x,head.y,0,head.x,head.y,glowRadius);
+    glow.addColorStop(0,"hsla("+cometHue+",98%,91%,"+(alpha*.38).toFixed(3)+")");
+    glow.addColorStop(.28,"hsla("+cometHue+",95%,75%,"+(alpha*.16).toFixed(3)+")");
+    glow.addColorStop(1,"hsla("+cometHue+",90%,65%,0)");
+    ctx.fillStyle=glow;
+    ctx.beginPath();ctx.arc(head.x,head.y,glowRadius,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="hsla("+cometHue+",94%,91%,"+(alpha*.94).toFixed(3)+")";
+    ctx.beginPath();ctx.arc(head.x,head.y,c.size*dpr,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,"+(alpha*.84).toFixed(3)+")";
+    ctx.beginPath();ctx.arc(head.x,head.y,.85*dpr,0,Math.PI*2);ctx.fill();
+  }
+  ctx.lineCap=oldLineCap;
+}
   function draw(card,s,t){
   const canvas=s.canvas,rect=canvas.getBoundingClientRect();
   if(!rect.width||!rect.height)return;
@@ -261,32 +348,9 @@
       ctx.beginPath();ctx.arc(p[0],p[1],(4.5+depth*2)*dpr,0,Math.PI*2);ctx.fill();
     }
   }
-  // Short orbital strokes, not solid regular rings.
-  ctx.lineWidth=.85*dpr;
-  for(let i=0;i<4;i++){
-    const direction=i%2?-1:1;
-    const angle=t*(isIdle?.000038:.00017)*direction+i*1.67;
-    ctx.strokeStyle=isIdle?"rgba(218,232,250,.21)":`hsla(${hue},88%,82%,.28)`;
-    ctx.beginPath();
-    ctx.ellipse(cx,cy,radius*(1.03+.045*i),radius*(.52+.11*(i%3)),angle*.18,angle,angle+.72+(i%3)*.18);
-    ctx.stroke();
-    const tip=angle+.72+(i%3)*.18;
-    const tipX=cx+Math.cos(tip)*radius*(1.03+.045*i);
-    const tipY=cy+Math.sin(tip)*radius*(.52+.11*(i%3));
-    ctx.fillStyle=isIdle?"rgba(242,244,255,.56)":`hsla(${hue},92%,89%,.76)`;
-    ctx.beginPath();ctx.arc(tipX,tipY,1.35*dpr,0,Math.PI*2);ctx.fill();
-  }
-  for(let i=0;i<11;i++){
-    const a=t*(isIdle?(i%2?-.000025:.000032):(i%2?-.00017:.00022))+i*2.113;
-    const orbit=radius*(.87+(i%5)*.062);
-    const x=cx+Math.sin(a)*orbit;
-    const y=cy+Math.cos(a*.83)*orbit*.72;
-    const flicker=isIdle?.24+.045*Math.sin(t*.0004+i*8.2):.15+.45*(.5+.5*Math.sin(t*.0017+i*8.2));
-    ctx.fillStyle=isIdle?`rgba(231,237,251,${flicker})`:`hsla(${hue},94%,86%,${flicker})`;
-    ctx.beginPath();ctx.arc(x,y,(i%5===0?2.2:1.1)*dpr,0,Math.PI*2);ctx.fill();
-  }
-
-  // Sensor labels are tied to actual 3D nodes, including perspective/depth.
+  // Short-lived 3D shooting stars around the sphere (no persistent orbit lines).
+  drawComets(ctx,s,t,cx,cy,radius,dpr,isIdle,hue);
+    // Sensor labels are tied to actual 3D nodes, including perspective/depth.
   if(++s.labelFrame>=1){
     for(let i=0;i<mesh.anchorIndices.length;i++){
       const label=s.metricNodes[i],p=projected[mesh.anchorIndices[i]];
