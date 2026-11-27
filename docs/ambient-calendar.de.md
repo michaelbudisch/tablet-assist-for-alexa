@@ -185,3 +185,35 @@ Untergrenze von 15 Sekunden wurde entfernt. Bei Sensorzuständen
 Eine individuelle Sensor-Entität kann im selben Dialog explizit
 überschrieben werden. Keine zusätzlichen HA-Automatisierungen
 oder Änderungen an vorhandenen Sensoren nötig.
+
+
+## Sparsamer Aufbau auf Android-Tablets (0.4.76)
+
+Der Kalender hat zwei Darstellungsprofile. Auf Desktop-PCs bleibt die
+aufwendige Sternschnuppen-, Knoten- und Kalender-Einzelanimation erhalten.
+Android-Tablets erhalten automatisch die leichtere Variante:
+
+- nur während des Übergangs: 24 statt 30 Kugel-Zeichenframes pro Sekunde;
+  native Rufworterkennung und Audio werden nicht angefasst
+- eine gemeinsame, compositorfreundliche Kalender-Einblendung anstelle
+  von 28 gleichzeitigen Filtern/Masken
+- überlagerte Sternschnuppen für rund 1,5 statt 2,1 Sekunden,
+  mit 0,75-facher Canvas-Pixelauflösung, höchstens drei Lichtpfaden,
+  weniger Segmenten und ohne teure Farbverläufe/Schatten
+- bereits angezeigte, unveränderte Kalendertage werden bei erneuter
+  Kalenderantwort nicht neu im DOM aufgebaut
+- Annäherung wird auf Android häufiger geprüft, sodass Öffnen und
+  Schließen weiterhin schnell reagieren
+
+Diese Zahlen beschreiben das implementierte Rendering-Profil, keine
+garantierte reale Bildrate auf einem bestimmten Android-Gerät. Im
+synchronen Mock-Vergleich wurden 25 statt 67 Canvas-Frames und 104
+statt 220 erzeugte DOM-Elemente erfasst; tatsächliche Hardwareleistung
+muss im Android-WebView geprüft werden.
+
+Der Performance-Modus hängt ausschließlich an
+`data-tablet="1"` und `data-overview-building="1"` (als
+`dataset.overviewBuilding`). Ein PC erhält automatisch weiterhin
+die vollständigen Effekte. Proximity-, Dialog- und Audioverwaltung
+bleiben unverändert; vorhandene HA-Automatisierungen werden nicht
+angepasst.

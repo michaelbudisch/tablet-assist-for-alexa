@@ -766,7 +766,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     // Load the optional calendar only for an active ambient display.
-    void import("./ambient_overview.js?v=0.4.75")
+    void import("./ambient_overview.js?v=0.4.76")
       .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
       .catch(err=>console.debug("TAFA ambient calendar unavailable",err));
     const exit=host.querySelector(".hz-ambient-exit");
@@ -895,9 +895,13 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
       if(active.get(card)!==s||!card.isConnected||!card._hzNight||!host.isConnected)return;
       s.raf=requestAnimationFrame(loop);
       if(document.hidden)return;
-      if(time-s.lastFrame<(/Android/i.test(navigator.userAgent)?31:15))return;
+      // During the calendar materialization, give the tablet CPU/GPU
+      // some headroom for the extra compositor and comet overlay.
+      const android=/Android/i.test(navigator.userAgent);
+      const building=android&&host.dataset.overviewBuilding==="1";
+      if(time-s.lastFrame<(building?40:android?31:15))return;
       s.lastFrame=time;
-      if(++frames%13===1)update(card);
+      if(++frames%(android?4:13)===1)update(card);
       draw(card,s,time);
     };
     s.raf=requestAnimationFrame(loop);
