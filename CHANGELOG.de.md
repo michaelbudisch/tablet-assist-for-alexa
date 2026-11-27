@@ -1,3 +1,8 @@
+## TAFA-App / HA-Integration 0.4.43 — 3D-Ambient und Tablet-Layout
+- Die Kugel besteht jetzt aus einem unregelmäßigen 3D-Partikelnetz mit 96 Knoten, 220 unterschiedlich langen Verbindungen, Partikeln und kurzen orbitalen Bögen. Sensoranzeigen sind mit sechs 3D-Ankerpunkten verbunden, drehen sich perspektivisch mit und blenden abhängig von der Tiefe ab.
+- Der Ambient-Modus setzt im Hoch- und Querformat die Navigationsspalte vollständig zurück und verwendet die verfügbare Breite. Die normale Dashboard-Navigation wird nicht verändert.
+- Animationsdateien erhalten neue Versionsparameter für die Browser- und Tablet-WebView-Caches; vorhandene Automationen und Sensorzuordnungen bleiben unverändert.
+
 ## TAFA-App / HA-Integration 0.4.42 — Stabiler optionaler Ambient-Modus
 - Der Ambient-Nachtmodus ist nun keine Voraussetzung mehr für das Starten des TAFA Dashboards. Wenn das Animationsmodul fehlt oder nicht geladen werden kann, bleiben Tagesdashboard und bestehende Nachtansicht verwendbar.
 - Nachladen, Fehlerbehandlung, Abschalten beim Ansichtswechsel und laufende Sensoraktualisierung wurden abgesichert.
