@@ -284,7 +284,7 @@
   }
 
   // Sensor labels are tied to actual 3D nodes, including perspective/depth.
-  if(++s.labelFrame%2===0){
+  if(++s.labelFrame>=1){
     for(let i=0;i<mesh.anchorIndices.length;i++){
       const label=s.metricNodes[i],p=projected[mesh.anchorIndices[i]];
       if(!label||!p)continue;
