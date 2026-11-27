@@ -254,7 +254,7 @@ async def describe(relay, source, mode, context):
                 ring_fallback_frames, ring_contact_sheet, ring_person_focus)
             model_options = {
                 "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
-                "keep_alive": -1,
+                "keep_alive": relay.entry.options.get("model_keep_alive", 0),
                 "num_ctx": relay.entry.options.get("model_num_ctx", 4096),
             }
             video = await ring_recording(relay.hass, entity_id)
@@ -523,7 +523,7 @@ async def describe(relay, source, mode, context):
             raise ServiceValidationError("Image too large")
         result = await request(relay, "/describe", {"image": base64.b64encode(image).decode("ascii"), "mode": "scene" if mode == "ring_video" else mode,
             "model": relay.entry.options.get("vision_model", "qwen3-vl:4b-instruct"),
-            "keep_alive": -1,
+            "keep_alive": relay.entry.options.get("model_keep_alive", 0),
             "num_ctx": relay.entry.options.get("model_num_ctx", 4096)})
         description = result.get("description")
         if not isinstance(description, str) or not description.strip():
