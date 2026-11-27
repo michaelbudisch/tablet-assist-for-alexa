@@ -57,3 +57,11 @@ Für ältere Tablets werden die animierten Kacheln über
 Compositor-Transformationen eingeblendet, keine dauerhaft aktive
 Canvas- oder WebGL-Szene hinzugefügt. Beim Nachladen von Terminen
 bleibt der Kalender bedienbar; beim Wiederöffnen läuft die Sequenz neu.
+
+
+## CSS-Isolation (0.4.69)
+
+Die vier Leuchtkanten besitzen die spezifischen Klassennamen
+`edge-n`, `edge-e`, `edge-s`, `edge-w`, damit private und
+öffentliche Ambient-Dashboards mit ihren allgemeinen
+`.top`-Selektoren keine Linien ausblenden können.

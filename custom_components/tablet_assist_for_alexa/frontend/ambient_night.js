@@ -757,7 +757,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     // Load the optional calendar only for an active ambient display.
-    void import("./ambient_overview.js?v=0.4.68")
+    void import("./ambient_overview.js?v=0.4.69")
       .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
       .catch(err=>console.debug("TAFA ambient calendar unavailable",err));
     const exit=host.querySelector(".hz-ambient-exit");

@@ -16,6 +16,8 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn("hz-overview-construct",js)
         self.assertIn("hz-overview-cell-in",js)
         self.assertIn("hz-overview-edge",js)
+        self.assertIn('class="edge-n"',js)
+        self.assertNotIn('class="top"',js)
         self.assertIn("playBeam",js)
         self.assertIn("prefers-reduced-motion",js)
         self.assertIn("cancelAnimationFrame(beamFrame)",js)
