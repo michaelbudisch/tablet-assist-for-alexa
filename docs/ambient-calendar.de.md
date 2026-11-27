@@ -81,3 +81,24 @@ Kugelpunkten und fliegen in die Kalenderfläche. Danach zeichnen sich
 Kalenderrasterlinien auf; Kreuzungspunkte blitzen beim Erreichen auf.
 Die Sternschnuppen und Rasterillumination laufen nur für rund zwei
 Sekunden. Kein permanentes Rendering, keine Änderungen am Android-Audio.
+
+
+## Layout wie Referenzvideo (0.4.71)
+
+- Uhr und Datum links oben, vernetzte Kugel als eigener oberer Bereich
+  (die bereits vorhandene Sprach- und Kugelanimation läuft unverändert weiter).
+- Echte 6-Tage-Vorhersage aus `weather.get_forecasts` mit Symbolen,
+  Höchst- und Tiefsttemperaturen. Ohne HA-Daten erscheint ein neutraler
+  Platzhalter, keine erfundenen Werte.
+- Kompakte Hauswerte mit geprüften Watt-Sensoren für Solar- und
+  Netzleistung, Strompreis in ct/kWh und Außentemperatur.
+  Datumssensoren werden nie mehr als Solarleistung angezeigt.
+- Der rollierende Kalender beginnt sonntags und zeigt 4 Wochen.
+  Die Sternschnuppen und Kalender-Rasterlinien erscheinen nur beim
+  Öffnen und blenden nach kurzer Zeit **vollständig aus**.
+  Kalendertermine und die Hervorhebung des heutigen Tages bleiben.
+- Die untere Leiste zeigt den nächsten echten Termin aus `Familie`.
+  Eine Nachrichtenschlagzeile wird nicht fingiert, wenn keine
+  Nachrichtenquelle eingerichtet ist.
+- Pro Gerät bleibt das lokale Zeitfenster und die Präsenzsteuerung
+  unverändert; keine HA-Automatisierungen sind Teil dieser Änderung.

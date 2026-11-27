@@ -8,7 +8,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     {name:"NETZ",ids:["sensor.tibber_pulse_0100100700ff"],pattern:/tibber.*pulse|netz.*leistung|grid.*power|wirkleistung aktuell/i},
     {name:"STROMPREIS",ids:["sensor.hauptstr_23a_aktueller_strompreis"],pattern:/aktueller.*strompreis|electricity.*price|strompreis/i},
     {name:"AUßEN",ids:[],pattern:/au.ss.en.*temperatur|aussentemperatur|outside.*temp|outdoor.*temp/i},
-    {name:"SOLAR",ids:[],pattern:/pv.*leistung|solar.*power|solar.*leistung|photovoltaik.*leistung/i},
+    {name:"SOLAR",ids:["sensor.growatt_wechselrichter_growatt_ausgangsleistung_0_w_nachts"],pattern:/pv.*leistung|solar.*power|solar.*leistung|photovoltaik.*leistung|growatt.*leistung/i},
     {name:"WÄRMEPUMPE",ids:[],pattern:/w.rmepumpe.*(speicher.*temp|temperatur)|warmwasser.*(temp|speicher)/i},
     {name:"HEIZÖL",ids:[],pattern:/heiz.l.*(bestand|rest|liter|tank)/i}
   ];
@@ -146,10 +146,19 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const n=Number(entity.state),unit=String(entity.attributes?.unit_of_measurement||"");
     return (Number.isFinite(n)&&String(entity.state).trim()!==""?new Intl.NumberFormat("de-DE",{maximumFractionDigits:unit==="W"?0:1}).format(n):String(entity.state).slice(0,24))+(unit?" "+unit:"");
   };
+  const validForMetric=(entity,entry)=>{
+    if(!isValid(entity))return false;
+    if(entry.name==="SOLAR"||entry.name==="NETZ")
+      return ["W","kW"].includes(String(entity.attributes?.unit_of_measurement||""))&&
+        Number.isFinite(Number(entity.state))&&
+        (entity.attributes?.device_class==="power"||entity.attributes?.state_class==="measurement");
+    return true;
+  };
   const choose=(states,entry)=>{
-    for(const id of entry.ids)if(isValid(states[id]))return id;
-    const ids=Object.keys(states);
-    return ids.find(id=>id.startsWith("sensor.")&&entry.pattern.test(id+" "+(states[id]?.attributes?.friendly_name||""))&&isValid(states[id]))||null;
+    for(const id of entry.ids)if(validForMetric(states[id],entry))return id;
+    return Object.keys(states).find(id=>id.startsWith("sensor.")&&
+      entry.pattern.test(id+" "+(states[id]?.attributes?.friendly_name||""))&&
+      validForMetric(states[id],entry))||null;
   };
   function body(){
     return `<style>${style}</style><section class="hz-ambient-body" data-tablet="${typeof navigator!=="undefined"&&(/Android/i.test(navigator.userAgent)||(typeof matchMedia==="function"&&matchMedia("(pointer:coarse)").matches&&window.innerWidth<=1300))?"1":"0"}" data-phase="idle" data-controls="hidden" tabindex="0" aria-label="TAFA Ambient Nachtansicht">
@@ -757,7 +766,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     // Load the optional calendar only for an active ambient display.
-    void import("./ambient_overview.js?v=0.4.70")
+    void import("./ambient_overview.js?v=0.4.71")
       .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
       .catch(err=>console.debug("TAFA ambient calendar unavailable",err));
     const exit=host.querySelector(".hz-ambient-exit");
