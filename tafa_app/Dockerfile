@@ -8,7 +8,7 @@ RUN python -m pip install --no-cache-dir "numpy==1.26.4" "piper-tts==1.8.0" "fas
 RUN python -c "import numpy; assert numpy.__version__ == '1.26.4', numpy.__version__; from piper import PiperVoice; from faster_whisper import WhisperModel; print('TAFA CPU speech imports OK', numpy.__version__)"
 WORKDIR /opt/tafa
 COPY feature_center.py server.py installer.py speech_proxy.py auto_setup.py speech_source.py model_store.py wyoming_picker.py settings_ui.py endpoint_checks.py connection_probes.py connection_ui.py control_center_view.py device_center.py import_manifest.py voice_test.py voice_test_view.py voice_manager.py ./
-COPY control_center.css control_center.js voice-test.js brand.svg ./
+COPY control_center.css control_center.js voice-manager.js voice-test.js brand.svg ./
 # Fail container builds early if the module is not packaged.
 RUN python -c "from wyoming_picker import discover_wyoming_stt, save_wyoming_selection; print('TAFA Wyoming picker import OK')"
 COPY bundle ./bundle
