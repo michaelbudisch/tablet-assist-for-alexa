@@ -337,8 +337,8 @@ def render_device_center(lang, csrf, state):
             f'<small>{t("Geräte-ID","Device ID")}: <code>{h(did)}</code></small>'
             f'<small>{t("Aktueller Raum","Current area")}: {h(area_names.get(active, current))}</small>'
             + setting(device,"room",t("Tabletname","Tablet name"),kind="text")
-            '</div>'
-            f'<form class="tafa-area-form" data-current-area="{h(active)}" method="post" action="./">{hidden("area_assign", did)}'
+            + '</div>'
+            + f'<form class="tafa-area-form" data-current-area="{h(active)}" method="post" action="./">{hidden("area_assign", did)}'
             '<input type="hidden" name="confirm_move" value="0">'
             f'<label for="area-{h(did)}">{t("Home-Assistant-Raum","Home Assistant area")}</label>'
             f'<select id="area-{h(did)}" name="area_id" required{" disabled" if not options else ""}>'
