@@ -10,7 +10,7 @@ import json
 import re
 import urllib.request
 
-from speech_source import load_options
+from speech_source import load_supervisor_options
 
 SUPERVISOR_OPTIONS="http://supervisor/addons/self/options"
 STT_PATTERN=re.compile(r"stt\.[a-z0-9_]{1,200}\Z")
@@ -76,7 +76,7 @@ def save_wyoming_selection(token,cpu_stt,gpu_stt,available):
     if not token:
         raise RuntimeError("Supervisor authentication unavailable")
     changes=validate_selection(cpu_stt,gpu_stt,available)
-    current=load_options()
+    current=load_supervisor_options(token)
     options={**current,**changes}
     data=json.dumps({"options":options},ensure_ascii=False).encode("utf-8")
     request=urllib.request.Request(
