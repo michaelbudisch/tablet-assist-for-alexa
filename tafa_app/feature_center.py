@@ -441,25 +441,25 @@ def render_announcement_rooms(options, lang, csrf, entities, services):
                      '<input type="hidden" name="action" value="feature_room">'
                      '<input type="hidden" name="room_name" value="' + _esc(room) + '">'
                      + body + '<button type="submit" class="btn btn-primary">'
-                     + t("Raum speichern", "Save room") + '</button></form></details>')
+                     + t("Durchsageziel speichern", "Save target") + '</button></form></details>')
     # Optional additional user-defined Alexa announcement room.
     create = (
-        '<details class="feature-room"><summary>' + t("Weiteren Alexa-Raum hinzufügen", "Add another Alexa room") + '</summary>'
+        '<details class="feature-room"><summary>' + t("Weiteres Durchsageziel hinzufügen", "Add another announcement target") + '</summary>'
         '<form action="./" method="post" class="feature-form">'
         '<input type="hidden" name="csrf" value="' + _esc(csrf) + '">'
         '<input type="hidden" name="lang" value="' + _esc(lang) + '">'
         '<input type="hidden" name="tab" value="features">'
         '<input type="hidden" name="action" value="feature_room">'
-        '<label class="feature-source"><span>' + t("Raumname", "Room name") + '</span>'
+        '<label class="feature-source"><span>' + t("Zielname", "Target name") + '</span>'
         '<input name="room_name" type="text" maxlength="48" required placeholder="Flur"></label>'
         + combo("notify", "", services, t("Alexa-Benachrichtigung", "Alexa notification"))
         + '<input type="hidden" name="dnd" value=""><input type="hidden" name="quiet" value="">'
-        + '<button class="btn btn-primary" type="submit">' + t("Raum hinzufügen", "Add room") + '</button>'
+        + '<button class="btn btn-primary" type="submit">' + t("Durchsageziel hinzufügen", "Add target") + '</button>'
         '</form></details>')
     return ('<section class="feature-room-section"><h3>'
-            + t("Alexa-Ausgaberäume", "Alexa output rooms")
+            + t("Alexa-/Echo-Durchsageziele (optional)", "Alexa / Echo announcement targets (optional)")
             + '</h3><p>' + t("Alexa-Ankündigungen sind optional und benötigen einen in Home Assistant eingerichteten notify-Dienst. "
-                             "Native TAFA-Tablets und deren Räume werden weiterhin unter Geräte & Multiroom gekoppelt.",
+                             "TAFA-Tablets werden ausschließlich vorhandenen Home-Assistant-Räumen unter Geräte & Multiroom zugeordnet. Diese Liste steuert nur optionale Alexa-Durchsagen.",
                              "Alexa announcements are optional and require a Home Assistant notify service. "
-                             "Native TAFA tablets are still paired in Devices & multiroom.")
+                             "TAFA tablets are paired with existing Home Assistant areas under Devices & multiroom. This list controls only optional Alexa announcements.")
             + '</p>' + "".join(forms) + create + '</section>')
