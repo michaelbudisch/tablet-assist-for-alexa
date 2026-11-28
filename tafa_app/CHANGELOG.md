@@ -1,3 +1,10 @@
+## 0.4.71
+
+- **TAFA statt Jarvis:** Vereinheitlicht die HA-Integrationsdienste und Wakeword-Ereignisse; frühere parallele Jarvis-Audio-/Android-Integrationen werden nicht mehr benötigt.
+- **Bestehende Installation erhalten:** Zugeordnete Geräte, Räume, Sprach- und Sensoreinstellungen bleiben beim Update bestehen. Das Rufwort „Jarvis“ bleibt weiterhin auswählbar.
+- **Frontend und Tests:** Stabile Dateinamen für die privaten Dashboard-Module, bereinigte Worker-Artefakte und aktuelle Prüfungen für Android, Multiroom, Import und Kamera.
+- **Aktivierung:** Nach Aktualisierung der App kann eine einmalige Übernahme der HA-Integrationsdateien und ein kontrollierter Home-Assistant-Core-Neustart nötig sein.
+
 ## 0.4.70
 
 - Stimmenverwaltung unter **Einstellungen → Stimme und Klang**: Qwen-Varianten 1–9 werden als vorhanden/fehlend angezeigt, mit den Aktionen Erstellen und Hörprobe.
