@@ -31,6 +31,32 @@ def load_options(path=OPTIONS_FILE):
     return value
 
 
+def load_supervisor_options(token):
+    """Read committed App options from Supervisor, not a potentially stale /data mount.
+
+    Supervisor may expose updated options before the running App's options.json
+    changes. The Control Center must render and synchronize the saved values.
+    """
+    if not token:
+        raise RuntimeError("Supervisor authentication unavailable")
+    request = Request(
+        "http://supervisor/addons/self/info",
+        method="GET",
+        headers={"Authorization": "Bearer " + token},
+    )
+    with HTTP.open(request, timeout=8) as response:
+        if response.status != 200:
+            raise RuntimeError("Cannot read saved TAFA App settings")
+        reply = json.loads(response.read(262144))
+    if not isinstance(reply, dict) or reply.get("result") != "ok":
+        raise RuntimeError("Supervisor did not return saved TAFA settings")
+    data = reply.get("data")
+    options = data.get("options") if isinstance(data, dict) else None
+    if not isinstance(options, dict):
+        raise RuntimeError("Supervisor returned invalid TAFA App options")
+    return options
+
+
 def private_http_origin(value):
     """Accept explicit RFC1918 IPv4 or .local hostname with a required HTTP port."""
     if not isinstance(value, str):
