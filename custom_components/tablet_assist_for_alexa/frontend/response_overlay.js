@@ -1,4 +1,4 @@
-import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
+import {subscribeTafaVisual} from './visual_client.js?v=0.5.2';
 /* TAFA shared visual response layer. No browser microphone. */
 const HEAT=["vorlauf","ruecklauf","spreizung"], ENERGY=["netz","solar","preis","netzheute","solarheute"], HEATPUMP=["waermepumpe","wpheute","wpkosten"];
 const LABELS={vorlauf:"Vorlauf",ruecklauf:"Rücklauf",spreizung:"Spreizung",preis:"Strompreis",guenstig:"Günstigster Tarif",netz:"Netzleistung",solar:"PV-Leistung",prognose:"PV-Prognose",solarheute:"PV heute",netzheute:"Netzbezug heute",einspeisungheute:"Einspeisung heute",waermepumpe:"Wärmepumpe",wpheute:"Wärmepumpe heute",wpkosten:"Wärmepumpenkosten",heizoel:"Heizöl",oelverbrauch:"Heizölverbrauch",waschmaschine:"Waschmaschine",waschenergie:"Waschverbrauch",waschkosten:"Waschkosten",kuehlschrank:"Kühlschrank",kuehlschrankheute:"Kühlschrank heute",weather:"Wetter",shopping:"Einkaufsliste"};

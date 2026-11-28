@@ -17,8 +17,8 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .relay_vision import request, resolve_camera
 
-EVENT = "jarvis_echo_relay_proactive"
-DETECTION_EVENT = "jarvis_echo_relay_detection"
+EVENT = "tafa_echo_relay_proactive"
+DETECTION_EVENT = "tafa_echo_relay_detection"
 DEFAULTS = {"enabled": False, "test_mode": True, "cooldown": 60, "start": "06:00", "end": "10:00",
     "classes": ["person", "dog"], "greeting": True, "greeting_class": "person",
     "name_woman": "", "name_man": "", "name_child": "",
@@ -312,7 +312,7 @@ class Proactive:
                     detection["room"] = room
                 self.hass.bus.async_fire(DETECTION_EVENT, detection, context=context)
                 if settings["script_entity"]:
-                    await self.hass.services.async_call("script", "turn_on", {"entity_id": settings["script_entity"], "variables": {"jarvis_detection": detection}}, blocking=True, context=context)
+                    await self.hass.services.async_call("script", "turn_on", {"entity_id": settings["script_entity"], "variables": {"tafa_detection": detection}}, blocking=True, context=context)
                     await self.mark_action()
                 if settings["greeting"] and settings["greeting_class"] in labels and self.eligible_clients():
                     message = await self.message(settings, context, result["detection"])

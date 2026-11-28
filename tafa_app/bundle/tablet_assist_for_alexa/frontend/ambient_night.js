@@ -1,5 +1,5 @@
-import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
-import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.1';
+import {subscribeTafaVisual} from './visual_client.js?v=0.5.2';
+import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.2';
 /* TAFA dashboard asset version 0.4.64 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
@@ -780,6 +780,22 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.1';
     if(!host||!canvas)return;
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
+    const subscribeVisual=async binding=>{
+      const connection=card.h?.connection;
+      if(!connection?.subscribeMessage||!card.h?.callWS)return;
+      const token=(s.visualToken||0)+1;s.visualToken=token;
+      try{s.unsubscribe?.();}catch{}s.unsubscribe=null;
+      try{
+        const stop=await subscribeTafaVisual(card.h,data=>{
+          if(active.get(card)!==s)return;
+          const configured=Number(card.cfg?.presentation?.infoSeconds);
+          const seconds=Number.isFinite(configured)&&configured>=5&&configured<=180?configured:30;
+          show(card,{...data,title:data.title||data.topic||"TAFA Antwort",message:data.reply,seconds});
+        },{binding:binding||null});
+        if(active.get(card)!==s||s.visualToken!==token||card.h?.connection!==connection)stop?.();
+        else s.unsubscribe=stop;
+      }catch(err){console.debug("TAFA: Ambient Visualstream nicht verfügbar",err);}
+    };
     const applyProfile=(profile,deviceId,revision)=>{
       if(active.get(card)!==s)return;
       s.profile=profile;s.deviceId=deviceId;s.profileRevision=revision;
@@ -791,6 +807,9 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.1';
         if(title&&entry)title.textContent=entry.name;
       });
       s.overview?.applyProfile?.(profile);
+      // The local tablet identity arrives after the initial mount.
+      // Rebind the response stream to the new installation ID now.
+      if(card._tafaLocalVoice?.deviceId===deviceId)void subscribeVisual(deviceId);
       update(card);
     };
     const attachProfile=()=>{
@@ -944,22 +963,14 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.1';
     };
     s.raf=requestAnimationFrame(loop);
     update(card);
-    if(card.h?.connection?.subscribeMessage){
-      const binding=card._tafaLocalVoice?.status||null;
-      Promise.resolve(subscribeTafaVisual(card.h,data=>{
-        if(active.get(card)!==s)return;
-        const configured=Number(card.cfg?.presentation?.infoSeconds);
-        const seconds=Number.isFinite(configured)&&configured>=5&&configured<=180?configured:30;
-        show(card,{...data,title:data.title||data.topic||"TAFA Antwort",message:data.reply,seconds});
-      },{binding})).then(unsub=>{
-        if(active.get(card)!==s)unsub?.();else s.unsubscribe=unsub;
-      }).catch(err=>console.debug("TAFA: Ambient Visualstream nicht verfügbar",err));
-    }
+    // Initial subscription is optional; applyProfile will rebind it once
+    // pairing/profile resolution finishes, even after a fresh install.
+    void subscribeVisual(card._tafaLocalVoice?.deviceId||card._tafaLocalVoice?.status||null);
   }
   function dispose(card){
     const s=active.get(card);if(!s)return;
     s.overview?.dispose?.();
-    active.delete(card);cancelAnimationFrame(s.raf);
+    active.delete(card);s.visualToken=(s.visualToken||0)+1;cancelAnimationFrame(s.raf);
     clearTimeout(s.infoTimer);
     clearTimeout(s.controlsTimer);
     clearTimeout(s.dragPointer?.timer);

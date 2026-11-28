@@ -14,11 +14,15 @@ export function selectTafaVisualDevice(hass, identity, preference=null) {
   }
   if(selected==="none")return null;
   if(selected){
-    return devices.find(d=>d.device_id===selected||d.sensors?.status===selected)||null;
+    const match=devices.find(d=>d.device_id===selected||d.sensors?.status===selected);
+    if(match)return match;
   }
-  // A room account with precisely one paired tablet is unambiguous.
-  // Administrators and shared multi-device accounts must opt in locally.
-  if(hass?.user?.is_admin===true||devices.length!==1)return null;
+  // Repair a stale saved device after Android reinstallation only when
+  // precisely one tablet belongs to this local display. Desktop admins
+  // still require explicit binding; multiple devices are never guessed.
+  const android=typeof navigator!=="undefined"&&/Android/i.test(navigator.userAgent||"");
+  if(devices.length!==1||(!android&&hass?.user?.is_admin===true))return null;
+  if(android&&selected)try{globalThis.localStorage?.setItem(VISUAL_BINDING_KEY,devices[0].device_id);}catch{}
   return devices[0];
 }
 

@@ -1,3 +1,8 @@
+## 0.4.64
+
+- Bundle TAFA integration 0.5.2: recover stale Android tablet bindings after a reinstall, resubscribe Ambient visual replies once the per-tablet profile is resolved, and preserve per-room isolation of admin desktops.
+- No user dashboard or automation is overwritten. Existing Ambient profile settings are retained, and each new registered tablet can receive its own profile.
+
 ## 0.4.63
 
 - Bundle HA integration 0.4.67 with the per-tablet local proximity entity and authenticated approach reporting used by Android 1.2.9.

@@ -374,7 +374,7 @@ async def setup_room_audio(hass, entry):
                     raise ServiceValidationError("Explicit valid rooms and message required")
                 engine = er.async_get(hass).async_get_entity_id("tts", "tablet_assist_for_alexa", entry.entry_id + "_stream")
                 if not engine:
-                    raise ServiceValidationError("Jarvis streaming TTS unavailable")
+                    raise ServiceValidationError("TAFA streaming TTS unavailable")
                 results = {}
                 for r in targets:
                     if quiet_now(transport.settings.get(r, {}), dt_util.now()):
