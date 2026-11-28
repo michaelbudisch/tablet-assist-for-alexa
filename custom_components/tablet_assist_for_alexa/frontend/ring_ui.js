@@ -56,6 +56,62 @@ class TafaRingVisionDiagnostics extends HTMLElement{
 if(!customElements.get("tafa-ring-vision-diagnostics"))
  customElements.define("tafa-ring-vision-diagnostics",TafaRingVisionDiagnostics);
 
+
+/* Product configuration: two last-recording cameras, validated server-side. */
+class TafaRingCameraConfig extends HTMLElement{
+ constructor(){super();this.attachShadow({mode:"open"});this._h=null;this.ready=false;this.message="";this.door="";this.outside="";this.busy=false;}
+ set hass(h){const connection=this._h?.connection;this._h=h;if(this.isConnected&&(!this.ready||connection!==h?.connection))void this.load();}
+ get hass(){return this._h;}
+ connectedCallback(){
+  this.shadowRoot.addEventListener("click",event=>{
+   const b=event.target.closest("button");
+   if(!b)return;
+   if(b.dataset.saveCamera!==undefined)void this.save();
+   else if(b.dataset.reloadCamera!==undefined)void this.load();
+  });
+  if(this._h)void this.load();
+ }
+ async load(){
+  if(!this._h?.callWS)return;
+  this.busy=true;this.message="";this.render();
+  try{
+   const r=await this._h.callWS({type:"tablet_assist_for_alexa/vision_camera_config",action:"get"});
+   if(!this.isConnected)return;
+   this.door=r.door_camera||"";this.outside=r.outside_camera||"";
+   this.ready=true;this.busy=false;this.render();
+  }catch(error){this.busy=false;this.message="Kamera-Einstellungen nicht verfügbar: "+String(error.message||error);this.render();}
+ }
+ async save(){
+  if(this.busy||!this._h?.callWS)return;
+  const door=this.shadowRoot.querySelector("[data-ring-door]")?.value||"",
+        outside=this.shadowRoot.querySelector("[data-ring-outside]")?.value||"";
+  if(!door||!outside||door===outside){this.message="Bitte zwei verschiedene Ring-Aufnahmekameras wählen.";this.status();return;}
+  this.busy=true;this.message="Speichere …";this.status();
+  try{
+   const r=await this._h.callWS({type:"tablet_assist_for_alexa/vision_camera_config",
+    action:"set",door_camera:door,outside_camera:outside});
+   this.door=r.door_camera;this.outside=r.outside_camera;
+   this.message="Gespeichert. Beide Kameras sind für die Qwen-Videoanalyse zugeordnet.";
+   this.busy=false;this.render();
+  }catch(error){this.busy=false;this.message="Zuordnung fehlgeschlagen: "+String(error.message||error);this.status();}
+ }
+ status(){const el=this.shadowRoot.querySelector("[data-status]");if(el)el.textContent=this.message;}
+ render(){
+  const states=this._h?.states||{},cams=Object.keys(states).filter(id=>id.startsWith("camera."));
+  const options=(value)=>{
+   const all=new Set([...cams,value].filter(Boolean));
+   return '<option value="">— Kamera wählen —</option>'+[...all].sort((a,b)=>a.localeCompare(b))
+     .map(id=>'<option value="'+safe(id)+'"'+(id===value?' selected':'')+'>'+safe(states[id]?.attributes?.friendly_name||id)+' · '+safe(id)+'</option>').join("");
+  };
+  this.shadowRoot.innerHTML='<style>:host{display:block;margin:15px 0;color:var(--fg,var(--primary-text-color));font:14px Roboto,Arial,sans-serif}*{box-sizing:border-box}.panel{padding:15px;background:var(--card,var(--card-background-color));border:1px solid var(--border,var(--divider-color));border-radius:14px}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px}label{display:flex;flex-direction:column;gap:7px;font-size:12px}select{width:100%;padding:11px 10px;border-radius:9px;background:var(--card2,var(--secondary-background-color));color:inherit;border:1px solid var(--border,var(--divider-color));font:inherit}h2{font-size:16px;margin:0 0 7px}p{color:var(--muted,var(--secondary-text-color));font-size:12px;line-height:1.5}button{color:inherit;background:var(--card2,var(--secondary-background-color));border:1px solid var(--border,var(--divider-color));padding:9px 13px;border-radius:8px;cursor:pointer}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.actions button:first-child{border-color:var(--acc,var(--primary-color))}.status{margin-top:12px;font-size:12px}</style>'+
+  '<section class="panel"><h2>Ring · Qwen-Kamerazuordnung</h2><p>Wähle jeweils die Ring-Entität „Letzte Aufnahme“, nicht „Live-Ansicht“. TAFA prüft die Zuordnung beim Speichern. Die Aufnahmen werden nur für eine angeforderte Videoanalyse heruntergeladen.</p>'+
+  '<div class="fields"><label>Haustür<select data-ring-door>'+options(this.door)+'</select></label><label>Vorderseite<select data-ring-outside>'+options(this.outside)+'</select></label></div>'+
+  '<div class="actions"><button type="button" data-save-camera'+(this.busy?' disabled':'')+'>Speichern</button><button type="button" data-reload-camera>Aktualisieren</button></div>'+
+  '<p class="status" data-status>'+safe(this.message)+'</p></section>';
+ }
+}
+if(!customElements.get("tafa-ring-camera-config"))customElements.define("tafa-ring-camera-config",TafaRingCameraConfig);
+
 const subscribers=new WeakMap();
 const clearNotice=card=>{
  const item=subscribers.get(card);
