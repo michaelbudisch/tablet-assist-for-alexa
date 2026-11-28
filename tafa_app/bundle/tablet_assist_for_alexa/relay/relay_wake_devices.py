@@ -307,12 +307,8 @@ class WakeDevices:
                 event = {"source": "android_echo_relay", "version": 3,
                          "device_id": identifier, "room": device["room"],
                          "wakeword": word, "timestamp_ms": int(stamp)}
-                # The TAFA event is canonical. Legacy Jarvis consumers continue to
-                # receive their original event name and payload during migration.
-                # Emit both so only explicitly migrated listeners change behavior.
                 tafa_event = {**event, "source": "tafa_device_bridge"}
                 self.hass.bus.async_fire("tafa_android_wakeword", tafa_event)
-                self.hass.bus.async_fire("jarvis_android_wakeword", event)
                 now = time.monotonic()
                 if now - self.last_wake < 3.0:
                     return {"accepted": False, "reason": "other_device_won"}
@@ -320,7 +316,6 @@ class WakeDevices:
                 self.telemetry.setdefault(identifier, {})["last_wake"] = int(time.time())
                 self.changed(identifier)
                 self.hass.bus.async_fire("tafa_android_wakeword_routed", tafa_event)
-                self.hass.bus.async_fire("jarvis_android_wakeword_routed", event)
                 return {"accepted": True}
             raise ValueError("Unknown action")
 
@@ -331,24 +326,12 @@ async def setup_wake_devices(hass, entry):
         return
     store = Store(hass, 1, DOMAIN + ".wake_devices." + entry.entry_id)
     saved = await store.async_load()
-    migrated = False
-    if not saved:
-        # Import existing, HA-authenticated tablet enrollment without deleting
-        # or modifying legacy Jarvis storage. Once saved here, TAFA is owner.
-        for legacy in hass.config_entries.async_entries("jarvis_tablet_audio"):
-            old = await Store(hass, 1, "jarvis_tablet_audio.wake_devices." + legacy.entry_id).async_load()
-            if isinstance(old, dict) and isinstance(old.get("devices"), dict):
-                saved = old
-                migrated = True
-                break
     raw = (saved or {}).get("devices", {})
     devices = {}
     for identifier, device in raw.items():
         if DEVICE_ID.fullmatch(identifier) and isinstance(device, dict):
             if isinstance(device.get("user_id"), str):
                 devices[identifier] = {**DEFAULTS, **device}
-    if migrated:
-        await store.async_save({"devices": devices})
     data[KEY] = WakeDevices(hass, store, devices)
     if not data.get("wake_devices_view_registered"):
         hass.http.register_view(WakeDeviceView())

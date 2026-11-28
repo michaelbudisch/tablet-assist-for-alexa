@@ -120,23 +120,16 @@ async def async_setup_entry(hass, entry):
     await learning.load()
     data = hass.data.setdefault(DOMAIN, {})
     data[entry.entry_id] = LocalData(hass, cfg, reminders, learning)
-    # TAFA owns the one supported audio/wake transport, even if an old
-    # Jarvis integration is installed for unrelated automations. Namespaced
-    # endpoints prevent conflicts; copy legacy room/device pairings read-only.
-    legacy_present = bool(hass.config_entries.async_entries("jarvis_tablet_audio"))
+    # TAFA betreibt Audio und Wakeword ausschließlich im eigenen Namensraum.
     from .relay.relay_room_adapter import setup_room_audio
     from .relay.relay_wake_devices import setup_wake_devices
     await setup_room_audio(hass, entry)
     await setup_wake_devices(hass, entry)
     data["relay_started"] = True
-    # TAFA HTTP routes, service namespace and per-room frame storage are
-    # independent of the legacy integration. Keep both temporarily so users
-    # can verify new camera/motion entities before removing old services.
+    # TAFA registriert Kamera, Audio und Geräte direkt.
     from .relay.relay_camera import async_setup as setup_relay_camera
     await setup_relay_camera(hass, entry)
     data["relay_camera_started"] = True
-    if legacy_present:
-        _LOGGER.info("TAFA camera and legacy camera enabled side by side for safe migration")
     active_platforms = PLATFORMS
     data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
     await hass.config_entries.async_forward_entry_setups(entry, active_platforms)
