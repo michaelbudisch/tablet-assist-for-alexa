@@ -79,8 +79,8 @@ def requested_reference(data):
 def voice_headers(selection):
     _, effective, status = selection
     # Limit the optional user-facing header to numeric, known variants.
-    return {'X-Jarvis-Voice-Variant': effective if effective in CHOICES else 'default',
-            'X-Jarvis-Voice-Status': status}
+    return {'X-TAFA-Voice-Variant': effective if effective in CHOICES else 'default',
+            'X-TAFA-Voice-Status': status}
 
 
 def pcm_chunks(text, ref=None):

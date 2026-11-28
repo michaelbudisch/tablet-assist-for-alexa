@@ -1,3 +1,8 @@
+## 0.4.72
+
+- Stimmvarianten verwenden ab sofort TAFA-Header und TAFA-Audio-Cache-Optionen. Ältere Qwen-Worker und bestehende Cache-Parameter bleiben lesbar, damit Streaming und ausgewählte Stimmen während der Geräteumstellung funktionieren.
+- Gleiche TAFA-Dateinamen und bestehende Geräte-/Sensoreinstellungen bleiben erhalten. Ein Home-Assistant-Core-Neustart aktiviert den integrierten Python-Code.
+
 ## 0.4.71
 
 - **TAFA statt Jarvis:** Vereinheitlicht die HA-Integrationsdienste und Wakeword-Ereignisse; frühere parallele Jarvis-Audio-/Android-Integrationen werden nicht mehr benötigt.

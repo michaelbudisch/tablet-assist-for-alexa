@@ -137,7 +137,7 @@ def streaming_header(rate):
 class TafaStreamingTTS(TafaNativeTTS):
     """Stream PCM from Faster Qwen; fall back only before audio is emitted."""
 
-    _attr_supported_options = ["jarvis_cache_voice", "jarvis_cache_profile", "jarvis_cache_epoch", "jarvis_cache_sound"]
+    _attr_supported_options = ["tafa_cache_voice", "tafa_cache_profile", "tafa_cache_epoch", "tafa_cache_sound", "jarvis_cache_voice", "jarvis_cache_profile", "jarvis_cache_epoch", "jarvis_cache_sound"]
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -152,17 +152,17 @@ class TafaStreamingTTS(TafaNativeTTS):
         return self._cfg.get("live_profile", "Natürlich")
 
     def _requested_sound(self, options):
-        value = (options or {}).get("jarvis_cache_sound", self._sound_profile())
+        value = (options or {}).get("tafa_cache_sound", (options or {}).get("jarvis_cache_sound", self._sound_profile()))
         return value if value in PROFILES else "Natürlich"
 
     @property
     def default_options(self):
         # HA includes these options in its native audio-cache hash.
         return {
-            "jarvis_cache_voice": self._voice_variant(),
-            "jarvis_cache_profile": self._profile(),
-            "jarvis_cache_sound": self._sound_profile(),
-            "jarvis_cache_epoch": f"{self._cache_boot}-{self._cache_generation}",
+            "tafa_cache_voice": self._voice_variant(),
+            "tafa_cache_profile": self._profile(),
+            "tafa_cache_sound": self._sound_profile(),
+            "tafa_cache_epoch": f"{self._cache_boot}-{self._cache_generation}",
         }
 
     def _set_health(self, ready):
@@ -193,7 +193,7 @@ class TafaStreamingTTS(TafaNativeTTS):
         await self._poll_health()
 
     def _requested_variant(self, options):
-        value = (options or {}).get("jarvis_cache_voice", self._voice_variant())
+        value = (options or {}).get("tafa_cache_voice", (options or {}).get("jarvis_cache_voice", self._voice_variant()))
         return value if value in {"default", *map(str, range(1, 10))} else "default"
 
     def _gpu_allowed(self):
@@ -205,8 +205,8 @@ class TafaStreamingTTS(TafaNativeTTS):
 
     @staticmethod
     def _read_voice_headers(headers):
-        effective = headers.get("X-Jarvis-Voice-Variant", "default")
-        status = headers.get("X-Jarvis-Voice-Status", "unknown")
+        effective = headers.get("X-TAFA-Voice-Variant", headers.get("X-Jarvis-Voice-Variant", "default"))
+        status = headers.get("X-TAFA-Voice-Status", headers.get("X-Jarvis-Voice-Status", "unknown"))
         if effective not in {"default", *map(str, range(1, 10))}:
             effective = "default"
         meanings = {"selected": "Gespeicherte Variante", "default": "Standard (.env)",
