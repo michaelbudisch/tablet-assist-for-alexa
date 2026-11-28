@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.app.Instrumentation;
 import android.media.AudioManager;

@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Device-monotonic presence with entry confirmation, exit delay and hysteresis. */
 final class ApproachState {
