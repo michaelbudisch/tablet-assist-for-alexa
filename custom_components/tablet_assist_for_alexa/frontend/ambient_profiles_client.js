@@ -49,7 +49,12 @@ class TafaAmbientProfilesEditor extends HTMLElement{
   this._h=null;this.devices=[];this.deviceId="";this.profile=null;this.revision=0;
   this.loading=false;this.dirty=false;this.message="";this.readToken=0;this.unsubscribe=null;
  }
- set hass(h){if(h===this._h)return;this._h=h;if(this.isConnected)void this.loadDevices();}
+ set hass(h){
+  const previousConnection=this._h?.connection;
+  this._h=h;
+  if(this.isConnected&&(this.devices.length===0||previousConnection!==h?.connection))
+   void this.loadDevices();
+ }
  get hass(){return this._h;}
  connectedCallback(){
   this.shadowRoot.addEventListener("change",e=>{
