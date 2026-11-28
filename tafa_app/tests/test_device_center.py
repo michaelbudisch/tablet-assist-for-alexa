@@ -49,8 +49,9 @@ class DeviceCenterTests(unittest.TestCase):
         self.assertNotIn("<script", html)
         self.assertNotIn('name="action" value="room_create"', html)
         self.assertIn("Home-Assistant-Räume", html)
-        pair = html.split('name="action" value="area_assign"', 1)[1].split('</form>', 1)[0]
+        pair = html.split('<form class="tafa-area-form"', 1)[1].split('</form>', 1)[0]
         self.assertEqual(pair.count('name="device_id"'), 1)
+        self.assertEqual(pair.count('name="area_id"'), 1)
 
     def test_room_camera_explicit_opt_in_without_any_tablet(self):
         with patch.object(panel, "ws_call", return_value={"camera_enabled": True}) as api:
@@ -139,7 +140,7 @@ class DeviceCenterTests(unittest.TestCase):
         self.assertIn('name="user_id" value="tablet"', page)
         self.assertIn('name="device_id" value="' + ID + '"', page)
         self.assertIn("HA-Benutzer", page)
-        self.assertIn("Automatisierungen", page)
+        self.assertIn("Automationen", page)
 
     def test_create_room_without_any_tablet(self):
         with patch.object(panel, "ws_call", return_value={"created": True}) as api:

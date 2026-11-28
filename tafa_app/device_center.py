@@ -279,7 +279,7 @@ def render_device_center(lang, csrf, state):
                      setting(device,"hold",t("Rufwort-Haltezeit (s)","Wake handoff (s)"),lo=10,hi=90)+
                      setting(device,"pause_ms",t("Sprechpause (ms)","Speech endpoint pause (ms)"),lo=900,hi=3200)+
                      setting(device,"mic_gain",t("Digitale Mikrofonverstärkung (%)","Digital mic gain (%)"),lo=50,hi=200)+
-                     '</div></details><details><summary>'+t("Anzeige & Raum","Display & room")+'</summary>'
+                     '</div></details><details><summary>'+t("Anzeige","Display")+'</summary>'
                      '<p class="subtle">'+t(
                        "Display-Steuerung ist optional und benötigt die Android-Freigabe „Systemeinstellungen ändern“. Die Einstellung dimmt nur, sie sperrt oder weckt den Bildschirm nicht.",
                        "Display control requires optional Android Modify system settings permission. It only dims, without locking or waking the screen."
@@ -321,7 +321,7 @@ def render_device_center(lang, csrf, state):
         label = device.get("room") or "TAFA Tablet"
         online = bool(device.get("online"))
         status = (t("Verbunden","Connected") if online else t("Offline","Offline"))
-        current = (area_names.get(active) if active in area_names else
+        current = (t("Zugeordnet","Assigned") if active in area_names else
                    t("Noch keinem HA-Raum zugeordnet","Not assigned to an HA area"))
         if active and active not in area_names:
             current = t("Alte TAFA-Zuordnung","Legacy TAFA assignment") + ": " + active
