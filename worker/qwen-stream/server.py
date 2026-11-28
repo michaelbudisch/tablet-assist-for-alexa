@@ -1,4 +1,5 @@
 """Private-LAN Faster Qwen TTS: PCM stream and complete WAV endpoints."""
+import gc
 import hashlib
 import io
 import os
@@ -33,6 +34,7 @@ if MODE != 'fast' and not 0 < len(STYLE) <= 1000:
 SPEAKER = os.environ.get('QWEN_SPEAKER', 'Ryan')
 from pathlib import Path
 from reference_voice import REFERENCE_TEXT, ensure_reference, valid_reference
+from voice_variants import CHOICES, inventory, reference_id, variant_path, variant_style
 REFERENCE = None
 VOICE_ID = None
 variant = None
@@ -54,6 +56,7 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16384
 lock = threading.Lock()
 cancel_event = threading.Event()
+voice_job = {'state': 'idle', 'variant': None, 'updated_at': 0}
 SPEECH_CLEANUP = os.environ.get('STREAM_TEXT_CLEANUP', '1') == '1'
 SPEECH_SPLIT = os.environ.get('STREAM_SPEECH_SPLIT', '0') == '1'
 PRONUNCIATION = dictionary(os.environ.get('STREAM_PRONUNCIATION', ''))
@@ -65,10 +68,9 @@ def requested_reference(data):
     selected = data.get('voice_variant') if isinstance(data, dict) else None
     if selected is None or selected == 'default':
         return REFERENCE, variant, 'default'
-    if not isinstance(selected, str) or selected not in tuple(str(i) for i in range(1, 10)):
+    if not isinstance(selected, str) or selected not in CHOICES:
         return REFERENCE, variant, 'invalid-variant'
-    key = hashlib.sha256(('v1\n' + STYLE + '\n' + selected + '\n' + REFERENCE_TEXT).encode('utf-8')).hexdigest()[:24]
-    path = Path('/models/jarvis-voices') / (key + '.wav')
+    path = variant_path(selected, STYLE)
     if valid_reference(path):
         return path, selected, 'selected'
     return REFERENCE, variant, 'not-prepared'
@@ -77,7 +79,7 @@ def requested_reference(data):
 def voice_headers(selection):
     _, effective, status = selection
     # Limit the optional user-facing header to numeric, known variants.
-    return {'X-Jarvis-Voice-Variant': effective if effective in tuple(str(i) for i in range(1, 10)) else 'default',
+    return {'X-Jarvis-Voice-Variant': effective if effective in CHOICES else 'default',
             'X-Jarvis-Voice-Status': status}
 
 
@@ -115,9 +117,71 @@ def pcm_chunks(text, ref=None):
                 raise ValueError('Audio exceeds size limit')
             yield pcm
 
+def prepare_voice(number):
+    """Prepare one synthetic reference without a second TTS model in VRAM."""
+    global model, voice_job
+    state = 'error'
+    try:
+        # Synthesis shares the same lock. Release the Base model BEFORE the
+        # one-time VoiceDesign subprocess uses the GPU; retain the Ollama model.
+        model = None
+        gc.collect()
+        torch.cuda.empty_cache()
+        ensure_reference(reference_id(number, STYLE), variant_style(number, STYLE))
+        state = 'ready'
+    except Exception as exc:
+        print('Voice preparation failed:', type(exc).__name__, flush=True)
+    finally:
+        try:
+            # Even if preparation fails, restore the original streaming model.
+            model = FasterQwen3TTS.from_pretrained(MODEL)
+        except Exception as exc:
+            print('Qwen reload failed:', type(exc).__name__, flush=True)
+            model = None
+            state = 'error'
+        voice_job = {'state': state, 'variant': number, 'updated_at': int(time.time())}
+        lock.release()
+
+
+@app.get('/voices')
+def voices():
+    return jsonify(available=MODE == 'fixed', mode=MODE,
+                   default_variant=variant if MODE == 'fixed' else 'default',
+                   variants=inventory(STYLE, MODE),
+                   job=dict(voice_job), busy=lock.locked())
+
+
+@app.post('/voices/prepare')
+def voices_prepare():
+    data = request.get_json(silent=True)
+    number = data.get('variant') if isinstance(data, dict) and set(data) == {'variant'} else None
+    if not isinstance(number, str) or number not in CHOICES:
+        return jsonify(error='invalid variant'), 400
+    if MODE != 'fixed':
+        return jsonify(error='fixed mode required'), 409
+    if not lock.acquire(blocking=False):
+        return jsonify(error='worker busy'), 409
+    try:
+        if valid_reference(variant_path(number, STYLE)):
+            voice_job.update(state='ready', variant=number, updated_at=int(time.time()))
+            return jsonify(state='ready', variant=number)
+        voice_job.update(state='preparing', variant=number, updated_at=int(time.time()))
+        threading.Thread(target=prepare_voice, args=(number,), daemon=True).start()
+        return jsonify(state='preparing', variant=number), 202
+    finally:
+        # The background job owns the lock once it has started.
+        if voice_job.get('state') != 'preparing':
+            lock.release()
+
+
 @app.get('/health')
 def health():
-    return jsonify(ready=True, worker_version='2.2.7', backend='faster-qwen', busy=lock.locked(), rate=RATE, model=MODEL, voice_mode=MODE, speaker=SPEAKER if MODE in ('fast', 'styled') else None, voice_id=VOICE_ID, speech_cleanup=SPEECH_CLEANUP, sentence_splitting=SPEECH_SPLIT, supports_cancel=True)
+    return jsonify(ready=model is not None and not lock.locked(), worker_version='2.2.8',
+                   backend='faster-qwen', busy=lock.locked(), rate=RATE, model=MODEL,
+                   voice_mode=MODE, speaker=SPEAKER if MODE in ('fast', 'styled') else None,
+                   voice_id=VOICE_ID, speech_cleanup=SPEECH_CLEANUP,
+                   sentence_splitting=SPEECH_SPLIT, supports_cancel=True,
+                   supports_voice_management=MODE == 'fixed')
 
 
 def validated_text():
@@ -138,7 +202,7 @@ def cancel():
     busy = lock.locked()
     if busy:
         cancel_event.set()
-    return jsonify(cancel_requested=busy, worker_version='2.2.7'), 202
+    return jsonify(cancel_requested=busy, worker_version='2.2.8'), 202
 
 
 @app.post('/stream')
