@@ -120,11 +120,25 @@ def render_settings_form(options, wyoming, lang, csrf, note, checks=None, latest
   ("automatic",t("Automatisch", "Automatic")),("manual",t("Manuell", "Manual"))])}
 <p class="muted">{t("Intelligent: Nur nach einer echten Rückfrage weitersprechen. Automatisch: Nach jeder Antwort ein begrenztes Anschlussfenster. Manuell: Nach gewöhnlichen Antworten wieder Rufwort erwarten; explizite Dialoge (z. B. Suchtreffer wählen) bleiben möglich. Anzahl und Wartezeit stellst du zusätzlich lokal in der TAFA Device Bridge ein. Den KI-Gesprächsassistenten wählst du unter Verbindungen.", "Intelligent: Follow up only when TAFA explicitly requests an answer. Automatic: Allow a bounded listening window after every answer. Manual: Wake word again after ordinary replies; explicit dialogs (such as choosing search results) remain available. The tablet also controls its own maximum and listening time. Configure the LLM conversation agent under Connections.")}</p>
 </details>
-<details><summary>3 · {t("Stimme und Klang", "Voice and sound")}</summary>
+<details id="tafa-voice-details"><summary>3 · {t("Stimme und Klang", "Voice and sound")}</summary>
 {select("voice_variant",t("Qwen-Stimmvariante", "Qwen voice variant"),
  [(i,t("Standard", "Default") if i == "default" else i) for i in CHOICES["voice_variant"]])}
 {select("live_profile",t("Klangprofil", "Sound profile"),
  [(i,i.title()) for i in CHOICES["live_profile"]])}
+<div class="tafa-voice-manager" id="tafa-voice-manager"
+     data-csrf="{esc(csrf)}" data-lang="{esc(lang)}">
+  <h3>{t("Qwen-Stimmen verwalten", "Manage Qwen voices")}</h3>
+  <p class="muted">{t("Varianten müssen auf dem GPU-Worker vorbereitet sein. Nicht vorbereitete Stimmen verwenden sonst die Standardstimme. Die Auswahl oben wird erst mit „Einstellungen speichern“ dauerhaft übernommen.",
+      "Variants must be prepared on the GPU worker. Missing voices otherwise fall back to the default voice. Save the selection above with Save settings.")}</p>
+  <p id="tafa-voice-state" role="status" aria-live="polite">{t("Beim Öffnen werden die verfügbaren Stimmen geprüft.", "Available voices are checked when opened.")}</p>
+  <div id="tafa-voice-list" class="tafa-voice-list"></div>
+  <div class="tafa-voice-preview">
+    <button type="button" class="btn btn-outline" id="tafa-voice-default-preview">{t("Standardstimme anhören", "Preview default voice")}</button>
+    <audio id="tafa-voice-audio" controls preload="none" hidden></audio>
+  </div>
+  <p class="muted">{t("Die Erstellung erfolgt lokal auf dem GPU-Rechner. Währenddessen kann die Sprachausgabe auf Piper ausweichen; andere TAFA-Einstellungen bleiben erhalten.",
+       "Voice creation runs locally on the GPU computer. Speech may fall back to Piper during preparation; unrelated settings are preserved.")}</p>
+</div>
 </details>
 <details><summary>4 · {t("Alexa-Durchsagen (optional)", "Alexa announcements (optional)")}</summary>
 {select("mp3_profile",t("Durchsage-Klang", "Announcement sound"),[(i,i.title()) for i in CHOICES["mp3_profile"]])}
