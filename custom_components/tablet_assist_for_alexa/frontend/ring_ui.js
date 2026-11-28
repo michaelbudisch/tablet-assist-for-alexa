@@ -122,7 +122,7 @@ function showNotice(card,event){
  if(!card?.isConnected||document.hidden)return;
  if(card._hzNight){
    try{const part=globalThis[Symbol.for("tafa-ambient.integration.v1")]?.parts?.ambient;
-     if(part?.show?.(card,{title:event.title,topic:"camera",message:"Bewegung erkannt",
+     if(part?.show?.(card,{title:event.title,topic:event.camera?"camera":"notice",message:String(event.message||"Bewegung erkannt").slice(0,2000),
        camera:event.camera,seconds:event.seconds,request_id:event.request_id}))return;
    }catch(error){console.debug("TAFA ring ambient info",error);}
  }
@@ -142,7 +142,7 @@ function showNotice(card,event){
  close.style.cssText="position:absolute;right:12px;top:12px;color:inherit;background:transparent;border:1px solid #8ba6b277;border-radius:7px;padding:3px 8px;cursor:pointer";
  close.onclick=()=>clearNotice(card);
  const message=document.createElement("p");
- message.textContent="Bewegung erkannt";message.style.margin="0 0 11px";
+ message.textContent=String(event.message||"Bewegung erkannt").slice(0,2000);message.style.margin="0 0 11px";
  box.append(title,close,message);
  if(image){
   const picture=document.createElement("img");picture.src=image;picture.alt="Latest Ring camera snapshot";
@@ -155,24 +155,50 @@ function showNotice(card,event){
  if(current)current.hideTimer=setTimeout(()=>clearNotice(card),Math.max(5,Math.min(90,Number(event.seconds)||45))*1000);
 }
 export function connectRingNotices(card){
- const h=card?.h,conn=h?.connection;
- if(!card?.isConnected||!conn?.subscribeMessage)return;
- const old=subscribers.get(card);
- if(old?.connection===conn)return;
- if(old){try{old.unsubscribe?.();}catch{}clearNotice(card);}
- const state={connection:conn,unsubscribe:null,hideTimer:null};
- subscribers.set(card,state);
- Promise.resolve(conn.subscribeMessage(data=>{
-  if(subscribers.get(card)!==state||!data||typeof data!=="object")return;
-  if(typeof data.camera!=="string"||!data.camera.startsWith("camera."))return;
-  showNotice(card,data);
- },{type:"tablet_assist_for_alexa/ring_notice_subscribe"})).then(stop=>{
-  if(subscribers.get(card)!==state)stop?.();else state.unsubscribe=stop;
- }).catch(error=>console.debug("TAFA Ring notices unavailable",error));
-}
+  const h=card?.h,conn=h?.connection;
+  if(!card?.isConnected||!conn)return;
+  const old=subscribers.get(card);
+  if(old?.connection===conn)return;
+  if(old){for(const stop of old.unsubs||[]){try{stop?.();}catch{}}clearNotice(card);}
+  const state={connection:conn,unsubs:[],hideTimer:null};
+  subscribers.set(card,state);
+  const deliver=data=>{
+   if(subscribers.get(card)!==state||!data||typeof data!=="object")return;
+   const title=String(data.title||"TAFA").slice(0,100);
+   const message=String(data.message||"").slice(0,2000);
+   if(!title||!message)return;
+   const room=String(data.room||data.target_room||"").trim();
+   const device=String(data.device_id||data.target_device_id||"").trim();
+   const own=card._tafaLocalVoice;
+   if(device&&device!==own?.deviceId)return;
+   if(room&&room.toLowerCase()!==String(own?.room||"").toLowerCase()
+      &&room.toLowerCase()!==String(own?.label||"").toLowerCase())return;
+   showNotice(card,{...data,title,message});
+  };
+  const store=promise=>{
+   Promise.resolve(promise).then(stop=>{
+    if(subscribers.get(card)!==state)stop?.();
+    else if(typeof stop==="function")state.unsubs.push(stop);
+   }).catch(error=>console.debug("TAFA notice subscription unavailable",error));
+  };
+  if(h?.user?.is_admin===true&&typeof conn.subscribeEvents==="function"){
+   // Admin browsers can see general announcements; legacy Ring event
+   // compatibility stays available until the automation migration ends.
+   for(const type of ["jarvis_infobox_show","tafa_infobox_show"])
+    store(conn.subscribeEvents(event=>deliver(event?.data||{}),type));
+  }else if(typeof conn.subscribeMessage==="function"){
+   // Paired room users receive only appropriately scoped notifications.
+   store(conn.subscribeMessage(data=>deliver(data),{
+    type:"tablet_assist_for_alexa/ring_notice_subscribe"
+   }));
+   store(conn.subscribeMessage(data=>deliver(data),{
+    type:"tablet_assist_for_alexa/notice_subscribe"
+   }));
+  }
+ }
 export function disconnectRingNotices(card){
  const old=subscribers.get(card);if(!old)return;
- subscribers.delete(card);try{old.unsubscribe?.();}catch{}
+ subscribers.delete(card);for(const stop of old.unsubs||[]){try{stop?.();}catch{}}
  clearTimeout(old.hideTimer);
  card.shadowRoot?.querySelector("[data-tafa-ring-notice]")?.remove();
 }
