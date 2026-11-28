@@ -779,9 +779,9 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.98'
     if(!host||!canvas)return;
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
-    const applyProfile=(profile,deviceId)=>{
+    const applyProfile=(profile,deviceId,revision)=>{
       if(active.get(card)!==s)return;
-      s.profile=profile;s.deviceId=deviceId;
+      s.profile=profile;s.deviceId=deviceId;s.profileRevision=revision;
       s.metricEntries=Array.isArray(profile?.metrics)?profile.metrics.slice(0,6).map(m=>({name:m.name||m.id,ids:[m.id],pattern:/(?!)/})):null;
       s.metricNodes.forEach((node,i)=>{
         const entry=s.metricEntries?.[i]||(s.metricEntries?null:metrics[i]);
