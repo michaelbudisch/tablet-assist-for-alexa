@@ -1,5 +1,12 @@
 # GPU-Worker – Änderungsverlauf
 
+## 2.2.8
+
+- Neue lokale Stimmenverwaltung: vorhandene Varianten prüfen, fehlende synthetische Varianten einzeln erstellen und per WAV-Probe testen.
+- Varianten 2–9 erhalten bewusst unterschiedliche Stimmcharaktere statt identischer Beschreibungen. Standardstimme und vorhandene Variante 1 bleiben erhalten.
+- Beim Erstellen wird das Base-TTS-Modell zeitweilig freigegeben, damit VoiceDesign nicht parallel im GPU-Speicher liegt; danach wird TTS wieder geladen. Andere GPU-Dienste werden nicht automatisch gestoppt.
+- Meldung bei fehlendem Fixed-Modus oder fehlenden Stimmprofilen, keine Stimmuploads und keine externen Modell-APIs.
+
 ## 2.2.7
 
 - Ein einziges Ollama-Modell `qwen3-vl:4b-instruct` für Wissensfragen und Vision. Windows richtet es unmittelbar ein und lädt es vor.
