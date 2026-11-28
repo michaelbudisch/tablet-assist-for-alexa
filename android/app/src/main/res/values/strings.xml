@@ -137,6 +137,7 @@
     <string name="footer">TAFA Device Bridge · %1$s</string>
     <string name="camera_relay_title">Camera for Home Assistant</string>
     <string name="camera_relay_help">Send JPEG snapshots to your TAFA room using the saved HA room-user login. First enable Camera for the room under Apps → TAFA → Devices &amp; multiroom. Start explicitly and stop here or via the notification. Portrait and landscape mounting are detected from the physical device orientation, even with screen rotation locked. No recording or separate Jarvis receiver required.</string>
+    <string name="camera_on_connect">Start camera and send images to Home Assistant on connect</string>
     <string name="camera_relay_start">Start camera for HA</string>
     <string name="camera_relay_stop">Stop HA camera</string>
     <string name="camera_local_title">Local camera test</string>
@@ -171,6 +172,7 @@
     <string name="wake_start">Start native wakeword</string>
     <string name="wake_stop">Stop native wakeword</string>
     <string name="wake_stopped">Microphone off</string>
+    <string name="wake_model_downloading">Downloading the offline model…</string>
     <string name="wake_ready">Offline model installed</string>
     <string name="wake_model_missing">Download the offline model first</string>
     <string name="wake_permission">Allow microphone access to test wakeword recognition.</string>
@@ -209,7 +211,7 @@
     <string name="voice_overview_eyebrow">MICROPHONE</string>
     <string name="voice_overview_help">Recognize a wakeword on this device and let your TAFA dashboard handle the question.</string>
     <string name="connection_start">Connect</string>
-    <string name="connection_start_help">Only using wakeword recognition? Switch to Wakeword and start it there; the same connection is saved.</string>
+    <string name="connection_start_help">Connect starts the selected microphone mode and optionally the HA camera. Wakeword mode downloads the German offline model (~45 MB) once if needed.</string>
     <string name="bluetooth_advanced_title">Bluetooth options</string>
     <string name="room_settings_title">TAFA direct Bluetooth multiroom</string>
     <string name="wake_model_eyebrow">01 / PREPARE</string>

@@ -1,5 +1,6 @@
-## 1.3.0 · Native TAFA Android identity (source)
-- New application ID and Java namespace `de.tafa.devicebridge`, version code 33. Fresh install and new tablet pairing required; signed APK not yet published.
+## 1.3.0 · Native TAFA Android identity
+- **Connect** starts the selected microphone mode and the camera when opted in. A missing offline wakeword model downloads once. **Disconnect** keeps the selection for the next connection.
+- New application ID and Java namespace `de.tafa.devicebridge`, version code 33. Fresh install and new tablet pairing required.
 - Replaced legacy app preference and Android action names without changing selectable wakeword vocabulary.
 
 ## 1.2.10 · Clearer proximity exit-delay wording

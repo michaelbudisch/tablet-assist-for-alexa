@@ -1,8 +1,9 @@
-# TAFA Device Bridge 1.3.0 (nur Quellcode)
+# TAFA Device Bridge 1.3.0
 
+- **Verbinden** startet den gewählten Mikrofonmodus und bei ausdrücklicher Freigabe die Kamera. Das Offline-Rufwortmodell wird bei Bedarf einmalig geladen. **Trennen** behält die Auswahl für die nächste Verbindung.
 - Android-Paketkennung, Namespace, Java-Quell- und Testpakete sowie interne Aktionen auf `de.tafa.devicebridge` umgestellt.
 - Die bisherige App `de.jarvis.audio` muss deinstalliert und eine neu signierte APK installiert werden. App-Einstellungen und Zugangsdaten werden nicht übernommen; Tablet in TAFA neu koppeln.
-- Rufwörter einschließlich Jarvis und Hey Jarvis bleiben erhalten. Versionscode 33. Build, Signierung und Tablet-Funktionstest stehen noch aus.
+- Rufwörter einschließlich Jarvis und Hey Jarvis bleiben erhalten. Versionscode 33. Signierter Build mit dem bisherigen Zertifikat.
 
 # TAFA Device Bridge 1.2.10
 

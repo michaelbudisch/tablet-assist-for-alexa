@@ -1,6 +1,8 @@
 # TAFA Device Bridge · Android 1.3.0
 
-**1.3.0 (Quellstand, APK noch nicht erstellt):** Die neue Android-Paketkennung lautet `de.tafa.devicebridge`. Die bisherige App `de.jarvis.audio` lässt sich nicht darüber aktualisieren: alte App deinstallieren, neu signierte TAFA-App installieren, Zugangsdaten erneut einrichten und das Tablet im TAFA Control Center neu koppeln. Frühere Geräteeinstellungen werden nicht automatisch übernommen. Die Rufwörter „Jarvis“ und „Hey Jarvis“ bleiben weiterhin auswählbar.
+**1.3.0:** Die neue Android-Paketkennung lautet `de.tafa.devicebridge`. Die bisherige App `de.jarvis.audio` lässt sich nicht darüber aktualisieren: alte App deinstallieren, neu signierte TAFA-App installieren, Zugangsdaten erneut einrichten und das Tablet im TAFA Control Center neu koppeln. Frühere Geräteeinstellungen werden nicht automatisch übernommen. Die Rufwörter „Jarvis“ und „Hey Jarvis“ bleiben weiterhin auswählbar.
+
+Beim **Verbinden** startet der gewählte Mikrofonmodus. Die App lädt ein fehlendes Offline-Rufwortmodell einmalig herunter. Aktiviere in den Kamera-Einstellungen **Beim Verbinden Kamera starten und Bilder an Home Assistant senden**, um die Kamera ebenfalls zu starten. **Trennen** stoppt alle drei Dienste und behält die Auswahl.
 
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
@@ -65,7 +67,7 @@ Die separate lokale Testvorschau wurde entfernt. Kameraaufnahmen erfolgen nur w�
 
 ## Veröffentlichung und Installation
 
-[Signierte APK 1.2.11 herunterladen](downloads/TAFA-Device-Bridge-1.2.11.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.11) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Die APK verwendet die bisherige Signatur, App-ID de.jarvis.audio und Versionscode **32**. Über die bestehende App installieren; Zugangsdaten und Gerätekennung bleiben erhalten.
+[Signierte APK 1.3.0 herunterladen](downloads/TAFA-Device-Bridge-1.3.0.apk) · [GitHub-Release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.3.0) · [SHA-256-Prüfsumme](downloads/SHA256SUMS). Neue App-ID und Versionscode **33**. Tablet nach der Neuinstallation erneut koppeln.
 
 Zum eigenen Bauen JDK 17, Android SDK Platform 35 und `build.ps1` verwenden; zum Signieren `sign-release.ps1` mit dem ursprünglichen Keystore. Private Schlüssel sind nicht im Repository enthalten. Die automatisierten Tests ersetzen keinen echten Bluetooth-/Mikrofontest.
 

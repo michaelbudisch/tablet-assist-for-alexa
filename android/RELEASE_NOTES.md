@@ -1,8 +1,9 @@
-# TAFA Device Bridge 1.3.0 (source only)
+# TAFA Device Bridge 1.3.0
 
+- **Connect** starts the selected microphone mode and the camera when opted in. A missing offline wakeword model downloads once. **Disconnect** keeps the selection for the next connection.
 - Changed Android namespace, application ID, source/test Java packages and Android internal actions to `de.tafa.devicebridge`.
 - Previous `de.jarvis.audio` installations must be removed and the newly signed APK installed afresh. Existing Android app preferences and credentials do not transfer; pair the tablet again in TAFA.
-- Wakeword choices including Jarvis and Hey Jarvis remain unchanged. Version code 33. APK build/signing and physical playback/voice checks remain pending.
+- Wakeword choices including Jarvis and Hey Jarvis remain unchanged. Version code 33. The APK is signed with the existing certificate.
 
 # TAFA Device Bridge 1.2.11
 
@@ -26,7 +27,7 @@ Signed final proximity build, version code 31. Includes local detection from 1.2
 - Bundled offline model; no identity recognition. Camera starts explicitly. Wrong lens, errors or stopped capture make the entity unavailable; HA expires reports after eight seconds.
 - Android 1.2.9 / version code 30; accompanying HA 0.4.66 adds the authenticated device action and occupancy entity. Python changes require an HA restart.
 
-# TAFA Device Bridge 1.2.8 — Folgefragen nur bei Rückfrage (Quellstand)
+# TAFA Device Bridge 1.2.8 — Folgefragen nur bei Rückfrage
 
 Der neue Quellstand behält die bisherige Paketkennung `de.jarvis.audio` und
 verwendet Version Code **29**. Ein signiertes APK mit dem ursprünglichen

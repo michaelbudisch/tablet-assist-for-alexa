@@ -13,10 +13,12 @@ import java.util.concurrent.*;
 /** Real background camera -> normalized JPEG -> authenticated local HTTP on an isolated emulator. */
 final class CameraRelaySmoke {
     private static void check(boolean value,String message){if(!value)throw new AssertionError(message);}
-    static String run(Instrumentation test)throws Exception{
+    static String run(Instrumentation test,boolean automaticConnect)throws Exception{
         Context context=test.getTargetContext();
         test.getUiAutomation().grantRuntimePermission(context.getPackageName(),Manifest.permission.CAMERA);
         test.getUiAutomation().grantRuntimePermission(context.getPackageName(),Manifest.permission.POST_NOTIFICATIONS);
+        if(automaticConnect)
+            test.getUiAutomation().grantRuntimePermission(context.getPackageName(),Manifest.permission.RECORD_AUDIO);
         String address=null;
         Enumeration<NetworkInterface> networks=NetworkInterface.getNetworkInterfaces();
         while(networks.hasMoreElements()){
@@ -33,15 +35,33 @@ final class CameraRelaySmoke {
             var prefs=context.getSharedPreferences(MainActivity.PREF,0);
             prefs.edit().putString("base",base).putString(MainActivity.HTTP_CONSENT,base)
                     .putString("secret",MainActivity.encrypt("camera-fixture-only"))
-                    .putBoolean("camera_motion",true).commit();
+                    .putBoolean("camera_motion",true).putBoolean("camera_on_connect",false)
+                    .putBoolean("wake_muted",!automaticConnect)
+                    .putString("native_voice_mode","continuous").commit();
             Activity visible=test.startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             try{
                 check(!CameraRelayService.running,"Opening screen never auto-starts relay");
                 test.runOnMainSync(()->{
                     visible.findViewById(R.id.nav_settings).performClick();
-                    visible.findViewById(R.id.camera_relay_start).performClick();
+                    if(automaticConnect){
+                        ((android.widget.CheckBox)visible.findViewById(R.id.camera_on_connect)).setChecked(true);
+                        visible.findViewById(R.id.nav_status).performClick();
+                        visible.findViewById(R.id.status_connect).performClick();
+                    }else visible.findViewById(R.id.camera_relay_start).performClick();
                 });
                 check(receiver.first.await(15,TimeUnit.SECONDS),"First real camera JPEG uploaded: "+CameraRelayService.status);
+                if(automaticConnect){
+                    check(AudioService.haConnected && WakeWordService.running,"Connect starts audio and the chosen microphone mode");
+                    test.runOnMainSync(()->visible.findViewById(R.id.status_connect).performClick());
+                    check(receiver.stopped.await(6,TimeUnit.SECONDS),"Disconnect invalidates remote camera session");
+                    long deadline=System.nanoTime()+3_000_000_000L;
+                    while((AudioService.running||WakeWordService.running||CameraRelayService.running)&&System.nanoTime()<deadline)
+                        Thread.sleep(20);
+                    check(!AudioService.running&&!WakeWordService.running&&!CameraRelayService.running,"Disconnect stops all services");
+                    check(prefs.getBoolean("camera_on_connect",false),"Disconnect keeps the saved camera selection");
+                    check(receiver.error==null,"HTTP protocol valid: "+receiver.error);
+                    return "Connect starts audio, camera and continuous microphone; Disconnect stops all and keeps the selection.";
+                }
                 test.runOnMainSync(visible::finish);
                 check(receiver.background.await(12,TimeUnit.SECONDS),"Camera keeps uploading after activity exits");
                 check(CameraRelayService.running&&CameraRelayService.sent>=2,"Independent foreground camera remains running");
@@ -53,7 +73,12 @@ final class CameraRelaySmoke {
                 check(receiver.error==null,"HTTP protocol valid: "+receiver.error);
                 check(!AudioService.running,"Camera does not start audio service");
             }finally{
-                context.stopService(new Intent(context,CameraRelayService.class));test.runOnMainSync(visible::finish);
+                context.stopService(new Intent(context,CameraRelayService.class));
+                if(automaticConnect){
+                    context.stopService(new Intent(context,WakeWordService.class));
+                    context.stopService(new Intent(context,AudioService.class));
+                }
+                test.runOnMainSync(visible::finish);
             }
         }
         return "Camera relay passed: real background camera, bounded upright JPEG, authenticated push/session/sequence, motion metadata, continued delivery after screen exit, remote stop.\n";
@@ -80,9 +105,14 @@ final class CameraRelaySmoke {
                     byte[] body=new byte[length];int offset=0,n;
                     while(offset<length&&(n=input.read(body,offset,length-offset))>0)offset+=n;
                     check(offset==length,"Complete body");
-                    check(headers.get("authorization").equals("Bearer camera-fixture-only"),"HA bearer authentication");
+                    if (request.contains("/room_camera/") || request.contains("/room_audio "))
+                        check("Bearer camera-fixture-only".equals(headers.get("authorization")),"HA bearer authentication");
                     byte[] reply=new byte[0];int status=204;
-                    if(request.startsWith("POST /api/tablet_assist_for_alexa/room_camera/register ")){
+                    if (request.startsWith("POST /api/tablet_assist_for_alexa/room_audio ")) {
+                        reply=("{\"session\":\""+session+"\"}").getBytes(StandardCharsets.UTF_8);status=200;
+                    }else if(!request.contains("/room_camera/")){
+                        reply="{}".getBytes(StandardCharsets.UTF_8);status=200;
+                    }else if(request.startsWith("POST /api/tablet_assist_for_alexa/room_camera/register ")){
                         device=headers.get("x-relay-device");
                         check(device!=null&&device.matches("[a-f0-9]{32}"),"Stable device ID");
                         check(new String(body,StandardCharsets.UTF_8).contains(device),"Pairing body matches device");

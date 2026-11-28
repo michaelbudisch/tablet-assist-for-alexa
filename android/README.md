@@ -1,6 +1,8 @@
 # TAFA Device Bridge · Android 1.3.0
 
-**1.3.0 (source, APK pending):** New Android package/application ID `de.tafa.devicebridge`. The former `de.jarvis.audio` build cannot be upgraded in-place: uninstall it, then install and connect the newly signed TAFA app, and re-pair this tablet in TAFA Control Center. Existing device settings are not imported automatically. Wakewords such as "Jarvis" and "Hey Jarvis" remain supported.
+**1.3.0:** New Android package/application ID `de.tafa.devicebridge`. The former `de.jarvis.audio` build cannot be upgraded in-place: uninstall it, then install and connect the newly signed TAFA app, and re-pair this tablet in TAFA Control Center. Existing device settings are not imported automatically. Wakewords such as "Jarvis" and "Hey Jarvis" remain supported.
+
+Connect starts the selected microphone mode and downloads the offline wakeword model once if needed. In Camera settings, select **Start camera and send images to Home Assistant on connect** to start the camera too. Disconnect stops all three services and retains the selection.
 
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
@@ -65,7 +67,7 @@ The separate local preview/test screen was removed. No camera starts automatical
 
 ## Releases and signing
 
-[Download signed APK 1.2.11](downloads/TAFA-Device-Bridge-1.2.11.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.2.11) · [SHA-256 checksum](downloads/SHA256SUMS). The APK uses the existing certificate, de.jarvis.audio application ID and version code **32**. Install over the existing app to retain credentials and device identity.
+[Download signed APK 1.3.0](downloads/TAFA-Device-Bridge-1.3.0.apk) · [GitHub release](https://github.com/michaelbudisch/tablet-assist-for-alexa/releases/tag/audio-v1.3.0) · [SHA-256 checksum](downloads/SHA256SUMS). New application ID and version code **33**. Pair the tablet again after installing.
 
 For local builds use JDK 17, Android SDK Platform 35 and `build.ps1`; sign with `sign-release.ps1` and the original keystore. The repository contains no private signing keys. Automated tests do not replace real Echo or tablet checks.
 

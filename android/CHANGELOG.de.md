@@ -1,5 +1,6 @@
-## 1.3.0 · Eigenständige TAFA-Android-Kennung (Quellstand)
-- Neue App-ID und Java-Namespace `de.tafa.devicebridge`, Versionscode 33. Neuinstallation und erneute Tablet-Kopplung erforderlich; signierte APK noch nicht veröffentlicht.
+## 1.3.0 · Eigenständige TAFA-Android-Kennung
+- **Verbinden** startet den gewählten Mikrofonmodus und bei ausdrücklicher Freigabe die Kamera. Das Offline-Rufwortmodell wird bei Bedarf einmalig geladen. **Trennen** behält die Auswahl für die nächste Verbindung.
+- Neue App-ID und Java-Namespace `de.tafa.devicebridge`, Versionscode 33. Neuinstallation und erneute Tablet-Kopplung erforderlich.
 - Alte App-Einstellungen und interne Android-Aktionsnamen bereinigt, Rufwortauswahl bleibt erhalten.
 
 ## 1.2.10 · Klarer Text für die Ausschaltverzögerung

@@ -36,14 +36,17 @@ public class MainActivity extends Activity {
     private static final int SCAN_TOKEN = 100;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refresh = new Runnable() {
-        public void run() { refreshStatus(); handler.postDelayed(this, 1000); }
+        public void run() { advanceBridgeStart(); refreshStatus(); handler.postDelayed(this, 1000); }
     };
     private EditText urlInput, tokenInput;
     private CheckBox allowHttp;
     private Spinner cameraLens, cameraRefresh;
     private ArrayList<CameraPreviewController.Lens> availableCameras=new ArrayList<>();
-    private static final int CAMERA_PERMISSION=220;
-    private boolean pendingCameraStart=false,pendingNativeQuestion=false;
+    private static final int CAMERA_PERMISSION=220, BRIDGE_PERMISSIONS=221;
+    private static final String CAMERA_ON_CONNECT="camera_on_connect";
+    private boolean pendingCameraStart, pendingNativeQuestion, pendingWakePermission;
+    private boolean bridgeStartPending, bridgePermissionRequested, bridgePermissionInProgress;
+    private boolean wakeAfterDownload, resumed;
     private String consentForAddress = "";
     private TextView setupMessage, searchMessage;
     private Button searchButton;
@@ -88,6 +91,15 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         configureColumns();
         var prefs = getSharedPreferences(PREF, 0);
+        if (state != null) {
+            bridgeStartPending = state.getBoolean("bridge_start_pending");
+            bridgePermissionRequested = state.getBoolean("bridge_permission_requested");
+            bridgePermissionInProgress = state.getBoolean("bridge_permission_in_progress");
+            wakeAfterDownload = state.getBoolean("wake_after_download");
+            pendingCameraStart = state.getBoolean("pending_camera_start");
+            pendingWakePermission = state.getBoolean("pending_wake_permission");
+            pendingNativeQuestion = state.getBoolean("pending_native_question");
+        }
         urlInput = findViewById(R.id.server_address);
         tokenInput = findViewById(R.id.token);
         allowHttp = findViewById(R.id.allow_http);
@@ -132,9 +144,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.forget).setOnClickListener(v -> new AlertDialog.Builder(this)
                 .setTitle(R.string.forget_title).setMessage(R.string.forget_help)
                 .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.forget, (dialog, which) -> {
-                    stopService(new Intent(this, AudioService.class));
-                    stopService(new Intent(this, WakeWordService.class));
-                    stopService(new Intent(this, CameraRelayService.class));
+                    disconnectBridge();
                     stopDiscovery();
                     prefs.edit().remove("base").remove("secret").remove(HTTP_CONSENT).remove("room_audio_enabled").remove("wake_choice").apply();
                     tokenInput.setText(""); urlInput.setText("");
@@ -153,9 +163,9 @@ public class MainActivity extends Activity {
         initializeNativeWake();
         initializeNativeAssistControls();
         findViewById(R.id.status_connect).setOnClickListener(v->{
-            if(AudioService.running||WakeWordService.running||CameraRelayService.running)disconnectBridge();
+            if(bridgeStartPending||AudioService.running||WakeWordService.running||CameraRelayService.running)disconnectBridge();
             else if(!getSharedPreferences(PREF,0).contains("secret"))showSection("connection",true);
-            else startPlayer();
+            else connectBridge();
         });
         findViewById(R.id.status_speak).setOnClickListener(v->startNativeWake(true));
         findViewById(R.id.status_wake).setOnClickListener(v->{if(WakeWordService.running)stopService(new Intent(this,WakeWordService.class));else startNativeWake();});
@@ -173,7 +183,68 @@ public class MainActivity extends Activity {
     }
 
 
+    private boolean connectBridge() {
+        if (bridgePermissionInProgress) return true;
+        if (!startPlayer(false)) return false;
+        wakeAfterDownload = false;
+        bridgeStartPending = true;
+        bridgePermissionRequested = false;
+        bridgePermissionInProgress = false;
+        refreshStatus();
+        return true;
+    }
+
+    private boolean hasPermission(String permission) {
+        return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void advanceBridgeStart() {
+        if (!resumed || !AudioService.haConnected || bridgePermissionInProgress) return;
+        var prefs = getSharedPreferences(PREF, 0);
+        boolean launchVoice = !prefs.getBoolean("wake_muted", true) && !WakeWordService.running;
+        if (bridgeStartPending) {
+            boolean launchCamera = prefs.getBoolean(CAMERA_ON_CONNECT, false)
+                    && !availableCameras.isEmpty() && !CameraRelayService.running;
+            if (!bridgePermissionRequested) {
+                ArrayList<String> permissions = new ArrayList<>();
+                if (Build.VERSION.SDK_INT >= 33 && !hasPermission(Manifest.permission.POST_NOTIFICATIONS))
+                    permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+                if (launchVoice && !hasPermission(Manifest.permission.RECORD_AUDIO))
+                    permissions.add(Manifest.permission.RECORD_AUDIO);
+                if (launchCamera && !hasPermission(Manifest.permission.CAMERA))
+                    permissions.add(Manifest.permission.CAMERA);
+                bridgePermissionRequested = true;
+                if (!permissions.isEmpty()) {
+                    bridgePermissionInProgress = true;
+                    requestPermissions(permissions.toArray(new String[0]), BRIDGE_PERMISSIONS);
+                    return;
+                }
+            }
+            bridgeStartPending = false;
+            if (launchCamera && hasPermission(Manifest.permission.CAMERA)) requestCameraRelay();
+            wakeAfterDownload = launchVoice && hasPermission(Manifest.permission.RECORD_AUDIO);
+        }
+        if (!wakeAfterDownload) return;
+        if (!launchVoice || !hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            wakeAfterDownload = false;
+            return;
+        }
+        boolean needsModel = !"continuous".equals(prefs.getString("native_voice_mode", "wake"))
+                && !WakeModelInstaller.installed(this);
+        if (needsModel) {
+            installWakeModel();
+            return;
+        }
+        wakeAfterDownload = false;
+        startWakeService(false);
+    }
+
     private void disconnectBridge(){
+        bridgeStartPending = false;
+        wakeAfterDownload = false;
+        pendingCameraStart = false;
+        pendingWakePermission = false;
+        pendingNativeQuestion = false;
         getSharedPreferences(PREF,0).edit().putBoolean("room_audio_enabled",false).apply();
         stopService(new Intent(this,WakeWordService.class));
         stopService(new Intent(this,CameraRelayService.class));
@@ -248,7 +319,7 @@ public class MainActivity extends Activity {
             findViewById(id).setOnClickListener(v -> showSection(section, true));
         }
         findViewById(R.id.connection_start).setOnClickListener(v -> {
-            if (startPlayer()) showSection("status", true);
+            if (connectBridge()) showSection("status", true);
         });
         findViewById(R.id.diagnostics_toggle).setOnClickListener(v -> toggle(R.id.diagnostics_text));
         if (state != null) {
@@ -434,6 +505,8 @@ public class MainActivity extends Activity {
                 preferences.edit().putString("wake_room_name",e.toString().trim()).apply();
             }
         });
+        if (WakeModelInstaller.installed(this))
+            ((TextView)findViewById(R.id.wake_model_status)).setText(R.string.wake_ready);
         ((TextView)findViewById(R.id.wake_device_id)).setText(
             getString(R.string.wake_device_id,WakeDeviceIdentity.get(this).substring(0,12)));
         wakeChoice=findViewById(R.id.wake_choice);
@@ -457,25 +530,7 @@ public class MainActivity extends Activity {
                 }
             }
         });
-        wakeInstall.setOnClickListener(v->{
-            if(wakeDownloading||WakeWordService.running)return;
-            wakeDownloading=true;wakeInstall.setEnabled(false);
-            wakeStatus.setText(R.string.wake_model_missing);
-            new Thread(()->{
-                try{
-                    WakeModelInstaller.install(this,progress->runOnUiThread(()->{
-                        wakeStatus.setText(progress);
-                        ((TextView)findViewById(R.id.wake_model_status)).setText(progress);
-                    }));
-                    runOnUiThread(()->wakeStatus.setText(R.string.wake_ready));
-                }catch(Exception e){
-                    runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_download_failed,
-                        e.getMessage()==null?e.getClass().getSimpleName():e.getMessage())));
-                }finally{
-                    runOnUiThread(()->{wakeDownloading=false;wakeInstall.setEnabled(true);});
-                }
-            },"TAFAWakeModelDownload").start();
-        });
+        wakeInstall.setOnClickListener(v -> installWakeModel());
         wakeStrictSlider=findViewById(R.id.wake_strict_slider);
         wakeCooldownSlider=findViewById(R.id.wake_cooldown_slider);
         wakeHoldSlider=findViewById(R.id.wake_hold_slider);
@@ -495,6 +550,43 @@ public class MainActivity extends Activity {
             stopService(new Intent(this,WakeWordService.class));
             wakeStatus.setText("");
         });
+    }
+
+    private void installWakeModel() {
+        if (wakeDownloading || WakeWordService.running) return;
+        TextView modelStatus = findViewById(R.id.wake_model_status);
+        wakeDownloading = true;
+        wakeInstall.setEnabled(false);
+        modelStatus.setText(R.string.wake_model_downloading);
+        wakeStatus.setText(R.string.wake_model_downloading);
+        new Thread(() -> {
+            String failure = null;
+            try {
+                WakeModelInstaller.install(getApplicationContext(), progress -> runOnUiThread(() -> {
+                    if (isDestroyed()) return;
+                    modelStatus.setText(progress);
+                    wakeStatus.setText(progress);
+                }));
+            } catch (Exception error) {
+                failure = getString(R.string.wake_download_failed, error.getMessage() == null
+                        ? error.getClass().getSimpleName() : error.getMessage());
+            }
+            String errorMessage = failure;
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                wakeDownloading = false;
+                wakeInstall.setEnabled(true);
+                if (errorMessage == null) {
+                    modelStatus.setText(R.string.wake_ready);
+                    advanceBridgeStart();
+                } else {
+                    if (wakeAfterDownload) Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                    wakeAfterDownload = false;
+                    modelStatus.setText(errorMessage);
+                    wakeStatus.setText(errorMessage);
+                }
+            });
+        }, "TAFAWakeModelDownload").start();
     }
 
     private void initializeNativeAssistControls(){
@@ -531,8 +623,7 @@ public class MainActivity extends Activity {
         enabled.setChecked(true);
         enabled.setVisibility(View.GONE);
         followups.setVisibility(View.GONE);
-        preferences.edit().putBoolean("native_assist_enabled",true)
-            .putBoolean("room_audio_enabled",true).apply();
+        preferences.edit().putBoolean("native_assist_enabled",true).apply();
         Spinner limit=findViewById(R.id.native_followup_limit);
         ArrayList<String> choices=new ArrayList<>();
         final int[] followupValues={0,1,2,3,4,5,6,7,8,9,10,20,50,100,-1};
@@ -681,10 +772,15 @@ public class MainActivity extends Activity {
         }
         if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
             wakeStatus.setText(R.string.wake_permission);
+            pendingWakePermission = true;
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},WAKE_MICROPHONE_PERMISSION);
             return;
         }
         pendingNativeQuestion=false;
+        startWakeService(manual);
+    }
+
+    private void startWakeService(boolean manual) {
         if(manual&&WakeWordService.running&&WakeWordService.muted){
             Toast.makeText(this,R.string.quick_microphone_muted,Toast.LENGTH_LONG).show();
             return;
@@ -702,6 +798,11 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grants){
         super.onRequestPermissionsResult(requestCode,permissions,grants);
+        if (requestCode == BRIDGE_PERMISSIONS) {
+            bridgePermissionInProgress = false;
+            advanceBridgeStart();
+            return;
+        }
         if(requestCode==CAMERA_PERMISSION){
             boolean pending=pendingCameraStart;
             pendingCameraStart=false;
@@ -711,7 +812,8 @@ public class MainActivity extends Activity {
                     .setText(R.string.camera_denied);
             return;
         }
-        if(requestCode!=WAKE_MICROPHONE_PERMISSION)return;
+        if(requestCode!=WAKE_MICROPHONE_PERMISSION || !pendingWakePermission)return;
+        pendingWakePermission = false;
         if(grants.length>0&&grants[0]==PackageManager.PERMISSION_GRANTED)startNativeWake(pendingNativeQuestion);
         else {pendingNativeQuestion=false;wakeStatus.setText(R.string.wake_permission);
             Toast.makeText(this,R.string.wake_permission,Toast.LENGTH_LONG).show();}
@@ -801,7 +903,9 @@ public class MainActivity extends Activity {
         if (!http || !normalizedInput().equals(consentForAddress)) allowHttp.setChecked(false);
     }
 
-    private boolean startPlayer() {
+    private boolean startPlayer() { return startPlayer(true); }
+
+    private boolean startPlayer(boolean requestNotifications) {
         setupMessage.setText("");
         try {
             String base = HaAddress.validate(urlInput.getText().toString(), allowHttp.isChecked() && normalizedInput().equals(consentForAddress));
@@ -817,7 +921,7 @@ public class MainActivity extends Activity {
             if (!token.isEmpty()) edit.putString("secret", encrypt(token));
             edit.apply(); tokenInput.setText("");
             ((TextView) findViewById(R.id.token_note)).setText(R.string.token_saved);
-            if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            if (requestNotifications && Build.VERSION.SDK_INT >= 33 && !hasPermission(Manifest.permission.POST_NOTIFICATIONS))
                 requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
             stopService(new Intent(this, AudioService.class));
             startForegroundService(new Intent(this, AudioService.class));
@@ -864,6 +968,10 @@ public class MainActivity extends Activity {
         var prefs=getSharedPreferences(PREF,0);
         cameraLens=findViewById(R.id.camera_lens);
         initApproachSettings();
+        CheckBox cameraOnConnect = findViewById(R.id.camera_on_connect);
+        cameraOnConnect.setChecked(prefs.getBoolean(CAMERA_ON_CONNECT, false));
+        cameraOnConnect.setOnCheckedChangeListener(
+                (button, checked) -> prefs.edit().putBoolean(CAMERA_ON_CONNECT, checked).apply());
         cameraRefresh=findViewById(R.id.camera_refresh_rate);
         Spinner refreshSpinner=cameraRefresh;
         int[] seconds=CameraRefresh.options();
@@ -975,7 +1083,7 @@ public class MainActivity extends Activity {
         ((Button)findViewById(R.id.status_camera)).setText(cameraRunning?R.string.camera_relay_stop:R.string.quick_camera);
         ((Button)findViewById(R.id.status_wake)).setText(WakeWordService.running?R.string.wake_stop:R.string.quick_wake);
         findViewById(R.id.status_wake).setEnabled(true);
-        boolean bridgeRunning=AudioService.running||WakeWordService.running||CameraRelayService.running;
+        boolean bridgeRunning=bridgeStartPending||AudioService.running||WakeWordService.running||CameraRelayService.running;
         ((Button)findViewById(R.id.status_connect)).setText(bridgeRunning?
             (AudioService.haConnected?R.string.quick_disconnect:R.string.quick_cancel_connection):R.string.quick_connect);
         ((Button)findViewById(R.id.connection_start)).setText(AudioService.running?R.string.connection_reconnect:R.string.connection_start);
@@ -1083,6 +1191,17 @@ public class MainActivity extends Activity {
         if (!didAutoSearch && urlInput.getText().toString().trim().isEmpty()) { didAutoSearch = true; searchHomeAssistant(); }
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        resumed = true;
+        advanceBridgeStart();
+    }
+
+    @Override protected void onPause() {
+        resumed = false;
+        super.onPause();
+    }
+
     @Override protected void onStop() {
         VoiceDiagnostics.checkpoint();
         handler.removeCallbacks(refresh);
@@ -1091,6 +1210,13 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
+        state.putBoolean("bridge_start_pending", bridgeStartPending);
+        state.putBoolean("bridge_permission_requested", bridgePermissionRequested);
+        state.putBoolean("bridge_permission_in_progress", bridgePermissionInProgress);
+        state.putBoolean("wake_after_download", wakeAfterDownload);
+        state.putBoolean("pending_camera_start", pendingCameraStart);
+        state.putBoolean("pending_wake_permission", pendingWakePermission);
+        state.putBoolean("pending_native_question", pendingNativeQuestion);
         state.putString("setup_base", urlInput.getText().toString());
         state.putString(HTTP_CONSENT, allowHttp.isChecked() ? consentForAddress : "");
         state.putBoolean("did_auto_search", didAutoSearch);

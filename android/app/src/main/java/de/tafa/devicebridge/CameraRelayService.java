@@ -47,7 +47,7 @@ public class CameraRelayService extends Service {
         Notification notification=new Notification.Builder(this,"camera").setContentTitle(localized.getString(R.string.camera_relay_title))
                 .setContentText(localized.getString(R.string.camera_notification_text)).setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(open).addAction(new Notification.Action.Builder(null,localized.getString(R.string.camera_relay_stop),stop).build()).setOngoing(true).build();
-        if(Build.VERSION.SDK_INT>=30)startForeground(43,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);else startForeground(43,notification);
+        if(Build.VERSION.SDK_INT>=30)startForeground(44,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);else startForeground(44,notification);
     }
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent==null||"stop".equals(intent.getAction())){stopSelf();return START_NOT_STICKY;}

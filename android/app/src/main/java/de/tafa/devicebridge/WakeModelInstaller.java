@@ -7,7 +7,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.net.ssl.HttpsURLConnection;
 
-/** Explicitly installed, private, offline German Vosk model. Never downloaded automatically. */
+/** Private, offline German Vosk model, installed after the user selects wakeword recognition. */
 final class WakeModelInstaller {
     static final String MODEL_NAME="vosk-model-small-de-0.15";
     static final String DOWNLOAD="https://alphacephei.com/vosk/models/"+MODEL_NAME+".zip";
@@ -22,7 +22,7 @@ final class WakeModelInstaller {
     }
     private static void notify(Progress p,String s) { if(p!=null)p.onProgress(s); }
 
-    static void install(Context context,Progress callback) throws Exception {
+    static synchronized void install(Context context,Progress callback) throws Exception {
         if(installed(context)){notify(callback,"ready");return;}
         File root=context.getFilesDir(),archive=new File(root,"wake-model-downloading.zip");
         File unpack=new File(root,"wake-model-unpack");

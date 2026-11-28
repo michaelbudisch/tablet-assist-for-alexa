@@ -137,6 +137,7 @@
     <string name="footer">TAFA Device Bridge · %1$s</string>
     <string name="camera_relay_title">Kamera für Home Assistant</string>
     <string name="camera_relay_help">Überträgt Einzelbilder an deinen TAFA-Raum mit der gespeicherten Anmeldung des Raumnutzers. Zuerst unter Apps → TAFA → Geräte &amp; Multiroom die Kamera im Raum freigeben. Kamera ausdrücklich starten oder über die Benachrichtigung stoppen. Hoch- und Querformat werden anhand der Gerätelage automatisch erkannt, auch bei gesperrter Bildschirmdrehung. Keine Aufzeichnung und kein separater Jarvis-Empfänger nötig.</string>
+    <string name="camera_on_connect">Beim Verbinden Kamera starten und Bilder an Home Assistant senden</string>
     <string name="camera_relay_start">Kamera für HA starten</string>
     <string name="camera_relay_stop">HA-Kamera stoppen</string>
     <string name="camera_local_title">Lokaler Kameratest</string>
@@ -171,6 +172,7 @@
     <string name="wake_start">Native Erkennung starten</string>
     <string name="wake_stop">Native Erkennung stoppen</string>
     <string name="wake_stopped">Mikrofon aus</string>
+    <string name="wake_model_downloading">Offline-Modell wird heruntergeladen …</string>
     <string name="wake_ready">Offline-Modell installiert</string>
     <string name="wake_model_missing">Zuerst das Offline-Modell herunterladen</string>
     <string name="wake_permission">Bitte den Mikrofonzugriff für die Rufworterkennung erlauben.</string>
@@ -209,7 +211,7 @@
     <string name="voice_overview_eyebrow">MIKROFON</string>
     <string name="voice_overview_help">Das Rufwort wird auf diesem Gerät erkannt. Die eigentliche Frage übernimmt dein TAFA-Dashboard.</string>
     <string name="connection_start">Verbinden</string>
-    <string name="connection_start_help">Du nutzt nur die Rufworterkennung? Unter Rufwort starten; dabei wird dieselbe Verbindung gespeichert.</string>
+    <string name="connection_start_help">Verbinden startet den gewählten Mikrofonmodus und auf Wunsch die HA-Kamera. Im Rufwortmodus lädt die App das deutsche Offline-Modell (~45 MB) bei Bedarf einmalig herunter.</string>
     <string name="bluetooth_advanced_title">Bluetooth-Optionen</string>
     <string name="room_settings_title">TAFA Multiroom über Bluetooth</string>
     <string name="wake_model_eyebrow">01 / VORBEREITEN</string>

@@ -206,6 +206,7 @@
                 <TextView style="@style/Body" android:text="@string/approach_hold" android:labelFor="@+id/approach_hold" />
                 <Spinner android:id="@+id/approach_hold" android:layout_width="match_parent" android:layout_height="56dp" android:spinnerMode="dropdown" style="@style/Choice" />
                 <TextView android:id="@+id/approach_status" style="@style/Body" android:text="@string/approach_off" android:accessibilityLiveRegion="polite" />
+                <CheckBox android:id="@+id/camera_on_connect" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/camera_on_connect" android:textColor="@color/ink" />
                 <Button android:id="@+id/camera_relay_start" style="@style/Primary" android:text="@string/camera_relay_start" />
                 <Button android:id="@+id/camera_relay_stop" style="@style/Action" android:text="@string/camera_relay_stop" />
                 <TextView android:id="@+id/camera_relay_status" style="@style/Body" android:text="@string/camera_relay_off" android:accessibilityLiveRegion="polite" />
