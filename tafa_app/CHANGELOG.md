@@ -1,3 +1,9 @@
+## 0.4.73
+
+- Neuer typisierter TAFA-Schaltauftrag für Ambient-Infoboxen: sichere Übertragung von Entität, Zielzustand und optionaler Tablet-/Raumzuordnung über den bestehenden Gerätekanal.
+- Der visuelle Schaltstatus wird ausschließlich durch den live gemeldeten Home-Assistant-Zustand bestätigt. Demo-Aufträge schalten keine Geräte.
+- Erweitert `infobox_anzeigen` um einen optionalen Schaltkarten-Vertrag. Bestehende Kamera- und Wissenskarten bleiben unverändert.
+
 ## 0.4.72
 
 - Stimmvarianten verwenden ab sofort TAFA-Header und TAFA-Audio-Cache-Optionen. Ältere Qwen-Worker und bestehende Cache-Parameter bleiben lesbar, damit Streaming und ausgewählte Stimmen während der Geräteumstellung funktionieren.
