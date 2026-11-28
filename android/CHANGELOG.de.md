@@ -1,3 +1,7 @@
+## 1.3.2 · Tabletname
+- „Raumname“ heißt jetzt **Tabletname**. Der Name ist frei wählbar, erscheint in Home Assistant und beeinflusst nicht die Raumzuordnung.
+- Die vorhandene eindeutige Installations-ID und die gespeicherte Verbindung bleiben bei einem normalen Update bestehen.
+
 ## 1.3.0 · Eigenständige TAFA-Android-Kennung
 - **Verbinden** startet den gewählten Mikrofonmodus und bei ausdrücklicher Freigabe die Kamera. Das Offline-Rufwortmodell wird bei Bedarf einmalig geladen. **Trennen** behält die Auswahl für die nächste Verbindung.
 - Neue App-ID und Java-Namespace `de.tafa.devicebridge`, Versionscode 33. Neuinstallation und erneute Tablet-Kopplung erforderlich.

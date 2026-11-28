@@ -192,8 +192,8 @@
     <string name="wake_unmute_button">Unmute native microphone</string>
     <string name="wake_remote_help">Settings are synchronized per device with Home Assistant. Muting releases the Android microphone while the service stays running. Changes take effect after the next sync.</string>
     <string name="wake_save_error">Could not save wakeword settings to Home Assistant: %1$s</string>
-    <string name="wake_multiroom_help">Each installation receives a unique device ID. Home Assistant owns the rooms; assign this tablet once under TAFA → Devices &amp; Multiroom. The name below is only a label, not a room assignment.</string>
-    <string name="wake_room_label">Device name (display only; not a room assignment)</string>
+    <string name="wake_multiroom_help">Each installation receives a unique device ID. Home Assistant owns the rooms; assign this tablet once under TAFA → Devices &amp; Multiroom. The tablet name is shown in Home Assistant and does not select an area. Multiple tablets may share an HA area.</string>
+    <string name="wake_room_label">Tablet name (shown in Home Assistant)</string>
     <string name="wake_room_hint">e.g. Office tablet</string>
     <string name="wake_device_id">This installation: %1$s</string>
     <string name="nav_status">Status</string>

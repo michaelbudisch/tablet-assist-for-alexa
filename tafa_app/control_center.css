@@ -317,3 +317,10 @@ border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)}
 .tafa-area-advanced .device-grid{margin-top:14px}
 @media(max-width:800px){.tafa-area-row{grid-template-columns:1fr}.tafa-area-form{grid-template-columns:minmax(0,1fr) auto}}
 @media(max-width:430px){.tafa-area-form{grid-template-columns:1fr}.tafa-area-form label{grid-column:1}.tafa-area-form button{justify-self:start}}
+
+/* Tablet names are editable independently of HA areas. */
+.tafa-area-identity .device-setting{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;max-width:440px;margin-top:8px}
+.tafa-area-identity .device-setting label{grid-column:1/-1;font-size:12px;font-weight:650}
+.tafa-area-identity .device-setting input{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)}
+.tafa-area-identity .device-setting button{white-space:nowrap}
+@media(max-width:420px){.tafa-area-identity .device-setting{grid-template-columns:1fr}.tafa-area-identity .device-setting button{justify-self:start}}

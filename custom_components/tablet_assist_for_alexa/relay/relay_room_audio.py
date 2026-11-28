@@ -35,6 +35,34 @@ class AudioJob:
     stop: bool = False
 
 
+
+def expand_area_targets(rooms, settings, requested):
+    """Resolve explicit HA-area broadcasts to distinct device-scoped routes.
+
+    Direct per-tablet routes beginning with tafa_ stay private. The
+    authenticated player's own voice response never calls this function.
+    """
+    targets = []
+    for target in requested:
+        if not isinstance(target, str) or not ROOM.fullmatch(target):
+            raise ValueError("Invalid HA area or TAFA tablet route")
+        if target.startswith("tafa_") and target in rooms:
+            matches = [target]
+        else:
+            matches = [route for route in rooms
+                       if settings.get(route, {}).get("area_id", route) == target]
+            if not matches and target in rooms:
+                matches = [target]
+        if not matches:
+            raise ValueError("No registered tablet in the requested HA area")
+        for route in matches:
+            if route not in targets:
+                targets.append(route)
+    if len(targets) > MAX_ROOMS:
+        raise ValueError("Too many tablet targets")
+    return targets
+
+
 class RoomAudioTransport:
     def __init__(self, clock=monotonic):
         self.clock = clock
