@@ -10,14 +10,14 @@ TAFA contains a **Control Center**, the integrated `tablet_assist_for_alexa` Hom
 2. A new instance starts with `speech_mode=setup`; **no CPU models download until you choose** Local or External in **TAFA → Settings**. Local starts bundled CPU Piper/Faster-Whisper; External uses a separately configured CPU speech server.
 3. In **TAFA → Connections**, enter CPU Piper and Wyoming settings for external mode; add **Wyoming Protocol** for external STT in **HA → Devices & services** (CPU host, port 10300) and select the resulting actual `stt.*` entity. Local mode uses TAFA's built-in CPU speech engines.
 4. The App safely provisions **one** unified HA integration. **Restart HA Core once** after installation or a backend update, then restart TAFA as required. Check **TAFA Lokal** in **Settings → Voice assistants**: **Tablet Assist Sprachrouter** (STT), **Tablet Assist Gespraechsrouter** (conversation), **Tablet Assist Stream** (TTS).
-5. Install the [signed Android Device Bridge](../android/README.md), connect a dedicated non-admin HA room user, pair Android Bluetooth/Echo if needed and test an actual question. Use [Devices & Multiroom](../homeassistant/examples/MULTIROOM.md) for multiple tablets.
+5. Install the [signed Android Device Bridge](../android/README.md), connect with its dedicated non-admin HA user, assign an existing HA area in TAFA, pair Bluetooth/Echo if needed and test an actual question. Use [Devices & Multiroom](../homeassistant/examples/MULTIROOM.md) for multiple tablets.
 
 ## Control Center
 
 - **Overview:** system and speech route status.
 - **Connections:** **Quick setup via JSON**, GPU host/fast availability check, GPU Wyoming, Qwen and Ollama, **CPU fallback** Piper/Wyoming, optional Alexa MP3 URLs.
 - **Settings:** local/external speech mode, voice and conversation behavior, optional features. Server/IP fields are in **Connections**, not Settings.
-- **Devices & Multiroom:** room pairing, registered tablets and camera permissions.
+- **Devices & Multiroom:** assign each registered tablet once to an existing HA area; camera permissions and reset controls are under Advanced.
 - **Maintenance & Help:** backend status, downloads and diagnostics.
 - **Speak now:** independent browser microphone/text test with Muted/Wake word/Always on, transient transcript and stage timing. Browser microphone requires **HTTPS/localhost**; playback is **in the browser**, not automatically on Android/Echo.
 

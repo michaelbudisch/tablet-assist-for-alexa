@@ -20,7 +20,7 @@ TAFA stellt ein **Control Center**, eine gemeinsame HA-Integration und optional 
 | **Übersicht** | Status des Sprachwegs und Hinweise |
 | **Verbindungen** | **Schnelleinrichtung per JSON**, GPU-PC-IP/Schnellprüfung, GPU-Whisper-/Qwen-/Ollama-Verbindungen, CPU-Piper/Wyoming und Alexa-MP3/HTTPS |
 | **Einstellungen** | Sprachmodus, Routing, Stimme, Gesprächsverhalten und optionale Funktionen |
-| **Geräte & Multiroom** | Tabletregistrierung, Benutzer, Raum- und Kamera-Freigaben |
+| **Geräte & Multiroom** | Einmalige Tablet-Zuordnung zu vorhandenen HA-Bereichen; Kamera und Zurücksetzen unter Erweitert |
 | **Wartung & Hilfe** | Diagnose, Backend/Modelle und Neustart |
 | **Jetzt sprechen** | Separater **Browser-Sprachtest**: Stumm/Rufwort/Immer an, Transkript, Antwort und Zeiten; HTTPS/localhost für Browser-Mikrofon erforderlich |
 
@@ -36,7 +36,7 @@ Unter **TAFA Control Center → Funktionen & Datenquellen** erscheinen alle verf
 4. **Zum TAFA-Dashboard hinzufügen** aktiviert ein noch nicht angezeigtes Modul – die bestehenden Kacheln bleiben erhalten.
 5. Fehlende Integrationen lassen sich später unter **Einstellungen → Geräte & Dienste** installieren. Andere Funktionen bleiben verfügbar.
 
-Alexa-Ankündigungen werden ebenfalls grafisch zugeordnet. Dafür muss in Home Assistant ein passender notify-Dienst existieren. Weitere Alexa-Räume können angelegt werden; native Tablets bleiben unter **Geräte & Multiroom**.
+Optionale **Alexa-/Echo-Durchsageziele** können auf vorhandene Home-Assistant-`notify`-Dienste zeigen. Das ist **keine zweite Tablet- oder Raumzuordnung**. Native Tablets werden einmalig einem **Home-Assistant-Bereich** unter **Geräte & Multiroom** zugewiesen.
 
 Die bisherigen internen Formate sources_json und rooms_json bleiben aus Kompatibilitätsgründen erhalten, sind aber nicht mehr für die normale Einrichtung erforderlich.
 

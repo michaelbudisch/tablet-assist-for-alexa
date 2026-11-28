@@ -46,7 +46,7 @@ On Windows use Docker Desktop with WSL2 and suitable NVIDIA drivers; on Linux us
 2. In Device Bridge **Connect**, set the HA base URL (no dashboard path) and authenticate. Grant microphone permission explicitly.
 3. Optionally pair the Echo in **Android Bluetooth settings** for media audio. Start **Settings → Echo & audio player**. TAFA does **not** listen through the Echo microphone.
 4. Under **Settings → Wakeword**, install the local model, pick a wake word, and start listening. Native microphone modes are **Muted**, **Wake word**, and optional **Always on**, which can also react to background speech.
-5. Pair the enrolled tablet with its HA room/user under **TAFA → Devices & Multiroom**; see [Multiroom](../../homeassistant/examples/MULTIROOM.md).
+5. Under **TAFA → Devices & Multiroom**, assign the tablet once to an existing **Home Assistant Area**; TAFA provisions audio routing automatically; see [Multiroom](../../homeassistant/examples/MULTIROOM.md).
 
 ## 5. Test an entire request
 
