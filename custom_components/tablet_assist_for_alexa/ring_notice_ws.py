@@ -78,7 +78,18 @@ async def ring_notice_subscribe(hass, connection, msg):
         camera = payload.get("camera")
         if not isinstance(camera, str) or camera not in _ring_cameras(hass, entries[0]):
             return
-        if not user.is_admin and not user.permissions.check_entity(camera, POLICY_READ):
+        # The motion event may refer to the live-view sibling. Display the
+        # last-recording camera instead, never starting a livestream.
+        registry = er.async_get(hass)
+        source = registry.async_get(camera)
+        recording = camera
+        for option in ("vision_door_camera", "vision_outside_camera"):
+            candidate_id = entries[0].options.get(option)
+            candidate = registry.async_get(candidate_id) if candidate_id else None
+            if candidate and source and candidate.device_id == source.device_id:
+                recording = candidate_id
+                break
+        if not user.is_admin and not user.permissions.check_entity(recording, POLICY_READ):
             return
         title = payload.get("title", "")
         if event.event_type == "jarvis_infobox_show" and (
@@ -103,7 +114,7 @@ async def ring_notice_subscribe(hass, connection, msg):
         connection.send_event(msg["id"], {
             "title": title[:100] if isinstance(title, str) and title.startswith("Ring · ") else "Ring · Bewegung",
             "message": "Bewegung erkannt",
-            "camera": camera,
+            "camera": recording,
             "seconds": duration,
             "request_id": request_id,
             "device_id": routed_id or "",
