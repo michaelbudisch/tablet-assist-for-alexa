@@ -35,3 +35,7 @@ A separate [Proxmox CPU server](../docs/en/proxmox.md), [GPU worker](../docs/en/
 ## Einmalige Übernahme älterer privater TAFA-Dateien
 
 Falls TAFA trotz App-Update im Wartungsstatus eine **externe/manuelle Integration** meldet, wird sie absichtlich nicht überschrieben. Für die bewusst gewünschte Migration gibt es ab App 0.4.66 die standardmäßig ausgeschaltete Supervisor-Konfigurationsoption `migration_adopt_backend_once`: nur bei einer anhand von Domain, Projekt-Codeowner und Repo-URL verifizierten TAFA-Integration werden die bisherigen Dateien vollständig unter `/config/.tafa/rollback` gesichert und das App-Bundle installiert. Anschließend Option wieder ausschalten und HA Core neu starten. Andere Integrationen, Benutzer, Bereiche, Automationen und Dashboards bleiben unverändert.
+
+### Tablet-identification sensors
+
+Every enrolled TAFA tablet automatically provides two additional Home Assistant sensor entities after integration 0.5.5: **Tabletname** (the editable display name, which updates on changes) and **Gerätekennung** (the complete stable 32-character Android installation ID). Each has its own integration unique ID derived from that installation ID, not the editable name, and remains available while its tablet is offline but enrolled. No Android APK change or extra helper is needed.

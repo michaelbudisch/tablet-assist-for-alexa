@@ -15,6 +15,8 @@ SENSORS = {
     "bluetooth": ("Bluetooth", "mdi:bluetooth-connect"),
     "battery": ("Akku", "mdi:battery"),
     "app_version": ("App-Version", "mdi:cellphone"),
+    "device_name": ("Tabletname", "mdi:tablet"),
+    "device_id": ("Gerätekennung", "mdi:identifier"),
     "last_seen": ("Zuletzt gesehen", "mdi:clock-outline"),
     "last_wake": ("Letztes Rufwort", "mdi:history"),
     "display": ("Displaystatus", "mdi:tablet"),
@@ -31,6 +33,12 @@ class TabletSensor(TabletMixin, SensorEntity):
 
     @property
     def native_value(self):
+        # Enrollment metadata is persisted in HA, independent of whether
+        # Android is online. Do not read these sensors from volatile telemetry.
+        if self.key == "device_name":
+            return self.controller.devices.get(self.device_id, {}).get("room") or "TAFA Tablet"
+        if self.key == "device_id":
+            return self.device_id
         runtime = self.controller.telemetry.get(self.device_id, {})
         if self.key == "online":
             return "online" if runtime.get("seen", 0) and time.time() - runtime["seen"] < 45 else "offline"

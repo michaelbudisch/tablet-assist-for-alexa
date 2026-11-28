@@ -1,3 +1,10 @@
+## 0.4.68
+
+- Zwei neue automatisch mit jedem TAFA-Tablet bereitgestellte Home-Assistant-Sensoren: **Tabletname** (`device_name`) und **Gerätekennung** (`device_id`). Beide sind bei offline befindlichen, weiterhin registrierten Tablets verfügbar.
+- Tabletname übernimmt den in der Android-App oder im TAFA Control Center gespeicherten Namen und aktualisiert sich über das bestehende Geräte-Änderungssignal; die Gerätekennung liefert die vollständige, unveränderliche Installations-ID.
+- Die eindeutigen HA-Sensor-IDs werden aus der Installationskennung, nicht aus dem frei änderbaren Namen erzeugt. Keine neuen Android-Berechtigungen, keine zweite Gerätekennung, keine manuellen Helfer und keine Änderungen an Audio- oder Raumzuordnungen.
+- Integrationsversion 0.5.5; die bestehende Android Device Bridge 1.3.0 oder neuer funktioniert unverändert.
+
 ## 0.4.67
 
 - **Tabletname** statt technischem Raumlabel: pro Gerät im Control Center editierbar und in HA als Gerätename sichtbar. Die Android-App 1.3.2 zeigt dieselbe Bezeichnung.

@@ -29,3 +29,12 @@ Unter **Geräte & Multiroom → Erweitert** lassen sich Kameraübertragung, nati
 - **Alte Jarvis-Karten/Automationen:** Nicht parallel neu installieren. Alte Kennungen in technischen Migrationsdateien sind kein weiterer laufender Assistent.
 
 **Sicherheit:** Eine Installationskennung ist keine Authentifizierung. HA-Token nicht in Screenshots, Git oder Konfigurationsexporte aufnehmen und wenn möglich HTTPS verwenden.
+
+## Zusätzliche Sensorschnittstellen
+
+Ab **TAFA-Integration 0.5.5** erhält **jedes registrierte Tablet automatisch** zwei weitere Home-Assistant-Sensoren:
+
+- **Tabletname:** der frei wählbare Name aus Android oder TAFA Control Center; wird beim Umbenennen aktualisiert.
+- **Gerätekennung:** vollständige 32-stellige Installationskennung der Android-App; ändert sich bei normalem App-Update nicht.
+
+Die Entitäten verwenden technisch stabile, je Tablet eindeutige IDs (`tafa_<installations-id>_device_name` und `tafa_<installations-id>_device_id`) und sind auch bei ausgeschaltetem, aber registriertem Tablet verfügbar. Das genaue `sensor.…`-Entity-ID-Schema wird von Home Assistant vergeben; über **Entwicklerwerkzeuge → Zustände** kannst du beide Namen finden. Eine Neuinstallation kann eine andere Gerätekennung erzeugen.
