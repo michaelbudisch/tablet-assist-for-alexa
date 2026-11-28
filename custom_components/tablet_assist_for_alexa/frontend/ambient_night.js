@@ -172,8 +172,9 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.99'
   }
   function resolvePhase(card,s){
     const h=card.h?.states||{};
-    const wake=String(h["sensor.tafa_jarvis_tablet_rufwortstatus"]?.state||"").toLowerCase();
-    const mic=String(h["sensor.tafa_jarvis_tablet_mikrofonstatus"]?.state||"").toLowerCase();
+    const device=card._tafaLocalVoice||{};
+    const wake=String(h[device.status]?.state||"").toLowerCase();
+    const mic=String(h[device.mic]?.state||"").toLowerCase();
     const voice=card._jarvisIntegratedVoice;
     if(voice?.playing)return "speaking";
     if(voice?.processing)return "processing";
@@ -186,7 +187,7 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.99'
     if(/^native_(?:waiting_for_playback|buffering|playing|speaking)/.test(wake)||/^(?:speaking|playing|tts)$/.test(mic))return "speaking";
     if(/^native_(?:processing|thinking|generating_voice|transcribing|sending_audio|waiting_for_stt)/.test(wake)||/^(?:processing|thinking|busy)$/.test(mic))return "processing";
     if(/^(?:detected(?::|$)|native_(?:connecting|authenticating|connected|followup|starting_microphone|listening))/.test(wake)||mic==="assist")return "listening";
-    const last=h["sensor.tafa_jarvis_tablet_letztes_rufwort"]?.state;
+    const last=h[device.last]?.state;
     const ms=Date.now()-Date.parse(last||"");
     if(Number.isFinite(ms)&&ms>=0&&ms<2000)return "listening";
     if(s.forceUntil>Date.now())return s.forcedPhase;
