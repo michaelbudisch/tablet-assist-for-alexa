@@ -1,4 +1,4 @@
-# TAFA GPU Worker 2.2.7 – Installation
+# TAFA GPU Worker 2.2.8 – Installation
 
 [English](README.md) · [Schnellstart](../README.md) · [TAFA-Ersteinrichtung](../../docs/setup-guide.md)
 
