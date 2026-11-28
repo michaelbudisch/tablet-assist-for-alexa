@@ -4,6 +4,12 @@
 
 Der GPU Worker ist **optional**. Er ergänzt die TAFA-CPU-Basis um GPU-Wyoming-Whisper (STT), Qwen-Streaming-Stimme (TTS) und ein gemeinsames Qwen3-VL-Modell über Ollama für Text/KI und Vision. Voraussetzung ist eine kompatible **NVIDIA-GPU**. Unter Windows: NVIDIA-Treiber, Docker Desktop mit **WSL2/Linux-Containern**. Unter Linux: Docker Engine mit Compose und NVIDIA Container Toolkit. Für die erstmaligen Modell-Downloads wird Internetzugang und genügend SSD-Speicher benötigt.
 
+## TAFA-Stimmenverwaltung (ab 2.2.8)
+
+Die Qwen-Stimmenvarianten sind ausschließlich mit `STREAM_VOICE_MODE=fixed` wirksam. Variante 1 entspricht der bestehenden Stimme; Varianten 2–9 haben unterschiedliche synthetische Stimmbeschreibungen. Unter **TAFA → Einstellungen → Stimme und Klang** werden vorbereitete/fehlende Varianten angezeigt. Mit **Erstellen** wird das gewählte Profil im vorhandenen Worker-Volume gespeichert, mit **Hörprobe** ohne dauerhafte Änderung angehört.
+
+Auf einem bereits laufenden Windows-Worker die neuen Projektdateien übernehmen und **06-Stimmenverwaltung-Aktualisieren.bat** ausführen. Das baut nur `qwen-stream` neu; andere Dienste und `.env` bleiben unverändert. Der Worker entlädt beim Erstellen vorübergehend das Qwen-Base-TTS-Modell, lädt das VoiceDesign-Modell für die synthetische Referenz und anschließend Base wieder. Bei zu wenig freiem GPU-Speicher erscheint ein Fehler; andere GPU-Modelle werden nicht automatisch beendet.
+
 ## Schnellstart Windows
 
 Im Verzeichnis `worker/`:
