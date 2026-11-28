@@ -13,7 +13,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers import entity_registry as er, device_registry as dr
 from homeassistant.util import dt as dt_util
 from .const import DOMAIN
-from .relay_room_audio import RoomAudioTransport
+from .relay_room_audio import RoomAudioTransport, expand_area_targets
 
 KEY = "room_audio"
 SERVICE = "room_audio"
@@ -381,22 +381,10 @@ async def setup_room_audio(hass, entry):
                 requested = call.data.get("rooms", [room] if room else [])
                 if not message or len(message) > 500 or not requested or len(set(requested)) != len(requested):
                     raise ServiceValidationError("Explicit valid rooms and message required")
-                # A human HA area name broadcasts to its paired tablets,
-                # while an explicit technical device route targets one player.
-                targets = []
-                for target in requested:
-                    matching = ([target] if target.startswith("tafa_") and target in transport.rooms
-                                else [r for r in transport.rooms
-                                      if transport.settings.get(r, {}).get("area_id", r) == target])
-                    if not matching and target in transport.rooms:
-                        matching = [target]
-                    if not matching:
-                        raise ServiceValidationError("No TAFA tablet in requested room")
-                    for internal in matching:
-                        if internal not in targets:
-                            targets.append(internal)
-                if len(targets) > 24:
-                    raise ServiceValidationError("Too many target tablets")
+                try:
+                    targets = expand_area_targets(transport.rooms, transport.settings, requested)
+                except ValueError as error:
+                    raise ServiceValidationError(str(error)) from None
                 engine = er.async_get(hass).async_get_entity_id("tts", "tablet_assist_for_alexa", entry.entry_id + "_stream")
                 if not engine:
                     raise ServiceValidationError("TAFA streaming TTS unavailable")
