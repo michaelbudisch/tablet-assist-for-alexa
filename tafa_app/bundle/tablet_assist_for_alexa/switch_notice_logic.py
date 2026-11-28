@@ -64,3 +64,21 @@ def confirmed_transition(entity_id, previous, current):
     return (isinstance(entity_id, str) and ENTITY.fullmatch(entity_id) is not None
             and previous in ("on", "off") and current in ("on", "off")
             and previous != current)
+
+def reported_native_wake(status, selected):
+    """Accept only a real Android detector edge matching its HA configuration.
+
+    The native Android Assist route reports 'detected: <word>' and does
+    not invoke the old /wake API. Never infer a wake from standby phases.
+    """
+    if not isinstance(status, str) or not status.startswith("detected: "):
+        return None
+    word = status[len("detected: "):].strip()
+    if word not in ("Hey Jarvis", "Jarvis", "Alexa"):
+        return None
+    if selected == "Alle drei" or selected == word:
+        return word
+    if selected == "Jarvis" and word == "Hey Jarvis":
+        return word
+    return None
+

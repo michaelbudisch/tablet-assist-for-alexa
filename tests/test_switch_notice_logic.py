@@ -37,6 +37,26 @@ class SwitchNoticeLogicTests(unittest.TestCase):
         self.assertFalse(mod.confirmed_transition("sensor.energy","off","on"))
         self.assertFalse(mod.confirmed_transition("light.office","off","unavailable"))
 
+    def test_native_android_detection_routing(self):
+        self.assertEqual(mod.reported_native_wake("detected: Jarvis", "Jarvis"), "Jarvis")
+        self.assertEqual(mod.reported_native_wake("detected: Hey Jarvis", "Jarvis"), "Hey Jarvis")
+        self.assertEqual(mod.reported_native_wake("detected: Alexa", "Alle drei"), "Alexa")
+        for status, selected in [
+            ("listening: jarvis", "Jarvis"),
+            ("native_processing", "Jarvis"),
+            ("detected: Alexa", "Jarvis"),
+            ("detected: unknown", "Alle drei"),
+            ("detected: Jarvis", "Alexa"),
+            ("detected:", "Jarvis"),
+        ]:
+            self.assertIsNone(mod.reported_native_wake(status, selected))
+
+    def test_only_confirmed_state_changes_publish_native_cards(self):
+        source = (ROOT/"custom_components"/"tablet_assist_for_alexa"
+                  /"switch_intent_bridge.py").read_text()
+        self.assertIn("EVENT_STATE_CHANGED, state_changed", source)
+        self.assertNotIn("EVENT_CALL_SERVICE", source)
+
     def test_pair_and_one_service_context(self):
         wake={"user_id":"room-user","at":20,"context_id":None}
         self.assertTrue(mod.eligible_wake(wake,"room-user",25,"intent-123"))

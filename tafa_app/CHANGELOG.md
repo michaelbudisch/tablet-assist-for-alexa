@@ -1,3 +1,9 @@
+## 0.4.76
+
+- Die native Android-Spracherkennung meldet "detected: ..." über den Gerätebericht, nicht über die ältere Wake-API. Die TAFA-Integration leitet die bestätigte, gerätegebundene Erkennung jetzt an die bestehende Schaltkarten-Zuordnung weiter; kein neues APK erforderlich.
+- Schaltkarten erscheinen erst bei einer wirklichen Home-Assistant-Zustandsänderung (on/off), niemals schon beim Dienstaufruf. Raum- und Gerätezuordnung sowie die Entdoppelung bleiben erhalten.
+- Gleichzeitige Aktualisierung von App-Bundle und Integrationsquelle; Regressionstests für native Rufwortphasen und bestätigte Zustände.
+
 ## 0.4.75
 
 - Repariert die Ambient-Schaltinfobox bei nativen HA-Licht-Intents: Zusätzlich zu expliziten Dienstaufrufen werden bestätigte on/off-Zustandsänderungen mit dem authentifizierten Rufwort-Kontext korreliert.

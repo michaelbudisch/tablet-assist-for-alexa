@@ -1,18 +1,17 @@
 """Scope native Home Assistant Assist light changes to the paired TAFA tablet.
 
-Home Assistant executes local intents before the TAFA conversation entity. Native
-lighting intents may resolve registry targets without a public call_service
-event naming their entity IDs. Listen to both explicit service calls and the
-resulting confirmed state changes, without executing any command ourselves.
+Home Assistant executes local intents before the TAFA conversation entity.
+Only actual, confirmed state transitions with a paired recent TAFA wake
+produce cards; an intended service call alone never claims success.
 """
 from time import monotonic
 
-from homeassistant.const import EVENT_CALL_SERVICE, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import callback
 
 from .const import DOMAIN
 from .switch_notice_logic import (
-    eligible_wake, expected_state, extract_targets, confirmed_transition,
+    eligible_wake, confirmed_transition,
 )
 
 KEY = "native_switch_notice"
@@ -90,28 +89,6 @@ def setup_switch_intent_bridge(hass):
         }, context=context)
 
     @callback
-    def service(event):
-        payload = event.data
-        if not isinstance(payload, dict):
-            return
-        ids = extract_targets(
-            payload.get("domain"), payload.get("service"),
-            payload.get("service_data", {}),
-        )
-        if not ids:
-            return
-        context = event.context
-        route = route_for(context)
-        if route is None:
-            return
-        for entity_id in ids:
-            state = hass.states.get(entity_id)
-            previous = getattr(state, "state", None)
-            desired = expected_state(payload["service"], previous)
-            if state is not None and desired is not None:
-                notify(route, entity_id, previous, desired, context, state)
-
-    @callback
     def state_changed(event):
         raw = event.data
         if not isinstance(raw, dict):
@@ -133,7 +110,6 @@ def setup_switch_intent_bridge(hass):
 
     data[KEY] = (
         hass.bus.async_listen(WAKE_EVENT, wake),
-        hass.bus.async_listen(EVENT_CALL_SERVICE, service),
         hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed),
     )
 

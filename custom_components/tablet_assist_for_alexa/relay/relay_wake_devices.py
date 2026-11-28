@@ -14,6 +14,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
+from ..switch_notice_logic import reported_native_wake
 
 KEY = "wake_devices_dynamic"
 SIGNAL = DOMAIN + "_tablet_changed"
@@ -277,15 +278,25 @@ class WakeDevices:
                         sanitized[key] = value
                     else:
                         raise ValueError("Invalid telemetry value")
-                # Preserve the per-device wake timestamp and other prior
-                # readings across partial/rapid telemetry updates.
-                # Native Assist now reports "detected:" immediately instead
-                # of invoking the legacy routed wake-event action.
+                # Preserve telemetry, but route a *new, authenticated native
+                # detection* through the same event as the legacy /wake API.
+                # Android's native Assist path uses /report, never /wake.
                 previous = self.telemetry.get(identifier, {})
                 now = time.time()
                 merged = {**previous, "seen": now, **sanitized}
-                if str(sanitized.get("wake_status", "")).startswith("detected:"):
+                detected = reported_native_wake(
+                    sanitized.get("wake_status"), device.get("word"))
+                if (detected and not device.get("muted")
+                        and sanitized["wake_status"] != previous.get("wake_status")):
                     merged["last_wake"] = int(now)
+                    when = time.monotonic()
+                    if when - self.last_wake >= 3.0:
+                        self.last_wake = when
+                        self.hass.bus.async_fire("tafa_android_wakeword_routed", {
+                            "source": "tafa_device_bridge", "version": 3,
+                            "device_id": identifier, "room": device["room"],
+                            "wakeword": detected, "timestamp_ms": int(now * 1000),
+                        })
                 self.telemetry[identifier] = merged
                 if "control_channel" in sanitized:
                     self.control_metrics.setdefault(identifier, {})["channel"] = sanitized["control_channel"]
