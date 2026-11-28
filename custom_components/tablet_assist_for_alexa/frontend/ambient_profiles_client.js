@@ -22,7 +22,7 @@ export async function subscribeOwnAmbientProfile(card,onProfile){
  const reload=async()=>{
   try{
    const value=await h.callWS({type:COMMAND,action:"get",device_id:deviceId});
-   if(!closed&&card.h?.connection===connection)onProfile(normalize(value?.profile),deviceId);
+   if(!closed&&card.h?.connection===connection)onProfile(normalize(value?.profile),deviceId,Number(value?.revision)||0);
   }catch(error){console.debug("TAFA Ambient profile read",error);}
  };
  await reload();
