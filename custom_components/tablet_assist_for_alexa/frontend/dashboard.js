@@ -194,8 +194,8 @@ class TafaHome extends HTMLElement{
    const requested=Number(d.control?.requested_at||0);
    const age=requested>0?Date.now()-requested:Infinity;
    const phase=mode==="off"||d.online===false?"idle":this.micVoicePhase(d);
-   const labels=de?{idle:mode==="off"?"Aus":d.online===false?"Offline":mode==="continuous"?"Bereit":"Rufwort",listening:"Höre zu",processing:"Verarbeite",speaking:"Antwort"}:
-     {idle:mode==="off"?"Off":d.online===false?"Offline":mode==="continuous"?"Ready":"Wake word",listening:"Listening",processing:"Processing",speaking:"Answer"};
+   const labels=de?{idle:mode==="off"?"Aus":d.online===false?"Offline":"Bereit",listening:"Höre zu",processing:"Verarbeite",speaking:"Antwort"}:
+     {idle:mode==="off"?"Off":d.online===false?"Offline":"Ready",listening:"Listening",processing:"Processing",speaking:"Answer"};
    const label=pending?(de?"Übertrage":"Sending"):labels[phase];
    const status=pending?(age>=0&&age<10000?(de?"Wird an die App übertragen":"Sending to app"):(de?"Nicht von App bestätigt":"Not acknowledged by app")):
      d.online===false?(de?"Offline – Einstellung gespeichert":"Offline – setting saved"):
