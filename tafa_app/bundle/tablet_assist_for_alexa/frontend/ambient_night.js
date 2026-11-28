@@ -1,5 +1,5 @@
 import {subscribeTafaVisual} from './visual_client.js?v=0.5.2';
-import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.2';
+import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.3';
 /* TAFA dashboard asset version 0.4.64 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";

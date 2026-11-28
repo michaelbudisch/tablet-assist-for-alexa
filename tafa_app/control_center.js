@@ -165,4 +165,20 @@
       }
     });
   });
+
+  // Changing an existing room can retire its previous TAFA camera entities.
+  // Ask only for a real move; assigning the already selected room is silent.
+  document.querySelectorAll("form.tafa-area-form").forEach(form => {
+    form.addEventListener("submit", event => {
+      const current = form.dataset.currentArea || "";
+      const next = form.querySelector('[name="area_id"]')?.value || "";
+      if (!current || !next || current === next) return;
+      const question = en
+        ? "Move this tablet to another Home Assistant area? Its old TAFA audio and camera routing will be replaced. Your HA area, user and automations remain."
+        : "Dieses Tablet in einen anderen Home-Assistant-Raum verschieben? Die bisherige TAFA-Audio-/Kamerazuordnung wird ersetzt. HA-Raum, Benutzer und Automationen bleiben erhalten.";
+      if (!window.confirm(question)) {event.preventDefault(); return;}
+      const field = form.querySelector('[name="confirm_move"]');
+      if (field) field.value = "1";
+    });
+  });
 })();

@@ -46,7 +46,7 @@ Für die Sprachausgabe wird Qwen über `http://GPU-IP:10502` bevorzugt; **Tablet
 2. In der Device Bridge unter **Verbinden** die HA-Basisadresse (ohne Dashboard-Pfad) und den Zugriff einrichten. Mikrofonberechtigung ausdrücklich erteilen.
 3. Bei Bedarf den Echo **in Android über Bluetooth als Medienlautsprecher** koppeln und unter **Einstellungen → Echo & Audioplayer** den Player starten. Das **Echo-Mikrofon** nimmt die TAFA-Frage nicht entgegen.
 4. Unter **Einstellungen → Rufwort** das lokale Modell einrichten, Rufwort auswählen und den Dienst starten. Im nativen Mikrofonmodus stehen **Stumm**, **Rufwort** und optional **Immer an** zur Wahl; „Immer an“ kann auch auf Hintergrundgespräche reagieren.
-5. Unter **TAFA → Geräte & Multiroom** das registrierte Tablet einem Raum und dessen HA-Benutzer zuordnen. [Multiroom-Anleitung](../homeassistant/examples/MULTIROOM.de.md).
+5. Unter **TAFA → Geräte & Multiroom** das registrierte Tablet einmalig einem bereits bestehenden **Home-Assistant-Bereich** zuordnen; TAFA übernimmt die Audiozuordnung automatisch. [Multiroom-Anleitung](../homeassistant/examples/MULTIROOM.de.md).
 
 ## 5. Eine vollständige Anfrage prüfen
 

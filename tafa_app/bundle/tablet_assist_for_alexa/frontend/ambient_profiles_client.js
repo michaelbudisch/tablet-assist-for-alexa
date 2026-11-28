@@ -95,7 +95,7 @@ class TafaAmbientProfilesEditor extends HTMLElement{
    if(b.dataset.save!==undefined){void this.save();return;}
    if(b.dataset.add!==undefined){this.dirty=true;this.addMetric();return;}
    if(b.dataset.remove!==undefined){this.dirty=true;b.closest("[data-metric-row]")?.remove();return;}
-   if(b.dataset.local!==undefined){try{localStorage.setItem(LOCAL_DEVICE,this.deviceId);this.message="Dieses Display ist dem ausgewählten Tablet zugeordnet.";this.render();}catch(error){this.message=String(error.message||error);this.render();}}
+   if(b.dataset.local!==undefined){try{localStorage.setItem(LOCAL_DEVICE,this.deviceId);this.message="Nur auf diesem Browser: Antworten des ausgewählten Tablets als Vorschau anzeigen.";this.render();}catch(error){this.message=String(error.message||error);this.render();}}
   });
   void this.loadDevices();
  }
@@ -169,6 +169,7 @@ class TafaAmbientProfilesEditor extends HTMLElement{
  metricRow(row){return '<div class="metricrow" data-metric-row><input data-mname placeholder="Beschriftung" maxlength="40" value="'+escapeHtml(row.name||"")+'"><input data-mid placeholder="sensor.…" value="'+escapeHtml(row.id||"")+'"><button type="button" data-remove aria-label="Sensor entfernen">×</button></div>';}
  render(){
   const p=this.profile||defaults(),language=String(this._h?.locale?.language||"de").startsWith("de")?"de":"en";
+  const isAndroid=typeof navigator!=="undefined"&&/Android/i.test(navigator.userAgent||"");
   const devices=this.devices.map(d=>'<option value="'+escapeHtml(d.device_id)+'"'+(d.device_id===this.deviceId?" selected":"")+'>'+escapeHtml(d.room||d.label||"Tablet")+(d.online?" · online":" · offline")+'</option>').join("");
   const sourceList=Object.entries(this._h?.states||{}).filter(([id])=>/^(sensor|binary_sensor|number|input_number|calendar)\./.test(id)).slice(0,400)
    .map(([id,state])=>'<option value="'+escapeHtml(id)+'" label="'+escapeHtml(state.attributes?.friendly_name||id)+'"></option>').join("");
@@ -180,7 +181,8 @@ class TafaAmbientProfilesEditor extends HTMLElement{
   this.shadowRoot.innerHTML='<style>:host{display:block;margin-top:16px;font:14px Roboto,Arial,sans-serif;color:var(--fg,var(--primary-text-color))}*{box-sizing:border-box}.panel{border:1px solid var(--border,var(--divider-color));background:var(--card,var(--card-background-color));border-radius:15px;padding:16px;max-width:950px}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.row>*{flex:1;min-width:190px}label{display:flex;flex-direction:column;gap:6px;font-size:12px;margin:11px 0}.check{flex-direction:row;align-items:center;font-size:13px}input:not([type=checkbox]),select{width:100%;padding:9px 10px;border:1px solid var(--border,var(--divider-color));background:var(--card2,var(--secondary-background-color));color:inherit;border-radius:8px;font:inherit}button{border:1px solid var(--border,var(--divider-color));color:inherit;background:var(--card2,var(--secondary-background-color));padding:9px 12px;border-radius:8px;cursor:pointer}.metricrow{display:grid;grid-template-columns:minmax(90px,1fr) minmax(150px,2fr) auto;gap:8px;align-items:center;margin:7px 0}.metricrow input{min-width:0}.help{color:var(--muted,var(--secondary-text-color));font-size:12px;line-height:1.5}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.primary{border-color:var(--acc,var(--primary-color))}.status{font-size:12px;margin-top:10px;color:var(--muted,var(--secondary-text-color))}h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:18px 0 6px}@media(max-width:540px){.metricrow{grid-template-columns:1fr;gap:5px}.row>*{min-width:100%}}</style>'+
   '<section class="panel"><h2>TAFA Ambient · '+(language==="de"?"Einstellungen pro Tablet":"Settings per tablet")+'</h2>'+
   '<p class="help">Kalender, Näherungssensor, Einblenddauer und Sensorkacheln gelten nur für das gewählte Tablet. Die Konfiguration wird zentral in Home Assistant gespeichert.</p>'+
-  '<div class="row"><label>Tablet<select data-device>'+devices+'</select></label><button data-local type="button">Dieses Display zuordnen</button><button data-reload type="button">Neu laden</button></div>'+
+  '<div class="row"><label>Ambient-Profil bearbeiten für Tablet<select data-device>'+devices+'</select></label><button data-reload type="button">Neu laden</button></div>'+ 
+  (isAndroid?'':'<details><summary>Nur Browser-Vorschau (keine HA-Raumzuordnung)</summary><p class="help">Optional für PC-Dashboards: Auf diesem Browser die Antworten eines bereits zugeordneten Tablets anzeigen. Ändert weder Raum noch Gerätezuordnung.</p><button data-local type="button">Auf diesem Browser als Vorschau anzeigen</button></details>')+
   (!this.deviceId?'<p class="help">Noch kein TAFA-Tablet gekoppelt.</p>':
   '<div class="row">'+checkbox("Ambient aktiv","enabled")+checkbox("Automatisch bei Annäherung öffnen","autoOpen")+'</div>'+
   '<div class="row">'+field("Kalender-Entität","calendar",p.calendar)+field("Annäherungssensor","presence",p.presence)+'</div>'+

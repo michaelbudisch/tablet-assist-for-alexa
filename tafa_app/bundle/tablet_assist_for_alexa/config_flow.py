@@ -141,7 +141,7 @@ class TabletAssistConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 if existing is not None:
                     return self.async_update_reload_and_abort(existing, data=data)
-                return self.async_create_entry(title="Tablet Assist for Alexa", data=data)
+                return self.async_create_entry(title="TAFA", data=data)
         suggested = user_input if user_input is not None else (dict(existing.data) if existing else {})
         suggested = {k:v for k,v in suggested.items() if k != "rooms" and v != ""}
         for key, choices in CHOICES.items():

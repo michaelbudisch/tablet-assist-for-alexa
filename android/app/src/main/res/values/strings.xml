@@ -192,9 +192,9 @@
     <string name="wake_unmute_button">Unmute native microphone</string>
     <string name="wake_remote_help">Settings are synchronized per device with Home Assistant. Muting releases the Android microphone while the service stays running. Changes take effect after the next sync.</string>
     <string name="wake_save_error">Could not save wakeword settings to Home Assistant: %1$s</string>
-    <string name="wake_multiroom_help">Unlimited tablets: each installation gets a unique random ID. Enter a room name, start native recognition and select/pair the tablet in TAFA under Voice &amp; Audio. No numbered slot restrictions.</string>
-    <string name="wake_room_label">Room name (for event diagnostics)</string>
-    <string name="wake_room_hint">e.g. Living room</string>
+    <string name="wake_multiroom_help">Each installation receives a unique device ID. Home Assistant owns the rooms; assign this tablet once under TAFA → Devices &amp; Multiroom. The name below is only a label, not a room assignment.</string>
+    <string name="wake_room_label">Device name (display only; not a room assignment)</string>
+    <string name="wake_room_hint">e.g. Office tablet</string>
     <string name="wake_device_id">This installation: %1$s</string>
     <string name="nav_status">Status</string>
     <string name="nav_connection">Connect</string>
@@ -306,7 +306,7 @@
     <string name="output_using_bluetooth">Output through Bluetooth.</string>
     <string name="group_audio">Audio</string>
     <string name="group_voice">Speech &amp; wakeword</string>
-    <string name="group_room">Room &amp; device</string>
+    <string name="group_room">Device identity</string>
     <string name="group_advanced">Advanced speech settings</string>
     <string name="group_device">Display &amp; camera</string>
     <string name="group_support">Help &amp; diagnostics</string>

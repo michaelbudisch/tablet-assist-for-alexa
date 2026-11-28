@@ -1,38 +1,31 @@
-# TAFA Multiroom – multiple tablets
+# TAFA Multiroom – assign tablets to Home Assistant areas
 
 [Deutsch](MULTIROOM.de.md) · [Project](../../README.md) · [Setup](../../docs/en/setup-guide.md)
 
-**Current fresh-install path:** Multiroom is part of the unified TAFA integration and **TAFA Device Bridge 1.2.1**. Old separate Jarvis integrations, helpers, Lovelace cards and Android 0.x APKs are **not required**. The [historical Multiroom guide](archive/legacy-MULTIROOM.md) is kept for migration only.
+**Current setup:** TAFA App 0.4.65+, integration 0.5.3+, Device Bridge 1.3.1+. **Home Assistant Areas are the only room source**; do not create a second TAFA room list in the Control Center.
 
-## Requirements
+## One-time setup per tablet
 
-- [TAFA App and TAFA Lokal](../../docs/en/setup-guide.md) with CPU Piper/Whisper running locally in TAFA or on an external speech server.
-- The signed [TAFA Device Bridge](../../android/README.md) installed on each Android 9+ tablet; microphone and audio permissions granted.
-- One **dedicated active non-admin HA user per tablet/room**. Do not share one access token across multiple rooms.
-- Optional Echo paired as an **Android Bluetooth media speaker** on each tablet; normal Alexa use remains possible.
+1. In **Home Assistant → Settings → Areas, labels & zones → Areas**, create the area if it does not already exist.
+2. Native per-room audio and camera permissions currently require **one dedicated active non-admin HA user per tablet**. This is an authorization identity, **not another room assignment**. Keep that user's token on its tablet.
+3. Connect TAFA Device Bridge to HA and start the native audio player. The app **automatically creates a persistent unique 32-character installation ID**. Its optional device name is for display only and is not a room selector.
+4. Under **Apps → TAFA → User interface → Devices & Multiroom**, each enrolled tablet appears once. Choose the existing **Home Assistant area** and click **Assign area**. TAFA automatically provisions its internal audio route and updates the HA device registry area. There is no separate TAFA room creation or user transfer checkbox.
+5. Test the wake word and playback. For an Echo speaker, pair its Android Bluetooth media output.
 
-## Pair a room and device
+A fresh Android installation may create a new installation ID. Assign the desired HA area again; TAFA can replace the same owner's **offline** previous installation, but not an active/foreign device. Explicit confirmation is required to move an existing tablet to a different area because its previous TAFA camera entities may be retired.
 
-1. Create a **separate non-admin HA account** for each tablet.
-2. Under **TAFA → Devices & Multiroom**, create/select a room and assign that account. Rooms can be created before tablets enroll; there is **no four-device cap**.
-3. In Device Bridge **Connect**, provide the correct HA base URL (without dashboard path) and **that room user's token**. Start the local wake service to enroll the device.
-4. In **TAFA → Devices & Multiroom**, select the enrolled tablet, assign the room/user and choose **Connect audio room**. Explicit confirmation is required for a transfer from another user.
-5. On Android enable **Multiroom audio** and **Start player**. Check **connected**, **player ready** and **last seen** in TAFA.
-6. Ask a short question on **that tablet**. For Echo playback, pair the Echo as the tablet's Bluetooth media output.
+## Optional camera and advanced controls
 
-A registered wake device does **not** by itself prove audio room pairing. If playback shows offline, check the native player/network; if not ready, check Android media output. The Assist pipeline must use **Tablet Assist Stream** TTS. Control Center's browser **Speak now** test plays **in the browser** and does not automatically confirm room/Echo playback.
+Under **Devices & Multiroom → Advanced**, configure camera access or reset a TAFA pairing. Camera uploads are disabled for a newly assigned area until explicitly enabled and started on Android. Resetting TAFA routing does **not** delete an HA area or HA user.
 
-## Optional camera and device settings
+**Alexa/Echo announcement targets** in **Features & data sources** are separate optional mappings to HA `notify` services. They are **not** tablet rooms and do not change the tablet's HA area.
 
-Explicitly grant **tablet camera permission per room** in **Devices & Multiroom** (default **off**), then start the camera on the tablet. The assigned non-admin room user works; no administrator camera token is needed. Recent JPEG stills and coarse image motion are not continuous video or identity detection. See [camera setup](../../android/docs/camera-preparation.md).
+## Troubleshooting
 
-Microphone modes and device information can be controlled from TAFA/Device Bridge. Inform others sharing the room about active camera or microphone features. A non-admin HA account is **not** a general isolation boundary for every HA entity.
+- **Missing tablet:** Verify Android connection, its dedicated HA account/token and the running audio player.
+- **Area cannot be assigned:** The tablet owner must be the logged-in non-admin user; a foreign or currently active different tablet is not taken over silently.
+- **No speech:** Check native player, wake word and optional Bluetooth. A successful HTTP probe alone cannot prove audible playback.
+- **Ambient not responding:** Check that the browser is bound to the new registered device ID, then reload the TAFA dashboard.
+- **Old Jarvis files:** Keep legacy components out of fresh installs; migration-only identifiers do not mean a second active assistant.
 
-## Troubleshooting and legacy
-
-- **Device missing:** Check Device Bridge connection, assigned HA user and running wakeword service.
-- **No Echo speech:** Check Android Bluetooth media output, native player and **Tablet Assist Stream**.
-- **Speech slow/offline:** Check CPU/GPU Wyoming under **TAFA → Connections**; CPU fallback is independent of Multiroom.
-- **Old Jarvis cards or automations:** Do not deploy them alongside a fresh TAFA install. Back up HA and review migration manually before removing legacy components.
-
-**Security:** Do not publish HA tokens in YAML/Git/screenshots. Plain local HTTP transmits credentials without encryption; prefer trusted HTTPS. Granting a camera permission does not automatically start capture.
+**Security:** An installation ID is not an authentication credential. Keep HA access tokens out of Git, logs and screenshots; prefer trusted HTTPS.

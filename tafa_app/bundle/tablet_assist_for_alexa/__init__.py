@@ -81,6 +81,9 @@ async def async_setup(hass: HomeAssistant, config):
     return True
 
 async def async_setup_entry(hass, entry):
+    # Migrate only the previous default label, never a user-customized title.
+    if entry.title == "Tablet Assist for Alexa":
+        hass.config_entries.async_update_entry(entry, title="TAFA")
     cfg = settings(entry)
     lock = asyncio.Lock()
     session = async_get_clientsession(hass)

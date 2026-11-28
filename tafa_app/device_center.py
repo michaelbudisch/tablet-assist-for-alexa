@@ -32,13 +32,15 @@ def read_device_data():
         for key in ("devices", "rooms", "users"):
             if not isinstance(result.get(key), list):
                 raise ValueError("Invalid TAFA " + key)
+        if not isinstance(result.get("areas"), list):
+            result["areas"] = []
         return {**result, "error": "", "room_error": ""}
     except Exception as exc:
         # Do not leak tokens, URLs or server exception messages into the UI.
         detail = (str(exc) if isinstance(exc, RuntimeError)
                   and str(exc).startswith("TAFA WebSocket: ")
                   else type(exc).__name__)
-        return {"devices": [], "rooms": [], "users": [],
+        return {"devices": [], "rooms": [], "users": [], "areas": [],
                 "error": detail, "room_error": detail}
 
 
@@ -90,6 +92,25 @@ def set_native_followup_limit(identifier, limit):
         raise ValueError("Invalid follow-up ceiling")
     ws_call("configure", device_id=identifier, settings={"followup_limit": limit})
     return "Follow-up ceiling saved."
+
+
+def assign_to_ha_area(fields):
+    """One action: bind an already enrolled tablet to an existing HA area.
+
+    The backend derives the device's non-admin principal, provisions the
+    private audio room and syncs the HA device registry automatically.
+    """
+    identifier = fields.get("device_id", [""])[0]
+    area_id = fields.get("area_id", [""])[0].strip()
+    if not DEVICE_ID.fullmatch(identifier) or not ROOM.fullmatch(area_id):
+        raise ValueError("Invalid TAFA tablet or HA area")
+    confirmed = fields.get("confirm_move", ["0"])[0]
+    if confirmed not in ("0", "1"):
+        raise ValueError("Invalid move confirmation")
+    response = ws_call("assign_area", device_id=identifier, area_id=area_id,
+                       confirm_move=confirmed == "1")
+    return ("Tablet einem Home-Assistant-Raum zugeordnet."
+            if isinstance(response, dict) else "Zuordnung gespeichert.")
 
 
 def create_room(fields):
@@ -262,12 +283,11 @@ def render_device_center(lang, csrf, state):
                      setting(device,"hold",t("Rufwort-Haltezeit (s)","Wake handoff (s)"),lo=10,hi=90)+
                      setting(device,"pause_ms",t("Sprechpause (ms)","Speech endpoint pause (ms)"),lo=900,hi=3200)+
                      setting(device,"mic_gain",t("Digitale Mikrofonverstärkung (%)","Digital mic gain (%)"),lo=50,hi=200)+
-                     '</div></details><details><summary>'+t("Anzeige & Raum","Display & room")+'</summary>'
+                     '</div></details><details><summary>'+t("Anzeige","Display")+'</summary>'
                      '<p class="subtle">'+t(
                        "Display-Steuerung ist optional und benötigt die Android-Freigabe „Systemeinstellungen ändern“. Die Einstellung dimmt nur, sie sperrt oder weckt den Bildschirm nicht.",
                        "Display control requires optional Android Modify system settings permission. It only dims, without locking or waking the screen."
                      )+'</p><div class="device-settings">'+
-                     setting(device,"room",t("Raumname","Room name"),kind="text")+
                      setting(device,"display_control_enabled",t("Displaysteuerung erlauben","Enable brightness control"),kind="boolean")+
                      setting(device,"screen_awake",t("Display hell statt gedimmt","Bright instead of dim"),kind="boolean")+
                      setting(device,"brightness",t("Helligkeit (%)","Brightness (%)"),lo=1,hi=100)+
@@ -275,158 +295,145 @@ def render_device_center(lang, csrf, state):
     device_section = '<div class="device-grid">'+"".join(parts)+'</div>' if parts else (
         f'<div class="work-card"><p>{t("Noch kein Tablet angemeldet. Starte TAFA Device Bridge auf einem Tablet und verbinde es mit HA.","No tablets enrolled. Start TAFA Device Bridge and connect it to HA.")}</p></div>')
 
-    roomrows = []
-    for item in rooms:
-        if isinstance(item, dict):
-            roomrows.append(
-                f'<div class="room-row"><strong>{h(item.get("room"))}</strong>'
-                f'<span>{t("bereit","ready") if item.get("ready") else t("nicht bereit","not ready")}</span>'
-                f'<small>{h(item.get("wake_device_id"))}</small></div>')
-    room_management_forms = []
-    if not state.get("room_error"):
-        for item in rooms:
-            if not isinstance(item, dict):
-                continue
-            rid, uid = item.get("room"), item.get("user_id")
-            paired = item.get("wake_device_id")
-            if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
-                    or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
-                continue
-            if isinstance(paired, str) and DEVICE_ID.fullmatch(paired):
-                room_management_forms.append(
-                    f'<form class="pair-form" method="post" action="./">{hidden("room_unpair", paired)}'
-                    f'<input type="hidden" name="room" value="{h(rid)}">'
-                    f'<input type="hidden" name="user_id" value="{h(uid)}">'
-                    f'<strong>{h(rid)} – {t("Tablet lösen","Unpair tablet")}</strong>'
-                    f'<p class="subtle">{t("Trennt die Gerätezuordnung und beendet die aktive Raum-Audio-/Kamerasitzung. Der Raum und das Tablet bleiben gespeichert.","Clears the assignment and stops active room audio/camera sessions. The room and tablet remain registered.")}</p>'
-                    f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required> {t("Zuordnung zurücksetzen","Reset assignment")}</label>'
-                    f'<button type="submit" class="btn btn-outline">{t("Tablet lösen","Unpair tablet")}</button></form>'
-                )
-            room_management_forms.append(
-                f'<form class="pair-form" method="post" action="./">{hidden("room_delete")}'
-                f'<input type="hidden" name="room" value="{h(rid)}">'
-                f'<input type="hidden" name="user_id" value="{h(uid)}">'
-                f'<strong>{h(rid)} – {t("Raum löschen","Delete room")}</strong>'
-                f'<p class="subtle">{t("Löscht den TAFA-Raum und seine Kamera-/Bewegungsentitäten, aber nicht den HA-Benutzer oder Automatisierungen. Der Raumnutzer kann danach neu zugeordnet werden.","Deletes the TAFA room and its camera/motion entities, not the HA user or automations. The room user can then be reassigned.")}</p>'
-                f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required> {t("Raum wirklich löschen","Confirm room deletion")}</label>'
-                f'<button type="submit" class="btn btn-outline">{t("Raum löschen","Delete room")}</button></form>'
-            )
-    room_management = (
-        f'<section class="work-card multiroom-panel"><h3>{t("Räume und Zuordnungen zurücksetzen","Reset rooms and assignments")}</h3>'
-        f'<p class="subtle">{t("Keine Home-Assistant-Benutzer oder Automatisierungen werden gelöscht. Bereits darauf verweisende Automatisierungen können nach dem Entfernen einer Kamera-/Geräteentität eine erneute Zuordnung benötigen.","No HA users or automations are deleted. Automations referring to removed camera/device entities may need to be reconfigured.")}</p>'
-        + "".join(room_management_forms)
-        + (f'<p class="subtle">{t("Noch keine Räume angelegt.","No rooms created.")}</p>' if not room_management_forms else "")
-        + '</section>'
-    )
-    # The first room can be created before there is any registered tablet.
-    # A fresh install must not hide its creation form behind device enrollment.
-    useropts = "".join(
-        f'<option value="{h(u.get("id"))}">{h(u.get("name") or u.get("id"))}</option>'
-        for u in users if isinstance(u, dict)
-        and isinstance(u.get("id"), str) and 1 <= len(u["id"]) <= 128
-    )
-    deviceopts = "".join(
-        f'<option value="{h(d.get("device_id"))}">{h(d.get("room") or "Tablet")}'
-        f' ({h(str(d.get("device_id"))[:8])})</option>'
-        for d in devices if isinstance(d, dict)
-        and DEVICE_ID.fullmatch(str(d.get("device_id", "")))
-    )
-
+    # One authority: Home Assistant's area registry. Do not offer a
+    # second TAFA-specific room creation/assignment wizard.
+    areas = state.get("areas") if isinstance(state.get("areas"), list) else []
+    area_names = {
+        area["area_id"]: area["name"]
+        for area in areas if isinstance(area, dict)
+        and isinstance(area.get("area_id"), str)
+        and isinstance(area.get("name"), str)
+        and ROOM.fullmatch(area["area_id"])
+    }
+    bound = {
+        room.get("wake_device_id"): room.get("room")
+        for room in rooms if isinstance(room, dict)
+        and isinstance(room.get("wake_device_id"), str)
+    }
+    rows = []
+    for device in devices:
+        if not isinstance(device, dict):
+            continue
+        did = device.get("device_id")
+        if not isinstance(did, str) or not DEVICE_ID.fullmatch(did):
+            continue
+        active = bound.get(did, "")
+        options = "".join(
+            f'<option value="{h(area_id)}"{" selected" if area_id == active else ""}>{h(name)}</option>'
+            for area_id, name in sorted(area_names.items(), key=lambda a: a[1].casefold())
+        )
+        label = device.get("room") or "TAFA Tablet"
+        online = bool(device.get("online"))
+        status = (t("Verbunden","Connected") if online else t("Offline","Offline"))
+        current = (t("Zugeordnet","Assigned") if active in area_names else
+                   t("Noch keinem HA-Raum zugeordnet","Not assigned to an HA area"))
+        if active and active not in area_names:
+            current = t("Alte TAFA-Zuordnung","Legacy TAFA assignment") + ": " + active
+        rows.append(
+            '<div class="tafa-area-row">'
+            '<div class="tafa-area-identity">'
+            f'<strong>{h(label)}</strong> '
+            f'<span class="status-pill status-{"good" if online else "neutral"}">{status}</span>'
+            f'<small>{t("Geräte-ID","Device ID")}: <code>{h(did)}</code></small>'
+            f'<small>{t("Aktueller Raum","Current area")}: {h(current)}</small>'
+            '</div>'
+            f'<form class="tafa-area-form" data-current-area="{h(active)}" method="post" action="./">{hidden("area_assign", did)}'
+            '<input type="hidden" name="confirm_move" value="0">'
+            f'<label for="area-{h(did)}">{t("Home-Assistant-Raum","Home Assistant area")}</label>'
+            f'<select id="area-{h(did)}" name="area_id" required{" disabled" if not options else ""}>'
+            f'<option value=""{" selected" if not active or active not in area_names else ""} disabled>'
+            f'{t("Raum auswählen","Choose area")}</option>{options}</select>'
+            f'<button class="btn btn-primary" type="submit"{" disabled" if not options else ""}>'
+            f'{t("Raum zuweisen","Assign area")}</button></form></div>'
+        )
+    if rows:
+        content = "".join(rows)
+    else:
+        content = ('<p class="subtle">' +
+                   t("Noch kein TAFA-Tablet registriert. Verbinde TAFA Device Bridge in Android mit Home Assistant; die App registriert ihre eindeutige Kennung automatisch.",
+                     "No TAFA tablet enrolled. Connect Device Bridge to Home Assistant; the app enrolls its own unique ID automatically.") +
+                   '</p>')
+    area_hint = ('<p class="subtle">' +
+                 t("Noch keine Home-Assistant-Räume verfügbar. Lege sie zuerst unter Einstellungen → Bereiche an.",
+                   "No Home Assistant areas available. Create one in Settings → Areas first.") +
+                 '</p>' if not area_names else "")
     guide = (
-        f'<div class="work-card first-room-guide">'
-        f'<h3>{t("Erste Einrichtung","First-time setup")}</h3>'
-        f'<p><strong>1.</strong> {t("In Home Assistant unter Einstellungen → Personen → Benutzer einen eigenen Nicht-Admin-Benutzer für den Raum anlegen.","Create a dedicated non-admin HA user for this room under Settings → People → Users.")}</p>'
-        f'<p><strong>2.</strong> {t("Hier einen Raum erstellen – auch wenn noch kein Tablet angemeldet ist.","Create the room here, even before a tablet is enrolled.")}</p>'
-        f'<p><strong>3.</strong> {t("Die native App mit der Serveradresse und dem Token dieses Benutzers verbinden, dann den Audioplayer starten. TAFA registriert das Tablet automatisch – auch ohne Rufworterkennung.","Connect the native app to the server with this user's token and start the audio player. TAFA enrolls automatically, without requiring wakeword.")}</p>'
-        f'<p><strong>4.</strong> {t("Das angemeldete Tablet dem erstellten Raum zuordnen und danach den Bluetooth-Player starten.","Pair the enrolled tablet with the new room, then start Bluetooth playback.")}</p>'
-        '</div>'
+        '<p class="subtle">' +
+        t("1. Raum in Home Assistant erstellen. 2. TAFA Device Bridge verbinden. 3. Hier das Tablet dem Raum zuweisen. Die technische Audio-/Kamerazuordnung erledigt TAFA automatisch. Für getrennte Audiokanäle benötigt jedes Tablet weiterhin ein eigenes Nicht-Admin-HA-Konto.",
+          "1. Create an area in Home Assistant. 2. Connect Device Bridge. 3. Assign this tablet to its area. TAFA handles internal audio/camera routing. Each tablet still requires its own non-admin HA account for isolated audio.") +
+        '</p>'
+    )
+    assignment_panel = (
+        '<section class="work-card multiroom-panel tafa-area-panel">'
+        f'<h3>{t("Tablets und Home-Assistant-Räume","Tablets and Home Assistant areas")}</h3>'
+        + guide
+        + '<p><a href="/config/areas/dashboard" target="_top" rel="noopener">'
+        + t("Home-Assistant-Räume verwalten","Manage Home Assistant areas") + '</a></p>'
+        + '<div class="tafa-area-rows">' + content + '</div>' + area_hint + '</section>'
     )
 
-    ready = bool(useropts) and not state.get("room_error")
-    userhint = (
-        f'<p class="subtle">{t("Noch kein Nicht-Admin-Benutzer vorhanden. Lege zuerst einen in Home Assistant an und aktualisiere diese Seite.","No non-admin HA user yet. Create one in Home Assistant first and refresh this page.")}</p>'
-        if not useropts else ""
-    )
-    api_hint = (
-        f'<p class="subtle">{t("TAFA-Raum-API nicht erreichbar. Prüfe, ob die neue Integration auf diesem Testserver geladen ist und der Zugriff autorisiert ist.","TAFA room API unavailable. Check that the updated integration is loaded and authorized on this test server.")}</p>'
-        if state.get("room_error") else ""
-    )
-    disabled = " disabled" if not ready else ""
-    room_create = (
-        f'<section class="work-card multiroom-panel">'
-        f'<h3>{t("Neuen Raum anlegen","Create a new room")}</h3>'
-        f'<p class="subtle">{t("Dafür muss noch kein Tablet registriert sein.","No enrolled tablet is required.")}</p>'
-        f'<form class="pair-form" action="./" method="post">{hidden("room_create")}'
-        f'<label>{t("Raum-ID (z. B. buero)","Room ID (e.g. office)")}'
-        '<input name="room" type="text" pattern="[a-z0-9][a-z0-9_-]*" maxlength="64" required></label>'
-        f'<label>{t("Home-Assistant-Raumnutzer","Home Assistant room user")}'
-        f'<select name="user_id" required{disabled}>{useropts}</select></label>'
-        f'<button class="btn btn-primary" type="submit"{disabled}>{t("Raum anlegen","Create room")}</button>'
-        '</form>' + userhint + api_hint + '</section>'
-    )
-
-    pair_forms = []
-    if not state.get("room_error") and deviceopts:
-        for room in rooms:
-            if not isinstance(room, dict):
-                continue
-            rid, uid = room.get("room"), room.get("user_id")
-            if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
-                    or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
-                continue
-            pair_forms.append(
-                f'<form class="pair-form" action="./" method="post">{hidden("room_pair")}'
-                f'<input type="hidden" name="room" value="{h(rid)}">'
-                f'<input type="hidden" name="user_id" value="{h(uid)}">'
-                f'<strong>{h(rid)}</strong>'
-                f'<label>{t("Tablet auswählen","Select tablet")}'
-                f'<select name="device_id" required>{deviceopts}</select></label>'
-                f'<label class="pair-consent"><input type="checkbox" name="transfer_device" value="1"> '
-                f'{t("Gerätebesitz ausdrücklich übertragen (nur wenn das Tablet unter einem anderen HA-Benutzer registriert wurde). Danach in Android das Token des Raumnutzers verwenden.","Explicitly transfer device ownership only if enrolled under a different user. Then use the room users token in Android.")}</label>'
-                f'<button class="btn btn-primary" type="submit">{t("Tablet zuordnen","Pair tablet")}</button>'
-                '</form>'
-            )
-    camera_forms = []
-    if not state.get("room_error"):
-        for item in rooms:
-            if not isinstance(item, dict):
-                continue
-            rid, uid = item.get("room"), item.get("user_id")
-            if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
-                    or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
-                continue
+    # Settings and destructive actions remain available, but do not create
+    # another visible pairing flow or a duplicate listing of each room.
+    camera_controls = []
+    reset_controls = []
+    for item in rooms:
+        if not isinstance(item, dict):
+            continue
+        rid, uid = item.get("room"), item.get("user_id")
+        if (not isinstance(rid, str) or not ROOM.fullmatch(rid)
+                or not isinstance(uid, str) or not 1 <= len(uid) <= 128):
+            continue
+        has_device = isinstance(item.get("wake_device_id"), str) and DEVICE_ID.fullmatch(item["wake_device_id"])
+        if has_device:
             enabled = item.get("camera_enabled") is True
-            selector = (
-                f'<select name="camera_enabled" aria-label="{t("Kamera für Raum","Camera for room")} {h(rid)}">'
-                f'<option value="false"{" selected" if not enabled else ""}>{t("Aus – keine Bilder","Off – no images")}</option>'
-                f'<option value="true"{" selected" if enabled else ""}>{t("An – Bilder bei manuellem Kamerastart","On – images on manual camera start")}</option>'
-                '</select>'
-            )
-            camera_forms.append(
-                f'<form class="pair-form" action="./" method="post">{hidden("room_camera")}'
+            camera_controls.append(
+                f'<form class="pair-form" method="post" action="./">{hidden("room_camera")}'
                 f'<input type="hidden" name="room" value="{h(rid)}">'
                 f'<input type="hidden" name="user_id" value="{h(uid)}">'
-                f'<strong>{h(rid)}</strong>'
-                + selector
-                + f'<button class="btn btn-outline" type="submit">{t("Kamerafreigabe speichern","Save camera permission")}</button>'
+                f'<label>{h(area_names.get(rid, rid))} – {t("Tablet-Kamera","Tablet camera")}'
+                '<select name="camera_enabled">'
+                f'<option value="false"{" selected" if not enabled else ""}>{t("Aus","Off")}</option>'
+                f'<option value="true"{" selected" if enabled else ""}>{t("An (nach manuellem Start in der App)","On (after manual app start)")}</option>'
+                '</select></label>'
+                f'<button class="btn btn-outline" type="submit">{t("Kamera speichern","Save camera")}</button>'
                 '</form>'
             )
-    camera_panel = (
-        f'<section class="work-card multiroom-panel">'
-        f'<h3>{t("Tablet-Kameras je Raum","Tablet cameras per room")}</h3>'
-        f'<p class="subtle">{t("Kameraübertragung ist standardmäßig aus. Erlaube sie hier für einen Raum und starte die Kamera anschließend ausdrücklich auf dem Tablet. Es werden nur aktuelle Bilder im HA-Arbeitsspeicher gehalten.","Camera uploads are off by default. Enable them for a room here and explicitly start the tablet camera afterwards. Only recent images are held in HA memory.")}</p>'
-        + "".join(camera_forms)
-        + (f'<p class="subtle">{t("Lege zuerst einen Raum an.","Create a room first.")}</p>' if not camera_forms else "")
-        + '</section>'
+            reset_controls.append(
+                f'<form class="pair-form" method="post" action="./">{hidden("room_unpair", item["wake_device_id"])}'
+                f'<input type="hidden" name="room" value="{h(rid)}">'
+                f'<input type="hidden" name="user_id" value="{h(uid)}">'
+                f'<strong>{h(area_names.get(rid,rid))}: {t("Tablet lösen","Unpair tablet")}</strong>'
+                f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required>'
+                f'{t("TAFA-Gerätezuordnung wirklich lösen","Confirm unpairing")}</label>'
+                f'<button class="btn btn-outline" type="submit">{t("Tablet lösen","Unpair")}</button>'
+                '</form>'
+            )
+        reset_controls.append(
+            f'<form class="pair-form" method="post" action="./">{hidden("room_delete")}'
+            f'<input type="hidden" name="room" value="{h(rid)}">'
+            f'<input type="hidden" name="user_id" value="{h(uid)}">'
+            f'<strong>{h(area_names.get(rid,rid))}: {t("TAFA-Routing zurücksetzen","Reset TAFA routing")}</strong>'
+            f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required>'
+            f'{t("Nur TAFA-Routing löschen (HA-Raum bleibt erhalten)","Delete only TAFA routing (HA area remains)")}</label>'
+            f'<button class="btn btn-outline" type="submit">{t("TAFA-Routing entfernen","Remove TAFA routing")}</button>'
+            '</form>'
+        )
+    advanced = (
+        '<details class="work-card multiroom-panel tafa-area-advanced">'
+        f'<summary>{t("Erweitert: Tablet-Einstellungen, Kamera und Zurücksetzen","Advanced: device settings, camera and reset")}</summary>'
+        f'<h3>{t("Tablet-Einstellungen","Tablet settings")}</h3>'
+        + device_section
+        + f'<h3>{t("Kamerafreigabe (optional)","Camera access (optional)")}</h3>'
+        + '<p class="subtle">' +
+          t("Kamerabilder werden nur nach ausdrücklichem Start auf dem Tablet übertragen.",
+            "Camera images are shared only after explicit activation on the tablet.") +
+          '</p>'
+        + "".join(camera_controls)
+        + f'<h3>{t("TAFA-Zuordnung zurücksetzen","Reset TAFA pairing")}</h3>'
+        + '<p class="subtle">' +
+          t("Diese Aktionen verändern weder Home-Assistant-Bereiche noch Benutzer. Automationen mit Kamera-Entitäten können danach eine neue Zuordnung benötigen.",
+            "These actions never delete Home Assistant areas or users. Automations using camera entities may require reassignment.") +
+          '</p>'
+        + "".join(reset_controls) + '</details>'
     )
-    pairing_note = (
-        f'<p class="subtle">{t("Nach der Anmeldung des Tablets über den Audioplayer erscheint hier die Zuordnung.","After enrolling a tablet using the audio player, pairing appears here.")}</p>'
-        if not pair_forms else ""
-    )
-    pairing = (
-        f'<section class="work-card multiroom-panel">'
-        f'<h3>{t("Tablet einem Raum zuordnen","Pair a tablet with a room")}</h3>'
-        '<div class="room-list">' + "".join(roomrows) + '</div>'
-        + "".join(pair_forms) + pairing_note + '</section>'
-    )
-    return notice + device_section + guide + room_create + camera_panel + pairing + room_management
+    return notice + assignment_panel + advanced

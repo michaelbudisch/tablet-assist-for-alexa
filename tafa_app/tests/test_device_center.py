@@ -47,9 +47,11 @@ class DeviceCenterTests(unittest.TestCase):
             "error": ""})
         self.assertNotIn("<img", html)
         self.assertNotIn("<script", html)
-        self.assertIn('name="action" value="room_create"', html)
-        pair = html.split('name="action" value="room_pair"', 1)[1].split('</form>', 1)[0]
+        self.assertNotIn('name="action" value="room_create"', html)
+        self.assertIn("Home-Assistant-Räume", html)
+        pair = html.split('<form class="tafa-area-form"', 1)[1].split('</form>', 1)[0]
         self.assertEqual(pair.count('name="device_id"'), 1)
+        self.assertEqual(pair.count('name="area_id"'), 1)
 
     def test_room_camera_explicit_opt_in_without_any_tablet(self):
         with patch.object(panel, "ws_call", return_value={"camera_enabled": True}) as api:
@@ -60,8 +62,10 @@ class DeviceCenterTests(unittest.TestCase):
             self.assertEqual(api.call_args.args, ("camera",))
             self.assertEqual(api.call_args.kwargs,
                 {"room": "buero", "user_id": "user1", "camera_enabled": True})
-        state = {"devices": [], "rooms": [
-                    {"room": "buero", "user_id": "user1", "camera_enabled": False}],
+        state = {"devices": [{"device_id": ID, "room": "Tablet", "online": True}],
+                 "rooms": [{"room": "buero", "user_id": "user1",
+                            "wake_device_id": ID, "camera_enabled": False}],
+                 "areas": [{"area_id": "buero", "name": "Büro"}],
                  "users": [{"id": "user1", "name": "Tablet Benutzer"}],
                  "error": "", "room_error": ""}
         html = panel.render_device_center("de", "csrf", state)
@@ -74,6 +78,34 @@ class DeviceCenterTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 panel.set_room_camera({"room": ["buero"], "user_id": ["user1"],
                                        "camera_enabled": [val]})
+
+    def test_assign_one_ha_area_without_room_user_form(self):
+        with patch.object(panel, "ws_call", return_value={"paired": True}) as api:
+            self.assertIn("Home-Assistant-Raum", panel.assign_to_ha_area({
+                "device_id": [ID], "area_id": ["wohnzimmer"]}))
+            self.assertEqual(api.call_args.args, ("assign_area",))
+            self.assertEqual(api.call_args.kwargs,
+                             {"device_id": ID, "area_id": "wohnzimmer", "confirm_move": False})
+        for room in ("", "../bad", "BÜRO"):
+            with self.assertRaises(ValueError):
+                panel.assign_to_ha_area({"device_id": [ID], "area_id": [room]})
+        page = panel.render_device_center("de", "csrf", {
+            "devices": [{"device_id": ID, "room": "TAFA Tablet", "online": True}],
+            "rooms": [{"room": "wohnzimmer", "user_id": "owner", "wake_device_id": ID}],
+            "areas": [{"area_id": "wohnzimmer", "name": "Wohnzimmer"},
+                      {"area_id": "buero", "name": "Büro"}],
+            "users": [{"id": "owner", "name": "Room User"}]})
+        self.assertEqual(page.count('name="action" value="area_assign"'), 1)
+        self.assertNotIn('name="action" value="room_pair"', page)
+        self.assertNotIn('name="action" value="room_create"', page)
+        self.assertNotIn('name="transfer_device"', page)
+        self.assertIn('name="area_id"', page)
+        self.assertIn('name="confirm_move"', page)
+        self.assertIn('value="wohnzimmer" selected', page)
+        self.assertIn("<details", page)
+        self.assertIn("Erweitert:", page)
+        self.assertNotIn('name="setting" value="room"', page)
+
 
     def test_reset_actions_need_explicit_confirmation(self):
         with patch.object(panel, "ws_call", return_value={"removed": True}) as api:
@@ -109,7 +141,7 @@ class DeviceCenterTests(unittest.TestCase):
         self.assertIn('name="user_id" value="tablet"', page)
         self.assertIn('name="device_id" value="' + ID + '"', page)
         self.assertIn("HA-Benutzer", page)
-        self.assertIn("Automatisierungen", page)
+        self.assertIn("Automationen", page)
 
     def test_create_room_without_any_tablet(self):
         with patch.object(panel, "ws_call", return_value={"created": True}) as api:
@@ -122,19 +154,18 @@ class DeviceCenterTests(unittest.TestCase):
             "devices": [], "rooms": [],
             "users": [{"id": "user1", "name": "Room user"}],
             "error": "", "room_error": ""})
-        self.assertIn("Neuen Raum anlegen", page)
-        self.assertIn('name="action" value="room_create"', page)
+        self.assertIn("Home-Assistant-Räume verwalten", page)
+        self.assertNotIn('name="action" value="room_create"', page)
         self.assertNotIn('name="action" value="room_pair"', page)
 
     def test_empty_server_explains_missing_user(self):
         page = panel.render_device_center("de", "nonce", {
             "devices": [], "rooms": [], "users": [],
             "error": "", "room_error": ""})
-        self.assertIn("Neuen Raum anlegen", page)
-        self.assertIn("Nicht-Admin-Benutzer", page)
-        self.assertIn("Noch kein Nicht-Admin-Benutzer", page)
-        self.assertIn('name="action" value="room_create"', page)
-        self.assertIn('type="submit" disabled', page)
+        self.assertIn("Home-Assistant-Räume verwalten", page)
+        self.assertIn("Nicht-Admin-HA-Konto", page)
+        self.assertNotIn('name="action" value="room_create"', page)
+        self.assertNotIn('name="action" value="area_assign"', page)
 
     def test_reject_invalid_room_name(self):
         for room in ("BÜRO", "../bad", "", "q"*65):
@@ -167,8 +198,8 @@ class DeviceCenterTests(unittest.TestCase):
             state = panel.read_device_data()
         self.assertEqual(api.call_args.args, ("list",))
         self.assertEqual(state["error"], "")
-        self.assertIn("Tablet Nutzer", panel.render_device_center("de", "csrf", state))
-        self.assertIn('value="user123"', panel.render_device_center("de", "csrf", state))
+        self.assertEqual(state["users"][0]["name"], "Tablet Nutzer")
+        self.assertNotIn('name="user_id"', panel.render_device_center("de", "csrf", state))
 
     def test_websocket_denial_shows_code_without_secret(self):
         with patch.object(panel, "ws_call",
@@ -176,7 +207,7 @@ class DeviceCenterTests(unittest.TestCase):
             state = panel.read_device_data()
         self.assertEqual(state["error"], "TAFA WebSocket: unauthorized")
         self.assertIn("TAFA WebSocket: unauthorized", panel.render_device_center("de", "csrf", state))
-        self.assertIn('type="submit" disabled',
+        self.assertNotIn('name="action" value="area_assign"',
                       panel.render_device_center("de", "csrf", state))
 
 

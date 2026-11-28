@@ -34,7 +34,7 @@ from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
 from voice_test_view import render_voice_panel, public_device_snapshot
 from voice_test import run_voice, voice_status, load_audio, VoiceTestError, MAX_AUDIO
-from device_center import read_device_data, render_device_center, update_device, set_native_microphone_mode, set_native_followup_limit, pair_device, create_room, set_room_camera, remove_device, unpair_device, delete_room
+from device_center import read_device_data, render_device_center, update_device, set_native_microphone_mode, set_native_followup_limit, pair_device, assign_to_ha_area, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
@@ -56,7 +56,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.4.64"
+APP_VERSION="0.4.65"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -808,6 +808,9 @@ class Handler(BaseHTTPRequestHandler):
                 tab="devices"
             elif action=="room_pair":
                 msg=pair_device(fields)
+                tab="devices"
+            elif action=="area_assign":
+                msg=assign_to_ha_area(fields)
                 tab="devices"
             elif action=="room_camera":
                 msg=set_room_camera(fields)

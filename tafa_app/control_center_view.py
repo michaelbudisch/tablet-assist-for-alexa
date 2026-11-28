@@ -213,7 +213,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 <section class="tab-panel" id="devices" role="tabpanel" aria-labelledby="tab-devices">
   <div class="section-heading"><p class="kicker">{t("GERÄTE UND RÄUME","DEVICES AND ROOMS")}</p>
     <h2>{t("TAFA-Geräte und Räume","TAFA devices and rooms")}</h2>
-    <p>{t("Tablet-Einstellungen, Multiroom und Raumverwaltung.","Tablet settings, multiroom and room management.")}</p>
+    <p>{t("Einmalige Zuordnung eines Tablets zu einem Home-Assistant-Raum.","One place to assign each tablet to a Home Assistant area.")}</p>
   </div>
   {devices_panel}
 </section>

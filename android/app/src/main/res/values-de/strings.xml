@@ -192,9 +192,9 @@
     <string name="wake_unmute_button">Natives Mikrofon wieder freigeben</string>
     <string name="wake_remote_help">Die Einstellungen werden pro Gerät mit Home Assistant abgeglichen. Stumm gibt das Android-Mikrofon frei, während der Dienst weiterläuft. Änderungen gelten nach der nächsten Synchronisierung.</string>
     <string name="wake_save_error">Wakeword-Einstellung konnte nicht an Home Assistant gesendet werden: %1$s</string>
-    <string name="wake_multiroom_help">Beliebig viele Tablets: Jede Installation hat eine eigene zufällige Gerätekennung. Einen Raumnamen vergeben, die native Erkennung starten und das Tablet im TAFA-Dashboard unter Sprache &amp; Audio auswählen und zuordnen. Keine begrenzten oder doppelten Slots mehr.</string>
-    <string name="wake_room_label">Raumname (für die Anzeige)</string>
-    <string name="wake_room_hint">z. B. Wohnzimmer</string>
+    <string name="wake_multiroom_help">Jede Installation erhält eine eindeutige Gerätekennung. Die Räume werden ausschließlich in Home Assistant verwaltet. Weise dieses Tablet einmal unter TAFA → Geräte &amp; Multiroom einem HA-Raum zu. Der Gerätename unten dient nur der Anzeige.</string>
+    <string name="wake_room_label">Gerätename (nur Anzeige, keine Raumzuordnung)</string>
+    <string name="wake_room_hint">z. B. Büro-Tablet</string>
     <string name="wake_device_id">Diese Installation: %1$s</string>
     <string name="nav_status">Status</string>
     <string name="nav_connection">Verbinden</string>
@@ -304,7 +304,7 @@
     <string name="output_using_bluetooth">Ausgabe über Bluetooth.</string>
     <string name="group_audio">Audio</string>
     <string name="group_voice">Sprache &amp; Rufwort</string>
-    <string name="group_room">Raum &amp; Gerät</string>
+    <string name="group_room">Gerätekennung</string>
     <string name="group_advanced">Erweiterte Spracherkennung</string>
     <string name="group_device">Display &amp; Kamera</string>
     <string name="group_support">Hilfe &amp; Diagnose</string>
