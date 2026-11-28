@@ -68,6 +68,8 @@ async def async_setup(hass: HomeAssistant, config):
         StaticPathConfig("/tablet_assist_for_alexa/dashboard.js", str(Path(__file__).parent / "frontend" / "dashboard.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/ambient_night.js", str(Path(__file__).parent / "frontend" / "ambient_night.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/ambient_overview.js", str(Path(__file__).parent / "frontend" / "ambient_overview.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/ambient_profiles_client.js", str(Path(__file__).parent / "frontend" / "ambient_profiles_client.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/ring_ui.js", str(Path(__file__).parent / "frontend" / "ring_ui.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/response_overlay.js", str(Path(__file__).parent / "frontend" / "response_overlay.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/visual_client.js", str(Path(__file__).parent / "frontend" / "visual_client.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/dashboard_model.js", str(Path(__file__).parent / "frontend" / "dashboard_model.js"), False),
