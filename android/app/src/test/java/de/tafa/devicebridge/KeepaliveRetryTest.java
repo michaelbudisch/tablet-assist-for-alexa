@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

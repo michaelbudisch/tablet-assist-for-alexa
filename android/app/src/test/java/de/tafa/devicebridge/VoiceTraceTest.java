@@ -1,10 +1,10 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import org.junit.Test;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.Assert.*;
-import static de.jarvis.audio.VoiceTrace.Point.*;
+import static de.tafa.devicebridge.VoiceTrace.Point.*;
 
 public class VoiceTraceTest {
     final AtomicLong clock=new AtomicLong(1_000_000_000L);
