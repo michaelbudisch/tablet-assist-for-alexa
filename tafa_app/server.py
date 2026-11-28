@@ -34,6 +34,7 @@ from connection_probes import probe_connection, ADDRESS_FIELDS
 from control_center_view import render_dashboard
 from voice_test_view import render_voice_panel, public_device_snapshot
 from voice_test import run_voice, voice_status, load_audio, VoiceTestError, MAX_AUDIO
+from voice_manager import catalog as voice_catalog, prepare as voice_prepare, preview as voice_preview, VoiceManagerError
 from device_center import read_device_data, render_device_center, update_device, set_native_microphone_mode, set_native_followup_limit, pair_device, assign_to_ha_area, create_room, set_room_camera, remove_device, unpair_device, delete_room
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
@@ -577,7 +578,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type","text/html; charset=utf-8")
         self.send_header("Cache-Control","no-store")
         self.send_header("X-Content-Type-Options","nosniff")
-        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; media-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
+        self.send_header("Content-Security-Policy","default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; media-src 'self' blob:; img-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'none'")
         self.send_header("Content-Length",str(len(content)))
         self.end_headers()
         self.wfile.write(content)
@@ -610,6 +611,13 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
             return
+        if path == "/api/voices":
+            try:
+                return self.respond_json(voice_catalog(TOKEN))
+            except VoiceManagerError as exc:
+                return self.respond_json({"error": str(exc)}, exc.status)
+            except (OSError, RuntimeError, ValueError, TimeoutError):
+                return self.respond_json({"error": "Voice inventory unavailable"}, 503)
         if path.startswith("/voice/audio/"):
             identifier=path[len("/voice/audio/"):]
             try:
@@ -659,6 +667,27 @@ class Handler(BaseHTTPRequestHandler):
         fields=parse_qs(self.rfile.read(int(length)).decode("utf-8"),max_num_fields=32,keep_blank_values=True)
         if not secrets.compare_digest(fields.get("csrf",[""])[0],CSRF):
             return self.send_error(403)
+        route = urlsplit(self.path).path
+        if route in ("/api/voices/prepare", "/api/voices/preview"):
+            if set(fields) != {"csrf", "variant"} or len(fields.get("variant", [])) != 1:
+                return self.respond_json({"error": "Invalid voice request"}, 400)
+            number = fields["variant"][0]
+            try:
+                if route.endswith("/prepare"):
+                    return self.respond_json(voice_prepare(TOKEN, number))
+                audio = voice_preview(TOKEN, number)
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/wav")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("Content-Length", str(len(audio)))
+                self.end_headers()
+                self.wfile.write(audio)
+                return
+            except VoiceManagerError as exc:
+                return self.respond_json({"error": str(exc)}, exc.status)
+            except (OSError, RuntimeError, ValueError, TimeoutError):
+                return self.respond_json({"error": "Voice action unavailable"}, 503)
         lang="en" if fields.get("lang")==["en"] else "de"
         tab=fields.get("tab",["maintenance"])[0]
         if tab not in ("overview","connections","setup","features","devices","maintenance","voice"):
