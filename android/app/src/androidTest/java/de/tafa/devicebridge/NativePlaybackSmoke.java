@@ -1,9 +1,9 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.app.Instrumentation;
 import android.media.AudioManager;
 import android.os.SystemClock;
-import static de.jarvis.audio.VoiceTrace.Point.*;
+import static de.tafa.devicebridge.VoiceTrace.Point.*;
 
 /** Silent PCM only. Run on the isolated emulator, not as a live Echo latency measurement. */
 final class NativePlaybackSmoke {
