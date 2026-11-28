@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.app.Activity;
 import android.content.*;
@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.*;
 import java.text.DateFormat;
 import java.util.*;
-import static de.jarvis.audio.VoiceTrace.Point.*;
+import static de.tafa.devicebridge.VoiceTrace.Point.*;
 
 final class VoiceDiagnosticsPanel {
     private final Activity activity;

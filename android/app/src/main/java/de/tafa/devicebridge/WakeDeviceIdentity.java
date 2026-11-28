@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -17,6 +17,6 @@ final class WakeDeviceIdentity {
     }
     static String room(Context ctx){
         String text=ctx.getSharedPreferences(MainActivity.PREF,0).getString("wake_room_name","").trim();
-        return text.length()>48?text.substring(0,48):text.isEmpty()?"Jarvis Tablet":text;
+        return text.length()>48?text.substring(0,48):text.isEmpty()?"TAFA Tablet":text;
     }
 }

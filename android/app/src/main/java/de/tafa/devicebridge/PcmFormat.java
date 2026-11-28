@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 final class PcmFormat {
     final int sampleRate, channels, frameBytes;

@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -114,7 +114,7 @@ final class WakePilotSettings {
         AudioOutputMode.applyRemote(ctx,dev.optString(AudioOutputMode.KEY,""));
         Snapshot s=new Snapshot(
             dev.getBoolean("muted"),modeFor(dev.optString("voice_mode","wake")),choiceFor(dev.getString("word")),
-            dev.optString("room","Jarvis Tablet"),
+            dev.optString("room","TAFA Tablet"),
             clamp(dev.getInt("strict"),1,3),
             clamp(dev.getInt("cooldown"),3,30),
             clamp(dev.getInt("hold"),10,90),
