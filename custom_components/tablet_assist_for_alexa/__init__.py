@@ -25,6 +25,7 @@ from .dashboard_config import async_get_dashboard, async_set_dashboard
 from .announcement import audio_url, allowed_targets
 from .reminders import Reminders
 from .local_data import LocalData
+from .tafa_modules import register as register_tafa_modules, unregister as unregister_tafa_modules
 from .learning import Learning
 from .learning_ws import learning_command
 from .web_search import search_command
@@ -135,6 +136,7 @@ async def async_setup_entry(hass, entry):
     data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
     await hass.config_entries.async_forward_entry_setups(entry, active_platforms)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
+    register_tafa_modules(hass, entry)
     # No extra TAFA sidebar/dashboard. The Supervisor App is the only
     # configuration and speech-control user interface.
     await reminders.load()
@@ -161,4 +163,5 @@ async def async_unload_entry(hass, entry):
         if data:
             data.reminders.close()
         hass.services.async_remove(DOMAIN, "announce")
+        unregister_tafa_modules(hass)
     return ok
