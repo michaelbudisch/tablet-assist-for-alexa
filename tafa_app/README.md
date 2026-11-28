@@ -30,3 +30,8 @@ The App updates only its **own unchanged managed integration**, preserving a rol
 A separate [Proxmox CPU server](../docs/en/proxmox.md), [GPU worker](../docs/en/worker.md), [Ollama](../docs/en/setup-guide.md) and [Alexa MP3 HTTPS](../docs/en/proxmox.md) remain optional. CPU Whisper and Piper fallback do **not** automatically provide a CPU fallback for Ollama text AI.
 
 **Security:** TAFA LAN worker endpoints need no additional TAFA API token, but HA access tokens and normal HA permissions are still required for tablet connections. Keep unauthenticated model endpoints on a restricted trusted LAN; never publish them as public services.
+
+
+## Einmalige Übernahme älterer privater TAFA-Dateien
+
+Falls TAFA trotz App-Update im Wartungsstatus eine **externe/manuelle Integration** meldet, wird sie absichtlich nicht überschrieben. Für die bewusst gewünschte Migration gibt es ab App 0.4.66 die standardmäßig ausgeschaltete Supervisor-Konfigurationsoption `migration_adopt_backend_once`: nur bei einer anhand von Domain, Projekt-Codeowner und Repo-URL verifizierten TAFA-Integration werden die bisherigen Dateien vollständig unter `/config/.tafa/rollback` gesichert und das App-Bundle installiert. Anschließend Option wieder ausschalten und HA Core neu starten. Andere Integrationen, Benutzer, Bereiche, Automationen und Dashboards bleiben unverändert.

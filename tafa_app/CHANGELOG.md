@@ -1,3 +1,9 @@
+## 0.4.66
+
+- Korrigiert die blockierte Aktualisierung einer früher manuell bearbeiteten TAFA-Integration: neue **standardmäßig deaktivierte** Option `migration_adopt_backend_once` für eine einmalige Übernahme.
+- Nur eine anhand von Domain, Projekt-Codeowner und Dokumentationsquelle verifizierte TAFA-Installation darf übernommen werden. Ihre komplette bisherige Version wird atomar in `/config/.tafa/rollback` gesichert, dann erst die neuere verwaltete Version aktiviert.
+- Ohne ausdrückliches Opt-in werden alle manuell verwalteten oder bearbeiteten Komponenten weiterhin geschützt. Nach der Übernahme die Option wieder deaktivieren und HA Core neu starten.
+
 ## 0.4.65
 
 - Geräte & Multiroom zeigt Home-Assistant-Bereiche als einzige Raumquelle; pro Tablet eine Zuordnung mit vollständiger Gerätekennung.
