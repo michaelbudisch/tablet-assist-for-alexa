@@ -34,7 +34,9 @@ async def perform_device_admin(hass, user, msg):
                  if u.is_active and not u.is_admin and not u.system_generated]
         async with controller.lock:
             devices = [controller.public(d) for d in controller.devices.values()]
-        rooms = [{"room": name, "user_id": owner,
+        rooms = [{"room": name, "area_id": transport.settings.get(name, {}).get("area_id", name),
+                  "device_name": controller.devices.get(transport.settings.get(name, {}).get("wake_device_id"), {}).get("room", ""),
+                  "user_id": owner,
                   "wake_device_id": transport.settings.get(name, {}).get("wake_device_id", ""),
                   "camera_enabled": transport.settings.get(name, {}).get("camera_enabled") is True,
                   "camera_online": bool(data.get("room_cameras") and
@@ -46,9 +48,8 @@ async def perform_device_admin(hass, user, msg):
                 "rooms": sorted(rooms, key=lambda r: r["room"]),
                 "areas": sorted(areas, key=lambda a: a["name"].casefold())}
     if action == "assign_area":
-        # A Home Assistant area, not a second TAFA room, is the source of
-        # truth. The tablet's enrolled HA principal is derived server-side:
-        # the client cannot reassign ownership by passing a user ID.
+        # HA Areas are grouping metadata; audio/camera connections remain
+        # isolated by the owning non-admin HA principal and their unique route.
         identifier, area_id = msg.get("device_id"), msg.get("area_id")
         if (not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier)
                 or not isinstance(area_id, str) or not ROOM.fullmatch(area_id)):
@@ -63,48 +64,63 @@ async def perform_device_admin(hass, user, msg):
         owner = await hass.auth.async_get_user(principal) if principal else None
         if not owner or not owner.is_active or owner.is_admin or owner.system_generated:
             raise ValueError("Tablet requires a dedicated active non-admin HA user")
-        if area_id in transport.rooms and transport.rooms[area_id] != principal:
-            raise ValueError("Area already assigned to another tablet user")
-        existing = transport.settings.get(area_id, {}).get("wake_device_id", "")
-        if existing and existing != identifier:
-            older = controller.devices.get(existing)
-            # A disconnected old installation may be replaced, not a live
-            # second tablet, and never an installation from another user.
-            if older and (older.get("user_id") != principal or
-                          controller.public(older).get("online")):
-                raise ValueError("Area already has an active or foreign tablet")
-        previous = [r for r, p in transport.rooms.items()
-                    if p == principal and r != area_id]
-        if previous and msg.get("confirm_move") is not True:
+
+        # A single HA Area may contain multiple tablets. Each authenticates
+        # separately: never merge principals or put two devices in one session.
+        routes = [r for r, p in transport.rooms.items() if p == principal]
+        if len(routes) > 1:
+            raise ValueError("Dedicated HA user is already assigned more than one audio route")
+        current = routes[0] if routes else None
+        prior = transport.settings.get(current, {}) if current else {}
+        previous_id = prior.get("wake_device_id")
+        replaced_offline = bool(previous_id and previous_id != identifier)
+        if replaced_offline:
+            old = controller.devices.get(previous_id)
+            if old and (old.get("user_id") != principal or controller.public(old).get("online")):
+                raise ValueError("This HA user already owns an active tablet. Use a separate account for each tablet")
+        if any(r != current and settings.get("wake_device_id") == identifier
+               for r, settings in transport.settings.items()):
+            raise ValueError("Tablet already assigned to a different audio route")
+        previous_area = (prior.get("area_id") or current or "") if current else ""
+        moved = bool(current and previous_area != area_id)
+        if moved and msg.get("confirm_move") is not True:
             raise ValueError("Moving an existing tablet needs explicit confirmation")
-        for old in previous:
-            assigned = transport.settings.get(old, {}).get("wake_device_id", "")
-            if assigned and assigned != identifier:
-                raise ValueError("HA user belongs to another registered tablet")
-        # Move a single device in one explicit action. Only its TAFA room
-        # routing changes; never delete an HA Area, user, or automation.
-        for old in previous:
-            transport.revoke(old)
-            transport.settings.pop(old, None)
-        if area_id not in transport.rooms:
-            transport.provision(area_id, principal)
-        transport.settings[area_id] = {
-            **transport.settings.get(area_id, {}),
+
+        # Retain the original route for existing installations. The first new
+        # tablet in a room can use its HA area as a legacy-compatible route.
+        # Additional tablets use stable, per-installation internal route IDs.
+        if current and not moved:
+            route = current
+        elif current and current.startswith("tafa_"):
+            route = current
+        elif area_id not in transport.rooms or area_id == current:
+            route = area_id
+        else:
+            route = "tafa_" + identifier
+        if route in transport.rooms and route != current:
+            raise ValueError("Reserved audio route already belongs to a different tablet")
+        if current != route:
+            if current:
+                transport.revoke(current)
+                transport.settings.pop(current, None)
+            transport.provision(route, principal)
+        transport.settings[route] = {
+            **(prior if current else {}),
             "wake_device_id": identifier,
-            # Moving to a different room must not carry old camera consent.
-            "camera_enabled": (transport.settings.get(area_id, {}).get("camera_enabled") is True
-                               if not previous else False),
+            "area_id": area_id,
+            "camera_enabled": bool(prior.get("camera_enabled")) if not moved else False,
         }
         await persist()
-        for old in previous:
-            cleanup_room(hass, old)
+        if current and route != current:
+            cleanup_room(hass, current)
         registry = dr.async_get(hass)
-        actual = registry.async_get_device(identifiers={(DOMAIN, identifier)})
+        # Avoid deprecated async_get_device() on HA 2026.11+.
+        actual = registry.async_get_device_by_identifier(DOMAIN, identifier)
         if actual and actual.area_id != area_id:
             registry.async_update_device(actual.id, area_id=area_id)
         return {"room": area_id, "area": area.name, "device_id": identifier,
-                "paired": True, "moved": bool(previous),
-                "replaced_offline": bool(existing and existing != identifier)}
+                "paired": True, "moved": moved, "audio_route": route,
+                "replaced_offline": replaced_offline}
     if action == "delete_device":
         if msg.get("confirmed") is not True:
             raise ValueError("Explicit confirmation required")
