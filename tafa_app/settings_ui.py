@@ -7,7 +7,7 @@ import html
 import json
 import urllib.request
 
-from speech_source import load_options, private_http_origin, setup_settings_values
+from speech_source import load_options, load_supervisor_options, private_http_origin, setup_settings_values
 from endpoint_checks import suggested_gpu_stt_host
 from connection_ui import render_connection_form, validate_connection_form, CONNECTION_FIELDS, ADDRESS_FIELDS
 from wyoming_picker import SUPERVISOR_OPTIONS
@@ -157,7 +157,7 @@ def save_connection_form(token, fields, available=()):
     """Store only Connection form fields in existing Supervisor App options."""
     if not token:
         raise RuntimeError("Supervisor authentication unavailable")
-    current = load_options()
+    current = load_supervisor_options(token)
     changes = validate_connection_form(fields, current, available)
     return save_app_changes(token, changes)
 
@@ -196,7 +196,7 @@ def save_settings_form(token, fields, available):
     """Save validated settings to the *existing* Supervisor managed App options."""
     if not token:
         raise RuntimeError("Supervisor authentication unavailable")
-    previous = load_options()
+    previous = load_supervisor_options(token)
     changes = validate_settings_form(fields, previous, available)
     data = json.dumps({"options": {**previous, **changes}}, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(
@@ -208,7 +208,12 @@ def save_settings_form(token, fields, available):
         reply = json.loads(response.read(16384))
     if reply.get("result") != "ok":
         raise RuntimeError("Supervisor rejected TAFA settings")
-    return changes
+    # A 200 response is not enough: verify the canonical persisted settings
+    # before reporting success or handing a snapshot to Home Assistant.
+    confirmed = load_supervisor_options(token)
+    if any(confirmed.get(key) != value for key, value in changes.items()):
+        raise RuntimeError("TAFA settings were not persisted as requested")
+    return confirmed
 
 
 def save_app_changes(token,changes,*,import_kind=None):
@@ -217,7 +222,7 @@ def save_app_changes(token,changes,*,import_kind=None):
         raise RuntimeError("Supervisor authentication unavailable")
     if not isinstance(changes,dict):
         raise ValueError("Invalid import options")
-    current=load_options()
+    current=load_supervisor_options(token)
     if import_kind is not None:
         # The Supervisor store may have changed since the JSON preview or
         # provisioning step. Reconcile again against its ACTUAL last-read
@@ -235,4 +240,7 @@ def save_app_changes(token,changes,*,import_kind=None):
     with urllib.request.urlopen(req,timeout=8) as response:
         if response.status!=200 or json.loads(response.read(16384)).get("result")!="ok":
             raise RuntimeError("Supervisor did not accept import settings")
+    confirmed = load_supervisor_options(token)
+    if any(confirmed.get(key) != value for key, value in changes.items()):
+        raise RuntimeError("TAFA App options were not persisted as requested")
     return changes
