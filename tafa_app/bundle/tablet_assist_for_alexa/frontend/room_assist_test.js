@@ -3,7 +3,7 @@
  * No deployment-specific hostnames or account secrets are bundled. */
 (() => {
   "use strict";
-  const storageKey=(cfg,key)=>"jarvis-room-assist.v1."+(cfg.instance_id||cfg.command_entity)+"."+key;
+  const storageKey=(cfg,key)=>"tafa-room-assist.v1."+(cfg.instance_id||cfg.command_entity)+"."+key;
   const get=(cfg,key,fallback)=>{try{return localStorage.getItem(storageKey(cfg,key))||fallback;}catch{return fallback;}};
   const save=(cfg,key,value)=>{try{localStorage.setItem(storageKey(cfg,key),value);}catch{}};
   const preferenceDefaults={captions:true,history:false,followMode:"auto",pause:1700,sensitivity:100,turns:3,dialogSeconds:90,infoSeconds:30,captionSeconds:10,autoFallback:false};
@@ -19,7 +19,7 @@
     "Assistent":"Assistant","Audioausgabe":"Audio output","Dashboard Assist":"In-dashboard assistant","Android-Assistent (Reserve)":"Android assistant (fallback)","TAFA Device Bridge · empfohlen":"TAFA Device Bridge · recommended",
     "Tablet / Bluetooth":"Tablet / Bluetooth","Alexa direkt (Qwen / Piper)":"Direct Alexa (optional)","Android-Assistent öffnen":"Open native Assist","Einmal sprechen":"Speak once",
     "Antwort wiederholen":"Replay answer","Tablet-Reserve":"Tablet fallback","Alexa direkt aktivieren":"Enable direct Alexa","Abbrechen":"Cancel",
-    "Jarvis · Assistent und Audio":"Assistant and audio settings","Mikrofon oben rechts: Rufwort → Dauerbetrieb → Aus. Nur bei sichtbarem Dashboard aktiv. Informiere Anwesende.":"Microphone: wake word → continuous → off. Active only while the dashboard is visible. Inform people nearby.",
+    "TAFA · Assistent und Audio":"Assistant and audio settings","Mikrofon oben rechts: Rufwort → Dauerbetrieb → Aus. Nur bei sichtbarem Dashboard aktiv. Informiere Anwesende.":"Microphone: wake word → continuous → off. Active only while the dashboard is visible. Inform people nearby.",
     "Alexa direkt nutzt einen zeitlich begrenzt öffentlichen Audio-Link. Nur für nicht vertrauliche Antworten.":"Direct Alexa may use a temporary public audio link. Use only for non-confidential answers.",
     "TAFA Device Bridge · verbunden":"TAFA Device Bridge · connected","TAFA Device Bridge · nicht bereit (App und Bluetooth prüfen)":"TAFA Device Bridge · not ready (check app and Bluetooth)",
     "Native Audio App nicht bereit · App starten und Alexa per Bluetooth verbinden":"TAFA Device Bridge not ready · start app and connect Bluetooth",
@@ -133,7 +133,7 @@
       }catch(e){if(gen===this.generation){this.cancelNativeAudio();this.playError(fmt(e.message||e));}}
     }
 
-    setOutput(value,confirmed=false){if(value!=="native_audio")return;if(this.busy||!["alexa","bluetooth","native_audio"].includes(value)||value==="alexa"&&!this.cfg.alexa_script)return;if(value==="native_audio"&&!this.nativeAudioReady()){this.state("Audio prüfen","Native Audio App starten und Bluetooth verbinden.");return;}if(value==="alexa"&&this.output!=="alexa"&&!confirmed){this._jarvisMenu="alexa-confirm";this.update();return;}this.output=value;save(this.cfg,"output",value);this.update();}
+    setOutput(value,confirmed=false){if(value!=="native_audio")return;if(this.busy||!["alexa","bluetooth","native_audio"].includes(value)||value==="alexa"&&!this.cfg.alexa_script)return;if(value==="native_audio"&&!this.nativeAudioReady()){this.state("Audio prüfen","Native Audio App starten und Bluetooth verbinden.");return;}if(value==="alexa"&&this.output!=="alexa"&&!confirmed){this._tafaMenu="alexa-confirm";this.update();return;}this.output=value;save(this.cfg,"output",value);this.update();}
     beginDialog(){this.turnsLeft=this.pref.turns;this.dialogUntil=Date.now()+this.pref.dialogSeconds*1000;}
     shouldFollow(s){return this.canFollow()&&(!!s.keep||this.pref.followMode==="auto"||(this.pref.followMode==="smart"&&/\?\s*$/.test(s.reply||"")));}
     endDialog(){this.turnsLeft=0;this.dialogUntil=0;this.dialogId=null;this.follow=false;}
@@ -194,8 +194,8 @@
         const pcm=new PCM16(s.ctx.sampleRate,frame=>this.frame(s,frame));
         // AudioWorklet preferred; fallback for older Android WebViews.
         if(s.ctx.audioWorklet && typeof AudioWorkletNode!=="undefined"){
-          const url=URL.createObjectURL(new Blob(["class JRecorder extends AudioWorkletProcessor {process(inputs){const c=inputs[0]?.[0];if(c)this.port.postMessage(new Float32Array(c));return true;}} registerProcessor('jarvis-recorder-v2',JRecorder);"],{type:"application/javascript"}));
-          try{await s.ctx.audioWorklet.addModule(url);if(!this.alive(s))return;s.node=new AudioWorkletNode(s.ctx,"jarvis-recorder-v2");s.node.port.onmessage=e=>{if(this.alive(s)&&!s.ended)pcm.push(e.data);};s.recorder="worklet";}catch{if(!this.alive(s))return;}finally{URL.revokeObjectURL(url);}
+          const url=URL.createObjectURL(new Blob(["class JRecorder extends AudioWorkletProcessor {process(inputs){const c=inputs[0]?.[0];if(c)this.port.postMessage(new Float32Array(c));return true;}} registerProcessor('tafa-recorder',JRecorder);"],{type:"application/javascript"}));
+          try{await s.ctx.audioWorklet.addModule(url);if(!this.alive(s))return;s.node=new AudioWorkletNode(s.ctx,"tafa-recorder");s.node.port.onmessage=e=>{if(this.alive(s)&&!s.ended)pcm.push(e.data);};s.recorder="worklet";}catch{if(!this.alive(s))return;}finally{URL.revokeObjectURL(url);}
         }
         if(!s.node){s.node=s.ctx.createScriptProcessor(2048,1,1);s.node.onaudioprocess=e=>{if(this.alive(s)&&!s.ended)pcm.push(e.inputBuffer.getChannelData(0));};s.recorder="legacy";}
         if(!this.alive(s))return;
@@ -253,7 +253,7 @@
             this.report("stt|"+s.recorder+"|"+(s.ctx?.sampleRate||0)+"Hz|speech_ms="+s.speechMs+"|rms="+s.peakRms.toFixed(4)+"|chars="+s.text.length);
             break;
           }
-          case "intent-start":this.state("Verarbeitet","Jarvis · Mikrofon aus");break;
+          case "intent-start":this.state("Verarbeitet","TAFA · Mikrofon aus");break;
           case "intent-end":s.question??=s.text;s.reply=fmt(d.intent_output?.response?.speech?.plain?.speech).trim();s.keep=!!d.intent_output?.continue_conversation;this.dialogId=d.intent_output?.conversation_id||null;this.lastReply=s.reply;this.state("Antwort","");break;
           case "tts-start":this.state("Sprachausgabe","Piper/Qwen · Mikrofon aus");break;
           case "tts-end":s.tts=d.tts_output?.url;break;
@@ -302,7 +302,7 @@
     async playAlexa(reply,keep=false){
       if(!visible()||this.mode!=="dashboard"||!this.card.isConnected)return;
       const speaker=this.cfg.alexa_notify,room=speaker;
-      if(!speaker||!this.h?.states?.[speaker]||this.h.states[speaker].state==="unavailable"){this.playError("Alexa-Ziel nicht verfügbar. Lautsprecher in Jarvis auswählen.");return;}
+      if(!speaker||!this.h?.states?.[speaker]||this.h.states[speaker].state==="unavailable"){this.playError("Alexa-Ziel nicht verfügbar. Lautsprecher in TAFA auswählen.");return;}
       const text=reply.trim().slice(0,500);
       if(!text){this.playError("Antwort fehlt");return;}
       this._playbackRoute="alexa";this.playing=true;const gen=this.generation;this.state("Spricht · Alexa",room);this.lastReply=text;
@@ -335,35 +335,35 @@
     destroy(){clearInterval(this._roomStatusTimer);this.clearCaption();this.stop();document.removeEventListener("visibilitychange",this.onHidden);window.removeEventListener("pagehide",this.onPageHide);}
     mount(){
       const shadow=this.card.shadowRoot,actions=shadow?.querySelector(".relay-actions");if(!actions)return;
-      let b=actions.querySelector("[data-jarvis-mic]");
-      if(!b){b=element("button");b.type="button";b.className="relay-mic";b.dataset.jarvisMic="1";b.style.position="relative";
+      let b=actions.querySelector("[data-tafa-mic]");
+      if(!b){b=element("button");b.type="button";b.className="relay-mic";b.dataset.tafaMic="1";b.style.position="relative";
         const icon=element("ha-icon");icon.dataset.role="mic-icon";
         const mark=element("span",null,"position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;pointer-events:none;box-shadow:0 0 0 2px var(--card-background-color);");mark.dataset.role="activity-icon";
         const small=element("ha-icon");small.style.setProperty("--mdc-icon-size","12px");small.style.color="#13232e";mark.append(small);b.append(icon,mark);
         b.onclick=e=>{e.stopPropagation();this.cycle();};actions.append(b);}
       this.micButton=b;
-      const details=shadow.querySelector("details");let root=details.querySelector("[data-jarvis-integrated]");
+      const details=shadow.querySelector("details");let root=details.querySelector("[data-tafa-integrated]");
       if(!root){root=this.buildSettings();details.append(root);}this.ui=root;
       this.update();
     }
     buildSettings(){
       const root=element("section",null,"display:grid;gap:12px;box-sizing:border-box;width:100%;margin:0 0 16px;padding:16px;border:1px solid var(--hz-line,var(--divider-color,#456));border-radius:14px;background:var(--hz-surface,var(--card-background-color,#192526));color:inherit;");
-      root.dataset.jarvisIntegrated="1";
-      root.append(element("strong",tr(this.h,"Jarvis · Assistent und Audio"),"font-size:16px;"));
+      root.dataset.tafaIntegrated="1";
+      root.append(element("strong",tr(this.h,"TAFA · Assistent und Audio"),"font-size:16px;"));
       root.append(element("span",tr(this.h,"Mikrofon oben rechts: Rufwort → Dauerbetrieb → Aus. Nur bei sichtbarem Dashboard aktiv. Informiere Anwesende."),"font-size:12px;opacity:.75;"));
       const btn=(role,label,fn)=>{const b=element("button",tr(this.h,label),"font:inherit;font-size:13px;min-height:40px;border:1px solid var(--divider-color,#456);border-radius:10px;padding:8px 12px;background:var(--secondary-background-color,#26364a);color:inherit;cursor:pointer;touch-action:manipulation;");b.type="button";b.dataset.role=role;b.onclick=e=>{e.stopPropagation();fn(b);};return b;};
       const group=(name,choices,kind)=>{root.append(element("strong",tr(this.h,name),"font-size:13px;"));const row=element("div",null,"display:flex;flex-wrap:wrap;gap:8px;");for(const [value,label] of choices){
         const b=btn("choice-"+kind+"-"+value,label,()=>{
           if(this.busy)return;
           if(kind==="mode")this.setMode(value);
-          else if(value==="alexa"&&this.output!=="alexa"){this._jarvisMenu="alexa-confirm";this.update();}
+          else if(value==="alexa"&&this.output!=="alexa"){this._tafaMenu="alexa-confirm";this.update();}
           else this.setOutput(value);
         });b.dataset.kind=kind;b.dataset.choice=value;row.append(b);
       }root.append(row);};
       group("Assistent",[["dashboard","Dashboard Assist"]],"mode");
       group("Audioausgabe",[["native_audio","TAFA Device Bridge · empfohlen"]],"output");
       const confirm=element("div",null,"display:none;gap:8px;flex-wrap:wrap;align-items:center;");confirm.dataset.role="confirm";
-      confirm.append(element("span",tr(this.h,"Alexa direkt nutzt einen zeitlich begrenzt öffentlichen Audio-Link. Nur für nicht vertrauliche Antworten."),"font-size:12px;width:100%;"),btn("approve","Alexa direkt aktivieren",()=>{this._jarvisMenu=null;this.setOutput("alexa",true);this.update();}),btn("cancel","Abbrechen",()=>{this._jarvisMenu=null;this.update();}));root.append(confirm);
+      confirm.append(element("span",tr(this.h,"Alexa direkt nutzt einen zeitlich begrenzt öffentlichen Audio-Link. Nur für nicht vertrauliche Antworten."),"font-size:12px;width:100%;"),btn("approve","Alexa direkt aktivieren",()=>{this._tafaMenu=null;this.setOutput("alexa",true);this.update();}),btn("cancel","Abbrechen",()=>{this._tafaMenu=null;this.update();}));root.append(confirm);
       const row=element("div",null,"display:flex;gap:8px;flex-wrap:wrap;align-items:center;");
       row.append(btn("native","Android-Assistent öffnen",b=>{this.stop();native(b,this);}),btn("test","Einmal sprechen",b=>{if(this.busy)return;if(this.mode!=="dashboard")this.setMode("dashboard");this.tap(b);}),btn("replay","Antwort wiederholen",()=>{if(this.busy)return;if(this.output==="alexa"&&this.lastReply)this.playAlexa(this.lastReply,false);else if(this.output==="native_audio"&&this.lastAudio)this.playNativeAudio(this.lastAudio,false);else if(this.lastAudio)this.play(this.lastAudio,false);}),btn("tabletReplay","Tablet-Reserve",()=>{if(!this.busy&&this.lastAudio)this.play(this.lastAudio,false);}));
       row.querySelector("[data-role=native]").hidden=true;row.querySelector("[data-role=tabletReplay]").hidden=true;
@@ -417,7 +417,7 @@
         const kind=b.dataset.kind,v=b.dataset.choice,selected=(kind==="mode"?this.mode:this.output)===v;
         b.disabled=running;b.setAttribute("aria-pressed",String(selected));b.style.borderColor=selected?"#36bb9a":"var(--divider-color,#456)";b.style.background=selected?"rgba(54,187,154,.18)":"var(--secondary-background-color,#26364a)";
       }
-      q("confirm").style.display=this._jarvisMenu==="alexa-confirm"&&!running?"flex":"none";
+      q("confirm").style.display=this._tafaMenu==="alexa-confirm"&&!running?"flex":"none";
       q("native").disabled=running;q("test").disabled=running;
       q("replay").disabled=running||this.mode!=="dashboard"||!(this.output==="alexa"?this.lastReply:this.lastAudio);
       q("tabletReplay").disabled=running||this.mode!=="dashboard"||!this.lastAudio;
@@ -430,7 +430,7 @@
     constructor(){super();this.attachShadow({mode:"open"});}
     setConfig(c){
       if(!c||typeof c!=="object")throw Error("Configuration required");
-      const cfg={command_entity:"input_text.jarvis_native_audio_command",relay_status_entity:"input_text.jarvis_native_audio_status",...c,room_audio:true,output:"native_audio",alexa_script:null,alexa_notify:null,native_notify_service:null,status_entity:null};
+      const cfg={command_entity:"input_text.tafa_native_audio_command",relay_status_entity:"input_text.tafa_native_audio_status",...c,room_audio:true,output:"native_audio",alexa_script:null,alexa_notify:null,native_notify_service:null,status_entity:null};
       for(const k of ["command_entity","relay_status_entity","status_entity"])if(cfg[k]&&!/^input_text\.[a-z0-9_]+$/.test(cfg[k]))throw Error("Invalid "+k);
       if(cfg.command_entity===cfg.relay_status_entity)throw Error("Command and status helpers must differ");
       if(cfg.alexa_script&&!/^[a-z0-9_]+$/.test(cfg.alexa_script))throw Error("alexa_script must be a script service name without script.");

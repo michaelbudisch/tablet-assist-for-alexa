@@ -175,7 +175,7 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.5.3';
     const device=card._tafaLocalVoice||{};
     const wake=String(h[device.status]?.state||"").toLowerCase();
     const mic=String(h[device.mic]?.state||"").toLowerCase();
-    const voice=card._jarvisIntegratedVoice;
+    const voice=card._tafaIntegratedVoice;
     if(voice?.playing)return "speaking";
     if(voice?.processing)return "processing";
     if(voice?.info)return "listening";

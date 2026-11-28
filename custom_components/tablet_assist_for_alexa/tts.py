@@ -25,10 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     session = async_get_clientsession(hass)
     cfg = settings(entry)
-    entities = [JarvisNativeTTS(entry.entry_id, session, "piper", "Tablet Assist Piper", cfg)]
+    entities = [TafaNativeTTS(entry.entry_id, session, "piper", "Tablet Assist Piper", cfg)]
     if cfg.get("gpu_base"):
-        entities.append(JarvisNativeTTS(entry.entry_id, session, "qwen", "Tablet Assist Qwen", cfg))
-    entities.append(JarvisStreamingTTS(entry.entry_id, session, "stream", "Tablet Assist Stream", cfg))
+        entities.append(TafaNativeTTS(entry.entry_id, session, "qwen", "Tablet Assist Qwen", cfg))
+    entities.append(TafaStreamingTTS(entry.entry_id, session, "stream", "Tablet Assist Stream", cfg))
     async_add_entities(entities)
 
 
@@ -45,7 +45,7 @@ def valid_wav(data):
         return False
 
 
-class JarvisNativeTTS(TextToSpeechEntity):
+class TafaNativeTTS(TextToSpeechEntity):
     _attr_default_language = "de"
     _attr_supported_languages = ["de", "de-DE"]
     _attr_supported_options = []
@@ -134,7 +134,7 @@ def streaming_header(rate):
     return out.getvalue()
 
 
-class JarvisStreamingTTS(JarvisNativeTTS):
+class TafaStreamingTTS(TafaNativeTTS):
     """Stream PCM from Faster Qwen; fall back only before audio is emitted."""
 
     _attr_supported_options = ["jarvis_cache_voice", "jarvis_cache_profile", "jarvis_cache_epoch", "jarvis_cache_sound"]

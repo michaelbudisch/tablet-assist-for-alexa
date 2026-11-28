@@ -1,4 +1,4 @@
-// Jarvis Bluetooth Keepalive v1.1.0
+// TAFA Bluetooth Keepalive v1.1.0
 // One silent playback session per frontend document. No microphone access.
 (function () {
   if (customElements.get("tablet-assist-bt-keepalive")) return;
@@ -85,7 +85,7 @@ function localize(html,hass){if(language(hass)==="de")return html;for(const [de,
   // SPA navigation does not unload the document. A real page/app reload does.
   window.addEventListener("pagehide", function () { stop("Seite beendet · neu starten"); });
 
-  class JarvisBtKeepalive extends HTMLElement {
+  class TafaBtKeepalive extends HTMLElement {
     constructor() {
       super();
       this.updateStatus = this.updateStatus.bind(this);
@@ -120,9 +120,9 @@ function localize(html,hass){if(language(hass)==="de")return html;for(const [de,
       if (m) m.textContent = tr(message,this._hass);
     }
   }
-  customElements.define("tablet-assist-bt-keepalive", JarvisBtKeepalive);
+  customElements.define("tablet-assist-bt-keepalive", TafaBtKeepalive);
   window.customCards = window.customCards || [];
   if (!window.customCards.some(function (c) { return c.type === "tablet-assist-bt-keepalive"; })) {
-    window.customCards.push({type: "tablet-assist-bt-keepalive", name: "Jarvis Bluetooth Keepalive", description: tr("Manuell gesteuerter Silent-Audio-Dauerbetrieb")});
+    window.customCards.push({type: "tablet-assist-bt-keepalive", name: "TAFA Bluetooth Keepalive", description: tr("Manuell gesteuerter Silent-Audio-Dauerbetrieb")});
   }
 })();
