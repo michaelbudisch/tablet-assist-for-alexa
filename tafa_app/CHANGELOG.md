@@ -1,3 +1,11 @@
+## 0.4.70
+
+- Stimmenverwaltung unter **Einstellungen → Stimme und Klang**: Qwen-Varianten 1–9 werden als vorhanden/fehlend angezeigt, mit den Aktionen Erstellen und Hörprobe.
+- Variantenstatus kommt direkt vom konfigurierten GPU-Worker und zeigt Nicht-Fixed-Modus, Fallback und Erstellungsfehler ausdrücklich.
+- Gesicherte Ingress-Proxy-Endpunkte für Inventar, gezielte lokale Erstellung und kurze WAV-Hörproben. Kein zusätzlicher Token, keine frei eingebbaren Worker-Ziele, kein Upload von Sprachaufnahmen.
+- GPU-Worker 2.2.8 ergänzt unterschiedliche synthetische Stimmcharaktere und eine Vorbereitung mit vorübergehender Freigabe des Qwen-TTS-Modells. Bestehende Referenzen bleiben erhalten. Worker separat aktualisieren.
+- Ergänzende Regressionstests; Home-Assistant-Dashboards, bestehende Automationen und Gerätezuordnungen bleiben unverändert.
+
 ## 0.4.68
 
 - Zwei neue automatisch mit jedem TAFA-Tablet bereitgestellte Home-Assistant-Sensoren: **Tabletname** (`device_name`) und **Gerätekennung** (`device_id`). Beide sind bei offline befindlichen, weiterhin registrierten Tablets verfügbar.
