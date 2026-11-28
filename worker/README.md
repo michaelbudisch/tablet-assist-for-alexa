@@ -4,6 +4,12 @@
 
 Der GPU Worker ist eine **optionale** Ergänzung für GPU-Whisper, Qwen-TTS, Ollama und Vision. Die CPU-Basis kommt **wahlweise** aus der TAFA-App (**lokal**) oder einem separaten CPU-Sprachserver (**extern**).
 
+## Stimmenvarianten in TAFA
+
+Mit Worker 2.2.8 zeigt **TAFA → Einstellungen → Stimme und Klang** alle Varianten 1–9 mit ihrem echten Status. Fehlende Profile können dort einzeln erstellt und anschließend per Hörprobe getestet werden. Für die Erstellung ist `STREAM_VOICE_MODE=fixed` in der Worker-`.env` erforderlich. Die Standardstimme bleibt bestehen; weitere Stimmen nutzen bewusst unterschiedliche synthetische Stimmcharaktere. Eine neue Variante wird erst nach **Einstellungen speichern** für TAFA ausgewählt.
+
+**Bereits eingerichteter Windows-GPU-Worker:** die aktuellen Worker-Dateien übernehmen und **06-Stimmenverwaltung-Aktualisieren.bat** ausführen. Nur Qwen-Stream wird neu gebaut; Ollama, Whisper, Vision und persistente Modelle werden nicht gelöscht. Das Vorbereiten einer Stimme belegt die GPU vorübergehend; dabei kann Piper übernehmen.
+
 ## Windows-Schnellstart
 
 1. **01-Installieren.bat** – fehlende `.env` erzeugen, GPU-Whisper und Qwen-TTS starten und **`qwen3-vl:4b-instruct` als einziges Ollama-Modell für Text und Vision installieren und vorladen**. Mehrere GB Download gehören zur Installation.
