@@ -57,3 +57,10 @@ def eligible_wake(wake, user_id, when, context_id):
         return False
     owner = wake.get("context_id")
     return owner is None or owner == context_id
+
+
+def confirmed_transition(entity_id, previous, current):
+    """Only direct on/off changes from an existing controllable HA entity."""
+    return (isinstance(entity_id, str) and ENTITY.fullmatch(entity_id) is not None
+            and previous in ("on", "off") and current in ("on", "off")
+            and previous != current)

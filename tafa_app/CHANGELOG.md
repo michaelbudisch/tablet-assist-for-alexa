@@ -1,3 +1,8 @@
+## 0.4.75
+
+- Repariert die Ambient-Schaltinfobox bei nativen HA-Licht-Intents: Zusätzlich zu expliziten Dienstaufrufen werden bestätigte on/off-Zustandsänderungen mit dem authentifizierten Rufwort-Kontext korreliert.
+- Keine Änderung an Assist-Pipelines, Lichtsteuerung, Android-App oder vorhandenen Automationen; bereits gemeldete Schaltaufträge werden entdoppelt.
+
 ## 0.4.74
 
 - Native Home-Assistant-Assist-Schaltbefehle erzeugen nach einem gerätegebundenen TAFA-Rufwort automatisch die bereits vorhandene Ambient-Schaltkarte, auch wenn lokale Intents den Gesprächsrouter umgehen.

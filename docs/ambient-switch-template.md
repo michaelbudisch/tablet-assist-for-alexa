@@ -30,3 +30,7 @@ Room-specific commands must pass `room` or `device_id`. An event without target 
 Since TAFA App 0.4.74 / integration 0.5.9, native Assist calls with `prefer_local_intents: true` are also observed. TAFA listens only after an authenticated `tafa_android_wakeword_routed` event for a paired tablet. Within a 25-second bounded window it correlates direct, root-context `call_service` events from the room's assigned Home Assistant user. Eligible calls must explicitly name at most six `light.*`, `switch.*`, or `input_boolean.*` entities and use `turn_on`, `turn_off`, or `toggle`; all other events are ignored.
 
 The bridge publishes only presentation metadata to `tafa_infobox_show`. A native command continues to execute via Home Assistant (TAFA never repeats it). The ambient client confirms the requested state from the actual HA entity. Commands using area/device targets without explicit entity IDs are intentionally ignored rather than inferring or broadcasting arbitrary devices.
+
+## Confirmed state-change fallback
+
+TAFA App 0.4.75 (integration 0.5.10) additionally observes `state_changed` for **actual on/off transitions** where the new entity state's root context belongs to the paired TAFA user during the recent wake window. This complements explicit service events, since native HA intents may resolve entity targets internally. An entity change produces at most one scoped notice per wake/request context; non-TAFA manual and automated changes are ignored. No-op commands that do not change state may be speech-only.

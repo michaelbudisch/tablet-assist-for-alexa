@@ -27,6 +27,16 @@ class SwitchNoticeLogicTests(unittest.TestCase):
         self.assertEqual(mod.extract_targets("light","turn_on",{"entity_id":"script.tafa_geraet_schalten"}),())
         self.assertEqual(mod.extract_targets("light","turn_on",{"target":{"entity_id":["light.a"]}}),("light.a",))
 
+    def test_confirmed_native_state_transitions(self):
+        # The observed native light intent changed a root-user-owned entity
+        # without the initial explicit service-hook notification.
+        self.assertTrue(mod.confirmed_transition("light.buro_arbeitszimmer_led","off","on"))
+        self.assertTrue(mod.confirmed_transition("light.buro_arbeitszimmer_led","on","off"))
+        self.assertFalse(mod.confirmed_transition("light.buro_arbeitszimmer_led","on","on"))
+        self.assertFalse(mod.confirmed_transition("light.buro_arbeitszimmer_led","unknown","on"))
+        self.assertFalse(mod.confirmed_transition("sensor.energy","off","on"))
+        self.assertFalse(mod.confirmed_transition("light.office","off","unavailable"))
+
     def test_pair_and_one_service_context(self):
         wake={"user_id":"room-user","at":20,"context_id":None}
         self.assertTrue(mod.eligible_wake(wake,"room-user",25,"intent-123"))

@@ -1,17 +1,19 @@
-"""Bridge successful native Assist switch calls to typed TAFA ambient notices.
+"""Scope native Home Assistant Assist light changes to the paired TAFA tablet.
 
-Native Assist commands are evaluated by Home Assistant before TAFA's conversation
-agent when prefer_local_intents is enabled. This listener does not alter that
-pipeline or execute any device command. It correlates an authenticated native
-wakeword with direct, user-attributed service calls for named entities only.
+Home Assistant executes local intents before the TAFA conversation entity. Native
+lighting intents may resolve registry targets without a public call_service
+event naming their entity IDs. Listen to both explicit service calls and the
+resulting confirmed state changes, without executing any command ourselves.
 """
 from time import monotonic
 
-from homeassistant.const import EVENT_CALL_SERVICE
+from homeassistant.const import EVENT_CALL_SERVICE, EVENT_STATE_CHANGED
 from homeassistant.core import callback
 
 from .const import DOMAIN
-from .switch_notice_logic import eligible_wake, expected_state, extract_targets
+from .switch_notice_logic import (
+    eligible_wake, expected_state, extract_targets, confirmed_transition,
+)
 
 KEY = "native_switch_notice"
 WAKE_EVENT = "tafa_android_wakeword_routed"
@@ -47,61 +49,93 @@ def setup_switch_intent_bridge(hass):
         ), None)
         if not room:
             return
-        now = monotonic()
-        wakes.clear()  # A new native wake supersedes previous routing.
-        wakes[device_id] = {"at": now, "user_id": user_id, "room": room,
-                            "device_id": device_id, "context_id": None,
-                            "seen": set()}
+        # A new wake replaces older wakes for that user, not other active rooms.
+        for identifier, route in list(wakes.items()):
+            if route["user_id"] == user_id or monotonic() - route["at"] > 25:
+                wakes.pop(identifier, None)
+        wakes[device_id] = {
+            "at": monotonic(), "user_id": user_id, "room": room,
+            "device_id": device_id, "context_id": None, "seen": set(),
+        }
+
+    def route_for(context):
+        principal = getattr(context, "user_id", None)
+        context_id = getattr(context, "id", None)
+        if not principal or not context_id or getattr(context, "parent_id", None):
+            return None
+        routes = [
+            route for route in wakes.values()
+            if eligible_wake(route, principal, monotonic(), context_id)
+        ]
+        return routes[0] if len(routes) == 1 else None
+
+    def notify(route, entity_id, previous, desired, context, state):
+        if entity_id in route["seen"] or desired not in ("on", "off"):
+            return
+        route["seen"].add(entity_id)
+        route["context_id"] = context.id
+        friendly = str(state.attributes.get("friendly_name") or entity_id)[:90]
+        action = "einschalten" if desired == "on" else "ausschalten"
+        hass.bus.async_fire(NOTICE_EVENT, {
+            "template": "switch",
+            "title": "TAFA · Schaltauftrag",
+            "message": friendly + ": " + action,
+            "entity_id": entity_id,
+            "requested_state": desired,
+            "previous_state": previous,
+            "device_id": route["device_id"],
+            "room": route["room"],
+            "seconds": 12,
+            "request_id": "native-" + context.id[:48] + "-" + entity_id[:40],
+        }, context=context)
 
     @callback
     def service(event):
         payload = event.data
         if not isinstance(payload, dict):
             return
-        service_domain = payload.get("domain")
-        service_name = payload.get("service")
-        ids = extract_targets(service_domain, service_name,
-                              payload.get("service_data", {}))
+        ids = extract_targets(
+            payload.get("domain"), payload.get("service"),
+            payload.get("service_data", {}),
+        )
         if not ids:
             return
         context = event.context
-        principal = getattr(context, "user_id", None)
-        context_id = getattr(context, "id", None)
-        # Script and automation chains have their own notification mechanism.
-        # Direct native Assist commands carry a root user context.
-        if not principal or not context_id or getattr(context, "parent_id", None):
+        route = route_for(context)
+        if route is None:
             return
-        now = monotonic()
-        matching = [w for w in wakes.values()
-                    if eligible_wake(w, principal, now, context_id)]
-        if len(matching) != 1:
-            return
-        route = matching[0]
         for entity_id in ids:
             state = hass.states.get(entity_id)
             previous = getattr(state, "state", None)
-            desired = expected_state(service_name, previous)
-            if desired is None or entity_id in route["seen"]:
-                continue
-            route["seen"].add(entity_id)
-            route["context_id"] = context_id
-            friendly = str(state.attributes.get("friendly_name") or entity_id)[:90]
-            action = "einschalten" if desired == "on" else "ausschalten"
-            hass.bus.async_fire(NOTICE_EVENT, {
-                "template": "switch",
-                "title": "TAFA · Schaltauftrag",
-                "message": friendly + ": " + action,
-                "entity_id": entity_id,
-                "requested_state": desired,
-                "previous_state": previous,
-                "device_id": route["device_id"],
-                "room": route["room"],
-                "seconds": 12,
-                "request_id": "native-" + context_id[:48] + "-" + entity_id[:40],
-            }, context=context)
+            desired = expected_state(payload["service"], previous)
+            if state is not None and desired is not None:
+                notify(route, entity_id, previous, desired, context, state)
 
-    data[KEY] = (hass.bus.async_listen(WAKE_EVENT, wake),
-                 hass.bus.async_listen(EVENT_CALL_SERVICE, service))
+    @callback
+    def state_changed(event):
+        raw = event.data
+        if not isinstance(raw, dict):
+            return
+        entity_id = raw.get("entity_id")
+        old_state = raw.get("old_state")
+        new_state = raw.get("new_state")
+        previous = getattr(old_state, "state", None)
+        desired = getattr(new_state, "state", None)
+        if not confirmed_transition(entity_id, previous, desired):
+            return
+        # The *new entity state's* provenance is authoritative. This can
+        # differ from the wrapper event's context for native Assist intents.
+        context = getattr(new_state, "context", None) or event.context
+        route = route_for(context)
+        if route is None:
+            return
+        notify(route, entity_id, previous, desired, context, new_state)
+
+    data[KEY] = (
+        hass.bus.async_listen(WAKE_EVENT, wake),
+        hass.bus.async_listen(EVENT_CALL_SERVICE, service),
+        hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed),
+    )
 
 
 def unload_switch_intent_bridge(hass):
