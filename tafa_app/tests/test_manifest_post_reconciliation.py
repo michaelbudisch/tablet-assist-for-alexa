@@ -77,7 +77,7 @@ def run_import(current,latest):
          patch.object(server,"_internal_address",return_value="http://tafa-internal:5000"),\
          patch.object(server,"consume_import",return_value=worker()),\
          patch.object(server,"load_options",return_value=current),\
-         patch.object(settings_ui,"load_options",return_value=latest),\
+         patch.object(speech_source.HTTP,"open",side_effect=supervisor_read),\
          patch.object(server,"load_records",return_value={}),\
          patch.object(server,"configure",return_value="already_configured") as configure,\
          patch.object(server,"provision_worker_manifest",return_value={
