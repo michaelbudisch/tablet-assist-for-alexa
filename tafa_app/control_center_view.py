@@ -125,6 +125,7 @@ def render_dashboard(*, lang, version, default_tab, message, repo, csrf,
 <link rel="stylesheet" href="assets/control-center.css?v={version}">
 <script src="assets/control-center.js?v={version}" defer></script>
 <script src="assets/voice-test.js?v={version}" defer></script>
+<script src="assets/voice-manager.js?v={version}" defer></script>
 </head>
 <body data-default-tab="{default_tab}">
 <div class="shell">
