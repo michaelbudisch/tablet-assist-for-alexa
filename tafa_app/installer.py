@@ -37,6 +37,26 @@ def _managed(root):
     except (OSError, ValueError, TypeError):
         return False
 
+def _verified_tafa_source(dest):
+    """Conservatively identify this project's previously unmanaged install.
+
+    Opt-in adoption is the only path for a modified or markerless copy.
+    The existing directory is always preserved as a complete rollback.
+    """
+    if not dest.is_dir() or dest.is_symlink():
+        return False
+    try:
+        manifest=json.loads((dest / "manifest.json").read_text(encoding="utf-8"))
+        return (manifest.get("domain")==DOMAIN
+                and "@michaelbudisch" in manifest.get("codeowners", [])
+                and str(manifest.get("documentation", "")).startswith(
+                    "https://github.com/michaelbudisch/tablet-assist-for-alexa/")
+                and (dest/"__init__.py").is_file()
+                and not (dest/"__init__.py").is_symlink())
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def _prepare(source, dest):
     if not source.is_dir() or source.is_symlink():
         raise ValueError("Incomplete bundled integration.")
@@ -81,7 +101,7 @@ def status(config):
         return {DOMAIN:"existing (version unknown)"}
     return {DOMAIN:"installed · "+str(version)+(" · managed by TAFA App" if _managed(path) else " · external/manual installation")}
 
-def install(config, bundle, values=None, domains=DOMAINS):
+def install(config, bundle, values=None, domains=DOMAINS, adopt_existing=False):
     """Add missing files or safely update an unchanged TAFA-managed installation.
 
     For HACS-managed/manual installations, return without mutation.
@@ -97,8 +117,11 @@ def install(config, bundle, values=None, domains=DOMAINS):
     if not root.is_dir():
         raise ValueError("Invalid custom_components directory")
     dest=root / DOMAIN
-    if dest.is_symlink() or (dest.exists() and (not dest.is_dir() or not _managed(dest))):
+    if dest.is_symlink() or (dest.exists() and not dest.is_dir()):
         return []
+    if dest.exists() and not _managed(dest):
+        if adopt_existing is not True or not _verified_tafa_source(dest):
+            return []
     with tempfile.TemporaryDirectory(prefix=".tafa-stage-",dir=root) as tmp:
         stage=Path(tmp) / DOMAIN
         stage.mkdir()
@@ -122,6 +145,6 @@ def install(config, bundle, values=None, domains=DOMAINS):
             raise
         return [DOMAIN]
 
-def bootstrap(config,bundle):
-    """Install/update one app-managed backend. Never overwrite external copies."""
-    return install(config,bundle)
+def bootstrap(config,bundle,adopt_existing=False):
+    """Default: protect manual installs. One-time verified adoption needs opt-in."""
+    return install(config,bundle,adopt_existing=adopt_existing)

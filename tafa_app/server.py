@@ -56,7 +56,7 @@ FINALIZER_LOCK=threading.Lock()
 SETUP_GENERATION=0
 CPU_THREAD=None
 FINALIZER_THREAD=None
-APP_VERSION="0.4.65"
+APP_VERSION="0.4.66"
 
 def _json_url(url,token="",timeout=2):
     hdr={"Authorization":"Bearer "+token} if token else {}
@@ -374,9 +374,15 @@ def activate_configured_services():
 
 def startup():
     try:
-        added=bootstrap(CONFIG,BUNDLE)
-        if added: LOG.info("Unified TAFA backend staged. Home Assistant must restart to discover it.")
-        else: LOG.info("Existing TAFA installation preserved.")
+        # The default remains strictly non-destructive. Enabling this one-time
+        # Supervisor option permits a verified prior TAFA copy to be archived
+        # before an atomic replacement with the current managed bundle.
+        adoption=load_options().get("migration_adopt_backend_once") is True
+        added=bootstrap(CONFIG,BUNDLE,adopt_existing=adoption)
+        if added:
+            LOG.info("Unified TAFA backend staged; prior files backed up on upgrade. Home Assistant Core restart required.")
+        else:
+            LOG.info("Existing TAFA installation preserved%s.", " (adoption requested but source not verified)" if adoption else "")
     except (OSError,ValueError,SyntaxError) as exc:
         LOG.error("Backend installation could not complete: %s",type(exc).__name__)
     try:

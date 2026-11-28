@@ -57,4 +57,30 @@ class Tests(unittest.TestCase):
   (dest/MARKER).write_text("{}")
   (self.pkg/"manifest.json").write_text('{"domain":"tablet_assist_for_alexa","version":"0.5.0"}')
   self.assertEqual(bootstrap(self.cfg,self.bundle),[])
+ def test_one_time_verified_adoption_preserves_rollback(self):
+  dest=self.cfg/"custom_components"/"tablet_assist_for_alexa"
+  dest.mkdir(parents=True)
+  old=json.dumps({"domain":"tablet_assist_for_alexa","version":"0.5.2","codeowners":["@michaelbudisch"],"documentation":"https://github.com/michaelbudisch/tablet-assist-for-alexa/blob/main/docs/marketplace.md"})
+  (dest/"manifest.json").write_text(old)
+  (dest/"__init__.py").write_text("# locally customized TAFA\n")
+  self.assertEqual(bootstrap(self.cfg,self.bundle),[])
+  self.assertIn("locally customized",(dest/"__init__.py").read_text())
+  changed=bootstrap(self.cfg,self.bundle,adopt_existing=True)
+  self.assertEqual(len(changed),1)
+  self.assertIn("managed by TAFA App",status(self.cfg)["tablet_assist_for_alexa"])
+  backups=list((self.cfg/".tafa"/"rollback").iterdir())
+  self.assertEqual(len(backups),1)
+  self.assertEqual((backups[0]/"manifest.json").read_text(),old)
+  self.assertIn("locally customized",(backups[0]/"__init__.py").read_text())
+  self.assertEqual(bootstrap(self.cfg,self.bundle),[])
+
+ def test_optin_rejects_foreign_source(self):
+  dest=self.cfg/"custom_components"/"tablet_assist_for_alexa"
+  dest.mkdir(parents=True)
+  (dest/"manifest.json").write_text(json.dumps({"domain":"tablet_assist_for_alexa","version":"0.5.2","codeowners":["@unrelated"],"documentation":"https://example.org/other"}))
+  (dest/"__init__.py").write_text("# different source")
+  self.assertEqual(bootstrap(self.cfg,self.bundle,adopt_existing=True),[])
+  self.assertIn("different source",(dest/"__init__.py").read_text())
+  self.assertFalse((self.cfg/".tafa"/"rollback").exists())
+
 if __name__=="__main__":unittest.main()
