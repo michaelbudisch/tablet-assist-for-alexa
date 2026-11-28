@@ -28,7 +28,13 @@ class Store:
 
 
 class Hass:
-    def __init__(self):self.signals=[]
+    def __init__(self):
+        self.signals=[]
+        self.fired=[]
+        self.bus=self
+
+    def async_fire(self, kind, payload):
+        self.fired.append((kind, payload))
 
 
 def load_controller():
@@ -52,6 +58,12 @@ def load_controller():
         "CHOICES":{"Hey Jarvis","Jarvis","Alexa","Alle drei"},
         "async_dispatcher_send":lambda hass,kind,id: hass.signals.append((kind,id)),
     }
+    logic_path=ROOT/"custom_components/tablet_assist_for_alexa/switch_notice_logic.py"
+    logic_tree=ast.parse(logic_path.read_text(encoding="utf-8"))
+    reported_wake=next(n for n in logic_tree.body if isinstance(n,ast.FunctionDef)
+                       and n.name=="reported_native_wake")
+    exec(compile(ast.fix_missing_locations(
+        ast.Module(body=[reported_wake],type_ignores=[])),str(logic_path),"exec"),namespace)
     exec(compile(ast.fix_missing_locations(
         ast.Module(body=[node],type_ignores=[])),str(PATH),"exec"),namespace)
     return namespace["WakeDevices"]
@@ -114,6 +126,21 @@ class AckTests(unittest.IsolatedAsyncioTestCase):
         pub=c.public(c.devices[self.id])
         self.assertEqual(pub["telemetry"]["local_followup_limit"],-1)
         self.assertEqual(pub["control"]["ack_revision"],1)
+
+    async def test_native_wake_report_routes_once_without_control_push(self):
+        c=self.controller
+        c.devices[self.id]["word"]="Jarvis"
+        before=sum(kind=="settings" for kind,_ in self.hass.signals)
+        for status in ("listening: jarvis", "detected: Jarvis", "detected: Jarvis"):
+            result=await c.handle(self.user,"report",self.id,{
+                "telemetry":{"wake_status":status}})
+            self.assertTrue(result["accepted"])
+        wake_events=[payload for kind,payload in self.hass.fired
+                     if kind=="tafa_android_wakeword_routed"]
+        self.assertEqual(len(wake_events),1)
+        self.assertEqual(wake_events[0]["device_id"],self.id)
+        self.assertEqual(wake_events[0]["wakeword"],"Jarvis")
+        self.assertEqual(before,sum(kind=="settings" for kind,_ in self.hass.signals))
 
     async def test_denied_cross_owner_and_invalid_ack(self):
         c=self.controller
