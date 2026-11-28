@@ -444,6 +444,11 @@ public class MainActivity extends Activity {
         new Thread(()->{
             try{
                 WakePilotSettings.write(this,setting,value);
+                if("room".equals(setting)){
+                    var prefs=getSharedPreferences(PREF,0);
+                    if(String.valueOf(value).equals(prefs.getString("wake_room_name","")))
+                        prefs.edit().putBoolean("wake_room_name_pending",false).apply();
+                }
             }catch(Exception e){
                 android.util.Log.w("TAFAWake","Unable to save HA wakeword setting",e);
                 runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_save_error,
@@ -493,6 +498,9 @@ public class MainActivity extends Activity {
         var preferences=getSharedPreferences(PREF,0);
         wakeRoomName=findViewById(R.id.wake_room_name);
         wakeRoomName.setText(preferences.getString("wake_room_name",""));
+        wakeRoomName.setOnEditorActionListener((v,actionId,event)->{
+            wakeRoomName.clearFocus();return false;
+        });
         wakeRoomName.setOnFocusChangeListener((v,focus)->{
             if(!focus&&WakeWordService.running){
                 remoteWakeSetting("room",wakeRoomName.getText().toString().trim());
@@ -502,7 +510,8 @@ public class MainActivity extends Activity {
             @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
             @Override public void onTextChanged(CharSequence s,int start,int before,int count){}
             @Override public void afterTextChanged(Editable e){
-                preferences.edit().putString("wake_room_name",e.toString().trim()).apply();
+                preferences.edit().putString("wake_room_name",e.toString().trim())
+                    .putBoolean("wake_room_name_pending",true).apply();
             }
         });
         if (WakeModelInstaller.installed(this))

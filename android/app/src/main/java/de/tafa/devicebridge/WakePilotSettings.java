@@ -107,6 +107,16 @@ final class WakePilotSettings {
 
     static void register(Context ctx) throws Exception {
         request(ctx,body(ctx,"register").put("room",WakeDeviceIdentity.room(ctx)));
+        // If the tablet was renamed while its player was off, apply the
+        // user-edited label to the existing enrollment after reconnecting.
+        SharedPreferences prefs=ctx.getSharedPreferences(MainActivity.PREF,0);
+        if(prefs.getBoolean("wake_room_name_pending",false)){
+            String current=WakeDeviceIdentity.room(ctx);
+            request(ctx,body(ctx,"configure")
+                .put("settings",new JSONObject().put("room",current)));
+            if(current.equals(WakeDeviceIdentity.room(ctx)))
+                prefs.edit().putBoolean("wake_room_name_pending",false).apply();
+        }
     }
 
     static Snapshot readFull(Context ctx) throws Exception {
