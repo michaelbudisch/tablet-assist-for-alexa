@@ -333,7 +333,7 @@ async def answer(hass, text, context):
             await resolve_camera_request(relay, request, context)
             # Visible dashboard clients handle these before Assist/TTS. Native clients
             # receive an honest fallback and never invoke the vision worker.
-            return "Die Liveansicht kannst du im Jarvis-Dashboard öffnen."
+            return "Die Liveansicht kannst du im TAFA-Dashboard öffnen."
         result = await describe(relay, *request, context)
         return "Auf dem gerade abgerufenen Einzelbild: " + result["description"]
     except (HomeAssistantError, ValueError, asyncio.TimeoutError):
