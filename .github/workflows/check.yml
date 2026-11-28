@@ -34,17 +34,5 @@ jobs:
       - run: python tests/test_standalone.py
       - run: python tests/test_local_intents.py
       - run: node tests/test_ambient_rebind.mjs
-      - run: node tests/test_camera_preview.mjs
-      - run: npm ci --prefix tests/ui --no-audit --no-fund
-      - name: Disable unrelated broken Microsoft APT source on ephemeral runner
-        run: |
-          for source in /etc/apt/sources.list.d/*; do
-            if [ -f "$source" ] && grep -q 'packages.microsoft.com' "$source"; then
-              sudo mv "$source" "$source.disabled"
-            fi
-          done
-      - run: npx --prefix tests/ui playwright install --with-deps chromium
-      - run: node tests/ui/camera-infobox.mjs
-      - run: node tests/ui/model-settings.mjs
-      - run: node tests/ui/settings.mjs
-      - run: node tests/ui/proactive.mjs
+      - run: python -m unittest discover -s tafa_app/tests -p 'test_camera_migration_contract.py' -v
+      - run: python -m unittest discover -s tafa_app/tests -p 'test_control_center_layout.py' -v

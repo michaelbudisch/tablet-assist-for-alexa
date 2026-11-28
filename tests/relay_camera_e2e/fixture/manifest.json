@@ -1,1 +1,0 @@
-{"domain":"relay_camera_ci","name":"Relay Camera CI","version":"1.0.0","requirements":[],"dependencies":["http","camera","conversation"]}
