@@ -19,6 +19,14 @@ export async function subscribeOwnAmbientProfile(card,onProfile){
  if(closed)return ()=>{};
  const deviceId=deviceFor(card,Array.isArray(list?.devices)?list.devices:[]);
  if(!deviceId)return ()=>{};
+ try{
+  const identity=await h.callWS({type:"tablet_assist_for_alexa/visual_identity"});
+  const own=(identity?.devices||[]).find(d=>d.device_id===deviceId);
+  if(own&&!closed&&card.h?.connection===connection)
+   card._tafaLocalVoice={...(card._tafaLocalVoice||{}),deviceId,room:own.room,
+     label:own.label,status:own.sensors?.status||"",mic:own.sensors?.mic||"",
+     last:own.sensors?.last||""};
+ }catch(error){console.debug("TAFA device identity unavailable",error);}
  const reload=async()=>{
   try{
    const value=await h.callWS({type:COMMAND,action:"get",device_id:deviceId});
