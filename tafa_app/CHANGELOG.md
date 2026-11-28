@@ -1,3 +1,11 @@
+## 0.4.67
+
+- **Tabletname** statt technischem Raumlabel: pro Gerät im Control Center editierbar und in HA als Gerätename sichtbar. Die Android-App 1.3.2 zeigt dieselbe Bezeichnung.
+- Mehrere Tablets dürfen einem vorhandenen Home-Assistant-Bereich zugeordnet werden. Jeder Teilnehmer behält seinen eigenen authentifizierten Audio- und Kamerakanal; kein zweites Tablet überschreibt das erste.
+- HA-Bereichsdurchsagen werden bei expliziter Bereichswahl an alle darin zugeordneten Player verteilt; Sprachantworten gehen weiterhin nur an den anfragenden Player.
+- Pro Tablet ist weiterhin ein eigenes aktives Nicht-Admin-HA-Konto für getrennte Audiokanäle erforderlich. Bestehende IDs, Bereiche und Kamerafreigaben bleiben erhalten.
+- Integrationsversion 0.5.4, Android 1.3.2.
+
 ## 0.4.66
 
 - Korrigiert die blockierte Aktualisierung einer früher manuell bearbeiteten TAFA-Integration: neue **standardmäßig deaktivierte** Option `migration_adopt_backend_once` für eine einmalige Übernahme.

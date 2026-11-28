@@ -192,8 +192,8 @@
     <string name="wake_unmute_button">Natives Mikrofon wieder freigeben</string>
     <string name="wake_remote_help">Die Einstellungen werden pro Gerät mit Home Assistant abgeglichen. Stumm gibt das Android-Mikrofon frei, während der Dienst weiterläuft. Änderungen gelten nach der nächsten Synchronisierung.</string>
     <string name="wake_save_error">Wakeword-Einstellung konnte nicht an Home Assistant gesendet werden: %1$s</string>
-    <string name="wake_multiroom_help">Jede Installation erhält eine eindeutige Gerätekennung. Die Räume werden ausschließlich in Home Assistant verwaltet. Weise dieses Tablet einmal unter TAFA → Geräte &amp; Multiroom einem HA-Raum zu. Der Gerätename unten dient nur der Anzeige.</string>
-    <string name="wake_room_label">Gerätename (nur Anzeige, keine Raumzuordnung)</string>
+    <string name="wake_multiroom_help">Jede Installation erhält eine eindeutige Gerätekennung. Die Räume werden ausschließlich in Home Assistant verwaltet. Weise dieses Tablet einmal unter TAFA → Geräte &amp; Multiroom einem HA-Raum zu. Der Tabletname ist in Home Assistant sichtbar und unabhängig von der Raumzuordnung. Mehrere Tablets dürfen denselben HA-Raum nutzen.</string>
+    <string name="wake_room_label">Tabletname (in Home Assistant sichtbar)</string>
     <string name="wake_room_hint">z. B. Büro-Tablet</string>
     <string name="wake_device_id">Diese Installation: %1$s</string>
     <string name="nav_status">Status</string>

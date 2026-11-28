@@ -1,3 +1,7 @@
+## 1.3.2 · Tablet name
+- The former room-name setting is now **Tablet name**. It appears in Home Assistant but does not select the HA Area.
+- The installation ID and stored connection persist across a normal signed update.
+
 ## 1.3.0 · Native TAFA Android identity
 - **Connect** starts the selected microphone mode and the camera when opted in. A missing offline wakeword model downloads once. **Disconnect** keeps the selection for the next connection.
 - New application ID and Java namespace `de.tafa.devicebridge`, version code 33. Fresh install and new tablet pairing required.
