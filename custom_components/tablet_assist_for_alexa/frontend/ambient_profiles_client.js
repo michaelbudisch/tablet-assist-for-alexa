@@ -6,10 +6,20 @@ const defaults=()=>({calendar:"",presence:"",dismiss:"sensor",idle:55,enabled:tr
 const normalize=p=>p&&typeof p==="object"?{...defaults(),...p}:defaults();
 const deviceFor=(card,devices)=>{
  const own=card?._tafaLocalVoice||{};
- let chosen=own.deviceId||own.device_id||own.wake_device_id||"";
- if(!chosen){try{chosen=localStorage.getItem(LOCAL_DEVICE)||"";}catch{}}
- if(!chosen&&devices.length===1)chosen=devices[0].device_id;
- return devices.some(d=>d.device_id===chosen)?chosen:"";
+ const primary=own.deviceId||own.device_id||own.wake_device_id||"";
+ if(devices.some(d=>d.device_id===primary))return primary;
+ let stored="";
+ try{stored=localStorage.getItem(LOCAL_DEVICE)||"";}catch{}
+ if(devices.some(d=>d.device_id===stored))return stored;
+ // A fresh Android install replaces the device ID. Repair only an
+ // unambiguous local tablet binding; never auto-bind an admin desktop.
+ const android=typeof navigator!=="undefined"&&/Android/i.test(navigator.userAgent||"");
+ if(devices.length===1&&(android||card?.h?.user?.is_admin!==true)){
+   const next=devices[0].device_id;
+   if(android)try{localStorage.setItem(LOCAL_DEVICE,next);}catch{}
+   return next;
+ }
+ return "";
 };
 export async function subscribeOwnAmbientProfile(card,onProfile){
  if(!card?.h?.callWS)return ()=>{};
