@@ -98,7 +98,7 @@ final class StreamingSession {
             listener.timing(VoiceTrace.Point.HTTP_READY);
             if(status!=200)throw new IOException(status==401||status==403?"error_stream_auth":"error_stream_http");
             if(connection.getContentLengthLong()>MAX_BYTES)throw new IOException("error_stream_size");
-            spool=File.createTempFile("jarvis-",".audio",cacheDir);
+            spool=File.createTempFile("tafa-",".audio",cacheDir);
             disk=new FileOutputStream(spool);
             body=connection.getInputStream();
             final FileOutputStream destination=disk;

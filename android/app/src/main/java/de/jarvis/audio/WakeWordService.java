@@ -37,7 +37,7 @@ public final class WakeWordService extends Service implements RecognitionListene
         NATIVE_TEST="de.jarvis.audio.NATIVE_TEST";
     static volatile boolean running=false;
     static volatile String status="off";
-    private static final String CHANNEL="jarvis-wake",TAG="JarvisWake";
+    private static final String CHANNEL="jarvis-wake",TAG="TAFAWake";
     private static final long SYNC_INTERVAL_MS=500;
     private final Handler main=new Handler(Looper.getMainLooper());
     private volatile boolean enabled=false;
@@ -235,7 +235,7 @@ public final class WakeWordService extends Service implements RecognitionListene
             }
         });
         settingsExecutor=Executors.newSingleThreadScheduledExecutor(r->{
-            Thread t=new Thread(r,"JarvisWakeHASettings");
+            Thread t=new Thread(r,"TAFAWakeHASettings");
             t.setDaemon(true);return t;
         });
         settingsExecutor.scheduleWithFixedDelay(()->{

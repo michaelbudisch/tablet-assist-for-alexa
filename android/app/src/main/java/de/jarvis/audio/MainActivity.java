@@ -374,18 +374,18 @@ public class MainActivity extends Activity {
             try{
                 WakePilotSettings.write(this,setting,value);
             }catch(Exception e){
-                android.util.Log.w("JarvisWake","Unable to save HA wakeword setting",e);
+                android.util.Log.w("TAFAWake","Unable to save HA wakeword setting",e);
                 runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_save_error,
                     e.getClass().getSimpleName())));
             }
-        },"JarvisWakeSettingsUpdate").start();
+        },"TAFAWakeSettingsUpdate").start();
     }
 
     private void remoteMicMode(String mode){
         new Thread(()->{
             try{WakePilotSettings.writeMode(this,mode);}
             catch(Exception failure){
-                android.util.Log.w("JarvisWake","Unable to save native microphone mode",failure);
+                android.util.Log.w("TAFAWake","Unable to save native microphone mode",failure);
                 runOnUiThread(()->wakeStatus.setText(getString(R.string.wake_save_error,
                     failure.getClass().getSimpleName())));
             }
@@ -474,7 +474,7 @@ public class MainActivity extends Activity {
                 }finally{
                     runOnUiThread(()->{wakeDownloading=false;wakeInstall.setEnabled(true);});
                 }
-            },"JarvisWakeModelDownload").start();
+            },"TAFAWakeModelDownload").start();
         });
         wakeStrictSlider=findViewById(R.id.wake_strict_slider);
         wakeCooldownSlider=findViewById(R.id.wake_cooldown_slider);

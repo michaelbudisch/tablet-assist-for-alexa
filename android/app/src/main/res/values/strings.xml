@@ -122,7 +122,7 @@
     <string name="camera_snapshot_label">Latest local test image</string>
     <string name="camera_snapshot_ready">Test image from %1$s · %2$d × %3$d · on this device only</string>
     <string name="camera_clear">Clear test image</string>
-    <string name="camera_future_help">In HA, use camera.echo_relay_tablet for images and Jarvis Tablet Audio: Describe camera for the local vision model. Select your outdoor/door camera in the integration options. Image movement is a simple pixel comparison and can react to lighting; it does not recognize people or objects. Continuous capture needs power and may need Android battery settings adjusted. Nothing starts automatically after a reboot.</string>
+    <string name="camera_future_help">In HA, use camera.echo_relay_tablet for images and TAFA: Describe camera for the local vision model. Select your outdoor/door camera in the integration options. Image movement is a simple pixel comparison and can react to lighting; it does not recognize people or objects. Continuous capture needs power and may need Android battery settings adjusted. Nothing starts automatically after a reboot.</string>
     <string name="camera_unavailable">No camera is available on this device.</string>
     <string name="camera_error">Camera could not be used. Another app may be using it, or this device may not support the preview. Stop other camera apps and try again.</string>
     <string name="camera_denied">Camera access was not granted. You can allow it in Android app settings and tap Start again. Audio works without camera access.</string>
@@ -148,7 +148,7 @@
     <string name="camera_setup_required">Save your HA address and token in audio setup first. Camera access does not require a running audio player.</string>
     <string name="camera_upload_error">Image delivery interrupted · retrying. Check Wi-Fi and HA. Old images expire in HA after 15 seconds.</string>
     <string name="camera_auth_error">Camera access denied. Enable the camera for this room under Apps → TAFA → Devices &amp; multiroom and use the HA token for that room user. No admin token is needed.</string>
-    <string name="camera_integration_missing">TAFA camera endpoint not found. Update the TAFA integration on this HA server and restart Home Assistant Core. No separate Jarvis receiver is needed.</string>
+    <string name="camera_integration_missing">TAFA camera endpoint not found. Update the TAFA integration on this HA server and restart Home Assistant Core. No separate legacy camera receiver is needed.</string>
     <string name="camera_pairing_error">Another tablet is already streaming to this TAFA room. Stop its camera stream before starting this one.</string>
     <string name="camera_image_error">Camera image could not be prepared. Stop and restart the HA camera.</string>
     <string name="camera_notification_channel">Camera image delivery</string>
@@ -259,7 +259,7 @@
     <string name="native_state_done">Answer finished</string>
     <string name="native_state_no_reply">No answer; waiting for wakeword</string>
     <string name="native_state_error">Native Assist error</string>
-    <string name="native_busy_notification">Jarvis voice request in progress</string>
+    <string name="native_busy_notification">TAFA voice request in progress</string>
     <string name="nav_settings">Settings</string>
     <string name="section_settings_title">Everything in one place</string>
     <string name="section_settings_description">Voice, Bluetooth, microphone, display and camera for this tablet.</string>

@@ -45,7 +45,7 @@ final class HaDiscovery {
         try {
             if (nsd == null) throw new IllegalStateException();
             if (wifi != null) {
-                multicast = wifi.createMulticastLock("jarvis-ha-discovery");
+                multicast = wifi.createMulticastLock("tafa-ha-discovery");
                 multicast.setReferenceCounted(false);
                 multicast.acquire();
             }

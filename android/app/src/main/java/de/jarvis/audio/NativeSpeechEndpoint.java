@@ -3,7 +3,7 @@ package de.jarvis.audio;
 /**
  * Lightweight endpoint detector for optional native Assist capture.
  * 20 ms PCM16 frames at 16 kHz. No recorded audio is kept in this class.
- * Designed to leave short thinking pauses intact, like the Jarvis dashboard.
+ * Designed to leave short thinking pauses intact, like the TAFA dashboard.
  */
 final class NativeSpeechEndpoint {
     enum Decision { CONTINUE, END, EMPTY, LIMIT }

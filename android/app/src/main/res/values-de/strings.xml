@@ -122,7 +122,7 @@
     <string name="camera_snapshot_label">Letztes lokales Testbild</string>
     <string name="camera_snapshot_ready">Testbild von %1$s · %2$d × %3$d · nur auf diesem Gerät</string>
     <string name="camera_clear">Testbild löschen</string>
-    <string name="camera_future_help">Nutze in HA camera.echo_relay_tablet für Bilder und Jarvis Tablet Audio: Kamerabild beschreiben für das lokale Visionmodell. Wähle Außen-/Haustürkamera in den Integrationsoptionen. Bildbewegung vergleicht nur Pixel und kann auf Lichtwechsel reagieren; Personen oder Objekte werden dabei nicht erkannt. Dauerbetrieb benötigt Strom und gegebenenfalls angepasste Android-Akkueinstellungen. Nach einem Neustart startet nichts automatisch.</string>
+    <string name="camera_future_help">Nutze in HA camera.echo_relay_tablet für Bilder und TAFA: Kamerabild beschreiben für das lokale Visionmodell. Wähle Außen-/Haustürkamera in den Integrationsoptionen. Bildbewegung vergleicht nur Pixel und kann auf Lichtwechsel reagieren; Personen oder Objekte werden dabei nicht erkannt. Dauerbetrieb benötigt Strom und gegebenenfalls angepasste Android-Akkueinstellungen. Nach einem Neustart startet nichts automatisch.</string>
     <string name="camera_unavailable">Auf diesem Gerät ist keine Kamera verfügbar.</string>
     <string name="camera_error">Die Kamera konnte nicht verwendet werden. Möglicherweise nutzt eine andere App die Kamera oder das Gerät unterstützt die Vorschau nicht. Schließe andere Kamera-Apps und versuche es erneut.</string>
     <string name="camera_denied">Kamerazugriff wurde nicht erlaubt. Du kannst ihn in den Android-App-Einstellungen freigeben und erneut auf Starten tippen. Audio funktioniert ohne Kamerazugriff.</string>
@@ -148,7 +148,7 @@
     <string name="camera_setup_required">Speichere zuerst HA-Adresse und Token in der Audioeinrichtung. Für die Kamera muss der Audioplayer nicht laufen.</string>
     <string name="camera_upload_error">Bildübertragung unterbrochen · neuer Versuch folgt. Prüfe WLAN und HA. Alte Bilder verfallen in HA nach 15 Sekunden.</string>
     <string name="camera_auth_error">Kamerazugriff abgelehnt. Unter Apps → TAFA → Geräte &amp; Multiroom die Kamera für den Raum aktivieren und das Token des Raumnutzers verwenden. Administratorrechte sind nicht nötig.</string>
-    <string name="camera_integration_missing">TAFA-Kamera-Endpunkt fehlt. Aktualisiere die TAFA-Integration auf diesem Home Assistant und starte HA Core neu. Kein separater Jarvis-Empfänger erforderlich.</string>
+    <string name="camera_integration_missing">TAFA-Kamera-Endpunkt fehlt. Aktualisiere die TAFA-Integration auf diesem Home Assistant und starte HA Core neu. Kein zusätzlicher Kamera-Empfänger erforderlich.</string>
     <string name="camera_pairing_error">Ein anderes Tablet überträgt bereits Bilder an diesen TAFA-Raum. Stoppe dessen Kameraübertragung, bevor du diese Kamera startest.</string>
     <string name="camera_image_error">Das Kamerabild konnte nicht vorbereitet werden. Stoppe und starte die HA-Kamera erneut.</string>
     <string name="camera_notification_channel">Kamera-Bildübertragung</string>
@@ -257,7 +257,7 @@
     <string name="native_state_done">Antwort beendet</string>
     <string name="native_state_no_reply">Keine Antwort; warte auf Rufwort</string>
     <string name="native_state_error">Fehler bei nativer Spracheingabe</string>
-    <string name="native_busy_notification">Jarvis verarbeitet eine Sprachanfrage</string>
+    <string name="native_busy_notification">TAFA verarbeitet eine Sprachanfrage</string>
     <string name="nav_settings">Einstellungen</string>
     <string name="section_settings_title">Alles an einem Ort</string>
     <string name="section_settings_description">Sprache, Bluetooth, Mikrofon, Display und Kamera für dieses Tablet.</string>

@@ -63,7 +63,7 @@ public class AudioService extends Service {
     @Override public IBinder onBind(Intent i){return null;}
     @Override public void onCreate() {
         super.onCreate();
-        File[] stale=getCacheDir().listFiles((dir,name)->name.startsWith("jarvis-")&&name.endsWith(".audio"));
+        File[] stale=getCacheDir().listFiles((dir,name)->(name.startsWith("jarvis-")||name.startsWith("tafa-"))&&name.endsWith(".audio"));
         if(stale!=null)for(File f:stale)f.delete();
         am=(AudioManager)getSystemService(AUDIO_SERVICE);
         keepalive=new BluetoothKeepalive(this, status -> keepaliveStatus=status);
