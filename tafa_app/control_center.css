@@ -298,3 +298,22 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:23px 4px 0;co
 .feature-room-section>h3,.feature-room-section>p{margin:0}
 .feature-json{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78rem;padding:12px;background:var(--surface-alt);border-radius:8px;max-height:300px;overflow:auto}
 @media(max-width:650px){.feature-heading{display:grid}.feature-status{justify-self:start}.feature-grid{grid-template-columns:1fr}.feature-card{padding:14px}}
+
+/* TAFA area registry is the sole visible source for tablet room pairing. */
+.tafa-area-rows{display:grid;gap:12px;margin-top:15px}
+.tafa-area-row{display:grid;grid-template-columns:minmax(210px,1fr) minmax(240px,1.25fr);
+gap:20px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface-alt)}
+.tafa-area-identity{display:grid;gap:5px;min-width:0}
+.tafa-area-identity .status-pill{justify-self:start}
+.tafa-area-identity small{overflow-wrap:anywhere;color:var(--muted)}
+.tafa-area-identity code{font-size:11px;user-select:text;word-break:break-all}
+.tafa-area-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.tafa-area-form label{grid-column:1/-1;font-weight:650;font-size:12px}
+.tafa-area-form select{min-height:39px;width:100%;min-width:0;border:1px solid var(--line);
+border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)}
+.tafa-area-form button{white-space:nowrap}
+.tafa-area-advanced>summary{cursor:pointer;font-weight:720}
+.tafa-area-advanced>h3{margin:22px 0 8px}
+.tafa-area-advanced .device-grid{margin-top:14px}
+@media(max-width:800px){.tafa-area-row{grid-template-columns:1fr}.tafa-area-form{grid-template-columns:minmax(0,1fr) auto}}
+@media(max-width:430px){.tafa-area-form{grid-template-columns:1fr}.tafa-area-form label{grid-column:1}.tafa-area-form button{justify-self:start}}
