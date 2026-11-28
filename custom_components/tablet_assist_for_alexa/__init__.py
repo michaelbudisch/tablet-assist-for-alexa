@@ -19,6 +19,7 @@ from .device_settings_ws import device_settings_subscribe
 from .visual_ws import visual_subscribe, visual_identity
 from .ambient_profiles_ws import ambient_profiles_command
 from .ring_notice_ws import ring_notice_subscribe
+from .tafa_notice_ws import notice_subscribe
 from .vision_camera_ws import vision_camera_config
 from .ha_provision import provision_manifest, resolve_manifest_entities
 from .dashboard_config import async_get_dashboard, async_set_dashboard
@@ -53,6 +54,7 @@ async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, visual_identity)
     websocket_api.async_register_command(hass, ambient_profiles_command)
     websocket_api.async_register_command(hass, ring_notice_subscribe)
+    websocket_api.async_register_command(hass, notice_subscribe)
     websocket_api.async_register_command(hass, vision_camera_config)
     websocket_api.async_register_command(hass, provision_manifest)
     websocket_api.async_register_command(hass, resolve_manifest_entities)
