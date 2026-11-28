@@ -1,3 +1,8 @@
+## 0.4.77
+
+- Synchronisiert die vom Control Center gemeldete App-Version mit dem Supervisor-Paket und beseitigt den Versionskonflikt in der CI-Releaseprüfung.
+- Übernimmt unverändert die Schalt-Infobox-Korrektur aus 0.4.76 (HA-Integration 0.5.11).
+
 ## 0.4.76
 
 - Die native Android-Spracherkennung meldet "detected: ..." über den Gerätebericht, nicht über die ältere Wake-API. Die TAFA-Integration leitet die bestätigte, gerätegebundene Erkennung jetzt an die bestehende Schaltkarten-Zuordnung weiter; kein neues APK erforderlich.
