@@ -1,5 +1,5 @@
 import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
-import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.98';
+import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.99';
 /* TAFA dashboard asset version 0.4.64 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
@@ -803,7 +803,7 @@ import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.98'
     };
     s.attachProfile=attachProfile;attachProfile();
     // Load the optional calendar only for an active ambient display.
-    void import("./ambient_overview.js?v=0.4.77")
+    void import("./ambient_overview.js?v=0.4.99")
       .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
       .catch(err=>console.debug("TAFA ambient calendar unavailable",err));
     const exit=host.querySelector(".hz-ambient-exit");
