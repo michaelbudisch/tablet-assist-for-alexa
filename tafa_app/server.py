@@ -38,7 +38,7 @@ from device_center import read_device_data, render_device_center, update_device,
 from import_manifest import preview as preview_import, consume as consume_import, proposed_options, reconcile_imported_stt, load_records, save_record, render_panel
 from auto_setup import provision_worker_manifest, resolve_import_entities, inspect_tafa_pipeline
 from settings_ui import save_app_changes
-from speech_source import load_options
+from speech_source import load_options, load_supervisor_options, private_http_origin
 from feature_center import (discover_entities, discover_notify_services, render_feature_center,
                             render_announcement_rooms, save_source_group,
                             save_announcement_room, active_dashboard_modules, add_dashboard_module)
@@ -107,7 +107,7 @@ def setup_status():
     except (OSError,ValueError):
         return {"status":"pending","detail":""}
 
-def autoconfigure(address, mode="local"):
+def autoconfigure(address, mode="local", saved_options=None):
     # Reattempt after HA Core restarts and discovers newly installed files.
     generation=SETUP_GENERATION
     while True:
@@ -119,7 +119,8 @@ def autoconfigure(address, mode="local"):
                     save_state("waiting_for_external_piper", "Check Proxmox Piper /health on the private LAN")
                     time.sleep(20)
                     continue
-                settings = setup_settings()
+                settings = (setup_settings_values(saved_options)
+                            if saved_options is not None else setup_settings())
                 # Always install and synchronize the HA integration first.
                 # Missing STT must NOT prevent Device Bridge pairing or TTS.
                 outcome=configure(address,settings)
@@ -170,10 +171,12 @@ def autoconfigure(address, mode="local"):
                 time.sleep(20)
                 continue
             if speech.get("piper_ready") and speech.get("whisper_ready"):
-                outcome=configure(address,setup_settings())
+                settings = (setup_settings_values(saved_options)
+                            if saved_options is not None else setup_settings())
+                outcome=configure(address,settings)
                 save_state(outcome)
                 if outcome in ("configured","already_configured"):
-                    sync_app_configuration(address, setup_settings())
+                    sync_app_configuration(address,settings)
                     pipeline=ensure_pipeline()
                     save_state(pipeline)
                     if pipeline in ("pipeline_created","pipeline_exists"):
@@ -222,11 +225,11 @@ def _cpu_monitor():
         CPU_THREAD.start()
 
 
-def _launch_autoconfigure(address,mode):
+def _launch_autoconfigure(address,mode,saved_options=None):
     global SETUP_GENERATION
     with SETUP_LOCK:
         SETUP_GENERATION+=1
-        threading.Thread(target=autoconfigure,args=(address,mode),daemon=True).start()
+        threading.Thread(target=autoconfigure,args=(address,mode,saved_options),daemon=True).start()
 
 
 def _tracked_profiles():
@@ -356,9 +359,16 @@ def restart_home_assistant_core():
                 raise RuntimeError("Supervisor did not accept Home Assistant Core restart")
 
 
-def activate_configured_services():
-    """Apply confirmed App options immediately; no blind extra restart."""
-    mode,external_base=choose_speech_source()
+def activate_configured_services(saved_options=None):
+    """Apply a confirmed Supervisor snapshot, not a possibly stale /data/options.json."""
+    if saved_options is None:
+        try:
+            saved_options = load_supervisor_options(TOKEN) if TOKEN else load_options()
+        except (OSError, ValueError, RuntimeError):
+            saved_options = load_options()
+    mode = saved_options.get("speech_mode", "local")
+    if mode not in ("setup", "local", "external"):
+        raise ValueError("Invalid speech mode")
     if mode=="setup":
         save_state("awaiting_import","Import GPU/Proxmox JSON or select the built-in CPU server")
         return
@@ -366,9 +376,9 @@ def activate_configured_services():
         _cpu_monitor()
         address=_internal_address()
     else:
-        address=external_base
+        address=private_http_origin(saved_options.get("external_piper_base", ""))
     publish_service_address(address)
-    _launch_autoconfigure(address,mode)
+    _launch_autoconfigure(address,mode,dict(saved_options))
     _start_import_finalizer()
 
 
@@ -403,8 +413,17 @@ def display(message="",lang="de",default_tab="overview",review=None):
     t=lambda de,eng:eng if en else de
     state=status(CONFIG)
     try:
-        mode, external_base = choose_speech_source()
-        preferences=setup_settings()
+        # Supervisor owns the saved settings; /data/options.json may lag behind.
+        saved_options = load_supervisor_options(TOKEN) if TOKEN else load_options()
+    except (OSError, ValueError, RuntimeError):
+        saved_options = load_options()
+    try:
+        mode = saved_options.get("speech_mode", "local")
+        if mode not in ("setup", "local", "external"):
+            raise ValueError("Invalid speech mode")
+        external_base = (private_http_origin(saved_options.get("external_piper_base", ""))
+                         if mode == "external" else "")
+        preferences=setup_settings_values(saved_options)
         source_error=""
     except (OSError, ValueError) as exc:
         mode, external_base, source_error = "invalid", "", str(exc)
@@ -520,11 +539,11 @@ def display(message="",lang="de",default_tab="overview",review=None):
                            if not wyoming_entries else t("Erkannte Entitaeten: ","Discovered entities: ")+str(len(wyoming_entries)))
     # The Control Center edits the same persisted Supervisor options as the
     # advanced HA App Configuration screen (never a second settings store).
-    checks=assess_endpoints({**load_options(),**preferences},mode,runtime,links,wyoming_entries)
+    checks=assess_endpoints({**saved_options,**preferences},mode,runtime,links,wyoming_entries)
     latest=recent_stt_backend(TOKEN) if TOKEN else None
-    picker=render_settings_form({**load_options(),**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
+    picker=render_settings_form({**saved_options,**preferences},wyoming_entries,lang,CSRF,picker_note,checks=checks,latest=latest)
     import_panel=render_panel(lang,CSRF,review=review)
-    connection_panel=render_connection_form({**load_options(),**preferences},lang,CSRF,
+    connection_panel=render_connection_form({**saved_options,**preferences},lang,CSRF,
                                             checks=checks,wyoming=wyoming_entries,
                                             wyoming_note=picker_note,latest=latest)
     device_state = read_device_data()
@@ -536,14 +555,14 @@ def display(message="",lang="de",default_tab="overview",review=None):
     voice_panel=render_voice_panel(lang,CSRF,device_state)
     entities, can_read = discover_entities(TOKEN)
     active_modules = active_dashboard_modules(TOKEN)
-    features_panel = (render_feature_center(load_options(),lang,CSRF,entities,can_read,active_modules)
-                      + render_announcement_rooms(load_options(),lang,CSRF,entities,discover_notify_services(TOKEN)))
+    features_panel = (render_feature_center(saved_options,lang,CSRF,entities,can_read,active_modules)
+                      + render_announcement_rooms(saved_options,lang,CSRF,entities,discover_notify_services(TOKEN)))
     return render_dashboard(
         pipeline=pipeline,
         lang=lang, version=APP_VERSION, default_tab=default_tab,
         message=message, repo=REPO, csrf=CSRF,
         cards=cards, picker=picker, connection_panel=connection_panel, import_panel=import_panel, devices_panel=devices_panel, voice_panel=voice_panel, features_panel=features_panel, checks=checks,
-        options={**load_options(), **preferences}, setup=setup,
+        options={**saved_options, **preferences}, setup=setup,
         links=links, latest=latest, cache_info=cache_info,
         note=note, install=install, retry_button=retry_button,
         remove_button=remove_button, mode=mode)
@@ -854,9 +873,26 @@ class Handler(BaseHTTPRequestHandler):
                 msg = ("Modul zum TAFA-Dashboard hinzugefügt. / Module added to TAFA dashboard."
                        if changed else "Dieses Modul ist bereits aktiviert. / Module already enabled.")
             elif action=="settings":
-                changes=save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
-                activate_configured_services()
-                msg="Einstellungen gespeichert. TAFA übernimmt die Änderung automatisch. / Settings saved; TAFA is applying changes automatically."
+                # Confirm Supervisor persistence, then apply that exact snapshot
+                # to HA before telling the user the voice selection is active.
+                saved = save_settings_form(TOKEN,fields,discover_wyoming_stt(TOKEN))
+                mode = saved.get("speech_mode", "setup")
+                pending = False
+                if mode != "setup":
+                    address = (_internal_address() if mode == "local"
+                               else private_http_origin(saved.get("external_piper_base", "")))
+                    try:
+                        sync_app_configuration(address,setup_settings_values(saved))
+                    except (OSError,ValueError,RuntimeError,TimeoutError) as exc:
+                        LOG.warning("TAFA settings persisted; HA synchronization pending: %s",
+                                    type(exc).__name__)
+                        pending = True
+                activate_configured_services(saved)
+                msg = ("App-Einstellungen gespeichert, HA-Synchronisierung noch ausstehend. "
+                       "TAFA versucht die Übernahme erneut. / App settings saved; HA sync pending and retrying."
+                       if pending else
+                       "Einstellungen gespeichert und an Home Assistant übergeben. / "
+                       "Settings saved and synchronized with Home Assistant.")
             elif action=="connection_settings":
                 # Keep address editing available when HA's entity registry
                 # cannot be read. Unchanged provider IDs remain valid; new
