@@ -22,7 +22,7 @@ SETTINGS_SIGNAL = DOMAIN + "_tablet_settings_changed"
 DEVICE_ID = re.compile(r"^[a-f0-9]{32}$")
 WAKEWORDS = {"Hey Jarvis", "Jarvis", "Alexa"}
 CHOICES = {"Hey Jarvis", "Jarvis", "Alexa", "Alle drei"}
-DEFAULTS = {"muted": False, "voice_mode": "wake", "audio_output_mode": "auto", "word": "Hey Jarvis", "room": "Jarvis Tablet",
+DEFAULTS = {"muted": False, "voice_mode": "wake", "audio_output_mode": "auto", "word": "Hey Jarvis", "room": "TAFA Tablet",
             "strict": 1, "cooldown": 12, "hold": 50, "followup_limit": -1,
             "pause_ms": 1700, "mic_gain": 100, "brightness": 80,
             "screen_awake": True, "display_control_enabled": False}
@@ -171,7 +171,7 @@ class WakeDevices:
                 room = payload.get("room", "")
                 if not isinstance(room, str) or len(room) > 48:
                     raise ValueError("Invalid room")
-                room = room.strip() or "Jarvis Tablet"
+                room = room.strip() or "TAFA Tablet"
                 device = self.devices.get(identifier)
                 if device is None:
                     device = dict(DEFAULTS, device_id=identifier, room=room, user_id=user.id)
