@@ -17,6 +17,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 import server
 import settings_ui
+import speech_source
 from import_manifest import validate
 
 
@@ -55,10 +56,22 @@ def run_import(current,latest):
     handler.send_error=lambda *args: (_ for _ in ()).throw(
         AssertionError(f"Unexpected HTTP error: {args}"))
 
-    saved=MagicMock()
-    saved.status=200
-    saved.read.return_value=b'{"result":"ok"}'
-    saved.__enter__.return_value=saved
+    persisted=dict(latest)
+    def supervisor_read(request,timeout=8):
+        response=MagicMock()
+        response.status=200
+        response.read.return_value=json.dumps({"result":"ok","data":{"options":dict(persisted)}}).encode()
+        response.__enter__.return_value=response
+        return response
+    def supervisor_write(request,timeout=8):
+        payload=json.loads(request.data)["options"]
+        persisted.clear()
+        persisted.update(payload)
+        response=MagicMock()
+        response.status=200
+        response.read.return_value=b'{"result":"ok"}'
+        response.__enter__.return_value=response
+        return response
     with patch.object(server,"CSRF","test-csrf"),\
          patch.object(server,"TOKEN","test-supervisor-token"),\
          patch.object(server,"consume_import",return_value=worker()),\
@@ -72,7 +85,7 @@ def run_import(current,latest):
          patch.object(server,"save_record") as record,\
          patch.object(server,"activate_configured_services"),\
          patch.object(server,"display",return_value="done"),\
-         patch.object(settings_ui.urllib.request,"urlopen",return_value=saved) as urlopen:
+         patch.object(settings_ui.urllib.request,"urlopen",side_effect=supervisor_write) as urlopen:
         handler.do_POST()
 
     if urlopen.call_count:

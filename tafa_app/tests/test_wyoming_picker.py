@@ -107,6 +107,8 @@ class PickerTests(unittest.TestCase):
         def test_display(lang):
             with patch.object(server,"discover_wyoming_stt",return_value=entries),\
                  patch.object(server,"setup_settings",return_value=options),\
+                  patch.object(server,"load_options",return_value=options),\
+                  patch.object(server,"load_supervisor_options",return_value=options),\
                  patch.object(server,"status",return_value={}),\
                  patch.object(server,"setup_status",return_value={"status":"ready"}),\
                  patch.object(server,"choose_speech_source",return_value=("external","http://192.168.1.2:5000")),\

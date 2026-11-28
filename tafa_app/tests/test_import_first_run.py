@@ -41,7 +41,8 @@ class SetupAndBrandTests(unittest.TestCase):
             cpu.assert_called_once()
             publish.assert_called_once_with("http://tafa-internal:5000")
             auto.assert_called_once_with("http://tafa-internal:5000","local",{})
-        with patch.object(server,"choose_speech_source",return_value=("external","http://10.0.0.18:5000")), \
+        with patch.object(server,"load_options",return_value={"speech_mode":"external","external_piper_base":"http://10.0.0.18:5000"}), \
+             patch.object(server,"choose_speech_source",return_value=("external","http://10.0.0.18:5000")), \
              patch.object(server,"_cpu_monitor") as cpu, \
              patch.object(server,"publish_service_address") as publish, \
              patch.object(server,"_launch_autoconfigure") as auto, \
@@ -49,7 +50,7 @@ class SetupAndBrandTests(unittest.TestCase):
             server.activate_configured_services()
             cpu.assert_not_called()
             publish.assert_called_once_with("http://10.0.0.18:5000")
-            auto.assert_called_once_with("http://10.0.0.18:5000","external",{})
+            auto.assert_called_once_with("http://10.0.0.18:5000","external",{"speech_mode":"external","external_piper_base":"http://10.0.0.18:5000"})
 
     def test_saved_entries_enable_later_entity_resolution(self):
         records={
