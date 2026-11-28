@@ -33,6 +33,7 @@ jobs:
       - run: python tests/test_proxy_host.py
       - run: python tests/test_standalone.py
       - run: python tests/test_local_intents.py
+      - run: node tests/test_ambient_rebind.mjs
       - run: node tests/test_camera_preview.mjs
       - run: npm ci --prefix tests/ui --no-audit --no-fund
       - name: Disable unrelated broken Microsoft APT source on ephemeral runner
