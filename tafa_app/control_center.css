@@ -324,3 +324,19 @@ border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)}
 .tafa-area-identity .device-setting input{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)}
 .tafa-area-identity .device-setting button{white-space:nowrap}
 @media(max-width:420px){.tafa-area-identity .device-setting{grid-template-columns:1fr}.tafa-area-identity .device-setting button{justify-self:start}}
+
+/* Voice profiles: small, responsive controls within existing Settings. */
+.tafa-voice-manager{grid-column:1/-1;margin:12px 0 5px;padding:15px;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
+.tafa-voice-manager h3{margin:0 0 4px;font-size:15px}
+.tafa-voice-manager p{margin:5px 0 12px;line-height:1.48}
+#tafa-voice-state{font-size:13px;font-weight:650;color:var(--muted)}
+.tafa-voice-list{display:grid;gap:7px;max-height:490px;overflow:auto}
+.tafa-voice-row{display:grid;grid-template-columns:minmax(125px,1fr) 83px auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:9px;background:var(--surface);border:1px solid var(--line)}
+.tafa-voice-row strong{font-size:13px;min-width:0;overflow-wrap:anywhere}
+.tafa-voice-row .btn{min-height:34px;padding:6px 10px;font-size:12px;white-space:nowrap}
+.tafa-voice-row .btn:disabled{opacity:.45;cursor:not-allowed}
+.tafa-voice-pill{font-size:11px;font-weight:710;color:var(--warn)}
+.tafa-voice-pill[data-ready=yes]{color:var(--good)}
+.tafa-voice-preview{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:14px 0 8px}
+.tafa-voice-preview audio{max-width:100%;width:320px;height:38px}
+@media(max-width:650px){.tafa-voice-row{grid-template-columns:1fr auto;row-gap:5px}.tafa-voice-pill{justify-self:end}.tafa-voice-row .btn{width:100%}}
