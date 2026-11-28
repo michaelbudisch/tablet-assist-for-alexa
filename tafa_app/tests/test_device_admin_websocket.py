@@ -52,7 +52,8 @@ class Fixture:
     def __init__(self):
         self.admin = User("admin", "Administrator", admin=True)
         self.user = User("tablet", "Tablet Benutzer")
-        self.auth = Auth([self.admin, self.user,
+        self.extra = User("tablet2", "Tablet Benutzer 2")
+        self.auth = Auth([self.admin, self.user, self.extra,
                           User("inactive", "Inactive", active=False),
                           User("system", "System", system=True)])
         self.area_entries = {
@@ -73,7 +74,7 @@ class Fixture:
         def update_registered_device(identifier, area_id):
             self.area_assignments[identifier] = area_id
         self.device_registry = types.SimpleNamespace(
-            async_get_device=get_registered_device,
+            async_get_device_by_identifier=lambda domain, identifier: get_registered_device({(domain, identifier)}),
             async_update_device=update_registered_device,
         )
         self.devices = {}
@@ -165,10 +166,55 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(PermissionError):
             await self.action(hass, hass.user, {
                 "action": "assign_area", "device_id": identifier, "area_id": "buero"})
-        hass.transport.rooms["buero"] = "some-other-user"
+        # A second active user occupying the desired HA area is allowed;
+        # each tablet receives an independent internal audio/camera route.
+        hass.transport.rooms["buero"] = "tablet2"
+        hass.transport.settings["buero"] = {"wake_device_id": "b"*32, "area_id": "buero"}
+        accepted = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": identifier, "area_id": "buero"})
+        self.assertTrue(accepted["paired"])
+        self.assertEqual(accepted["audio_route"], "tafa_" + identifier)
+
+    async def test_two_active_tablets_can_share_one_ha_area(self):
+        hass = Fixture()
+        first, second = "a"*32, "b"*32
+        hass.devices[first] = {"device_id": first, "user_id": "tablet",
+                                "room": "Büro Tablet", "online": True}
+        hass.devices[second] = {"device_id": second, "user_id": "tablet2",
+                                 "room": "Sofa Tablet", "online": True}
+        one = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": first, "area_id": "wohnzimmer"})
+        two = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": second, "area_id": "wohnzimmer"})
+        self.assertEqual(one["audio_route"], "wohnzimmer")
+        self.assertEqual(two["audio_route"], "tafa_" + second)
+        self.assertEqual(len(hass.transport.rooms), 2)
+        self.assertEqual(len(set(hass.transport.rooms.values())), 2)
+        self.assertEqual(hass.transport.settings["wohnzimmer"]["area_id"], "wohnzimmer")
+        self.assertEqual(hass.transport.settings["tafa_" + second]["area_id"], "wohnzimmer")
+        self.assertEqual(hass.area_assignments[first], "wohnzimmer")
+        self.assertEqual(hass.area_assignments[second], "wohnzimmer")
+        self.assertFalse(hass.transport.settings["tafa_" + second]["camera_enabled"])
+        rooms = (await self.action(hass, hass.admin, {"action": "list"}))["rooms"]
+        self.assertEqual({r["area_id"] for r in rooms}, {"wohnzimmer"})
+        self.assertEqual({r["device_name"] for r in rooms}, {"Büro Tablet", "Sofa Tablet"})
+        self.assertEqual({r["wake_device_id"] for r in rooms}, {first, second})
+        again = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": second, "area_id": "wohnzimmer"})
+        self.assertFalse(again["moved"])
+        self.assertEqual(len(hass.transport.rooms), 2)
+
+    async def test_two_tablets_cannot_share_the_same_ha_user(self):
+        hass = Fixture()
+        first, second = "a"*32, "b"*32
+        hass.devices[first] = {"device_id": first, "user_id": "tablet", "online": True}
+        hass.devices[second] = {"device_id": second, "user_id": "tablet", "online": True}
+        await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": first, "area_id": "wohnzimmer"})
         with self.assertRaises(ValueError):
             await self.action(hass, hass.admin, {
-                "action": "assign_area", "device_id": identifier, "area_id": "buero"})
+                "action": "assign_area", "device_id": second, "area_id": "wohnzimmer"})
+        self.assertEqual(len(hass.transport.rooms), 1)
 
     async def test_reinstall_replaces_only_offline_previous_device(self):
         hass = Fixture()

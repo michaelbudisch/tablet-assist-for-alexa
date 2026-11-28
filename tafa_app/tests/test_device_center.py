@@ -104,8 +104,29 @@ class DeviceCenterTests(unittest.TestCase):
         self.assertIn('value="wohnzimmer" selected', page)
         self.assertIn("<details", page)
         self.assertIn("Erweitert:", page)
-        self.assertNotIn('name="setting" value="room"', page)
+        self.assertIn('name="setting" value="room"', page)
+        self.assertIn("Tabletname", page)
 
+
+    def test_two_tablets_share_area_but_have_separate_name_forms(self):
+        first, second = "a"*32, "b"*32
+        html = panel.render_device_center("de", "csrf", {
+            "devices": [
+                {"device_id": first, "room": "Tablet am Sofa", "online": True},
+                {"device_id": second, "room": "Tablet am Fenster", "online": True}],
+            "rooms": [
+                {"room": "wohnzimmer", "area_id": "wohnzimmer",
+                 "wake_device_id": first, "user_id": "u1", "camera_enabled": True},
+                {"room": "tafa_"+second, "area_id": "wohnzimmer",
+                 "wake_device_id": second, "user_id": "u2", "camera_enabled": False}],
+            "areas": [{"area_id": "wohnzimmer", "name": "Wohnzimmer"}],
+            "users": []})
+        self.assertEqual(html.count('name="action" value="area_assign"'), 2)
+        self.assertEqual(html.count('name="setting" value="room"'), 2)
+        self.assertIn("Tablet am Sofa", html)
+        self.assertIn("Tablet am Fenster", html)
+        self.assertEqual(html.count('value="wohnzimmer" selected'), 2)
+        self.assertNotIn("tafa_"+second+" –", html)
 
     def test_reset_actions_need_explicit_confirmation(self):
         with patch.object(panel, "ws_call", return_value={"removed": True}) as api:
