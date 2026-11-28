@@ -29,3 +29,7 @@ Under **Devices & Multiroom → Advanced**, configure camera access or reset a T
 - **Old Jarvis files:** Keep legacy components out of fresh installs; migration-only identifiers do not mean a second active assistant.
 
 **Security:** An installation ID is not an authentication credential. Keep HA access tokens out of Git, logs and screenshots; prefer trusted HTTPS.
+
+## Tablet identity sensors
+
+Starting with **TAFA integration 0.5.5**, each enrolled tablet automatically provides two new Home Assistant sensor entities: **Tabletname** (editable display name, updated when renamed) and **Gerätekennung** (full 32-character Android installation ID). Each sensor has an immutable integration unique ID derived from the installation ID, not the display name, and remains available while its registered tablet is offline. Home Assistant assigns the concrete `sensor.…` entity IDs. A fresh install may create a different installation ID.
