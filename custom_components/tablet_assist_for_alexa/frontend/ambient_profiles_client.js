@@ -60,7 +60,23 @@ class TafaAmbientProfilesEditor extends HTMLElement{
   this.shadowRoot.addEventListener("change",e=>{
    const t=e.target;
    if(t.matches("[data-device]")){this.deviceId=t.value;void this.loadProfile();return;}
-   if(t.matches("[data-metric-mode]")){this.dirty=true;this.render();return;}
+   if(t.matches("[data-metric-mode]")){
+    const root=this.shadowRoot,prior=this.profile||defaults();
+    if(Array.isArray(prior.metrics)){
+     this._metricCache=[...root.querySelectorAll("[data-metric-row]")].map(row=>({
+      id:row.querySelector("[data-mid]")?.value.trim()||"",
+      name:row.querySelector("[data-mname]")?.value.trim()||""
+     }));
+    }
+    const get=key=>root.querySelector('[data-setting="'+key+'"]');
+    this.profile={...prior,
+      calendar:get("calendar")?.value||"",presence:get("presence")?.value||"",
+      dismiss:get("dismiss")?.value||"sensor",
+      idle:Number(get("idle")?.value??55),
+      enabled:!!get("enabled")?.checked,autoOpen:!!get("autoOpen")?.checked,
+      metrics:t.value==="custom"?(this._metricCache||[]):null};
+    this.dirty=true;this.render();return;
+   }
    this.dirty=true;
   });
   this.shadowRoot.addEventListener("input",e=>{if(e.target.matches("input,select"))this.dirty=true;});
@@ -92,7 +108,7 @@ class TafaAmbientProfilesEditor extends HTMLElement{
    if(!this.deviceId){this.profile=null;this.loading=false;this.render();return;}
    const response=await this._h.callWS({type:COMMAND,action:"get",device_id:this.deviceId});
    if(ticket!==this.readToken||!this.isConnected)return;
-   this.profile=normalize(response.profile);this.revision=Number(response.revision)||0;this.loading=false;
+   this.profile=normalize(response.profile);this._metricCache=Array.isArray(this.profile.metrics)?this.profile.metrics:[];this.revision=Number(response.revision)||0;this.loading=false;
    try{this.unsubscribe?.();}catch{}this.unsubscribe=null;
    const connection=this._h?.connection;
    if(connection?.subscribeMessage){
@@ -128,7 +144,7 @@ class TafaAmbientProfilesEditor extends HTMLElement{
   try{
    const response=await this._h.callWS({type:COMMAND,action:"save",
      device_id:this.deviceId,revision:this.revision,profile});
-   this.profile=normalize(response.profile);this.revision=Number(response.revision)||this.revision+1;
+   this.profile=normalize(response.profile);this._metricCache=Array.isArray(this.profile.metrics)?this.profile.metrics:[];this.revision=Number(response.revision)||this.revision+1;
    this.dirty=false;this.message="Gespeichert · Revision "+this.revision;
    this.loading=false;this.render();
    try{dispatchEvent(new CustomEvent("tafa:ambient-profile-saved",{detail:{device_id:this.deviceId,profile:this.profile}}));}catch{}
