@@ -735,5 +735,7 @@ export function mountOverview(card,s){
       particles.remove();panel.remove();beam.remove();bloom.remove();style.remove();
     }
   };
+  // The device profile may arrive before the optional overview module loads.
+  if(s.profile)s.overview.applyProfile(s.profile);
   host.dataset.overview="closed";
 }
