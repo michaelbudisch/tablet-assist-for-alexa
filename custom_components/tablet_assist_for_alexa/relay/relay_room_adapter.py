@@ -318,6 +318,11 @@ async def setup_room_audio(hass, entry):
             raise ServiceValidationError("Invalid registered tablet binding")
         result = {"quiet_start": start, "quiet_end": end, "device_id": device,
                   "camera_enabled": values.get("camera_enabled", False)}
+        # Keep HA-area grouping when a legacy room service reconfigures
+        # the per-tablet audio route.
+        area_id = values.get("area_id")
+        if isinstance(area_id, str) and ROOM.fullmatch(area_id):
+            result["area_id"] = area_id
         if paired:
             result["wake_device_id"] = paired
         return result
@@ -332,7 +337,11 @@ async def setup_room_audio(hass, entry):
         room = call.data.get("room")
         async with lock:
             if action == "list":
-                return {"rooms": [{"room": r, "user_id": p, **transport.status(p), **transport.settings.get(r,{}), "camera_entity_id": cameras.entity_id(r,"camera"), "motion_entity_id": cameras.entity_id(r,"motion"), "camera_online": cameras.store.fresh(r)} for r,p in transport.rooms.items()]}
+                return {"rooms": [{"room": r, "area_id": transport.settings.get(r, {}).get("area_id", r),
+                                   "user_id": p, **transport.status(p), **transport.settings.get(r,{}),
+                                   "camera_entity_id": cameras.entity_id(r,"camera"),
+                                   "motion_entity_id": cameras.entity_id(r,"motion"),
+                                   "camera_online": cameras.store.fresh(r)} for r,p in transport.rooms.items()]}
             if action == "users":
                 return {"users": [{"id": u.id, "name": u.name} for u in await hass.auth.async_get_users() if u.is_active and not u.is_admin and not u.system_generated]}
             if action == "provision":
@@ -369,9 +378,25 @@ async def setup_room_audio(hass, entry):
                 return {"room": room, "configured": False}
             if action == "announce":
                 message = call.data.get("message", "").strip()
-                targets = call.data.get("rooms", [room] if room else [])
-                if not message or len(message) > 500 or not targets or len(set(targets)) != len(targets) or any(r not in transport.rooms for r in targets):
+                requested = call.data.get("rooms", [room] if room else [])
+                if not message or len(message) > 500 or not requested or len(set(requested)) != len(requested):
                     raise ServiceValidationError("Explicit valid rooms and message required")
+                # A human HA area name broadcasts to its paired tablets,
+                # while an explicit technical device route targets one player.
+                targets = []
+                for target in requested:
+                    matching = ([target] if target.startswith("tafa_") and target in transport.rooms
+                                else [r for r in transport.rooms
+                                      if transport.settings.get(r, {}).get("area_id", r) == target])
+                    if not matching and target in transport.rooms:
+                        matching = [target]
+                    if not matching:
+                        raise ServiceValidationError("No TAFA tablet in requested room")
+                    for internal in matching:
+                        if internal not in targets:
+                            targets.append(internal)
+                if len(targets) > 24:
+                    raise ServiceValidationError("Too many target tablets")
                 engine = er.async_get(hass).async_get_entity_id("tts", "tablet_assist_for_alexa", entry.entry_id + "_stream")
                 if not engine:
                     raise ServiceValidationError("TAFA streaming TTS unavailable")
