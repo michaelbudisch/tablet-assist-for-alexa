@@ -90,9 +90,9 @@ class VoiceVariantPersistenceTests(unittest.TestCase):
 
     def test_save_does_not_claim_success_if_variant_was_not_persisted(self):
         with patch.object(speech_source.HTTP, "open",
-                          return_value=_Response({"result": "ok", "data": {"options": self.options}})), \
+                          side_effect=lambda *args, **kwargs: _Response({"result": "ok", "data": {"options": self.options}})), \
              patch.object(settings_ui.urllib.request, "urlopen",
-                          return_value=_Response({"result": "ok"})):
+                          side_effect=lambda *args, **kwargs: _Response({"result": "ok"})):
             with self.assertRaisesRegex(RuntimeError, "not persisted"):
                 settings_ui.save_settings_form("test-token", self._fields("3"), [])
 

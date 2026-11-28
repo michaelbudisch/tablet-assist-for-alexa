@@ -44,6 +44,7 @@ def run_import(current,latest):
         "action":"manifest_apply","ticket":"approved",
     }).encode("utf-8")
     handler=object.__new__(server.Handler)
+    handler.path="/"
     handler.allowed=lambda: True
     handler.rfile=io.BytesIO(submitted)
     handler.headers=Message()

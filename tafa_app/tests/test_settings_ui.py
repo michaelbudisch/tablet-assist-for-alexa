@@ -56,7 +56,8 @@ class SettingsUI(unittest.TestCase):
         response.status=200
         response.read.return_value=b'{"result":"ok"}'
         response.__enter__.return_value=response
-        with patch("settings_ui.load_options",return_value=latest), \
+        snapshots=iter([latest,{**latest,"cpu_stt":"","gpu_base":requested["gpu_base"]}])
+        with patch("settings_ui.load_supervisor_options",side_effect=lambda token: next(snapshots)), \
              patch("settings_ui.urllib.request.urlopen",return_value=response) as urlopen:
             changed=save_app_changes("internal-test-token",requested,
                                      import_kind="gpu_worker")
@@ -75,7 +76,8 @@ class SettingsUI(unittest.TestCase):
         response.status=200
         response.read.return_value=b'{"result":"ok"}'
         response.__enter__.return_value=response
-        with patch("settings_ui.load_options",return_value=latest), \
+        snapshots=iter([latest,{**latest,"gpu_stt":"stt.worker_new"}])
+        with patch("settings_ui.load_supervisor_options",side_effect=lambda token: next(snapshots)), \
              patch("settings_ui.urllib.request.urlopen",return_value=response) as urlopen:
             save_app_changes("internal-test-token",
                              {"gpu_stt":"stt.worker_new"},import_kind="gpu_worker")
@@ -84,7 +86,7 @@ class SettingsUI(unittest.TestCase):
         self.assertEqual(opts["gpu_stt"],"stt.worker_new")
 
     def test_manual_save_still_rejects_duplicate_roles(self):
-        with patch("settings_ui.load_options",
+        with patch("settings_ui.load_supervisor_options",
                    return_value={"cpu_stt":"stt.same","gpu_stt":"stt.same"}), \
              patch("settings_ui.urllib.request.urlopen") as request:
             with self.assertRaisesRegex(ValueError,"CPU and GPU Wyoming"):

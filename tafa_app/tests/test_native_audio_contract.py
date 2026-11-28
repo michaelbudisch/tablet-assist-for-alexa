@@ -52,7 +52,8 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn('control?.pending',src)
         self.assertIn("showMicChoice(devices)",src)
         self.assertIn("micDevices",src)
-        self.assertIn('this.micIndicator().icon',src)
+        self.assertIn('const v=this.micIndicator();',src)
+        self.assertIn('icon(v.icon)',src)
         self.assertNotIn("getUserMedia(",src)
         self.assertNotIn('k==="assist"&&this.cfg.modules.includes("assist"))this.go("assist")',src)
     def test_no_old_audio_command_paths_on_android(self):

@@ -80,7 +80,7 @@ class PickerTests(unittest.TestCase):
         def fake_open(req,timeout):
             calls.append((req.full_url,req.get_method(),json.loads(req.data)))
             return Reply()
-        with patch.object(wyoming_picker,"load_options",return_value=previous),\
+        with patch.object(wyoming_picker,"load_supervisor_options",return_value=previous),\
              patch.object(wyoming_picker.urllib.request,"urlopen",side_effect=fake_open):
             saved=wyoming_picker.save_wyoming_selection(
                 "supervisor-token","stt.cpu","stt.gpu",
@@ -113,7 +113,7 @@ class PickerTests(unittest.TestCase):
                  patch.object(server,"external_piper_ready",return_value=True),\
                  patch.object(server,"local_model_inventory",return_value={"piper_bytes":0,"whisper_bytes":0}),\
                  patch.object(server,"connection_status",return_value={"gpu":"offline","gpu_version":"","piper":"ready","mp3":"offline","route":"piper"}):
-                return server.display(lang=lang)
+                return server.display(lang=lang,default_tab="connections")
         german=test_display("de")
         english=test_display("en")
         self.assertIn("CPU &amp; &lt;Whisper&gt;",german)

@@ -48,6 +48,7 @@ class SpeechSourceTests(unittest.TestCase):
 
     def test_external_startup_skips_local_worker(self):
         with patch.object(server, "bootstrap", return_value=[]), \
+             patch.object(server, "load_options", return_value={"speech_mode":"external","external_piper_base":"http://192.168.178.60:5000"}), \
              patch.object(server, "choose_speech_source",
                           return_value=("external", "http://192.168.178.60:5000")), \
              patch.object(server, "monitor_speech") as monitor, \
@@ -58,7 +59,7 @@ class SpeechSourceTests(unittest.TestCase):
         publish.assert_called_once_with("http://192.168.178.60:5000")
         self.assertEqual(thread.call_count, 1)
         self.assertEqual(thread.call_args.kwargs["args"],
-                         ("http://192.168.178.60:5000", "external"))
+                         ("http://192.168.178.60:5000", "external", {"speech_mode":"external","external_piper_base":"http://192.168.178.60:5000"}))
 
     def test_external_ready_requires_wyoming_before_pipeline(self):
         states = []
