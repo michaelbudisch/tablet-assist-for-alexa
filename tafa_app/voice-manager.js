@@ -59,9 +59,8 @@
       option.textContent = option.dataset.baseLabel;
       if (!info || option.value === "default" || !info.available) continue;
       const entry = info.variants.find(item => item.id === option.value);
-      if (entry) option.textContent = entry.name_de && !en ? entry.name_de + " (" + entry.id + ")" :
-        (en ? entry.name_en : entry.name_de) + " (" + entry.id + ")" +
-        (entry.ready ? "" : word(" – fehlt", " – missing"));
+      if (entry) option.textContent = (en ? entry.name_en : entry.name_de) +
+        " (" + entry.id + ")" + (entry.ready ? "" : word(" – fehlt", " – missing"));
     }
   }
   function render() {
