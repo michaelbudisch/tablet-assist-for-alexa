@@ -1,3 +1,7 @@
+## 1.3.0 · Eigenständige TAFA-Android-Kennung (Quellstand)
+- Neue App-ID und Java-Namespace `de.tafa.devicebridge`, Versionscode 33. Neuinstallation und erneute Tablet-Kopplung erforderlich; signierte APK noch nicht veröffentlicht.
+- Alte App-Einstellungen und interne Android-Aktionsnamen bereinigt, Rufwortauswahl bleibt erhalten.
+
 ## 1.2.10 · Klarer Text für die Ausschaltverzögerung
 - Die Annäherungs-Einstellung bezeichnet die Wartezeit jetzt korrekt als „Nach … Sekunden“. Sensorfunktion und Standardwerte entsprechen 1.2.9. Versionscode 31.
 

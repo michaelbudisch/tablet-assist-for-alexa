@@ -1,3 +1,7 @@
+## 1.3.0 · Native TAFA Android identity (source)
+- New application ID and Java namespace `de.tafa.devicebridge`, version code 33. Fresh install and new tablet pairing required; signed APK not yet published.
+- Replaced legacy app preference and Android action names without changing selectable wakeword vocabulary.
+
 ## 1.2.10 · Clearer proximity exit-delay wording
 - The proximity setting now labels the timeout as “After … seconds”. Detection behavior and defaults match 1.2.9. Version code 31.
 
