@@ -12,6 +12,10 @@ TAFA contains a **Control Center**, the integrated `tablet_assist_for_alexa` Hom
 4. The App safely provisions **one** unified HA integration. **Restart HA Core once** after installation or a backend update, then restart TAFA as required. Check **TAFA Lokal** in **Settings → Voice assistants**: **Tablet Assist Sprachrouter** (STT), **Tablet Assist Gespraechsrouter** (conversation), **Tablet Assist Stream** (TTS).
 5. Install the [signed Android Device Bridge](../android/README.md), connect with its dedicated non-admin HA user, assign an existing HA area in TAFA, pair Bluetooth/Echo if needed and test an actual question. Use [Devices & Multiroom](../homeassistant/examples/MULTIROOM.md) for multiple tablets.
 
+## Voice profiles (GPU Worker 2.2.8+)
+
+Under **Settings → Voice and sound**, open the voice manager to inspect variants 1–9, prepare missing original synthetic voice profiles on the configured private GPU worker, and play a short in-browser WAV sample. Only `STREAM_VOICE_MODE=fixed` supports variant selection. The existing default voice remains unchanged; the user-selected variant is committed with the normal **Save settings** button. Updating the TAFA App alone does not update the Windows GPU worker: update the worker source and run `worker/06-Stimmenverwaltung-Aktualisieren.bat` on the GPU computer. Preparing a voice temporarily unloads the worker's Base TTS model and may cause Piper fallback.
+
 ## Control Center
 
 - **Overview:** system and speech route status.
