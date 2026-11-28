@@ -12,6 +12,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 
 KEY = "wake_devices_dynamic"
@@ -99,11 +100,21 @@ class WakeDevices:
         seen = observed.get("seen", 0)
         return {**DEFAULTS,
                 **{k: v for k, v in device.items() if k != "user_id"},
+                "device_name": device.get("room") or "TAFA Tablet",
                 "revision": self.revisions.get(identifier, 0),
                 "online": bool(seen and time.time() - seen < 45),
                 "last_seen": int(seen) if seen else None,
                 "telemetry": {k: v for k, v in observed.items() if k != "seen"},
                 "control": dict(self.control_metrics.get(identifier, {}))}
+
+    def sync_device_name(self, identifier):
+        # Preserve HA user overrides; this only updates the integration's
+        # suggested device name. Legacy settings still use the key "room".
+        label = self.devices.get(identifier, {}).get("room") or "TAFA Tablet"
+        registry = dr.async_get(self.hass)
+        entry = registry.async_get_device_by_identifier(DOMAIN, identifier)
+        if entry and entry.name != "TAFA · " + label:
+            registry.async_update_device(entry.id, name="TAFA · " + label)
 
     def changed(self, identifier, registered=False):
         async_dispatcher_send(self.hass, SIGNAL, identifier)
@@ -155,6 +166,8 @@ class WakeDevices:
             changes = self.clean_settings({key: value})
             self.devices[identifier].update(changes)
             await self.save()
+            if "room" in changes:
+                self.sync_device_name(identifier)
             self.changed(identifier)
             self.settings_changed(identifier)
 
@@ -211,6 +224,8 @@ class WakeDevices:
                 cleaned = self.clean_settings(payload.get("settings"))
                 device.update(cleaned)
                 await self.save()
+                if "room" in cleaned:
+                    self.sync_device_name(identifier)
                 self.changed(identifier)
                 self.settings_changed(identifier)
                 return {"device": self.public(device)}
