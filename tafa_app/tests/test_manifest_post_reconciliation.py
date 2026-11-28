@@ -84,14 +84,15 @@ def run_import(current,latest):
              "entities":{"stt":"stt.gpu_whisper"},"messages":[]}),\
          patch.object(server,"save_record") as record,\
          patch.object(server,"activate_configured_services"),\
-         patch.object(server,"display",return_value="done"),\
+         patch.object(server,"display",return_value="done") as rendered,\
          patch.object(settings_ui.urllib.request,"urlopen",side_effect=supervisor_write) as urlopen:
         handler.do_POST()
 
-    if urlopen.call_count:
-        stored=json.loads(urlopen.call_args.args[0].data)["options"]
-    else:
-        stored=None
+    # Use the real persisted mock snapshot, not the final GET request.
+    posted=[call for call in urlopen.call_args_list if call.args and call.args[0].data is not None]
+    stored=dict(persisted) if posted else None
+    if replies and replies[0][0]!=200:
+        raise AssertionError(f"Import rejected: {rendered.call_args!r}")
     return replies,stored,configure,record
 
 
