@@ -104,7 +104,11 @@ def assign_to_ha_area(fields):
     area_id = fields.get("area_id", [""])[0].strip()
     if not DEVICE_ID.fullmatch(identifier) or not ROOM.fullmatch(area_id):
         raise ValueError("Invalid TAFA tablet or HA area")
-    response = ws_call("assign_area", device_id=identifier, area_id=area_id)
+    confirmed = fields.get("confirm_move", ["0"])[0]
+    if confirmed not in ("0", "1"):
+        raise ValueError("Invalid move confirmation")
+    response = ws_call("assign_area", device_id=identifier, area_id=area_id,
+                       confirm_move=confirmed == "1")
     return ("Tablet einem Home-Assistant-Raum zugeordnet."
             if isinstance(response, dict) else "Zuordnung gespeichert.")
 
@@ -333,7 +337,8 @@ def render_device_center(lang, csrf, state):
             f'<small>{t("Geräte-ID","Device ID")}: <code>{h(did)}</code></small>'
             f'<small>{t("Aktueller Raum","Current area")}: {h(current)}</small>'
             '</div>'
-            f'<form class="tafa-area-form" method="post" action="./">{hidden("area_assign", did)}'
+            f'<form class="tafa-area-form" data-current-area="{h(active)}" method="post" action="./">{hidden("area_assign", did)}'
+            '<input type="hidden" name="confirm_move" value="0">'
             f'<label for="area-{h(did)}">{t("Home-Assistant-Raum","Home Assistant area")}</label>'
             f'<select id="area-{h(did)}" name="area_id" required{" disabled" if not options else ""}>'
             f'<option value=""{" selected" if not active or active not in area_names else ""} disabled>'

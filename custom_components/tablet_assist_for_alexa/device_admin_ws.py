@@ -75,6 +75,8 @@ async def perform_device_admin(hass, user, msg):
                 raise ValueError("Area already has an active or foreign tablet")
         previous = [r for r, p in transport.rooms.items()
                     if p == principal and r != area_id]
+        if previous and msg.get("confirm_move") is not True:
+            raise ValueError("Moving an existing tablet needs explicit confirmation")
         for old in previous:
             assigned = transport.settings.get(old, {}).get("wake_device_id", "")
             if assigned and assigned != identifier:
@@ -306,6 +308,7 @@ async def perform_device_admin(hass, user, msg):
                         "unpair", "delete_device", "delete_room")),
     vol.Optional("room"): str,
     vol.Optional("area_id"): str,
+    vol.Optional("confirm_move"): bool,
     vol.Optional("user_id"): str,
     vol.Optional("device_id"): str,
     vol.Optional("transfer_device"): bool,

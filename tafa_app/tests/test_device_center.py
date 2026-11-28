@@ -85,7 +85,7 @@ class DeviceCenterTests(unittest.TestCase):
                 "device_id": [ID], "area_id": ["wohnzimmer"]}))
             self.assertEqual(api.call_args.args, ("assign_area",))
             self.assertEqual(api.call_args.kwargs,
-                             {"device_id": ID, "area_id": "wohnzimmer"})
+                             {"device_id": ID, "area_id": "wohnzimmer", "confirm_move": False})
         for room in ("", "../bad", "BÜRO"):
             with self.assertRaises(ValueError):
                 panel.assign_to_ha_area({"device_id": [ID], "area_id": [room]})
@@ -100,6 +100,7 @@ class DeviceCenterTests(unittest.TestCase):
         self.assertNotIn('name="action" value="room_create"', page)
         self.assertNotIn('name="transfer_device"', page)
         self.assertIn('name="area_id"', page)
+        self.assertIn('name="confirm_move"', page)
         self.assertIn('value="wohnzimmer" selected', page)
         self.assertIn("<details", page)
         self.assertIn("Erweitert:", page)

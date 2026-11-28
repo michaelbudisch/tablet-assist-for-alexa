@@ -196,8 +196,12 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
         hass.transport.rooms["wohnzimmer"] = "tablet"
         hass.transport.settings["wohnzimmer"] = {
             "wake_device_id": identifier, "camera_enabled": True}
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "assign_area", "device_id": identifier, "area_id": "buero"})
         result = await self.action(hass, hass.admin, {
-            "action": "assign_area", "device_id": identifier, "area_id": "buero"})
+            "action": "assign_area", "device_id": identifier,
+            "area_id": "buero", "confirm_move": True})
         self.assertTrue(result["moved"])
         self.assertEqual(hass.transport.rooms, {"buero": "tablet"})
         self.assertEqual(hass.cleaned_rooms, ["wohnzimmer"])
