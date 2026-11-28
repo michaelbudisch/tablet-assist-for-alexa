@@ -1,4 +1,4 @@
-"""Jarvis conversation router: bounded, selectable follow-up and local fallback."""
+"""TAFA conversation router: bounded, selectable follow-up and local fallback."""
 import asyncio
 import logging
 import re
@@ -24,11 +24,11 @@ ANN_ROOMS = ("Büro", "Wohnzimmer", "Badezimmer", "Schlafzimmer", "Kinderzimmer"
 ANN_ALIASES = {"büro":"Büro", "buero":"Büro", "buro":"Büro", "wohnzimmer":"Wohnzimmer", "badezimmer":"Badezimmer", "bad":"Badezimmer", "schlafzimmer":"Schlafzimmer", "kinderzimmer":"Kinderzimmer"}
 ANN_ALL = {"alle", "allen", "alles", "überall", "ueberall", "uberall", "hausweit"}
 ANN_FILLER = set("ja nein bitte doch nur sende send schicke schick sag sage spiele spiel es sie das die den dem der nachricht durchsage benachrichtigung an ans am im ins in für fuer fürs fuers zum zur und sowie auch noch lieber lautsprecher gerät geräte geraet geraete alexa alexas echo echos raum räume raeume haus ganzen gesamte gesamtes".split())
-ANN_START = re.compile(r"^\s*(?:(?:hey\s+)?jarvis[\s,.:]+)?(?:(?:mach(?:e)?|erstelle(?:n|t)?|er\s+stell(?:e|t)?|stell(?:e)?|starte|send(?:e)?|schick(?:e)?|möchte|will|machst\s+du|kannst\s+du)\s+(?:bitte\s+)?)?(?:eine\s+)?(?:durchsage|benachrichtigung|ansage|ankündigung|ankuendigung|ankundigung|mitteilung)\b\s*(.*)$", re.I | re.S)
-ANN_COMMAND_LIKE = re.compile(r"^(?:(?:hey )?jarvis )?(?:bitte |ich möchte |ich will |kannst du |würdest du )?(?:mach\w*|erstell\w*|er stellt|stell\w*|sende\w*|schick\w*|starte\w*|sag\w*|ankündig\w*)\b.{0,45}\b(?:durchsage|benachrichtigung|ansage|ankündigung|ankuendigung|ankundigung|mitteilung)\b", re.I)
+ANN_START = re.compile(r"^\s*(?:(?:hey\s+)?(?:jarvis|tafa)[\s,.:]+)?(?:(?:mach(?:e)?|erstelle(?:n|t)?|er\s+stell(?:e|t)?|stell(?:e)?|starte|send(?:e)?|schick(?:e)?|möchte|will|machst\s+du|kannst\s+du)\s+(?:bitte\s+)?)?(?:eine\s+)?(?:durchsage|benachrichtigung|ansage|ankündigung|ankuendigung|ankundigung|mitteilung)\b\s*(.*)$", re.I | re.S)
+ANN_COMMAND_LIKE = re.compile(r"^(?:(?:hey )?(?:jarvis|tafa) )?(?:bitte |ich möchte |ich will |kannst du |würdest du )?(?:mach\w*|erstell\w*|er stellt|stell\w*|sende\w*|schick\w*|starte\w*|sag\w*|ankündig\w*)\b.{0,45}\b(?:durchsage|benachrichtigung|ansage|ankündigung|ankuendigung|ankundigung|mitteilung)\b", re.I)
 ANN_YES = {"ja", "ja bitte", "ja mach das", "ja sende sie", "ja sende", "mach das", "senden", "absenden", "bestätigen", "durchsage bestätigen", "nachricht senden"}
 ANN_CANCEL = {"abbrechen", "abbruch", "doch nicht", "nein danke", "nicht senden", "durchsage abbrechen", "nachricht abbrechen", "vergiss es", "stopp", "stop"}
-ANN_NOISE = {"danke", "vielen dank", "danke schön", "gerne geschehen", "gern geschehen", "okay", "ok", "ja", "nein", "hallo", "hey jarvis"}
+ANN_NOISE = {"danke", "vielen dank", "danke schön", "gerne geschehen", "gern geschehen", "okay", "ok", "ja", "nein", "hallo", "hey jarvis", "hey tafa"}
 
 def ann_normal(text):
     phrase = re.sub(r"[^\wäöüß]+", " ", text.casefold()).strip()
@@ -105,10 +105,10 @@ def _agent_is_usable(agent, state, own_entity_id):
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([JarvisConversation(entry.entry_id, settings(entry), hass.data[DOMAIN][entry.entry_id])])
+    async_add_entities([TafaConversation(entry.entry_id, settings(entry), hass.data[DOMAIN][entry.entry_id])])
 
 
-class JarvisConversation(conversation.ConversationEntity):
+class TafaConversation(conversation.ConversationEntity):
     _attr_name = "Tablet Assist Gesprächsrouter"
     _attr_should_poll = False
 
@@ -225,7 +225,7 @@ class JarvisConversation(conversation.ConversationEntity):
         try:
             await self.hass.services.async_call(DOMAIN, "announce", {"text": message, "rooms": list(rooms)}, blocking=True, context=user_input.context)
         except Exception:
-            _LOGGER.debug("Jarvis announcement could not be scheduled")
+            _LOGGER.debug("TAFA announcement could not be scheduled")
             return self._reply(user_input, chat_log, "Die Durchsage konnte nicht gestartet werden.")
         return self._reply(user_input, chat_log, "Ich habe die Durchsage an die freigegebenen Lautsprecher übergeben.")
 
@@ -353,7 +353,7 @@ class JarvisConversation(conversation.ConversationEntity):
                     return self._reply(user_input, chat_log, local, keep)
         except Exception:
             self._remember_closed(key, monotonic())
-            _LOGGER.debug("Jarvis local sentence failed")
+            _LOGGER.debug("TAFA local sentence failed")
             return self._reply(user_input, chat_log, "Die lokale Abfrage konnte nicht abgeschlossen werden. Bitte versuche es erneut.")
 
         try:
@@ -402,7 +402,7 @@ class JarvisConversation(conversation.ConversationEntity):
                 raise ValueError("LLM error")
         except Exception:
             self._remember_closed(key, monotonic())
-            _LOGGER.debug("Jarvis AI unavailable")
+            _LOGGER.debug("TAFA AI unavailable")
             return self._reply(user_input, chat_log, "Meine lokale KI ist gerade nicht erreichbar. Hausdaten und bekannte Befehle funktionieren weiterhin.")
 
         # Intelligent mode must follow the assistant's invitation, not
