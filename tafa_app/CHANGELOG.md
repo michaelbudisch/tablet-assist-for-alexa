@@ -1,3 +1,12 @@
+## 0.4.65
+
+- Geräte & Multiroom zeigt Home-Assistant-Bereiche als einzige Raumquelle; pro Tablet eine Zuordnung mit vollständiger Gerätekennung.
+- Beim Zuordnen wird das interne TAFA-Audiorouting automatisch provisioniert und das Tablet auch im HA-Geräteregister dem Bereich zugewiesen.
+- Kamera-/Zurücksetzen-Aktionen liegen unter Erweitert. Keine zweite sichtbar anzulegende TAFA-Raumliste; kein Übertragungs-Häkchen für Gerätebesitz.
+- Integration 0.5.3: bisherige Standardbezeichnung im HA-Integrationsbereich wird zu TAFA migriert; benutzerdefinierte Namen bleiben unverändert.
+- Android 1.3.1: Gerätename wird ausdrücklich nicht als Raumzuordnung bezeichnet, vollständige Installationskennung sichtbar.
+- Bestehende Gerätekennungen, Anmeldungen, Raumzuordnungen, Automationen und Kamerafreigaben bleiben bei der Aktualisierung unverändert.
+
 ## 0.4.64
 
 - Bundle TAFA integration 0.5.2: recover stale Android tablet bindings after a reinstall, resubscribe Ambient visual replies once the per-tablet profile is resolved, and preserve per-room isolation of admin desktops.

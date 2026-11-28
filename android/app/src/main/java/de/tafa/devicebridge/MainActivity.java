@@ -508,7 +508,7 @@ public class MainActivity extends Activity {
         if (WakeModelInstaller.installed(this))
             ((TextView)findViewById(R.id.wake_model_status)).setText(R.string.wake_ready);
         ((TextView)findViewById(R.id.wake_device_id)).setText(
-            getString(R.string.wake_device_id,WakeDeviceIdentity.get(this).substring(0,12)));
+            getString(R.string.wake_device_id,WakeDeviceIdentity.get(this)));
         wakeChoice=findViewById(R.id.wake_choice);
         wakeInstall=findViewById(R.id.wake_model_install);
         wakeStatus=findViewById(R.id.wake_status);
