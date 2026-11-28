@@ -599,6 +599,7 @@ class Handler(BaseHTTPRequestHandler):
         assets={"/assets/control-center.css":("control_center.css","text/css; charset=utf-8"),
                 "/assets/control-center.js":("control_center.js","text/javascript; charset=utf-8"),
                 "/assets/voice-test.js":("voice-test.js","text/javascript; charset=utf-8"),
+                "/assets/voice-manager.js":("voice-manager.js","text/javascript; charset=utf-8"),
                 "/assets/brand.svg":("brand.svg","image/svg+xml")}
         if path in assets:
             filename,mimetype=assets[path]
