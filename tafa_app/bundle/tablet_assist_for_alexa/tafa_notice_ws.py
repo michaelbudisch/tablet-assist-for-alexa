@@ -14,6 +14,7 @@ from .visual_ws import _paired_devices
 
 COMMAND = DOMAIN + "/notice_subscribe"
 CAMERA_ID = re.compile(r"^camera\.[a-z0-9_]+$")
+SWITCH_ENTITY = re.compile(r"^(?:light|switch|input_boolean)\.[a-z0-9_]+$")
 
 
 @websocket_api.websocket_command({vol.Required("type"): COMMAND})
@@ -65,11 +66,29 @@ async def notice_subscribe(hass, connection, msg):
         except (TypeError, ValueError):
             seconds = 30
         request_id = str(raw.get("request_id") or "")[:100]
-        connection.send_event(msg["id"], {
+        presentation = {
             "title": title, "message": message, "camera": camera,
             "seconds": seconds, "request_id": request_id,
             "device_id": target_id or "", "room": target_room or "",
-        })
+        }
+        if raw.get("template") == "switch":
+            entity_id = raw.get("entity_id")
+            expected = raw.get("requested_state")
+            previous = raw.get("previous_state") or ""
+            if not isinstance(entity_id, str) or not SWITCH_ENTITY.fullmatch(entity_id):
+                return
+            if expected not in ("on", "off") or previous not in ("on", "off", ""):
+                return
+            if hass.states.get(entity_id) is None:
+                return
+            if not user.is_admin and not user.permissions.check_entity(entity_id, POLICY_READ):
+                return
+            presentation.update({
+                "template": "switch", "entity_id": entity_id,
+                "requested_state": expected, "previous_state": previous,
+                "demo": raw.get("demo") is True,
+            })
+        connection.send_event(msg["id"], presentation)
 
     unsub = hass.bus.async_listen("tafa_infobox_show", on_notice)
     connection.subscriptions[msg["id"]] = unsub

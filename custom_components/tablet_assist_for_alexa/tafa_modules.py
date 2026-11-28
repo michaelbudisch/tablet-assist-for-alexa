@@ -31,6 +31,11 @@ INFO_SCHEMA = vol.Schema({
     vol.Optional("request_id", default=""): str,
     vol.Optional("device_id", default=""): str,
     vol.Optional("room", default=""): str,
+    vol.Optional("template", default=""): vol.In(("", "switch")),
+    vol.Optional("entity_id", default=""): str,
+    vol.Optional("requested_state", default=""): vol.In(("", "on", "off")),
+    vol.Optional("previous_state", default=""): vol.In(("", "on", "off")),
+    vol.Optional("demo", default=False): bool,
 })
 REQUEST_SCHEMA = vol.Schema({
     vol.Required("text"): vol.All(str, vol.Length(min=1, max=500)),
@@ -113,6 +118,21 @@ def register(hass, entry):
             payload["device_id"] = d["device_id"][:100]
         if d.get("room"):
             payload["room"] = d["room"][:64]
+        if d.get("template") == "switch":
+            eid = d.get("entity_id") or ""
+            expected = d.get("requested_state") or ""
+            previous = d.get("previous_state") or ""
+            if not re.fullmatch(r"(?:light|switch|input_boolean)\.[a-z0-9_]+", eid):
+                raise ServiceValidationError("Unsupported switch entity")
+            if expected not in ("on", "off") or previous not in ("on", "off", ""):
+                raise ServiceValidationError("Invalid switch state")
+            if hass.states.get(eid) is None:
+                raise ServiceValidationError("Switch entity unavailable")
+            payload.update({
+                "template": "switch", "entity_id": eid,
+                "requested_state": expected, "previous_state": previous,
+                "demo": d.get("demo") is True,
+            })
         hass.bus.async_fire("tafa_infobox_show", payload, context=call.context)
 
     async def status(call):
