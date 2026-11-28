@@ -349,16 +349,10 @@ export function mountOverview(card,s){
     const temp=Number(wx?.attributes?.temperature);
     const hasTemp=Number.isFinite(temp);
     q("[data-today-temp]").textContent=hasTemp?temp.toLocaleString("de-DE",{maximumFractionDigits:0})+"°":"—";
-    const solar=findPower(h,
-      ["sensor.growatt_wechselrichter_growatt_ausgangsleistung_0_w_nachts",
-       "sensor.growatt_wechselrichter_ausgangsleistung",
-       "sensor.growatt_wechselrichter_eingangsleistung_pv"],
-      /(?:solar|photovoltaik|pv|growatt|wechselrichter).*(?:power|leistung|output)/i);
-    const grid=findPower(h,["sensor.tibber_pulse_0100100700ff"],
-      /(?:netz|grid|tibber.*pulse).*(?:power|leistung)/i);
-    const price=h["sensor.hauptstr_23a_aktueller_strompreis"]||
-      h[Object.keys(h).find(id=>/strompreis|electricity_price|current_price/i.test(id)&&
-        numeric(h[id])!==null&&/ct\/kWh|€\/kWh/.test(String(h[id].attributes?.unit_of_measurement||"")))];
+    const solar=findPower(h,[],/(?:solar|photovoltaik|pv|wechselrichter).*(?:power|leistung|output)/i);
+    const grid=findPower(h,[],/(?:netz|grid|tibber.*pulse).*(?:power|leistung)/i);
+    const price=h[Object.keys(h).find(id=>/strompreis|electricity_price|current_price/i.test(id)&&
+      numeric(h[id])!==null&&/ct\/kWh|€\/kWh/.test(String(h[id].attributes?.unit_of_measurement||"")))];
     const p=numeric(price),priceUnit=String(price?.attributes?.unit_of_measurement||"");
     const values={
       solar:fmtPower(solar),grid:fmtPower(grid),
@@ -584,7 +578,7 @@ export function mountOverview(card,s){
     host.style.setProperty("--hz-sphere-scale",scale.toFixed(3));
   };
   const open=(reason="tap")=>{
-    if(disposed)return;
+    if(disposed||(reason==="sensor"&&s.profile&&(s.profile.enabled===false||s.profile.autoOpen===false)))return;
     lastTouch=Date.now();
     if(opened){
       if(reason==="sensor")openedBySensor=true;
@@ -655,7 +649,17 @@ export function mountOverview(card,s){
         if(!["sensor","time","either"].includes(dismiss))return;
         if(!Number.isFinite(idle)||idle<0)return;
         cfg={calendar:cal,presence,dismiss,idle};
-        try{localStorage.setItem(STORE,JSON.stringify(cfg));}catch{}
+        if(s.profile&&s.deviceId&&card.h?.callWS){
+          const profile={...s.profile,...cfg};
+          void card.h.callWS({type:"tablet_assist_for_alexa/ambient_profiles",action:"save",
+            device_id:s.deviceId,revision:s.profileRevision||0,profile}).then(result=>{
+              if(disposed)return;s.profile=result.profile;s.profileRevision=result.revision;
+              setStatus("Geräteprofil gespeichert");
+            }).catch(error=>{
+              if(disposed)return;cfg={...cfg,...s.profile};
+              setStatus("Speichern fehlgeschlagen: "+String(error.message||error));
+            });
+        }else{try{localStorage.setItem(STORE,JSON.stringify(cfg));}catch{}}
         serial++;ongoing=false;requestedCalendar="";lastFetch=0;
         wasPresent=false;boundPresenceId="";q(".hz-overview-config").hidden=true;void load(true);
       }
@@ -683,6 +687,17 @@ export function mountOverview(card,s){
   window.addEventListener("tafa:ambient-presence",onPresence);
   s.overview={
     open,close,
+    applyProfile(profile){
+      if(disposed||!profile)return;
+      const changed=cfg.calendar!==profile.calendar;
+      cfg={...cfg,calendar:profile.calendar||"",presence:profile.presence||"",
+        dismiss:profile.dismiss||"sensor",
+        idle:Number.isFinite(Number(profile.idle))?Number(profile.idle):55,
+        enabled:profile.enabled!==false,autoOpen:profile.autoOpen!==false};
+      if(profile.enabled===false){close();return;}
+      wasPresent=false;boundPresenceId="";
+      if(changed){serial++;ongoing=false;requestedCalendar="";lastFetch=0;void load(true);}
+    },
     update(){
       if(disposed)return;
       const states=card.h?.states||{};
@@ -694,7 +709,7 @@ export function mountOverview(card,s){
       const state=presenceId?String(states[presenceId]?.state||"").toLowerCase():"";
       const present=["on","present","detected","home"].includes(state);
       const free=["off","free","clear","frei","not_home"].includes(state);
-      if(present&&!wasPresent)open("sensor");
+      if(present&&!wasPresent&&cfg.enabled!==false&&cfg.autoOpen!==false)open("sensor");
       else if(free&&wasPresent&&opened&&cfg.dismiss!=="time")close();
       wasPresent=present;
       if(!opened)return;
@@ -720,5 +735,7 @@ export function mountOverview(card,s){
       particles.remove();panel.remove();beam.remove();bloom.remove();style.remove();
     }
   };
+  // The device profile may arrive before the optional overview module loads.
+  if(s.profile)s.overview.applyProfile(s.profile);
   host.dataset.overview="closed";
 }

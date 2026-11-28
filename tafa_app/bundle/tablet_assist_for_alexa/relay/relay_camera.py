@@ -72,15 +72,28 @@ class RelayRuntime:
     def save_ring_storyboard(self, source, jpeg, count, results=None, *, analyzed=None, summary=None, analysis_mode=None):
         if source not in ("door", "outside") or not isinstance(jpeg, bytes) or len(jpeg) > MAX_IMAGE:
             raise ValueError("Invalid Ring storyboard")
-        sensor = "sensor.haustur_letzte_aufzeichnung" if source == "door" else "sensor.vorderseite_letzte_aufzeichnung"
-        state = self.hass.states.get(sensor)
+        # Resolve the Ring last-recording sensor by device mapping and stable
+        # Ring unique ID, never by another household's entity names.
+        configured = self.entry.options.get(
+            "vision_door_camera" if source == "door" else "vision_outside_camera", ""
+        )
+        registry = er.async_get(self.hass)
+        camera = registry.async_get(configured) if configured else None
+        sensor_id = (registry.async_get_entity_id("sensor", "ring", camera.unique_id)
+                     if camera and camera.platform == "ring" else None)
+        state = self.hass.states.get(sensor_id) if sensor_id else None
+        recorded_at = (state.state if state and state.state not in
+                       ("unknown", "unavailable") else None)
+        if not recorded_at:
+            live = self.hass.states.get(configured) if configured else None
+            recorded_at = live.last_updated.isoformat() if live else None
         self.ring_storyboards[source] = {"image": jpeg, "frames": count,
                                          "frame_results": results or [],
                                          "frames_analyzed": analyzed if analyzed is not None else sum(bool(r.get("success")) for r in (results or [])),
                                          "summary": summary,
                                          "analysis_mode": analysis_mode,
                                          "saved_at": monotonic(),
-                                         "event_time": state.state if state else None}
+                                         "event_time": recorded_at}
         self.notify()
 
     def is_owner(self, user):
@@ -320,7 +333,7 @@ async def answer(hass, text, context):
             await resolve_camera_request(relay, request, context)
             # Visible dashboard clients handle these before Assist/TTS. Native clients
             # receive an honest fallback and never invoke the vision worker.
-            return "Die Liveansicht kannst du im Jarvis-Dashboard öffnen."
+            return "Die Liveansicht kannst du im TAFA-Dashboard öffnen."
         result = await describe(relay, *request, context)
         return "Auf dem gerade abgerufenen Einzelbild: " + result["description"]
     except (HomeAssistantError, ValueError, asyncio.TimeoutError):

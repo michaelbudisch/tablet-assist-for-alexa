@@ -77,7 +77,7 @@ async def resolve_camera(relay, source, context):
         if current:
             entity_id = current.entity_id(room, "camera") if current.store.enabled(room) else None
     if not entity_id or not re.fullmatch(r"camera\.[a-z0-9_]+", entity_id):
-        raise ServiceValidationError("Select this camera in Jarvis integration options")
+        raise ServiceValidationError("Choose a Ring recording camera in TAFA camera settings")
     if context.user_id:
         user = await relay.hass.auth.async_get_user(context.user_id)
         if user is None or not user.permissions.check_entity(entity_id, POLICY_READ):

@@ -17,11 +17,16 @@ from .app_settings import async_sync_from_app
 from .device_admin_ws import device_admin_command
 from .device_settings_ws import device_settings_subscribe
 from .visual_ws import visual_subscribe, visual_identity
+from .ambient_profiles_ws import ambient_profiles_command
+from .ring_notice_ws import ring_notice_subscribe
+from .tafa_notice_ws import notice_subscribe
+from .vision_camera_ws import vision_camera_config
 from .ha_provision import provision_manifest, resolve_manifest_entities
 from .dashboard_config import async_get_dashboard, async_set_dashboard
 from .announcement import audio_url, allowed_targets
 from .reminders import Reminders
 from .local_data import LocalData
+from .tafa_modules import register as register_tafa_modules, unregister as unregister_tafa_modules
 from .learning import Learning
 from .learning_ws import learning_command
 from .web_search import search_command
@@ -47,6 +52,10 @@ async def async_setup(hass: HomeAssistant, config):
     websocket_api.async_register_command(hass, device_settings_subscribe)
     websocket_api.async_register_command(hass, visual_subscribe)
     websocket_api.async_register_command(hass, visual_identity)
+    websocket_api.async_register_command(hass, ambient_profiles_command)
+    websocket_api.async_register_command(hass, ring_notice_subscribe)
+    websocket_api.async_register_command(hass, notice_subscribe)
+    websocket_api.async_register_command(hass, vision_camera_config)
     websocket_api.async_register_command(hass, provision_manifest)
     websocket_api.async_register_command(hass, resolve_manifest_entities)
     websocket_api.async_register_command(hass, async_get_dashboard)
@@ -62,6 +71,8 @@ async def async_setup(hass: HomeAssistant, config):
         StaticPathConfig("/tablet_assist_for_alexa/dashboard.js", str(Path(__file__).parent / "frontend" / "dashboard.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/ambient_night.js", str(Path(__file__).parent / "frontend" / "ambient_night.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/ambient_overview.js", str(Path(__file__).parent / "frontend" / "ambient_overview.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/ambient_profiles_client.js", str(Path(__file__).parent / "frontend" / "ambient_profiles_client.js"), False),
+        StaticPathConfig("/tablet_assist_for_alexa/ring_ui.js", str(Path(__file__).parent / "frontend" / "ring_ui.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/response_overlay.js", str(Path(__file__).parent / "frontend" / "response_overlay.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/visual_client.js", str(Path(__file__).parent / "frontend" / "visual_client.js"), False),
         StaticPathConfig("/tablet_assist_for_alexa/dashboard_model.js", str(Path(__file__).parent / "frontend" / "dashboard_model.js"), False),
@@ -127,6 +138,7 @@ async def async_setup_entry(hass, entry):
     data.setdefault("active_platforms", {})[entry.entry_id] = active_platforms
     await hass.config_entries.async_forward_entry_setups(entry, active_platforms)
     hass.services.async_register(DOMAIN, "announce", announce, schema=ANNOUNCE_SCHEMA)
+    register_tafa_modules(hass, entry)
     # No extra TAFA sidebar/dashboard. The Supervisor App is the only
     # configuration and speech-control user interface.
     await reminders.load()
@@ -153,4 +165,5 @@ async def async_unload_entry(hass, entry):
         if data:
             data.reminders.close()
         hass.services.async_remove(DOMAIN, "announce")
+        unregister_tafa_modules(hass)
     return ok
