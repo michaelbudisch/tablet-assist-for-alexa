@@ -161,16 +161,18 @@ def voices_prepare():
         return jsonify(error='fixed mode required'), 409
     if not lock.acquire(blocking=False):
         return jsonify(error='worker busy'), 409
+    started = False
     try:
         if valid_reference(variant_path(number, STYLE)):
             voice_job.update(state='ready', variant=number, updated_at=int(time.time()))
             return jsonify(state='ready', variant=number)
         voice_job.update(state='preparing', variant=number, updated_at=int(time.time()))
         threading.Thread(target=prepare_voice, args=(number,), daemon=True).start()
+        started = True
         return jsonify(state='preparing', variant=number), 202
     finally:
-        # The background job owns the lock once it has started.
-        if voice_job.get('state') != 'preparing':
+        # Never unlock a running worker; avoid races when it finishes quickly.
+        if not started:
             lock.release()
 
 
