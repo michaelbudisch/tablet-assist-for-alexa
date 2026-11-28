@@ -70,7 +70,7 @@ def update_device(fields):
         if key == "word" and value not in WORDS:
             raise ValueError("Unknown wake phrase")
         if key == "room" and not 0 < len(value) <= 48:
-            raise ValueError("Room name must be 1–48 characters")
+            raise ValueError("Tablet name must be 1–48 characters")
     ws_call("configure", device_id=identifier, settings={key: value})
     return "Tablet setting saved."
 
@@ -306,7 +306,7 @@ def render_device_center(lang, csrf, state):
         and ROOM.fullmatch(area["area_id"])
     }
     bound = {
-        room.get("wake_device_id"): room.get("room")
+        room.get("wake_device_id"): room.get("area_id") or room.get("room")
         for room in rooms if isinstance(room, dict)
         and isinstance(room.get("wake_device_id"), str)
     }
@@ -322,7 +322,7 @@ def render_device_center(lang, csrf, state):
             f'<option value="{h(area_id)}"{" selected" if area_id == active else ""}>{h(name)}</option>'
             for area_id, name in sorted(area_names.items(), key=lambda a: a[1].casefold())
         )
-        label = device.get("room") or "TAFA Tablet"
+        label = device.get("device_name") or device.get("room") or "TAFA Tablet"
         online = bool(device.get("online"))
         status = (t("Verbunden","Connected") if online else t("Offline","Offline"))
         current = (t("Zugeordnet","Assigned") if active in area_names else
@@ -335,7 +335,8 @@ def render_device_center(lang, csrf, state):
             f'<strong>{h(label)}</strong> '
             f'<span class="status-pill status-{"good" if online else "neutral"}">{status}</span>'
             f'<small>{t("Geräte-ID","Device ID")}: <code>{h(did)}</code></small>'
-            f'<small>{t("Aktueller Raum","Current area")}: {h(current)}</small>'
+            f'<small>{t("Aktueller Raum","Current area")}: {h(area_names.get(active, current))}</small>'
+            + setting(device,"room",t("Tabletname","Tablet name"),kind="text")
             '</div>'
             f'<form class="tafa-area-form" data-current-area="{h(active)}" method="post" action="./">{hidden("area_assign", did)}'
             '<input type="hidden" name="confirm_move" value="0">'
@@ -359,8 +360,8 @@ def render_device_center(lang, csrf, state):
                  '</p>' if not area_names else "")
     guide = (
         '<p class="subtle">' +
-        t("1. Raum in Home Assistant erstellen. 2. TAFA Device Bridge verbinden. 3. Hier das Tablet dem Raum zuweisen. Die technische Audio-/Kamerazuordnung erledigt TAFA automatisch. Für getrennte Audiokanäle benötigt jedes Tablet weiterhin ein eigenes Nicht-Admin-HA-Konto.",
-          "1. Create an area in Home Assistant. 2. Connect Device Bridge. 3. Assign this tablet to its area. TAFA handles internal audio/camera routing. Each tablet still requires its own non-admin HA account for isolated audio.") +
+        t("1. Raum in Home Assistant anlegen. 2. Jedes Tablet mit einem eigenen Nicht-Admin-HA-Konto verbinden. 3. Tabletname vergeben und gewünschten Raum auswählen. Mehrere Tablets dürfen denselben HA-Raum nutzen; ihre Sprach- und Kamerasitzungen bleiben getrennt.",
+          "1. Create an HA area. 2. Connect each tablet with its own non-admin HA account. 3. Choose a tablet name and select its area. Multiple tablets may share one HA area, while audio and camera sessions stay isolated.") +
         '</p>'
     )
     assignment_panel = (
@@ -390,7 +391,7 @@ def render_device_center(lang, csrf, state):
                 f'<form class="pair-form" method="post" action="./">{hidden("room_camera")}'
                 f'<input type="hidden" name="room" value="{h(rid)}">'
                 f'<input type="hidden" name="user_id" value="{h(uid)}">'
-                f'<label>{h(area_names.get(rid, rid))} – {t("Tablet-Kamera","Tablet camera")}'
+                f'<label>{h(next((d.get("device_name") or d.get("room") or "TAFA Tablet" for d in devices if d.get("device_id") == item.get("wake_device_id")), "TAFA Tablet"))} · {h(area_names.get(item.get("area_id") or rid, rid))} – {t("Tablet-Kamera","Tablet camera")}'
                 '<select name="camera_enabled">'
                 f'<option value="false"{" selected" if not enabled else ""}>{t("Aus","Off")}</option>'
                 f'<option value="true"{" selected" if enabled else ""}>{t("An (nach manuellem Start in der App)","On (after manual app start)")}</option>'
@@ -402,7 +403,7 @@ def render_device_center(lang, csrf, state):
                 f'<form class="pair-form" method="post" action="./">{hidden("room_unpair", item["wake_device_id"])}'
                 f'<input type="hidden" name="room" value="{h(rid)}">'
                 f'<input type="hidden" name="user_id" value="{h(uid)}">'
-                f'<strong>{h(area_names.get(rid,rid))}: {t("Tablet lösen","Unpair tablet")}</strong>'
+                f'<strong>{h(next((d.get("device_name") or d.get("room") or "TAFA Tablet" for d in devices if d.get("device_id") == item.get("wake_device_id")), "TAFA Tablet"))} · {h(area_names.get(item.get("area_id") or rid,rid))}: {t("Tablet lösen","Unpair tablet")}</strong>'
                 f'<label class="pair-consent"><input type="checkbox" name="confirm" value="1" required>'
                 f'{t("TAFA-Gerätezuordnung wirklich lösen","Confirm unpairing")}</label>'
                 f'<button class="btn btn-outline" type="submit">{t("Tablet lösen","Unpair")}</button>'
