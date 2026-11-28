@@ -74,6 +74,7 @@ def run_import(current,latest):
         return response
     with patch.object(server,"CSRF","test-csrf"),\
          patch.object(server,"TOKEN","test-supervisor-token"),\
+         patch.object(server,"_internal_address",return_value="http://tafa-internal:5000"),\
          patch.object(server,"consume_import",return_value=worker()),\
          patch.object(server,"load_options",return_value=current),\
          patch.object(settings_ui,"load_options",return_value=latest),\
