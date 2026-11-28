@@ -1,14 +1,15 @@
 import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
+import {subscribeOwnAmbientProfile} from './ambient_profiles_client.js?v=0.4.98';
 /* TAFA dashboard asset version 0.4.64 - cache-busted file delivery; existing code preserved */
 (function ambientModule(){
   "use strict";
   const bag=globalThis[Symbol.for("tafa-ambient.integration.v1")]??={parts:Object.create(null)};
   const active=new WeakMap();
   const metrics=[
-    {name:"NETZ",ids:["sensor.tibber_pulse_0100100700ff"],pattern:/tibber.*pulse|netz.*leistung|grid.*power|wirkleistung aktuell/i},
-    {name:"STROMPREIS",ids:["sensor.hauptstr_23a_aktueller_strompreis"],pattern:/aktueller.*strompreis|electricity.*price|strompreis/i},
+    {name:"NETZ",ids:[],pattern:/tibber.*pulse|netz.*leistung|grid.*power|wirkleistung aktuell/i},
+    {name:"STROMPREIS",ids:[],pattern:/aktueller.*strompreis|electricity.*price|strompreis/i},
     {name:"AUßEN",ids:[],pattern:/au.ss.en.*temperatur|aussentemperatur|outside.*temp|outdoor.*temp/i},
-    {name:"SOLAR",ids:["sensor.growatt_wechselrichter_growatt_ausgangsleistung_0_w_nachts"],pattern:/pv.*leistung|solar.*power|solar.*leistung|photovoltaik.*leistung|growatt.*leistung/i},
+    {name:"SOLAR",ids:[],pattern:/pv.*leistung|solar.*power|solar.*leistung|photovoltaik.*leistung|growatt.*leistung/i},
     {name:"WÄRMEPUMPE",ids:[],pattern:/w.rmepumpe.*(speicher.*temp|temperatur)|warmwasser.*(temp|speicher)/i},
     {name:"HEIZÖL",ids:[],pattern:/heiz.l.*(bestand|rest|liter|tank)/i}
   ];
@@ -198,11 +199,12 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const time=new Date(),clock=stage.querySelector("#hz-night-clock"),date=stage.querySelector("#hz-night-date");
     if(clock)clock.textContent=time.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
     if(date)date.textContent=time.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+    s.attachProfile?.();
     if(!s.metricIds)s.metricIds=[];
     for(let i=0;i<metrics.length;i++){
       const node=stage.querySelector(`[data-ambient-metric="${i}"] b`);
       if(!node)continue;
-      const id=choose(h,metrics[i]);s.metricIds[i]=id;const str=fmt(id?h[id]:null);
+      const entry=s.metricEntries?s.metricEntries[i]:metrics[i];const id=entry?choose(h,entry):null;s.metricIds[i]=id;const str=fmt(id?h[id]:null);
       if(node.textContent!==str)node.textContent=str;
     }
     const nextPhase=resolvePhase(card,s);
@@ -266,11 +268,23 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const content=document.createElement("div");content.className="hz-ambient-info-content";info.append(content);
     const head=document.createElement("div");head.className="hz-ambient-info-head";
     const left=document.createElement("div"),kick=document.createElement("div"),h=document.createElement("div");
-    kick.className="hz-ambient-info-kicker";kick.textContent="TAFA / "+(data.topic==="search"?"INTERNETSUCHE":"ASSIST");
+    kick.className="hz-ambient-info-kicker";kick.textContent="TAFA / "+(data.topic==="search"?"INTERNETSUCHE":data.camera?"KAMERA":"ASSIST");
     h.className="hz-ambient-info-title";h.textContent=title;left.append(kick,h);
     const x=document.createElement("button");x.type="button";x.className="hz-ambient-info-x";x.textContent="✕";x.setAttribute("aria-label","Infobox schließen");x.onclick=()=>close(card);
     head.append(left,x);content.append(head);
     if(message){const p=document.createElement("div");p.className="hz-ambient-info-message";p.textContent=message;content.append(p);}
+    if(typeof data.camera==="string"&&data.camera.startsWith("camera.")){
+      const entity=card.h?.states?.[data.camera];
+      const picture=entity?.attributes?.entity_picture;
+      if(typeof picture==="string"&&picture.startsWith("/api/camera_proxy/")&&!picture.startsWith("//")){
+        const image=document.createElement("img");
+        image.src=picture;image.alt="Ring · letzte Aufnahme";image.loading="eager";
+        image.style.cssText="display:block;width:100%;max-height:min(38vh,350px);object-fit:contain;background:#071525;border-radius:10px;margin:12px 0";
+        image.onerror=()=>image.remove();content.append(image);
+        const caption=document.createElement("div");caption.className="hz-ambient-info-message";
+        caption.style.fontSize="11px";caption.textContent="Letztes Kamerabild · kein Livestream";content.append(caption);
+      }
+    }
     const list=[];
     if(Array.isArray(data.results))for(const result of data.results.slice(0,5)){
       const text=typeof result==="string"?result:result?.title||result?.name||result?.snippet;
@@ -279,7 +293,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     if(data.sources&&typeof data.sources==="object")for(const [key,id] of Object.entries(data.sources).slice(0,6)){
       if(typeof id==="string"&&card.h?.states?.[id])list.push(key+": "+fmt(card.h.states[id]));
     }
-    if(data.camera&&typeof data.camera==="string")list.push("Kamera: "+data.camera.replace(/^camera\./,"").replace(/_/g," "));
+    if(data.camera&&typeof data.camera==="string"&&!card.h?.states?.[data.camera])list.push("Kamera: "+data.camera.replace(/^camera\./,"").replace(/_/g," "));
     if(list.length){const items=document.createElement("div");items.className="hz-ambient-items";for(const value of list){const el=document.createElement("div");el.className="hz-ambient-item";el.textContent=value;items.append(el);}content.append(items);}
     // A neutral context icon, never an unverified success indicator.
     const topic=String(data.topic||"").toLowerCase(),hint=(title+" "+message).toLowerCase();
@@ -765,6 +779,29 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     if(!host||!canvas)return;
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
+    const applyProfile=(profile,deviceId)=>{
+      if(active.get(card)!==s)return;
+      s.profile=profile;s.deviceId=deviceId;
+      s.metricEntries=Array.isArray(profile?.metrics)?profile.metrics.slice(0,6).map(m=>({name:m.name||m.id,ids:[m.id],pattern:/(?!)/})):null;
+      s.metricNodes.forEach((node,i)=>{
+        const entry=s.metricEntries?.[i]||(s.metricEntries?null:metrics[i]);
+        node.hidden=!entry;
+        const title=node.querySelector("small");
+        if(title&&entry)title.textContent=entry.name;
+      });
+      s.overview?.applyProfile?.(profile);
+      update(card);
+    };
+    const attachProfile=()=>{
+      const connection=card.h?.connection;
+      if(!connection||s.profileConnection===connection)return;
+      s.profileConnection=connection;
+      try{s.profileUnsub?.();}catch{}s.profileUnsub=null;
+      Promise.resolve(subscribeOwnAmbientProfile(card,applyProfile))
+        .then(stop=>{if(active.get(card)!==s||s.profileConnection!==connection)stop?.();else s.profileUnsub=stop;})
+        .catch(error=>console.debug("TAFA Ambient profile unavailable",error));
+    };
+    s.attachProfile=attachProfile;attachProfile();
     // Load the optional calendar only for an active ambient display.
     void import("./ambient_overview.js?v=0.4.77")
       .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
@@ -928,6 +965,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     s.dragPointer=null;
     s.manualDragging=false;
     try{s.unsubscribe?.();}catch{}
+    try{s.profileUnsub?.();}catch{}
   }
   bag.parts.ambient={body,mount,update,show,close,dispose};
   // Optional enhancement: never take part in the required dashboard boot gate.
