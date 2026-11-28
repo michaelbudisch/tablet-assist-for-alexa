@@ -4,6 +4,12 @@
 
 The GPU worker is **optional**, adding GPU Wyoming Whisper (STT), Qwen streaming voice (TTS), and one shared Qwen3-VL Ollama model for text AI and Vision to an existing CPU-capable TAFA setup. A supported **NVIDIA GPU** is required. Windows needs NVIDIA drivers, Docker Desktop with **WSL2/Linux containers**; Linux needs Docker Engine/Compose and NVIDIA Container Toolkit. First model builds/downloads need Internet access and sufficient SSD space.
 
+## TAFA voice profiles (2.2.8+)
+
+Only `STREAM_VOICE_MODE=fixed` supports selecting prepared voice variants. Variant 1 keeps the existing voice; variants 2–9 use distinct synthetic voice descriptions. **TAFA → Settings → Voice and sound** shows ready/missing profiles, offers one-at-a-time preparation, and plays local previews. Saving the selected variant is a separate operation.
+
+For an existing Windows worker, update the worker source and run **06-Stimmenverwaltung-Aktualisieren.bat**. Only `qwen-stream` is rebuilt; other services, volumes and `.env` are untouched. Preparation temporarily unloads the TTS Base model before loading VoiceDesign, then restores Base. Available VRAM is still required and failures are reported without deleting models.
+
 ## Windows quick start
 
 From the `worker/` directory:
