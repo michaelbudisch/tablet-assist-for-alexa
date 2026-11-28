@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Coarse image change, not person/object recognition. Suppress uniform brightness changes. */
 final class FrameMotion {

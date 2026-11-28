@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.Manifest;
 import android.app.Activity;
@@ -32,7 +32,7 @@ import com.journeyapps.barcodescanner.ScanOptions;
 
 public class MainActivity extends Activity {
     private VoiceDiagnosticsPanel flowDiagnostics;
-    static final String PREF = "jarvis_audio", KEY = "jarvis_audio_credentials", HTTP_CONSENT = "http_consent_base";
+    static final String PREF = "tafa_device_bridge", KEY = "tafa_device_bridge_credentials", HTTP_CONSENT = "http_consent_base";
     private static final int SCAN_TOKEN = 100;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refresh = new Runnable() {

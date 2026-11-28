@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;

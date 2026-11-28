@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Opt-in local voice activity gate. Never stores audio or a transcript. */
 final class ContinuousSpeechTrigger {

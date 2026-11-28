@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /**
  * Lightweight endpoint detector for optional native Assist capture.

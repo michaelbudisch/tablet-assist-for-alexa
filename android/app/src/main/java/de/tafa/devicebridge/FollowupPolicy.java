@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Follow-ups require HA's invitation and a local per-tablet opt-in. */
 final class FollowupPolicy {

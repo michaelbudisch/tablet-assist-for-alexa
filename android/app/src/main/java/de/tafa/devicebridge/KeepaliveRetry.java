@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Bounded, deterministic backoff for a silent Bluetooth keepalive stream. */
 final class KeepaliveRetry {

@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
