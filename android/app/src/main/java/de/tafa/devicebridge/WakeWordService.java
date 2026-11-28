@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.Manifest;
 import android.app.*;
@@ -32,12 +32,12 @@ import java.util.concurrent.TimeUnit;
  * websocket. No recordings or transcripts are stored.
  */
 public final class WakeWordService extends Service implements RecognitionListener {
-    static final String START="de.jarvis.audio.WAKE_START",STOP="de.jarvis.audio.WAKE_STOP",
-        NATIVE_SETTINGS="de.jarvis.audio.NATIVE_SETTINGS",
-        NATIVE_TEST="de.jarvis.audio.NATIVE_TEST";
+    static final String START="de.tafa.devicebridge.WAKE_START",STOP="de.tafa.devicebridge.WAKE_STOP",
+        NATIVE_SETTINGS="de.tafa.devicebridge.NATIVE_SETTINGS",
+        NATIVE_TEST="de.tafa.devicebridge.NATIVE_TEST";
     static volatile boolean running=false;
     static volatile String status="off";
-    private static final String CHANNEL="jarvis-wake",TAG="TAFAWake";
+    private static final String CHANNEL="tafa-wake",TAG="TAFAWake";
     private static final long SYNC_INTERVAL_MS=500;
     private final Handler main=new Handler(Looper.getMainLooper());
     private volatile boolean enabled=false;

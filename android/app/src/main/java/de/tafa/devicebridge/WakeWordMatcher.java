@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import java.text.Normalizer;
 import java.util.Locale;

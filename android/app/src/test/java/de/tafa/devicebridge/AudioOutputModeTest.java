@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 import android.media.AudioDeviceInfo;
 import org.junit.Test;
 import static org.junit.Assert.*;

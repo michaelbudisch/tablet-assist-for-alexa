@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Confirmation threshold for consecutive Vosk recognition hypotheses. */
 final class WakeTriggerGate {
