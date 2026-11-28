@@ -24,6 +24,8 @@ def load_action():
         "ROOM": re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z"),
         "cleanup_tablet": lambda hass, identifier: hass.cleaned_tablets.append(identifier),
         "cleanup_room": lambda hass, room: hass.cleaned_rooms.append(room),
+        "ar": types.SimpleNamespace(async_get=lambda hass: hass.area_registry),
+        "dr": types.SimpleNamespace(async_get=lambda hass: hass.device_registry),
     }
     exec(compile(ast.fix_missing_locations(
         ast.Module(body=[method], type_ignores=[])), str(SOURCE), "exec"),
@@ -53,6 +55,27 @@ class Fixture:
         self.auth = Auth([self.admin, self.user,
                           User("inactive", "Inactive", active=False),
                           User("system", "System", system=True)])
+        self.area_entries = {
+            name: types.SimpleNamespace(id=name, name=display)
+            for name, display in (("buero", "Büro"), ("wohnzimmer", "Wohnzimmer"))
+        }
+        self.area_registry = types.SimpleNamespace(
+            async_list_areas=lambda: list(self.area_entries.values()),
+            async_get_area=lambda name: self.area_entries.get(name),
+        )
+        self.area_assignments = {}
+        def get_registered_device(identifiers):
+            identifier = next(iter(identifiers))[1]
+            if identifier not in self.devices:
+                return None
+            return types.SimpleNamespace(id=identifier,
+                                         area_id=self.area_assignments.get(identifier))
+        def update_registered_device(identifier, area_id):
+            self.area_assignments[identifier] = area_id
+        self.device_registry = types.SimpleNamespace(
+            async_get_device=get_registered_device,
+            async_update_device=update_registered_device,
+        )
         self.devices = {}
         self.controller = types.SimpleNamespace(
             lock=asyncio.Lock(), devices=self.devices,
@@ -107,6 +130,79 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response["rooms"], [])
         self.assertEqual(response["devices"], [])
         self.assertNotIn("token", str(response))
+
+    async def test_assign_existing_ha_area_creates_one_secure_pairing(self):
+        hass = Fixture()
+        identifier = "a" * 32
+        hass.devices[identifier] = {
+            "device_id": identifier, "user_id": "tablet",
+            "room": "TAFA Tablet", "online": True,
+        }
+        result = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": identifier, "area_id": "wohnzimmer"})
+        self.assertTrue(result["paired"])
+        self.assertEqual(result["room"], "wohnzimmer")
+        self.assertEqual(hass.transport.rooms, {"wohnzimmer": "tablet"})
+        self.assertEqual(hass.transport.settings["wohnzimmer"]["wake_device_id"], identifier)
+        self.assertFalse(hass.transport.settings["wohnzimmer"]["camera_enabled"])
+        self.assertEqual(hass.area_assignments[identifier], "wohnzimmer")
+        self.assertEqual(hass.saved, 1)
+        self.assertEqual(len((await self.action(hass, hass.admin, {"action": "list"}))["areas"]), 2)
+        # Same ID / HA area is a safe idempotent assignment.
+        again = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": identifier, "area_id": "wohnzimmer"})
+        self.assertFalse(again["moved"])
+        self.assertEqual(len(hass.transport.rooms), 1)
+
+    async def test_assign_rejects_unregistered_area_and_wrong_owner(self):
+        hass = Fixture()
+        identifier = "a" * 32
+        hass.devices[identifier] = {"device_id": identifier, "user_id": "tablet"}
+        for area in ("no_such_area", "../bad"):
+            with self.assertRaises(ValueError):
+                await self.action(hass, hass.admin, {
+                    "action": "assign_area", "device_id": identifier, "area_id": area})
+        with self.assertRaises(PermissionError):
+            await self.action(hass, hass.user, {
+                "action": "assign_area", "device_id": identifier, "area_id": "buero"})
+        hass.transport.rooms["buero"] = "some-other-user"
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "assign_area", "device_id": identifier, "area_id": "buero"})
+
+    async def test_reinstall_replaces_only_offline_previous_device(self):
+        hass = Fixture()
+        old_id, new_id = "a"*32, "b"*32
+        hass.devices[old_id] = {"device_id": old_id, "user_id": "tablet", "online": False}
+        hass.devices[new_id] = {"device_id": new_id, "user_id": "tablet", "online": True}
+        hass.transport.rooms["wohnzimmer"] = "tablet"
+        hass.transport.settings["wohnzimmer"] = {"wake_device_id": old_id, "camera_enabled": True}
+        result = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": new_id, "area_id": "wohnzimmer"})
+        self.assertTrue(result["replaced_offline"])
+        self.assertEqual(hass.transport.settings["wohnzimmer"]["wake_device_id"], new_id)
+        self.assertTrue(hass.transport.settings["wohnzimmer"]["camera_enabled"])
+        hass.transport.settings["wohnzimmer"]["wake_device_id"] = old_id
+        hass.devices[old_id]["online"] = True
+        with self.assertRaises(ValueError):
+            await self.action(hass, hass.admin, {
+                "action": "assign_area", "device_id": new_id, "area_id": "wohnzimmer"})
+        self.assertEqual(hass.transport.settings["wohnzimmer"]["wake_device_id"], old_id)
+
+    async def test_moving_same_tablet_updates_area_and_clears_old_camera_consent(self):
+        hass = Fixture()
+        identifier = "a"*32
+        hass.devices[identifier] = {"device_id": identifier, "user_id": "tablet", "online": True}
+        hass.transport.rooms["wohnzimmer"] = "tablet"
+        hass.transport.settings["wohnzimmer"] = {
+            "wake_device_id": identifier, "camera_enabled": True}
+        result = await self.action(hass, hass.admin, {
+            "action": "assign_area", "device_id": identifier, "area_id": "buero"})
+        self.assertTrue(result["moved"])
+        self.assertEqual(hass.transport.rooms, {"buero": "tablet"})
+        self.assertEqual(hass.cleaned_rooms, ["wohnzimmer"])
+        self.assertFalse(hass.transport.settings["buero"]["camera_enabled"])
+        self.assertEqual(hass.area_assignments[identifier], "buero")
 
     async def test_create_room_first_then_list_user_and_room(self):
         hass = Fixture()
