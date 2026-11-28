@@ -321,7 +321,7 @@ async def setup_room_audio(hass, entry):
         # Keep HA-area grouping when a legacy room service reconfigures
         # the per-tablet audio route.
         area_id = values.get("area_id")
-        if isinstance(area_id, str) and ROOM.fullmatch(area_id):
+        if isinstance(area_id, str) and re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", area_id):
             result["area_id"] = area_id
         if paired:
             result["wake_device_id"] = paired
