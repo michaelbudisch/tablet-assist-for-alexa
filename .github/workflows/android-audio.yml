@@ -2,9 +2,9 @@ name: Android audio app
 on:
   push:
     branches: [main]
-    paths: ['android/**', 'homeassistant/custom_components/jarvis_tablet_audio/**', 'tests/relay_camera_e2e/**', '.github/workflows/android-audio.yml']
+    paths: ['android/**', 'custom_components/tablet_assist_for_alexa/**', 'tafa_app/tests/test_camera_migration_contract.py', '.github/workflows/android-audio.yml']
   pull_request:
-    paths: ['android/**', 'homeassistant/custom_components/jarvis_tablet_audio/**', 'tests/relay_camera_e2e/**', '.github/workflows/android-audio.yml']
+    paths: ['android/**', 'custom_components/tablet_assist_for_alexa/**', 'tafa_app/tests/test_camera_migration_contract.py', '.github/workflows/android-audio.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,8 +39,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Test authenticated camera and vision routing in real HA
-        run: bash tests/relay_camera_e2e/run.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check TAFA camera API and migration contract
+        run: python -m unittest discover -s tafa_app/tests -p 'test_camera_migration_contract.py' -v
   release:
     needs: [checks, camera-receiver]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

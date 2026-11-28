@@ -1,9 +1,17 @@
 name: Multiroom routing tests
 on:
   push:
-    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/www/jarvis/jarvis-room-*.js', 'homeassistant/www/jarvis/jarvis-kiosk-room-audio-*.js', 'homeassistant/www/jarvis/tafa-room-routing-*.mjs', 'tests/test_tafa_room_routing.mjs', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
+    paths:
+      - 'custom_components/tablet_assist_for_alexa/relay/**'
+      - 'tafa_app/tests/test_room*.py'
+      - 'tafa_app/tests/test_device_center.py'
+      - '.github/workflows/multiroom-ci.yml'
   pull_request:
-    paths: ['homeassistant/custom_components/jarvis_tablet_audio/relay_room_router.py', 'homeassistant/tests/test_room*.py', 'homeassistant/www/jarvis/jarvis-room-*.js', 'homeassistant/www/jarvis/jarvis-kiosk-room-audio-*.js', 'homeassistant/www/jarvis/tafa-room-routing-*.mjs', 'tests/test_tafa_room_routing.mjs', 'homeassistant/custom_components/jarvis_tablet_audio/relay_room*.py', '.github/workflows/multiroom-ci.yml']
+    paths:
+      - 'custom_components/tablet_assist_for_alexa/relay/**'
+      - 'tafa_app/tests/test_room*.py'
+      - 'tafa_app/tests/test_device_center.py'
+      - '.github/workflows/multiroom-ci.yml'
 permissions:
   contents: read
 jobs:
@@ -14,10 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m unittest discover -s homeassistant/tests -p 'test_room*.py' -v
-      - run: python -m compileall -q homeassistant/custom_components/jarvis_tablet_audio tests/relay_camera_e2e/fixture
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: node --check homeassistant/www/jarvis/jarvis-room-assist-v0.1.1.js && node --check homeassistant/www/jarvis/jarvis-room-admin-v0.2.0.js && node --input-type=module --check < homeassistant/www/jarvis/jarvis-kiosk-room-audio-v0.1.0.js
-      - run: node --test tests/test_tafa_room_routing.mjs
+      - name: Validate TAFA multiroom Python modules
+        run: python -m compileall -q custom_components/tablet_assist_for_alexa/relay
+      - name: Run TAFA room audio and routing tests
+        run: python -m unittest discover -s tafa_app/tests -p 'test_room*.py' -v

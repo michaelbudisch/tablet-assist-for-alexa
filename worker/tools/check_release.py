@@ -70,7 +70,7 @@ def package(target):
     files = list(safe_files())
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as zipfile_out:
         for path in files:
-            zipfile_out.write(path, f"jarvis_gpu_worker_{version}/" + path.relative_to(ROOT).as_posix())
+            zipfile_out.write(path, "tafa_gpu_worker/" + path.relative_to(ROOT).as_posix())
     with zipfile.ZipFile(target) as check:
         names = check.namelist()
         if any("/.env" in n or n.endswith((".wav", ".pcm", ".key", ".pem")) for n in names):
@@ -83,7 +83,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--package", metavar="ZIP")
     args = parser.parse_args()
-    print("Jarvis GPU Worker", validate(), "- release metadata OK")
+    print("TAFA GPU Worker", validate(), "- release metadata OK")
     if args.package:
         target, count = package(args.package)
         print(f"Safe release package: {target} ({count} files)")

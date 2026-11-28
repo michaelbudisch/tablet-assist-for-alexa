@@ -22,10 +22,10 @@ jobs:
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Build validated worker ZIP
-        run: python worker/tools/check_release.py --package "./jarvis-gpu-worker-${{ steps.version.outputs.version }}.zip"
+        run: python worker/tools/check_release.py --package "./tafa-gpu-worker.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: Jarvis_GPU_Worker_v${{ steps.version.outputs.version }}
-          path: jarvis-gpu-worker-${{ steps.version.outputs.version }}.zip
+          name: TAFA_GPU_Worker
+          path: tafa-gpu-worker.zip
           if-no-files-found: error
           retention-days: 30

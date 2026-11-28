@@ -23,7 +23,8 @@ class NativeAudioContract(unittest.TestCase):
         self.assertIn("await setup_room_audio(hass, entry)",app)
         self.assertIn("await setup_wake_devices(hass, entry)",app)
         self.assertIn("relay_camera_started",app)
-        self.assertIn("legacy_present",app)
+        self.assertNotIn("legacy_present",app)
+        self.assertNotIn("jarvis_tablet_audio",app)
         for name in ["relay_wake_devices.py","relay_room_adapter.py","relay_room_camera.py"]:
             f="relay/"+name
             self.assertEqual(read("custom_components/tablet_assist_for_alexa/"+f),

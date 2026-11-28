@@ -26,7 +26,7 @@ jobs:
       - name: Validate public TAFA documentation and links
         run: python tests/test_docs_public.py
       - run: python tests/test_audio.py
-      - run: python tests/test_install.py
+      - run: python -m unittest discover -s tafa_app/tests -p 'test_installer.py' -v
       - run: python tests/test_marketplace.py
       - run: python tests/test_proxy.py
       - run: python tests/test_combined_proxmox.py
