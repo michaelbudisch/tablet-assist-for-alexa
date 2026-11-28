@@ -6,7 +6,7 @@
 
 Open **TAFA Dashboard → More → Settings → TAFA Ambient**. Each paired tablet has a separate profile stored in its Home Assistant installation, not in GitHub. You can configure its calendar, proximity entity, enable/auto-open flags, close behavior, display duration, and up to twelve sensor labels and entity IDs (up to six visible around the globe on smaller displays).
 
-The **Assign this display** action binds only the current browser; it is not a remote change to another tablet. Profile revisions prevent accidental overwrites during concurrent edits. If no device can be identified unambiguously, TAFA does not silently bind the browser to another room.
+The optional **Preview responses on this browser** action is under a collapsed browser-only preview section and is hidden on Android; it never pairs a tablet or changes an HA area. Normal Android tablets automatically use their unique registered device identity. Profile revisions prevent accidental overwrites during concurrent edits. If no device can be identified unambiguously, TAFA does not silently bind the browser to another room.
 
 ## Configure Ring recording cameras
 

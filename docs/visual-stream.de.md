@@ -3,7 +3,7 @@
 Ab TAFA 0.4.64 empfangen normale Dashboard-Ansichten und der Ambientmodus Sprachantworten über den authentifizierten WebSocket-Befehl `tablet_assist_for_alexa/visual_subscribe`. Die Gerätezuordnung kommt ausschließlich über `tablet_assist_for_alexa/visual_identity`. Direkte Frontend-Abos auf `tafa_assist_response` sind nicht mehr erforderlich.
 
 - Ein Raum-Benutzer mit genau einem zugeordneten Tablet erhält ausschließlich dessen Antworten.
-- Bei mehreren Geräten sowie bei Administrator-Logins erfolgt **keine automatische Zuordnung**. Der lokale Bildschirm muss explizit über den Gerätestatus-Sensor (Browser-Einstellung `tafa.dashboard.local_voice_sensor.v1`) gebunden sein. Die Identität wird gegen die vom Backend autorisierten Geräte geprüft.
+- Bei **mehreren** Geräten und bei **Administrator-PC-Browsern** erfolgt keine automatische Antwortzuordnung. Die optionale **Browser-Vorschau** wird unter TAFA Ambient eingestellt (`tafa.dashboard.local_voice_sensor.v1`); das ist **keine HA-Raumzuordnung**. Ein Android-Tablet mit einer eindeutig erkannten gekoppelten Geräte-ID bindet sich nach einer Neuinstallation selbst wieder an.
 - Ist kein passendes Gerät zugeordnet, bleibt der Bildschirm passiv. Die Antwort wird nicht stattdessen aus einem anderen Raum angezeigt.
 - Die native TAFA Device Bridge steuert Rufwort und Anschlussfragen selbst; der Visualstream startet kein Mikrofon.
 - Das Frontend verwendet keinen Fallback auf Administrator-HA-Ereignis-Abos. Bei fehlender Berechtigung wird die Antwort nicht angezeigt; der Fehler wird in der Browserkonsole protokolliert.
