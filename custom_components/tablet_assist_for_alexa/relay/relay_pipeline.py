@@ -38,5 +38,5 @@ async def check_camera_pipeline(relay, call):
     pipeline = async_get_pipeline(relay.hass, call.data.get("pipeline_id"))
     agent = er.async_get(relay.hass).async_get_entity_id("conversation", "tablet_assist_for_alexa", relay.entry.entry_id + "_conversation_router")
     if pipeline.conversation_engine != agent:
-        raise ServiceValidationError("Select a Jarvis conversation router pipeline")
+        raise ServiceValidationError("Select the TAFA conversation router pipeline")
     return await run_intent(relay.hass, pipeline, call.context, text)
