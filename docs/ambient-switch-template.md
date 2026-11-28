@@ -24,3 +24,9 @@ The same payload can be sent via `tablet_assist_for_alexa.infobox_anzeigen` usin
 Allowed entities: `light.*`, `switch.*`, `input_boolean.*`. `requested_state` must be `on` or `off`; `previous_state` may additionally be empty. Non-admin tablet streams enforce the normal entity-read permission before forwarding device metadata. `demo: true` provides a preview that **never** actuates the device or reports verified success.
 
 Room-specific commands must pass `room` or `device_id`. An event without target uses TAFA's existing broadcast behavior to eligible subscribed screens. Native Assist light actions that do not use the TAFA switching script are not automatically intercepted.
+
+## Native Assist voice commands
+
+Since TAFA App 0.4.74 / integration 0.5.9, native Assist calls with `prefer_local_intents: true` are also observed. TAFA listens only after an authenticated `tafa_android_wakeword_routed` event for a paired tablet. Within a 25-second bounded window it correlates direct, root-context `call_service` events from the room's assigned Home Assistant user. Eligible calls must explicitly name at most six `light.*`, `switch.*`, or `input_boolean.*` entities and use `turn_on`, `turn_off`, or `toggle`; all other events are ignored.
+
+The bridge publishes only presentation metadata to `tafa_infobox_show`. A native command continues to execute via Home Assistant (TAFA never repeats it). The ambient client confirms the requested state from the actual HA entity. Commands using area/device targets without explicit entity IDs are intentionally ignored rather than inferring or broadcasting arbitrary devices.

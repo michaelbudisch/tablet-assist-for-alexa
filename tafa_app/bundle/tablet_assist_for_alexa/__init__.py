@@ -20,6 +20,7 @@ from .visual_ws import visual_subscribe, visual_identity
 from .ambient_profiles_ws import ambient_profiles_command
 from .ring_notice_ws import ring_notice_subscribe
 from .tafa_notice_ws import notice_subscribe
+from .switch_intent_bridge import setup_switch_intent_bridge, unload_switch_intent_bridge
 from .vision_camera_ws import vision_camera_config
 from .ha_provision import provision_manifest, resolve_manifest_entities
 from .dashboard_config import async_get_dashboard, async_set_dashboard
@@ -125,6 +126,7 @@ async def async_setup_entry(hass, entry):
     from .relay.relay_wake_devices import setup_wake_devices
     await setup_room_audio(hass, entry)
     await setup_wake_devices(hass, entry)
+    setup_switch_intent_bridge(hass)
     data["relay_started"] = True
     # TAFA registriert Kamera, Audio und Geräte direkt.
     from .relay.relay_camera import async_setup as setup_relay_camera
@@ -155,6 +157,7 @@ async def async_unload_entry(hass, entry):
             if hass.data.get(DOMAIN, {}).pop("relay_camera_started", False):
                 from .relay.relay_camera import async_unload as unload_relay_camera
                 unload_relay_camera(hass)
+            unload_switch_intent_bridge(hass)
             unload_room_audio(hass)
             unload_wake_devices(hass)
         data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)

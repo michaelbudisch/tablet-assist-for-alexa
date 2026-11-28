@@ -1,3 +1,9 @@
+## 0.4.74
+
+- Native Home-Assistant-Assist-Schaltbefehle erzeugen nach einem gerätegebundenen TAFA-Rufwort automatisch die bereits vorhandene Ambient-Schaltkarte, auch wenn lokale Intents den Gesprächsrouter umgehen.
+- Der Koppelkanal gleicht das berechtigte HA-Benutzerkonto und ein kurzes Aktivierungsfenster ab. Es werden ausschließlich explizit benannte Licht-/Schalter-Entitäten angezeigt, keine Schaltung ausgeführt und keine Automatisierung umgestellt.
+- Raumzuordnung und Schaltbestätigung bleiben getrennt; die angezeigte Zielzustandsbestätigung stammt weiterhin vom jeweiligen Gerät.
+
 ## 0.4.73
 
 - Neuer typisierter TAFA-Schaltauftrag für Ambient-Infoboxen: sichere Übertragung von Entität, Zielzustand und optionaler Tablet-/Raumzuordnung über den bestehenden Gerätekanal.
