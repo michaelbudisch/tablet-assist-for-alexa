@@ -6,6 +6,7 @@ use the authenticated HA WebSocket, matching existing TAFA app configuration.
 import re
 import voluptuous as vol
 from homeassistant.components import websocket_api
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from .const import DOMAIN
 from .device_cleanup import cleanup_tablet, cleanup_room
 
@@ -25,6 +26,9 @@ async def perform_device_admin(hass, user, msg):
         raise RuntimeError("Native TAFA backend not loaded")
     action = msg["action"]
     if action == "list":
+        registry = ar.async_get(hass)
+        areas = [{"area_id": a.id, "name": a.name}
+                 for a in registry.async_list_areas()]
         users = [{"id": u.id, "name": u.name or u.id}
                  for u in await hass.auth.async_get_users()
                  if u.is_active and not u.is_admin and not u.system_generated]
@@ -39,7 +43,66 @@ async def perform_device_admin(hass, user, msg):
                  for name, owner in transport.rooms.items()]
         return {"users": sorted(users, key=lambda u: u["name"].casefold()),
                 "devices": sorted(devices, key=lambda d: (d["room"].casefold(), d["device_id"])),
-                "rooms": sorted(rooms, key=lambda r: r["room"])}
+                "rooms": sorted(rooms, key=lambda r: r["room"]),
+                "areas": sorted(areas, key=lambda a: a["name"].casefold())}
+    if action == "assign_area":
+        # A Home Assistant area, not a second TAFA room, is the source of
+        # truth. The tablet's enrolled HA principal is derived server-side:
+        # the client cannot reassign ownership by passing a user ID.
+        identifier, area_id = msg.get("device_id"), msg.get("area_id")
+        if (not isinstance(identifier, str) or not DEVICE_ID.fullmatch(identifier)
+                or not isinstance(area_id, str) or not ROOM.fullmatch(area_id)):
+            raise ValueError("Invalid tablet ID or Home Assistant area")
+        area = ar.async_get(hass).async_get_area(area_id)
+        if area is None:
+            raise ValueError("Home Assistant area not found")
+        device = controller.devices.get(identifier)
+        if device is None:
+            raise ValueError("Tablet is not registered")
+        principal = device.get("user_id")
+        owner = await hass.auth.async_get_user(principal) if principal else None
+        if not owner or not owner.is_active or owner.is_admin or owner.system_generated:
+            raise ValueError("Tablet requires a dedicated active non-admin HA user")
+        if area_id in transport.rooms and transport.rooms[area_id] != principal:
+            raise ValueError("Area already assigned to another tablet user")
+        existing = transport.settings.get(area_id, {}).get("wake_device_id", "")
+        if existing and existing != identifier:
+            older = controller.devices.get(existing)
+            # A disconnected old installation may be replaced, not a live
+            # second tablet, and never an installation from another user.
+            if older and (older.get("user_id") != principal or
+                          controller.public(older).get("online")):
+                raise ValueError("Area already has an active or foreign tablet")
+        previous = [r for r, p in transport.rooms.items()
+                    if p == principal and r != area_id]
+        for old in previous:
+            assigned = transport.settings.get(old, {}).get("wake_device_id", "")
+            if assigned and assigned != identifier:
+                raise ValueError("HA user belongs to another registered tablet")
+        # Move a single device in one explicit action. Only its TAFA room
+        # routing changes; never delete an HA Area, user, or automation.
+        for old in previous:
+            transport.revoke(old)
+            transport.settings.pop(old, None)
+        if area_id not in transport.rooms:
+            transport.provision(area_id, principal)
+        transport.settings[area_id] = {
+            **transport.settings.get(area_id, {}),
+            "wake_device_id": identifier,
+            # Moving to a different room must not carry old camera consent.
+            "camera_enabled": (transport.settings.get(area_id, {}).get("camera_enabled") is True
+                               if not previous else False),
+        }
+        await persist()
+        for old in previous:
+            cleanup_room(hass, old)
+        registry = dr.async_get(hass)
+        actual = registry.async_get_device(identifiers={(DOMAIN, identifier)})
+        if actual and actual.area_id != area_id:
+            registry.async_update_device(actual.id, area_id=area_id)
+        return {"room": area_id, "area": area.name, "device_id": identifier,
+                "paired": True, "moved": bool(previous),
+                "replaced_offline": bool(existing and existing != identifier)}
     if action == "delete_device":
         if msg.get("confirmed") is not True:
             raise ValueError("Explicit confirmation required")
@@ -239,9 +302,10 @@ async def perform_device_admin(hass, user, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): COMMAND,
-    vol.Required("action"): vol.In(("list", "create", "pair", "configure", "camera", "camera_setup", "camera_diagnostics", "migrate_legacy_vision",
+    vol.Required("action"): vol.In(("list", "create", "pair", "assign_area", "configure", "camera", "camera_setup", "camera_diagnostics", "migrate_legacy_vision",
                         "unpair", "delete_device", "delete_room")),
     vol.Optional("room"): str,
+    vol.Optional("area_id"): str,
     vol.Optional("user_id"): str,
     vol.Optional("device_id"): str,
     vol.Optional("transfer_device"): bool,
