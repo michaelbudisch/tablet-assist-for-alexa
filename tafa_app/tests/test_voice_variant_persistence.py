@@ -81,7 +81,7 @@ class VoiceVariantPersistenceTests(unittest.TestCase):
             return _Response({"result": "ok"})
 
         with patch.object(speech_source.HTTP, "open",
-                          side_effect=lambda *args, **kwargs: next(get_results)), \\
+                          side_effect=lambda *args, **kwargs: next(get_results)), \
              patch.object(settings_ui.urllib.request, "urlopen", side_effect=post):
             saved = settings_ui.save_settings_form("test-token", self._fields("2"), [])
         self.assertEqual(saved["voice_variant"], "2")
@@ -90,7 +90,7 @@ class VoiceVariantPersistenceTests(unittest.TestCase):
 
     def test_save_does_not_claim_success_if_variant_was_not_persisted(self):
         with patch.object(speech_source.HTTP, "open",
-                          return_value=_Response({"result": "ok", "data": {"options": self.options}})), \\
+                          return_value=_Response({"result": "ok", "data": {"options": self.options}})), \
              patch.object(settings_ui.urllib.request, "urlopen",
                           return_value=_Response({"result": "ok"})):
             with self.assertRaisesRegex(RuntimeError, "not persisted"):
