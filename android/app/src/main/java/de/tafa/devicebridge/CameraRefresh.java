@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Bounded refresh preference for explicitly started JPEG delivery. */
 final class CameraRefresh {

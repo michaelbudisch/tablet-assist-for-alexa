@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;

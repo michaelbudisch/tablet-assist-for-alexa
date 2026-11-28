@@ -1,4 +1,4 @@
-package de.jarvis.audio;
+package de.tafa.devicebridge;
 
 /** Physical pose relative to the device's natural orientation, independent of screen lock. */
 final class CameraRotation {
