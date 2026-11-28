@@ -67,11 +67,19 @@ class AmbientCalendarTest(unittest.TestCase):
         self.assertIn("margin-top:clamp(52px,8vh,96px)!important",js)
         self.assertIn("background:transparent!important",js)
         self.assertNotIn("subscribeEvents",js)
+        self.assertIn("host.dataset.ambientInfoState",js)
+        self.assertNotIn("host.dataset.info",js)
+        self.assertIn("event.stopPropagation()",js)
     def test_android_sphere_is_throttled_only_while_building(self):
         src=(MAIN/"frontend/ambient_night.js").read_text()
         self.assertIn('host.dataset.overviewBuilding==="1"',src)
         self.assertIn("building?40:android?31:15",src)
         self.assertIn("android?4:13",src)
+    def test_ambient_status_not_an_entity_click_target(self):
+        ambient=(MAIN/"frontend/ambient_night.js").read_text()
+        self.assertIn('data-ambient-info-state="open"',ambient)
+        self.assertNotIn('data-info="open"',ambient)
+        self.assertNotIn("dataset.info",ambient)
     def test_optional_resource_is_registered(self):
         src=(MAIN/"__init__.py").read_text()
         self.assertIn('StaticPathConfig("/tablet_assist_for_alexa/ambient_overview.js"',src)

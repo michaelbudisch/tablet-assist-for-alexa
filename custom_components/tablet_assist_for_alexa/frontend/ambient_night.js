@@ -62,7 +62,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
   .hz-ambient-body[data-phase="speaking"] .hz-ambient-indicator{background:#f3d6ff;box-shadow:0 0 12px #f3d6ff}
   .hz-ambient-info{position:absolute;z-index:4;left:50%;bottom:clamp(12px,3vh,30px);width:min(740px,calc(100% - 32px));margin:0;background:linear-gradient(125deg,#173050e8,#0a233ddf);border:1px solid #61a9d18c;box-shadow:0 13px 45px #020d20a0,0 0 28px #3b9cbe20,inset 0 1px #b8ddf33c;border-radius:17px;backdrop-filter:blur(14px);padding:16px 20px 18px;max-height:33vh;overflow:auto;animation:hz-ambient-enter .38s cubic-bezier(.18,.85,.32,1.08) both}
   .hz-ambient-info[hidden]{display:none!important}
-  .hz-ambient-body[data-info="open"] .hz-ambient-foot{opacity:0}
+  .hz-ambient-body[data-ambient-info-state="open"] .hz-ambient-foot{opacity:0}
   .hz-ambient-info-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
   .hz-ambient-info-kicker{font:600 10px/1.3 inherit;letter-spacing:.14em;color:#63dbeb}
   .hz-ambient-info-title{font-size:clamp(17px,2.1vw,24px);font-weight:500;color:#ecf5ff;margin:6px 0 8px}
@@ -235,7 +235,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const s=active.get(card);if(!s)return;
     clearTimeout(s.infoTimer);
     const info=s.host?.querySelector("[data-ambient-info]");
-    if(info){info.hidden=true;info.replaceChildren();s.host.dataset.info="closed";s.infoKey=null;s.infoLastMessage=null;}
+    if(info){info.hidden=true;info.replaceChildren();s.host.dataset.ambientInfoState="closed";s.infoKey=null;s.infoLastMessage=null;}
   }
   function show(card,input){
     const s=active.get(card);if(!s||!card._hzNight)return false;
@@ -295,7 +295,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
       const glyph=document.createElement("ha-icon");glyph.setAttribute("icon",icon);badge.append(glyph);
       content.classList.add("has-symbol");content.append(badge);
     }
-    info.hidden=false;s.host.dataset.info="open";info.style.animation="none";void info.offsetWidth;info.style.animation="";
+    info.hidden=false;s.host.dataset.ambientInfoState="open";info.style.animation="none";void info.offsetWidth;info.style.animation="";
     clearTimeout(s.infoTimer);
     const seconds=Math.max(8,Math.min(180,Number(data.seconds)||30));
     s.infoTimer=setTimeout(()=>close(card),seconds*1000);
@@ -766,7 +766,7 @@ import {subscribeTafaVisual} from './visual_client.js?v=0.4.64';
     const s={host,canvas,phase:"idle",lastFrame:0,lastOrbitFrame:null,lastHeadingOrbit:null,lastVisualFrame:null,visual:null,autoYaw:undefined,orbitTime:undefined,manualYaw:0,manualPitch:0,manualDragging:false,inertiaYaw:0,inertiaPitch:0,autoBlend:1,dragPointer:null,suppressClick:false,forceUntil:0,forcedPhase:"idle",infoTimer:null,controlsTimer:null,raf:null,unsubscribe:null,closing:false,labelFrame:0,metricNodes:Array.from(host.querySelectorAll("[data-ambient-metric]"))};
     active.set(card,s);
     // Load the optional calendar only for an active ambient display.
-    void import("./ambient_overview.js?v=0.4.76")
+    void import("./ambient_overview.js?v=0.4.77")
       .then(mod=>{if(active.get(card)===s)mod.mountOverview(card,s);})
       .catch(err=>console.debug("TAFA ambient calendar unavailable",err));
     const exit=host.querySelector(".hz-ambient-exit");

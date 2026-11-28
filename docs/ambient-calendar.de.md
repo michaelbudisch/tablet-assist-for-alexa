@@ -217,3 +217,22 @@ Der Performance-Modus hängt ausschließlich an
 die vollständigen Effekte. Proximity-, Dialog- und Audioverwaltung
 bleiben unverändert; vorhandene HA-Automatisierungen werden nicht
 angepasst.
+
+
+## Klick auf Ambient-Ansicht öffnet ungültige Entität „closed“ (0.4.77)
+
+**Ursache:** Der lokale Ambient-Infoboxzustand verwendete `data-info="closed"`.
+Private HA-Dashboards behandeln jedoch `[data-info]` als Klickziel
+für eine Home-Assistant-Entität. Beim Tippen auf die Kugel wurde daher
+fälschlich ein Mehr-Informationen-Dialog für `closed` geöffnet
+("Invalid entity_ids").
+
+**Fix:** Die interne Statusangabe heißt jetzt
+`data-ambient-info-state="open|closed"`; der Kalendermodus unterbindet
+außerdem die Weitergabe gewöhnlicher Klicks an die Elternkarte.
+Ein privates Dashboard kann zusätzlich Nicht-Steuerelemente innerhalb
+von `.hz-ambient-body` beim generischen HA-Klickhandler ausschließen.
+Tagesansicht-/Infobox-Schaltflächen behalten ihre eigenen Aktionen.
+
+Das ist ein reiner Frontend-Fix. Keine HA-Entitäten, Automatisierungen,
+native Rufworterkennung oder Audioausgabe werden verändert.

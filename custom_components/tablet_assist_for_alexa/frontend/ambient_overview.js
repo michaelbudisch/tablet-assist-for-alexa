@@ -661,9 +661,16 @@ export function mountOverview(card,s){
       }
       return;
     }
-    if(panel.contains(event.target)){lastTouch=Date.now();return;}
+    if(panel.contains(event.target)){
+      lastTouch=Date.now();
+      event.stopPropagation();
+      return;
+    }
     if(event.target.closest?.(".hz-ambient-info,.hz-ambient-exit"))return;
-    if(!opened&&!s.suppressClick)open("tap");
+    if(!opened&&!s.suppressClick){
+      open("tap");
+      event.stopPropagation();
+    }
   };
   host.addEventListener("click",onClick);
   const onPresence=event=>{
@@ -692,7 +699,7 @@ export function mountOverview(card,s){
       wasPresent=present;
       if(!opened)return;
       const now=Date.now();
-      if(s.phase!=="idle"||host.dataset.info==="open")lastTouch=now;
+      if(s.phase!=="idle"||host.dataset.ambientInfoState==="open")lastTouch=now;
       // In sensor mode the sensor owns an automatically opened view.
       // A manual tap while the sensor is still "Frei" uses the optional
       // timer as a fallback. In time/either mode the timer always applies.
