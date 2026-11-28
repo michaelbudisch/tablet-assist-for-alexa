@@ -1,5 +1,12 @@
 # GPU worker changelog
 
+## 2.2.8
+
+- Voice manager API: list prepared voices, prepare one missing synthetic profile asynchronously, and preview via local WAV generation.
+- Voice variants 2–9 now have genuinely different character descriptions; existing variant 1 and default voice references stay unchanged.
+- Preparing a voice temporarily unloads the Base TTS model to avoid loading VoiceDesign and Base at the same time; restores streaming afterwards. Other GPU services are not stopped.
+- The Control Center can detect non-fixed worker modes and unavailable profiles; no uploads or external model APIs are added.
+
 ## 2.2.7
 
 - One Ollama `qwen3-vl:4b-instruct` model shared for conversations and vision; Windows installs/preloads it directly.
