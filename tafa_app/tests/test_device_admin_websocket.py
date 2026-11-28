@@ -52,8 +52,7 @@ class Fixture:
     def __init__(self):
         self.admin = User("admin", "Administrator", admin=True)
         self.user = User("tablet", "Tablet Benutzer")
-        self.extra = User("tablet2", "Tablet Benutzer 2")
-        self.auth = Auth([self.admin, self.user, self.extra,
+        self.auth = Auth([self.admin, self.user,
                           User("inactive", "Inactive", active=False),
                           User("system", "System", system=True)])
         self.area_entries = {
@@ -178,6 +177,7 @@ class DeviceAdminWebSocketTest(unittest.IsolatedAsyncioTestCase):
     async def test_two_active_tablets_can_share_one_ha_area(self):
         hass = Fixture()
         first, second = "a"*32, "b"*32
+        hass.auth.users["tablet2"] = User("tablet2", "Tablet Benutzer 2")
         hass.devices[first] = {"device_id": first, "user_id": "tablet",
                                 "room": "Büro Tablet", "online": True}
         hass.devices[second] = {"device_id": second, "user_id": "tablet2",
