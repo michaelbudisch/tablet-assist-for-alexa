@@ -292,7 +292,11 @@ class WakeDevices:
                 event = {"source": "android_echo_relay", "version": 3,
                          "device_id": identifier, "room": device["room"],
                          "wakeword": word, "timestamp_ms": int(stamp)}
-                # All registered device wake candidates are visible for intentional pairing.
+                # The TAFA event is canonical. Legacy Jarvis consumers continue to
+                # receive their original event name and payload during migration.
+                # Emit both so only explicitly migrated listeners change behavior.
+                tafa_event = {**event, "source": "tafa_device_bridge"}
+                self.hass.bus.async_fire("tafa_android_wakeword", tafa_event)
                 self.hass.bus.async_fire("jarvis_android_wakeword", event)
                 now = time.monotonic()
                 if now - self.last_wake < 3.0:
@@ -300,6 +304,7 @@ class WakeDevices:
                 self.last_wake = now
                 self.telemetry.setdefault(identifier, {})["last_wake"] = int(time.time())
                 self.changed(identifier)
+                self.hass.bus.async_fire("tafa_android_wakeword_routed", tafa_event)
                 self.hass.bus.async_fire("jarvis_android_wakeword_routed", event)
                 return {"accepted": True}
             raise ValueError("Unknown action")
