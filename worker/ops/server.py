@@ -1,4 +1,4 @@
-"""Private LAN, read-only Jarvis worker diagnostics (Python stdlib only).
+"""Private LAN, read-only TAFA worker diagnostics (Python stdlib only).
 
 No transcript, camera image, or request payload is stored.
 Selftest is a connectivity/readiness check, NOT a GPU inference benchmark.
@@ -115,5 +115,5 @@ def make_handler(checker=status):
 
 
 if __name__ == "__main__":
-    print("Jarvis diagnostics listening on port 10504", flush=True)
+    print("TAFA diagnostics listening on port 10504", flush=True)
     ThreadingHTTPServer(("0.0.0.0", 10504), make_handler()).serve_forever()
