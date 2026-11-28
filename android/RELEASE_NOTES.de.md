@@ -1,3 +1,9 @@
+# TAFA Device Bridge 1.3.0 (nur Quellcode)
+
+- Android-Paketkennung, Namespace, Java-Quell- und Testpakete sowie interne Aktionen auf `de.tafa.devicebridge` umgestellt.
+- Die bisherige App `de.jarvis.audio` muss deinstalliert und eine neu signierte APK installiert werden. App-Einstellungen und Zugangsdaten werden nicht übernommen; Tablet in TAFA neu koppeln.
+- Rufwörter einschließlich Jarvis und Hey Jarvis bleiben erhalten. Versionscode 33. Build, Signierung und Tablet-Funktionstest stehen noch aus.
+
 # TAFA Device Bridge 1.2.10
 
 Signierter finaler Annäherungs-Build, Versionscode 31. Enthält die lokale Erkennung aus 1.2.9 mit klar beschrifteter Ausschaltverzögerung. Über die vorhandene App installieren.

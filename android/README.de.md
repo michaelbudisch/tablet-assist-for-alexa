@@ -1,4 +1,7 @@
-# TAFA Device Bridge · Android 1.2.11
+# TAFA Device Bridge · Android 1.3.0
+
+**1.3.0 (Quellstand, APK noch nicht erstellt):** Die neue Android-Paketkennung lautet `de.tafa.devicebridge`. Die bisherige App `de.jarvis.audio` lässt sich nicht darüber aktualisieren: alte App deinstallieren, neu signierte TAFA-App installieren, Zugangsdaten erneut einrichten und das Tablet im TAFA Control Center neu koppeln. Frühere Geräteeinstellungen werden nicht automatisch übernommen. Die Rufwörter „Jarvis“ und „Hey Jarvis“ bleiben weiterhin auswählbar.
+
 
 [English](README.md) | **Deutsch** · [Projektübersicht](../README.de.md)
 
@@ -34,7 +37,7 @@ Unter **Einstellungen → Hilfe & Diagnose → Nativer Sprachablauf** findest du
 4. Unter **Einstellungen → Sprache & Rufwort** das lokale Vosk-Modell installieren, Rufwort wählen, Mikrofonberechtigung erteilen und die Erkennung starten. Die Sprache wird über die native HA-Assist-Pipeline übertragen.
 5. Unter **Status** Verbindung und laufenden Sprachzustand prüfen.
 
-Die App-ID `de.jarvis.audio`, verschlüsselte Zugangsdaten, Geräteschlüssel, gespeicherte Einstellungen und die Tablet-ID bleiben bei einem korrekt signierten Update erhalten. Die App nicht deinstallieren, wenn diese Daten erhalten bleiben sollen. Der Bildschirm kann über Android nur in der Helligkeit verändert, nicht zuverlässig vollständig ein- und ausgeschaltet werden.
+Ab **1.3.0** lautet die App-ID `de.tafa.devicebridge`. Dies ist eine Neuinstallation statt eines Updates über die bisherige Jarvis-Paket-App. Die Home-Assistant-Verbindung erneut einrichten und das Tablet neu koppeln. Der Bildschirm kann über Android nur in der Helligkeit verändert, nicht zuverlässig vollständig ein- und ausgeschaltet werden.
 
 ## Mikrofonmodus in 1.2.2
 

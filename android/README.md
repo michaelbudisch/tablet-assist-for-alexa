@@ -1,4 +1,7 @@
-# TAFA Device Bridge · Android 1.2.11
+# TAFA Device Bridge · Android 1.3.0
+
+**1.3.0 (source, APK pending):** New Android package/application ID `de.tafa.devicebridge`. The former `de.jarvis.audio` build cannot be upgraded in-place: uninstall it, then install and connect the newly signed TAFA app, and re-pair this tablet in TAFA Control Center. Existing device settings are not imported automatically. Wakewords such as "Jarvis" and "Hey Jarvis" remain supported.
+
 
 **English** | [Deutsch](README.de.md) · [Project overview](../README.md)
 
@@ -34,7 +37,7 @@ Open **Settings → Help & diagnostics → Native voice timeline** for the last 
 4. Under **Settings → Speech & wakeword**, install the local Vosk model, grant microphone permission, choose the wakeword and start recognition. Spoken requests use native HA Assist.
 5. Check live connection and activity in **Status**.
 
-The application ID `de.jarvis.audio`, encrypted credentials, device identity and preferences survive properly signed upgrades. Do not uninstall the previous app if preserving identity matters. Android's optional display permission supports brightness/dimming, not dependable full screen power on/off.
+From **1.3.0**, the application ID is `de.tafa.devicebridge`. This is a new installation, not an in-place update of the old Jarvis-package app. Re-enter the Home Assistant connection and pair the device again. Android's optional display permission supports brightness/dimming, not dependable full screen power on/off.
 
 ## Microphone mode in 1.2.2
 

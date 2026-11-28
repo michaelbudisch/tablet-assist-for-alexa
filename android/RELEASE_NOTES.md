@@ -1,3 +1,9 @@
+# TAFA Device Bridge 1.3.0 (source only)
+
+- Changed Android namespace, application ID, source/test Java packages and Android internal actions to `de.tafa.devicebridge`.
+- Previous `de.jarvis.audio` installations must be removed and the newly signed APK installed afresh. Existing Android app preferences and credentials do not transfer; pair the tablet again in TAFA.
+- Wakeword choices including Jarvis and Hey Jarvis remain unchanged. Version code 33. APK build/signing and physical playback/voice checks remain pending.
+
 # TAFA Device Bridge 1.2.11
 
 - Camera snapshots and on-device approach detection now follow physical tablet orientation, including portrait and inverted mounting with Android screen rotation locked.
